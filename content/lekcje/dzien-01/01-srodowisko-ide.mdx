@@ -1,0 +1,133 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Środowisko Arduino IDE i pierwszy szkic"
+slug: "srodowisko-ide-i-pierwszy-szkic"
+summary: "Instalacja Arduino IDE, struktura szkicu setup()/loop(), wgranie programu Blink na płytkę UNO."
+
+day: 1
+weekend: 1
+order: 1
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 1
+
+objectives:
+  - "Zainstalować Arduino IDE i sterowniki płytki UNO"
+  - "Wyjaśnić różnicę między funkcjami setup() a loop()"
+  - "Wgrać szkic Blink na płytkę i zaobserwować efekt"
+
+prerequisites: []
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-B",     qty: 1 }
+  - { name: "Komputer z dostępem do internetu", qty: 1 }
+
+tags: [arduino, ide, blink, setup-loop]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
+  - "Książka B — Arduino dla początkujących, r. 1–2"
+
+publish: true
+updated: "2026-05-11"
+---
+
+## Czego się dziś nauczymy
+
+W tej lekcji uruchamiamy środowisko Arduino IDE, podłączamy płytkę i wgrywamy
+pierwszy szkic. Po jej ukończeniu każda kolejna lekcja sprowadza się do
+„napisz kod → wgraj → obserwuj”.
+
+<Callout type="note" title="Wymagania wstępne">
+Komputer z systemem Windows, macOS lub Linux i prawami do instalowania
+sterowników USB. Dostęp do internetu na czas instalacji.
+</Callout>
+
+## 1. Instalacja Arduino IDE
+
+1. Wejdź na [arduino.cc/en/software](https://www.arduino.cc/en/software).
+2. Pobierz wersję dla swojego systemu (zalecamy *Arduino IDE 2.x*).
+3. Zainstaluj — w trakcie instalacji potwierdź instalację sterowników USB
+   (Windows poprosi o zgodę kilkukrotnie).
+
+<Callout type="warning">
+Nie używaj wersji „Web Editor” na tym kursie — będziemy pracować lokalnie,
+bez konta i bez chmury.
+</Callout>
+
+## 2. Podłączenie płytki
+
+Podłącz Arduino UNO do komputera kablem USB-B. Sprawdź, czy dioda **ON** na
+płytce świeci na zielono — to znak, że płytka jest zasilana.
+
+W IDE: **Narzędzia → Płytka → Arduino UNO**, następnie **Narzędzia → Port**
+i wybierz port szeregowy, pod którym widnieje płytka (zwykle `COM3+` na
+Windows lub `/dev/cu.usbmodem*` na macOS/Linux).
+
+## 3. Struktura szkicu — `setup()` i `loop()`
+
+Każdy program Arduino („szkic”) ma dwie funkcje, które muszą istnieć:
+
+<Code lang="cpp" file="szkielet.ino">
+```cpp
+void setup() {
+  // Uruchamia się raz, po włączeniu lub resecie płytki.
+  // Tu konfigurujemy piny, komunikację, biblioteki.
+}
+
+void loop() {
+  // Wykonuje się w nieskończonej pętli, tak długo jak płytka ma zasilanie.
+  // Tu wpisujemy właściwą logikę programu.
+}
+```
+</Code>
+
+## 4. Pierwszy szkic — `Blink`
+
+Wczytaj gotowy przykład: **Plik → Przykłady → 01.Basics → Blink**.
+
+<Code lang="cpp" file="Blink.ino">
+```cpp
+// Miga wbudowaną diodą LED na pinie 13.
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);  // dioda zapala się
+  delay(1000);                      // czeka 1 sekundę
+  digitalWrite(LED_BUILTIN, LOW);   // dioda gaśnie
+  delay(1000);                      // czeka 1 sekundę
+}
+```
+</Code>
+
+Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
+Następnie **Wgraj** (→). Po chwili dioda na płytce zacznie migać 1 Hz.
+
+<Task title="Zadanie 1" estimate="10 min">
+Zmień częstotliwość migania na ok. 4 Hz (dwa razy szybciej w obie strony).
+Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
+</Task>
+
+<Task title="Zadanie 2" estimate="15 min">
+Dodaj komentarz nad każdą linią funkcji `loop()` opisujący w 1 zdaniu po
+polsku, co dana linia robi. Cel: ćwiczenie czytania kodu.
+</Task>
+
+## Podsumowanie
+
+- Arduino IDE to środowisko, w którym piszemy szkice (programy) dla płytki.
+- Każdy szkic ma `setup()` (raz) i `loop()` (w pętli).
+- Wgranie szkicu na płytkę odbywa się przez USB, jednym kliknięciem.
+
+W następnej lekcji wyjdziemy poza wbudowaną diodę i zaczniemy podłączać
+elementy zewnętrzne na płytce stykowej.

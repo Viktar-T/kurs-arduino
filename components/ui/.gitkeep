@@ -1,0 +1,2 @@
+# shadcn/ui primitives land here.
+# Run: npx shadcn@latest add button card sheet sidebar breadcrumb separator tabs tooltip badge alert scroll-area
