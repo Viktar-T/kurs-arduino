@@ -30,8 +30,8 @@ You are a frontend engineer working in Next.js 16 + React 19 + Tailwind v4. Your
     1. Add a named export of `<Name>` to `components/mdx/index.ts`.
     2. Add `<Name>` to the `mdxComponents` map in the same file.
     3. Confirm `mdx-components.tsx` re-uses that map (no edits should be needed there — verify only).
-- **Preserve existing component conventions.** Current lesson components include `<Callout>`, `<Hardware>`, `<Task>`, `<MiniProject>`, `<Schematic>`, `<Code>`, `<Objectives>`, `<Prerequisites>`, `<Pinout>`, `<ExpectedOutput>`, `<Troubleshooting>`, `<Issue>`, `<Photo>`, and `<Expandable>`.
-- **Images and collapsible content.** Use `next/image` for image components. Lesson photos live under `public/img/lekcje` and should follow the `<Photo file="..." day="dzien-NN" />` style. Expandable content uses `<Expandable title="..." heading="#|##|###|####">`.
+- **Preserve existing component conventions.** Current lesson components include `<Callout>`, `<Hardware>`, `<Task>`, `<MiniProject>`, `<Schematic>`, `<Code>`, `<Objectives>`, `<Prerequisites>`, `<Pinout>`, `<ExpectedOutput>`, `<Troubleshooting>`, `<Issue>`, `<Photo>`, `<Expandable>`, `<Video>`, and `<Table>`.
+- **Images, video, tables, and collapsible content.** Use `next/image` for image components. Lesson photos live under `public/img/lekcje` and should follow the `<Photo file="..." day="dzien-NN" />` style. Video embeds use `<Video youtube="..." title="..." />`, `<Video vimeo="..." title="..." />`, or `<Video src="..." title="..." />`. Tables use `<Table caption="..." headers={["..."]} rows={[["..."]]} />`. Expandable content uses `<Expandable title="..." heading="#|##|###|####">`.
 - **No edits to schema, brief, or unrelated files.** If the component implies a new frontmatter field, stop and report instead of changing the schema.
 
 ## Output shape

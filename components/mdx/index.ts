@@ -17,6 +17,8 @@ import { ExpectedOutput } from "./ExpectedOutput";
 import { Troubleshooting, Issue } from "./Troubleshooting";
 import { Photo } from "./Photo";
 import { Expandable } from "./Expandable";
+import { Video } from "./Video";
+import { Table } from "./Table";
 
 export {
   Callout,
@@ -33,6 +35,8 @@ export {
   Issue,
   Photo,
   Expandable,
+  Video,
+  Table,
 };
 
 /**
@@ -54,4 +58,6 @@ export const mdxComponents: MDXComponents = {
   Issue,
   Photo,
   Expandable,
+  Video,
+  Table,
 };

@@ -104,16 +104,15 @@ rezystora ograniczającego prąd, typowo 220-330 Ω. Brak rezystora może uszkod
 diodę albo pin mikrokontrolera.
 </Callout>
 
-<Pinout board="Arduino UNO - piny używane w tej lekcji">
-
-| Pin | Funkcja | Notatka |
-| --- | --- | --- |
-| GND | Masa układu | Wspólny punkt odniesienia dla LED i przycisku |
-| D7 | Wejście cyfrowe | Przycisk z `INPUT_PULLUP` |
-| D8-D10 | Wyjścia cyfrowe | Diody LED przez rezystory 220-330 Ω |
-| 5V | Zasilanie | W tej lekcji nie zasilamy LED bezpośrednio z 5V |
-
-</Pinout>
+<Pinout
+  board="Arduino UNO - piny używane w tej lekcji"
+  pins={[
+    { pin: "GND", function: "Masa układu", note: "Wspólny punkt odniesienia dla LED i przycisku" },
+    { pin: "D7", function: "Wejście cyfrowe", note: "Przycisk z INPUT_PULLUP" },
+    { pin: "D8-D10", function: "Wyjścia cyfrowe", note: "Diody LED przez rezystory 220-330 Ω" },
+    { pin: "5V", function: "Zasilanie", note: "W tej lekcji nie zasilamy LED bezpośrednio z 5V" },
+  ]}
+/>
 
 ## 3. Ćwiczenie: zapalenie zewnętrznej diody
 

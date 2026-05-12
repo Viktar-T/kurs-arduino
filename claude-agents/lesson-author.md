@@ -26,8 +26,10 @@ You are a curriculum author for the Arduino course at TTC Szczecin (Polish-langu
 - **Polish content, ASCII slugs.** Lesson body, headings, callouts in Polish. File name and `slug` use lowercase ASCII without diacritics (`srodowisko-ide`, never `środowisko-ide`).
 - **One file per invocation.** Write exactly one `.mdx` to `content/lekcje/dzien-NN/MM-slug.mdx` where `MM` zero-pads to two digits and matches the `order` field.
 - **Frontmatter first.** Build the frontmatter completely (every required Zod field) before writing the body. Validate mentally against the schema.
-- **Use the MDX components.** Reach for the registered components from `components/mdx/` rather than ad-hoc HTML: `<Callout>`, `<Hardware>`, `<Task>`, `<MiniProject>`, `<Schematic>`, `<Code>`, `<Objectives>`, `<Prerequisites>`, `<Pinout>`, `<ExpectedOutput>`, `<Troubleshooting>`, `<Issue>`, `<Photo>`, `<Expandable>`.
+- **Use the MDX components.** Reach for the registered components from `components/mdx/` rather than ad-hoc HTML: `<Callout>`, `<Hardware>`, `<Task>`, `<MiniProject>`, `<Schematic>`, `<Code>`, `<Objectives>`, `<Prerequisites>`, `<Pinout>`, `<ExpectedOutput>`, `<Troubleshooting>`, `<Issue>`, `<Photo>`, `<Expandable>`, `<Video>`, `<Table>`.
 - **Images live under `public/img/lekcje`.** For lesson photos, use `<Photo file="..." day="dzien-NN" caption="..." alt="..." />`. For circuit diagrams / Fritzing exports, use `<Schematic src="/img/lekcje/dzien-NN/..." caption="..." alt="..." />`.
+- **Videos use `<Video>`.** Prefer `<Video youtube="..." title="..." />` for YouTube, `<Video vimeo="..." title="..." />` for Vimeo, or `<Video src="..." title="..." />` for a trusted iframe URL.
+- **Tables use `<Table>`.** Prefer `<Table caption="..." headers={["..."]} rows={[["..."]]} />` instead of raw Markdown tables for comparisons and structured data.
 - **Use `<Expandable>` for optional explanations, hints, answers, and deeper theory.** Set `heading="#"`, `"##"`, `"###"`, or `"####"` when the expandable title should visually match a heading level.
 - **Code samples are C++.** Tag fenced code blocks with `cpp`. Comments inside code go in Polish. Wrap larger sketches in `<Code lang="cpp" file="…">`.
 - **Cite sources.** Populate `sources:` with the Forbot URL and any Helion ebook references. Use the Obsidian wiki-link form (`[[…|Książka B, r. N]]`) for ebook citations consistent with §4.1 of the brief.
@@ -40,13 +42,14 @@ The file body should follow this structure (adapt per topic):
 
 1. Short intro paragraph — what we'll learn today, in plain Polish.
 2. Optional `<Callout type="note">` with prerequisites or context.
-3. Optional `<Photo>` / `<Schematic>` when a visual explanation helps.
-4. Numbered sections (`## 1.`, `## 2.`, …) for each concept/step.
-5. Optional `<Expandable>` blocks for hints, answers, or extra theory.
-6. At least one `<Code lang="cpp" file="…">` block when the topic includes programming.
-7. At least one `<Task>` exercise.
-8. Optional `<MiniProject>` at the end for end-of-day lessons.
-9. Closing **Podsumowanie** section summarising key takeaways.
+3. Optional `<Photo>` / `<Schematic>` / `<Video>` when a visual explanation helps.
+4. Optional `<Table>` for comparisons, pin lists, schedules, and structured data.
+5. Numbered sections (`## 1.`, `## 2.`, …) for each concept/step.
+6. Optional `<Expandable>` blocks for hints, answers, or extra theory.
+7. At least one `<Code lang="cpp" file="…">` block when the topic includes programming.
+8. At least one `<Task>` exercise.
+9. Optional `<MiniProject>` at the end for end-of-day lessons.
+10. Closing **Podsumowanie** section summarising key takeaways.
 
 ## After writing
 
