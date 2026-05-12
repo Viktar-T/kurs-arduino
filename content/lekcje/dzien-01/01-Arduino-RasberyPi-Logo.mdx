@@ -1,0 +1,287 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Czym jest Arduino i co można z nim zbudować"
+slug: "arduino-raspberry-pi-logo"
+summary: "Lekcja otwierająca kurs: czym jest Arduino, jakie projekty można z nim zbudować oraz czym różni się od Raspberry Pi i Siemens LOGO."
+
+
+day: 1
+weekend: 1
+order: 1
+duration: 60
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 1
+
+objectives:
+  - "Wytłumaczyć własnymi słowami, czym jest Arduino i do czego służy"
+  - "Wymienić co najmniej pięć typów projektów, które można zbudować z Arduino"
+  - "Wskazać kluczowe różnice między Arduino, Raspberry Pi a Siemens LOGO"
+  - "Dobrać odpowiednią platformę do prostego, zadanego scenariusza zastosowania"
+  - "Sformułować osobisty cel kursu: co chcę zbudować do końca 80 godzin"
+
+prerequisites: []
+
+hardware:
+  - { name: "Arduino UNO R3 (do pokazania na wstępie)", qty: 1 }
+  - { name: "Raspberry Pi (opcjonalnie, do porównania na żywo)", qty: 1, optional: true }
+  - { name: "Sterownik Siemens LOGO! (opcjonalnie, zdjęcie wystarczy)", qty: 1, optional: true }
+
+tags: [arduino, wprowadzenie, raspberry-pi, siemens-logo, projekty, icebreaker]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
+  - "https://youtu.be/Xvj2HO0bNHM"
+  - "[[../../40_materialy/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s.|Książka B, r. 1]]"
+
+publish: true
+updated: "2026-05-12"
+---
+
+## Czego się dziś nauczymy
+
+To pierwsza lekcja kursu — jeszcze nie piszemy żadnego programu i nie podłączamy
+przewodów. Najpierw chcemy się dowiedzieć, **czym właściwie jest Arduino**,
+**co można z nim zbudować** i **dlaczego wybieramy je na ten kurs**, a nie inną
+platformę elektroniczną, taką jak Raspberry Pi czy przemysłowy sterownik
+Siemens LOGO.
+
+<Photo file="01-Arduino-RasberyPi-Logo.jpg" 
+day="dzien-01" 
+caption="Arduino, Raspberry Pi i Siemens LOGO!" 
+alt="Arduino UNO, Raspberry Pi i Siemens LOGO!" />
+
+<Objectives
+  items={[
+    "Wytłumaczyć własnymi słowami, czym jest Arduino i do czego służy",
+    "Wymienić projekty, które można zbudować z Arduino",
+    "Wskazać kluczowe różnice między Arduino, Raspberry Pi a Siemens LOGO",
+    "Dobrać odpowiednią platformę do prostego zastosowania",
+    "Sformułować osobisty cel kursu: co chcę zbudować",
+  ]}
+/>
+
+<Callout type="note" title="Bez wymagań wstępnych">
+Ta lekcja jest wprowadzeniem — nie musisz nic wcześniej umieć. Wystarczy
+ciekawość i ołówek do notatek. Pierwsze szkice i podłączanie elementów
+zaczynamy w kolejnej lekcji.
+</Callout>
+
+## 1. Czym jest Arduino
+
+**Arduino** to popularna platforma elektroniczna typu *open hardware*,
+zbudowana wokół niewielkiej płytki z mikrokontrolerem. W praktyce oznacza to
+trzy rzeczy naraz:
+
+1. **Płytka** — fizyczny, niewielki komputer wielkości karty kredytowej (np.
+   model *Arduino UNO*), do którego można podłączać diody, przyciski,
+   czujniki, silniki i wyświetlacze.
+2. **Środowisko programistyczne (Arduino IDE)** — bezpłatny program na PC,
+   w którym piszemy *szkice* (programy) i wgrywamy je do płytki przez kabel
+   USB.
+3. **Społeczność i biblioteki** — ogromna baza gotowych przykładów, kursów
+   (m.in. forbot.pl, którego materiały współtworzą szkielet tego kursu) oraz
+   bibliotek, które ułatwiają obsługę popularnych modułów.
+
+Arduino zostało zaprojektowane dla osób, które **nie są inżynierami
+elektroniki ani programistami z wieloletnim stażem** — uczniów, hobbystów,
+artystów, projektantów. Dlatego nadaje się idealnie na początek nauki budowy
+„inteligentnych” układów.
+
+<Expandable title="Co dokładnie znaczy 'mikrokontroler'? Czym różni się od mikroprocesora?" heading="###">
+**Mikroprocesor** (np. w Twoim laptopie) to „mózg”, który do działania
+potrzebuje całej dodatkowej infrastruktury: pamięci RAM w osobnych kościach,
+pamięci masowej (SSD/HDD), karty graficznej, zasilacza, systemu operacyjnego.
+Sam w sobie nic nie robi.
+
+**Mikrokontroler** to *cały mały komputer w jednym układzie scalonym*. W jednej
+kostce ma:
+
+- procesor (CPU),
+- pamięć programu (Flash) — tu trafia Twój szkic,
+- pamięć operacyjną (SRAM) — tu trzymane są zmienne w trakcie pracy,
+- pamięć stałą (EEPROM) — przeżywa wyłączenie zasilania,
+- porty wejścia/wyjścia (piny) — żeby rozmawiać ze światem zewnętrznym,
+- przetworniki (ADC), liczniki czasu, kontrolery komunikacji (UART, SPI, I2C).
+
+Mikrokontroler na płytce Arduino UNO to **ATmega328P**. Działa z zegarem
+16 MHz, ma 32 kB pamięci programu i 2 kB SRAM. To miliony razy mniej niż
+laptop — ale aż nadto, żeby sterować robotem, alarmem, sygnalizacją świetlną
+czy stacją pogodową.
+</Expandable>
+
+## 2. Co można zbudować z Arduino
+
+Arduino jest świetne wszędzie tam, gdzie potrzebujemy **szybko reagować na
+sygnały ze świata fizycznego**: czujniki, przyciski, silniki, diody. Oto kilka
+typów projektów, które można zbudować — wszystkie są realne, hobbyści wykonują
+je tysiącami:
+
+- **Sygnalizacja świetlna** sterowana przyciskiem (ćwiczenie z dnia 1.).
+- **Stacja pogodowa** — czujnik temperatury i wilgotności (DHT22), wyświetlacz
+  LCD, wykresy na komputerze.
+- **System alarmowy** — czujnik ruchu PIR, kontaktron na drzwiach, syrena,
+  klawiatura do uzbrajania.
+- **Robot mobilny** — line follower (jeździ po linii) albo robosumo
+  (wypycha przeciwnika z ringu). To finałowy projekt naszego kursu.
+- **Sterownik oświetlenia** — paski LED RGB sterowane pilotem na podczerwień,
+  efekty świetlne, animacje.
+- **Termometr / higrometr** z wyświetlaczem 7-segmentowym lub OLED.
+- **Czujnik parkowania samochodowego** — ultradźwiękowy HC-SR04 + buzzer
+  zmieniający częstotliwość w miarę zbliżania się do przeszkody.
+- **MIDI-kontroler** — własny instrument muzyczny: potencjometry, przyciski,
+  USB-MIDI do komputera.
+- **Plotter / mini-CNC** ze starych napędów DVD — silniki krokowe rysują
+  rysunki długopisem.
+- **Drukarka 3D** — większość tanich drukarek 3D ma na pokładzie mikrokontroler
+  z rodziny Arduino (Mega + RAMPS).
+- **Dron** — proste sterowniki lotu zbudowane na Arduino z żyroskopem MPU-6050.
+- **Retro-konsola / mini-gra** — wyświetlacz OLED, przyciski, kilka linii kodu.
+- **Projekty IoT** — Arduino z modułem Wi-Fi (ESP8266/ESP32) raportuje dane
+  z czujników do chmury.
+- **Sterowanie domem** — przekaźniki włączające oświetlenie, wentylację,
+  podlewanie ogrodu.
+
+<Callout type="tip" title="Galeria inspiracji — wideo">
+Obejrzyj 5-minutowy przegląd projektów Arduino:
+[youtu.be/Xvj2HO0bNHM](https://youtu.be/Xvj2HO0bNHM). Wybierzemy razem 2-3
+projekty, które najbardziej Cię zaciekawiły — to dobry punkt wyjścia do
+rozmowy o tym, czego chcesz się na kursie nauczyć.
+</Callout>
+
+<Callout type="note" title="Co konkretnie zbudujemy na kursie">
+W ciągu 80 godzin kursu po kolei zbudujemy m.in.: migającą diodę, ręczną
+sygnalizację świetlną, alarm z czujnikiem PIR, termometr z LCD, czujnik
+parkowania HC-SR04, a na finał — **mobilny robot line follower / robosumo**.
+Każdy projekt to osobna lekcja w tym serwisie.
+</Callout>
+
+## 3. Arduino vs Raspberry Pi vs Siemens LOGO
+
+Arduino to nie jedyna „mała płytka”, którą można kupić w sklepie z elektroniką.
+Spójrzmy na trzy popularne platformy, które łatwo pomylić, a które rozwiązują
+zupełnie różne problemy:
+
+| Cecha               | Arduino UNO                                    | Raspberry Pi 5                                          | Siemens LOGO!                                            |
+| ------------------- | ---------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| Typ urządzenia      | Mikrokontroler (jeden układ)                   | Mikrokomputer (pełen komputer)                          | Przemysłowy sterownik PLC                                |
+| Procesor            | ATmega328P, 16 MHz, 8-bit                      | ARM Cortex-A76, 2,4 GHz, 64-bit (4 rdzenie)             | Wbudowany mikrokontroler (zamknięty, ok. kilkadziesiąt MHz) |
+| Pamięć RAM          | 2 kB                                           | 4 / 8 / 16 GB                                           | kilka kB (zależy od wersji)                              |
+| System operacyjny   | Brak — uruchamia tylko Twój szkic              | Linux (Raspberry Pi OS, Ubuntu)                         | Brak — własny firmware Siemensa                          |
+| Język programowania | C/C++ (Arduino, uproszczony)                   | Praktycznie dowolny: Python, C++, JavaScript, Java...   | Język drabinkowy (LD) / funkcjonalny (FBD)               |
+| Liczba pinów I/O    | 14 cyfrowych + 6 analogowych                   | 40 pinów GPIO                                           | 8-24 wejść/wyjść (przemysłowe, 24 V / 230 V)             |
+| Zasilanie           | 5 V z USB, ok. 50 mA                           | 5 V / 5 A (zasilacz dedykowany)                         | 24 V DC lub 230 V AC (sieć przemysłowa)                  |
+| Czas startu         | Natychmiastowy (milisekundy)                   | 20-40 sekund (boot Linuksa)                             | Natychmiastowy                                           |
+| Cena (orientacyjnie)| ok. 100-150 zł (oryginał) / 30-50 zł (klony)   | ok. 350-800 zł (sama płytka)                            | ok. 500-1500 zł (zależnie od wersji)                     |
+| Typowe zastosowania | Sterowanie sprzętem, czujniki, roboty, prototypy | Komputer ogólnego przeznaczenia, serwer domowy, kiosk, AI | Automatyka przemysłowa, sterowanie maszynami, bram, wind |
+| Kiedy wybrać        | Gdy chcesz sterować elektroniką w czasie rzeczywistym, nauka podstaw | Gdy potrzebujesz pełnego komputera (ekran, sieć, kamera, AI) | Gdy budujesz przemysłowy układ sterowania z certyfikatami |
+
+<Expandable title="Krótkie streszczenie różnic — jednym zdaniem" heading="###">
+- **Arduino** = mały, szybki sterownik elektroniki. „Zawsze włączony,
+  natychmiast reaguje na pin.”
+- **Raspberry Pi** = pełnoprawny komputer w miniaturowej obudowie. „Linux,
+  Python, kamera, ekran, internet.”
+- **Siemens LOGO!** = przemysłowy sterownik dla elektryka-automatyka.
+  „Drabinka, 24 V, certyfikat, niezawodność w fabryce.”
+</Expandable>
+
+<Callout type="tip" title="Reguła kciuka przy wyborze">
+Jeśli projekt mieści się w zdaniu *„czujnik → decyzja → reakcja silnika lub
+diody”*, użyj Arduino. Jeśli pojawia się słowo *ekran*, *kamera*, *strona
+internetowa*, *baza danych*, *AI* — prawdopodobnie potrzebujesz Raspberry
+Pi (lub Arduino z Raspberry Pi razem). Jeśli słyszysz *„hala produkcyjna”,
+*„rozdzielnia”*, *„24 V”*, *„DIN”* — to terytorium PLC, czyli np. Siemens
+LOGO.
+</Callout>
+
+## 4. Dlaczego na tym kursie używamy Arduino
+
+Wybór nie jest przypadkowy:
+
+- **Niski próg wejścia** — pierwsza migająca dioda powstaje w 10 minut, bez
+  konfiguracji systemu operacyjnego, sterowników GPU czy uprawnień.
+- **Natychmiastowe sprzężenie zwrotne** — wgrywasz program i od razu widzisz,
+  czy działa. Brak warstwy „systemu między Tobą a sprzętem”.
+- **Tanio i bezpiecznie** — pomyłka w kodzie nie skasuje systemu operacyjnego,
+  a klon UNO za 40 zł da się wymienić bez stresu.
+- **Realne, fizyczne efekty** — koniec lekcji nie wygląda jak okienko
+  w konsoli, tylko jak dioda, syrena, ruszający się robot albo wyświetlacz
+  pokazujący temperaturę.
+- **Most do większych systemów** — kiedy nauczysz się Arduino, znacznie
+  łatwiej przejdziesz do Raspberry Pi (jako *„mózgu wyższego rzędu”*) albo do
+  PLC w przyszłej pracy zawodowej.
+
+## 5. Zadanie: czego chcesz się nauczyć
+
+<Task title="Zadanie 1 - Lista marzeń projektowych" estimate="10 min">
+Na kartce papieru (albo w notatniku w telefonie) napisz **3 projekty, które
+chciał(a)byś zbudować** do końca kursu. Mogą to być pomysły z listy z punktu
+2., z wideo z YouTube, z forbot.pl, albo Twoje własne. Jedno zdanie na projekt
+wystarczy.
+
+Następnie odpowiedz pod każdym pomysłem na pytanie: **dlaczego akurat ten
+projekt?** Co Cię w nim ciekawi: efekt świetlny, ruch, dźwięk, programowanie,
+mechanika?
+</Task>
+
+<Task title="Zadanie 2 - Dyskusja w parach" estimate="10 min">
+Dobierz się w parę z osobą obok. Wymieńcie się listami pomysłów i krótko
+opowiedzcie sobie nawzajem, dlaczego wybraliście te akurat projekty.
+Wspólnie zaznaczcie pomysł, który **moglibyście zrealizować razem** w trakcie
+kursu jako mały projekt na bok.
+
+Pod koniec dyskusji prowadzący zbierze listę pomysłów na tablicy — to nasza
+„mapa marzeń” na resztę kursu.
+</Task>
+
+<Task title="Zadanie 3 - Dopasuj platformę do scenariusza" estimate="10 min">
+Przeczytaj poniższe trzy scenariusze i zdecyduj, czy lepszy będzie do nich
+**Arduino**, **Raspberry Pi**, czy **Siemens LOGO**. Uzasadnij wybór jednym
+zdaniem.
+
+1. *„Chcę zbudować system, który po wciśnięciu pilota włącza taśmę LED RGB
+   pod blatem kuchennym i zmienia kolor w rytm muzyki z radia.”*
+2. *„Robię własną stację pogodową z kamerą, która co godzinę robi zdjęcie
+   nieba, generuje wykres temperatury i wystawia stronę WWW w lokalnej
+   sieci.”*
+3. *„Modernizujemy bramę garażową w warsztacie ojca: ma reagować na trzy
+   czujniki krańcowe, fotokomórkę i przycisk awaryjny. Wszystko zasilane
+   24 V DC, układ musi przejść odbiór elektryka.”*
+
+<Expandable title="Sugerowane odpowiedzi" heading="####">
+1. **Arduino** — proste sterowanie diodami i odczyt sygnału z odbiornika
+   IR. Brak potrzeby ekranu, kamery, sieci.
+2. **Raspberry Pi** — potrzebna kamera, serwer WWW, lokalna sieć i system
+   operacyjny. Arduino można dodać jako *pomocnika* do odczytu czujników.
+3. **Siemens LOGO** (lub inny PLC) — układ przemysłowy, 24 V, wymóg
+   bezpieczeństwa i odbiór elektryka. Arduino tu nie wejdzie ze względu na
+   normy.
+</Expandable>
+</Task>
+
+## Podsumowanie
+
+- **Arduino** to mała płytka z mikrokontrolerem + bezpłatne IDE + ogromna
+  społeczność.
+- Mikrokontroler to *„cały komputer w jednym układzie”*, ale bardzo mały —
+  jego siła nie leży w mocy obliczeniowej, tylko w błyskawicznej reakcji na
+  sygnały elektryczne.
+- Z Arduino budujemy: alarmy, stacje pogodowe, roboty, sygnalizację, MIDI,
+  IoT, sterowanie oświetleniem, drukarki 3D, drony i wiele innych projektów.
+- **Raspberry Pi** to pełnoprawny komputer z Linuksem — sięgaj po niego, gdy
+  potrzebujesz ekranu, kamery, AI, sieci.
+- **Siemens LOGO!** to przemysłowy sterownik PLC — sięgaj po niego, gdy
+  budujesz układ w fabryce, rozdzielni albo w warsztacie, który musi
+  przejść odbiór.
+- Na tym kursie pracujemy z Arduino, bo daje najszybsze „a-ha!”, jest tanie,
+  bezpieczne i prowadzi prosto do finałowego projektu — własnego robota
+  mobilnego.
+
+W następnej lekcji uruchamiamy **Arduino IDE**, podłączamy płytkę i wgrywamy
+nasz pierwszy szkic — migającą diodę.

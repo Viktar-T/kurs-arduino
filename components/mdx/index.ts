@@ -10,8 +10,30 @@ import { Task } from "./Task";
 import { MiniProject } from "./MiniProject";
 import { Schematic } from "./Schematic";
 import { Code } from "./Code";
+import { Objectives } from "./Objectives";
+import { Prerequisites } from "./Prerequisites";
+import { Pinout } from "./Pinout";
+import { ExpectedOutput } from "./ExpectedOutput";
+import { Troubleshooting, Issue } from "./Troubleshooting";
+import { Photo } from "./Photo";
+import { Expandable } from "./Expandable";
 
-export { Callout, Hardware, Task, MiniProject, Schematic, Code };
+export {
+  Callout,
+  Hardware,
+  Task,
+  MiniProject,
+  Schematic,
+  Code,
+  Objectives,
+  Prerequisites,
+  Pinout,
+  ExpectedOutput,
+  Troubleshooting,
+  Issue,
+  Photo,
+  Expandable,
+};
 
 /**
  * Components available inside MDX without an explicit import.
@@ -24,4 +46,12 @@ export const mdxComponents: MDXComponents = {
   MiniProject,
   Schematic,
   Code,
+  Objectives,
+  Prerequisites,
+  Pinout,
+  ExpectedOutput,
+  Troubleshooting,
+  Issue,
+  Photo,
+  Expandable,
 };

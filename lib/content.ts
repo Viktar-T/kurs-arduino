@@ -41,12 +41,14 @@ export interface Lesson {
  * Walk `content/lekcje/**\/*.mdx` recursively. Cached for the duration of a build.
  */
 let _cache: Lesson[] | null = null;
+const SHOULD_CACHE_CONTENT = process.env.NODE_ENV !== "development";
 
 export function getAllLessons(): Lesson[] {
-  if (_cache) return _cache;
+  if (SHOULD_CACHE_CONTENT && _cache) return _cache;
   if (!fs.existsSync(CONTENT_ROOT)) {
-    _cache = [];
-    return _cache;
+    const empty: Lesson[] = [];
+    if (SHOULD_CACHE_CONTENT) _cache = empty;
+    return empty;
   }
 
   const lessons: Lesson[] = [];
@@ -86,8 +88,8 @@ export function getAllLessons(): Lesson[] {
     );
   });
 
-  _cache = lessons;
-  return _cache;
+  if (SHOULD_CACHE_CONTENT) _cache = lessons;
+  return lessons;
 }
 
 export function getLessonBySegments(segments: string[]): Lesson | undefined {

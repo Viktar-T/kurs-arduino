@@ -20,9 +20,12 @@ import rehypePrettyCode, {
 import { mdxComponents } from "@/components/mdx";
 
 const prettyCodeOptions: RehypePrettyCodeOptions = {
-  theme: { light: "github-light", dark: "github-dark" },
-  keepBackground: true,
-  defaultLang: "cpp", // Arduino sketches default to C++
+  theme: "github-light",
+  keepBackground: false,
+  defaultLang: {
+    block: "cpp",
+    inline: "cpp",
+  },
 };
 
 /**

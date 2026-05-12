@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 
 import { groupByBlock } from "@/lib/content";
 import { Shell } from "@/components/layout/Shell";
+import { Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Program kursu — 13 bloków · Kurs Arduino",
@@ -22,7 +23,7 @@ export default function ProgramPage() {
   return (
     <Shell>
       <h1>Program kursu — 13 bloków</h1>
-      <p className="opacity-80">
+      <p className="article-summary">
         Mapowanie lekcji na 13 bloków programu wymaganych przez zamawiającego
         (West Pomeranian / TTC Szczecin). Każda lekcja w widoku „dziennym”
         należy do jednego z tych bloków.
@@ -34,13 +35,13 @@ export default function ProgramPage() {
           <code>content/lekcje/dzien-NN/</code>.
         </p>
       ) : (
-        <ol className="space-y-6 not-prose">
+        <ol className="space-y-6">
           {blocks.map((b) => (
-            <li key={b.block}>
+            <li key={b.block} className="forbot-card list-none p-4">
               <h2 className="text-lg font-semibold">
-                <span className="mr-2 rounded bg-slate-100 px-2 py-0.5 font-mono text-sm dark:bg-slate-800">
+                <Badge variant="block" className="mr-2 text-sm">
                   B{b.block}
-                </span>
+                </Badge>
                 {b.blockTitle}
               </h2>
               <ul className="mt-2 list-disc space-y-1 pl-6 text-sm">

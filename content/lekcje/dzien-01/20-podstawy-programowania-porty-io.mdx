@@ -1,0 +1,364 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Podstawy programowania i porty I/O"
+slug: "podstawy-programowania-porty-io"
+summary: "Pierwsze własne programy Arduino: piny cyfrowe, LED, przycisk, pinMode(), digitalWrite(), digitalRead(), delay(), if/else i while()."
+
+day: 1
+weekend: 1
+order: 2
+duration: 120
+block: 2
+blockTitle: "Podstawy programowania"
+forbotCourse: 1
+forbotChapter: 2
+
+objectives:
+  - "Wyjaśnić, co robią funkcje setup() i loop() w szkicu Arduino"
+  - "Skonfigurować pin cyfrowy jako wyjście i sterować diodą LED"
+  - "Odczytać stan przycisku z użyciem INPUT_PULLUP"
+  - "Użyć instrukcji if/else oraz pętli while() w prostym układzie"
+
+prerequisites:
+  - "dzien-01/srodowisko-ide-i-pierwszy-szkic"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-B", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Dioda LED", qty: 3 }
+  - { name: "Rezystor 220-330 Ω", qty: 3 }
+  - { name: "Przycisk tact-switch", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 8 }
+
+tags: [arduino, programowanie, porty-io, led, przycisk, input-pullup]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-podstawy-programowania-porty-io-id3648"
+  - "Książka B - Arduino dla początkujących, r. 3-5, 11"
+
+publish: true
+updated: "2026-05-11"
+---
+
+## Czego się dziś nauczymy
+
+W poprzedniej lekcji uruchomiliśmy środowisko i wgraliśmy gotowy przykład
+`Blink`. Teraz piszemy własne szkice i zaczynamy używać pinów Arduino jako
+wejść oraz wyjść. Najpierw zapalimy zewnętrzną diodę LED, potem sprawimy, że
+będzie migać, a na końcu dodamy przycisk i prostą logikę programu.
+
+<Callout type="note" title="Materiał źródłowy">
+Ta lekcja odpowiada tematycznie rozdziałowi Forbota o podstawach programowania
+i portach I/O. Nie kopiujemy tekstu artykułu - używamy go jako mapy tematów,
+a ćwiczenia realizujemy własnym materiałem kursowym.
+</Callout>
+
+## 1. Szkielet programu Arduino
+
+Arduino ukrywa przed nami część technicznych szczegółów języka C/C++. Zamiast
+pisać pełny program od zera, tworzymy szkic z dwiema obowiązkowymi funkcjami:
+
+<Code lang="cpp" file="szkielet.ino">
+```cpp
+void setup() {
+  // Kod wykonywany jeden raz po starcie lub resecie płytki.
+}
+
+void loop() {
+  // Kod wykonywany w kółko, dopóki Arduino ma zasilanie.
+}
+```
+</Code>
+
+`setup()` służy zwykle do konfiguracji: ustawiamy tam tryb pracy pinów,
+uruchamiamy komunikację i przygotowujemy stan początkowy układu. `loop()` to
+główna pętla programu: Arduino wykonuje ją raz za razem z bardzo dużą
+prędkością.
+
+<Callout type="tip" title="Komentarze w kodzie">
+Tekst po `//` jest komentarzem dla człowieka. Kompilator go pomija, ale dla
+nas jest bardzo ważny, bo pozwala szybko zrozumieć, co miał robić dany fragment
+programu.
+</Callout>
+
+## 2. Piny cyfrowe jako wyjścia
+
+Pin cyfrowy Arduino może pracować między innymi jako wyjście. Wtedy program
+może ustawić na nim jeden z dwóch stanów:
+
+- `HIGH` - stan wysoki, na Arduino UNO najczęściej około 5 V,
+- `LOW` - stan niski, czyli około 0 V.
+
+Do ustawienia trybu pinu używamy funkcji `pinMode(pin, tryb)`. Do zmiany stanu
+wyjścia używamy `digitalWrite(pin, stan)`.
+
+<Callout type="hazard" title="Dioda zawsze z rezystorem">
+Nie podłączaj diody LED bezpośrednio między pin Arduino a GND. Dioda wymaga
+rezystora ograniczającego prąd, typowo 220-330 Ω. Brak rezystora może uszkodzić
+diodę albo pin mikrokontrolera.
+</Callout>
+
+<Pinout board="Arduino UNO - piny używane w tej lekcji">
+
+| Pin | Funkcja | Notatka |
+| --- | --- | --- |
+| GND | Masa układu | Wspólny punkt odniesienia dla LED i przycisku |
+| D7 | Wejście cyfrowe | Przycisk z `INPUT_PULLUP` |
+| D8-D10 | Wyjścia cyfrowe | Diody LED przez rezystory 220-330 Ω |
+| 5V | Zasilanie | W tej lekcji nie zasilamy LED bezpośrednio z 5V |
+
+</Pinout>
+
+## 3. Ćwiczenie: zapalenie zewnętrznej diody
+
+Podłącz diodę LED do pinu `8`:
+
+1. Dłuższa nóżka diody, czyli anoda, idzie do pinu `8`.
+2. Krótsza nóżka diody, czyli katoda, idzie przez rezystor 220-330 Ω do `GND`.
+3. Masa układu musi być wspólna z masą Arduino, czyli używamy dowolnego pinu
+   `GND` na płytce.
+
+<Code lang="cpp" file="led-on.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);
+  digitalWrite(8, HIGH);
+}
+
+void loop() {
+  // Nic nie trzeba tu dopisywać.
+}
+```
+</Code>
+
+Po wgraniu szkicu dioda powinna świecić cały czas. Dzieje się tak dlatego, że
+ustawiliśmy pin `8` w stan wysoki i nigdzie później tego stanu nie zmieniamy.
+
+<ExpectedOutput title="Efekt układu LED">
+Dioda podłączona do pinu `8` świeci światłem stałym. Jeśli nie świeci,
+najpierw sprawdzamy polaryzację diody i połączenie rezystora z `GND`.
+</ExpectedOutput>
+
+## 4. Miganie diodą i funkcja delay()
+
+Jeśli chcemy zobaczyć zmianę stanu gołym okiem, musimy spowolnić program.
+Funkcja `delay(czas)` zatrzymuje wykonanie programu na podaną liczbę
+milisekund.
+
+<Code lang="cpp" file="led-blink-pin-8.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(8, HIGH); // zapal LED
+  delay(500);            // poczekaj pół sekundy
+
+  digitalWrite(8, LOW);  // zgaś LED
+  delay(500);            // poczekaj pół sekundy
+}
+```
+</Code>
+
+`delay(1000)` oznacza 1000 ms, czyli 1 sekundę. `delay(250)` oznacza ćwierć
+sekundy. Im krótsze opóźnienia, tym szybciej miga dioda.
+
+<Task title="Zadanie 1" estimate="10 min">
+Znajdź najmniejszą wartość `delay()`, przy której nadal widzisz osobne
+mignięcia diody. Zapisz wynik w komentarzu na końcu szkicu.
+</Task>
+
+<Task title="Zadanie 2" estimate="15 min">
+Podłącz drugą diodę LED do pinu `9`. Napisz program, w którym diody migają
+naprzemiennie: gdy pierwsza świeci, druga jest zgaszona, a potem odwrotnie.
+</Task>
+
+## 5. Piny cyfrowe jako wejścia
+
+Mikrokontroler może też reagować na sygnały z zewnątrz. Do tego pin ustawiamy
+jako wejście. W tej lekcji użyjemy trybu `INPUT_PULLUP`, który włącza wewnętrzny
+rezystor podciągający.
+
+Podłącz przycisk do pinu `7`:
+
+1. Jedna nóżka przycisku idzie do pinu `7`.
+2. Druga nóżka przycisku idzie do `GND`.
+3. W programie ustawiamy `pinMode(7, INPUT_PULLUP)`.
+
+W takim układzie logika jest odwrócona:
+
+- przycisk puszczony daje odczyt `HIGH`,
+- przycisk wciśnięty zwiera pin do masy i daje odczyt `LOW`.
+
+Do odczytu wejścia służy funkcja `digitalRead(pin)`.
+
+## 6. Instrukcja if/else
+
+Program ma teraz podjąć decyzję: jeśli przycisk jest wciśnięty, zapal diodę;
+w przeciwnym razie ją zgaś. Taką decyzję zapisujemy instrukcją `if/else`.
+
+<Code lang="cpp" file="button-led.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);
+  pinMode(7, INPUT_PULLUP);
+  digitalWrite(8, LOW);
+}
+
+void loop() {
+  if (digitalRead(7) == LOW) {
+    digitalWrite(8, HIGH);
+  } else {
+    digitalWrite(8, LOW);
+  }
+}
+```
+</Code>
+
+Zwróć uwagę na zapis `==`. To porównanie dwóch wartości. Pojedynczy znak `=`
+oznacza przypisanie, czyli zupełnie inną operację. To jeden z najczęstszych
+błędów początkujących.
+
+<Task title="Zadanie 3" estimate="15 min">
+Zmień program tak, aby po wciśnięciu przycisku dioda świeciła przez 3 sekundy,
+a potem gasła. Wskazówka: w bloku `if` użyj `delay(3000)`.
+</Task>
+
+## 7. Pętla while()
+
+`loop()` jest główną pętlą Arduino, ale wewnątrz niej możemy tworzyć kolejne
+pętle. `while (warunek)` wykonuje swój blok tak długo, jak warunek pozostaje
+prawdziwy.
+
+<Code lang="cpp" file="while-template.ino">
+```cpp
+void loop() {
+  while (digitalRead(7) == LOW) {
+    // Ten kod działa tylko wtedy, gdy przycisk jest wciśnięty.
+  }
+
+  // Ten kod wykona się dopiero po wyjściu z pętli while().
+}
+```
+</Code>
+
+Pętla `while()` jest przydatna, gdy program ma czekać na określone zdarzenie
+albo wykonywać jakąś czynność tylko przez czas trzymania przycisku.
+
+<Code lang="cpp" file="button-while-blink.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);
+  pinMode(7, INPUT_PULLUP);
+}
+
+void loop() {
+  while (digitalRead(7) == LOW) {
+    digitalWrite(8, HIGH);
+    delay(150);
+    digitalWrite(8, LOW);
+    delay(150);
+  }
+
+  digitalWrite(8, LOW);
+}
+```
+</Code>
+
+Po wgraniu tego programu dioda miga tylko wtedy, gdy trzymasz przycisk. Po jego
+puszczeniu pętla `while()` przestaje działać, a program wraca do zwykłego
+obiegu `loop()`.
+
+## 8. Mini-projekt: ręczna sygnalizacja świetlna
+
+Podłącz trzy diody:
+
+- zielona LED do pinu `8`,
+- żółta LED do pinu `9`,
+- czerwona LED do pinu `10`,
+- każda dioda przez własny rezystor do `GND`,
+- przycisk między pinem `7` a `GND`.
+
+Na początek zbuduj prostą sekwencję czasową bez przycisku:
+
+<Code lang="cpp" file="traffic-auto.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);  // zielona
+  pinMode(9, OUTPUT);  // żółta
+  pinMode(10, OUTPUT); // czerwona
+}
+
+void loop() {
+  digitalWrite(8, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(10, LOW);
+  delay(1000);
+
+  digitalWrite(8, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(10, LOW);
+  delay(1000);
+
+  digitalWrite(8, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(10, HIGH);
+  delay(1000);
+
+  digitalWrite(8, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(10, HIGH);
+  delay(1000);
+}
+```
+</Code>
+
+<Task title="Zadanie 4" estimate="25 min">
+Rozbuduj sygnalizację tak, aby program czekał na wciśnięcie przycisku przed
+przejściem do następnego stanu. Użyj `pinMode(7, INPUT_PULLUP)` i pustej pętli
+`while (digitalRead(7) == HIGH) {}` jako mechanizmu czekania.
+</Task>
+
+<Callout type="warning" title="Dlaczego czasem przeskakuje kilka stanów?">
+Arduino wykonuje pętlę bardzo szybko. Jeśli trzymasz przycisk choćby ułamek
+sekundy, program może zdążyć przejść przez kilka miejsc, w których czeka na
+kliknięcie. Na razie wystarczy dodać krótkie opóźnienie po wykryciu przycisku.
+W kolejnych lekcjach wrócimy do lepszych rozwiązań z użyciem zmiennych i czasu
+`millis()`.
+</Callout>
+
+<Troubleshooting>
+  <Issue title="LED nie świeci">
+    - Sprawdź, czy dłuższa nóżka diody jest po stronie pinu cyfrowego.
+    - Sprawdź, czy rezystor łączy krótszą nóżkę diody z `GND`.
+    - Porównaj numer pinu w kodzie z numerem pinu użytym w układzie.
+  </Issue>
+  <Issue title="Przycisk działa odwrotnie">
+    - Przy `INPUT_PULLUP` stan wciśnięty to `LOW`, a puszczony to `HIGH`.
+    - Jeśli warunek wygląda dziwnie, przeczytaj go na głos: „jeśli odczyt jest LOW, przycisk jest wciśnięty”.
+  </Issue>
+  <Issue title="Dioda miga za szybko albo kilka stanów przeskakuje naraz">
+    - Dodaj krótkie `delay(150)` po wykryciu wciśnięcia przycisku.
+    - Nie trzymaj przycisku zbyt długo podczas testowania wersji bez eliminacji drgań styków.
+  </Issue>
+</Troubleshooting>
+
+## Podsumowanie
+
+- `pinMode()` ustawia tryb pracy pinu: wejście albo wyjście.
+- `digitalWrite()` ustawia stan wyjścia: `HIGH` albo `LOW`.
+- `digitalRead()` odczytuje stan wejścia.
+- `INPUT_PULLUP` upraszcza podłączanie przycisku, ale odwraca logikę odczytu.
+- `if/else` pozwala programowi podejmować decyzje.
+- `while()` pozwala powtarzać fragment kodu tak długo, jak spełniony jest
+  warunek.
+
+W następnej części dołożymy zmienne i komunikację z komputerem, dzięki czemu
+programy zaczną raportować, co dzieje się na płytce.

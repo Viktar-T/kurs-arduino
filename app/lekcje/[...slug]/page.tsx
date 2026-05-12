@@ -7,10 +7,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-import { getAllLessons, getLessonBySegments } from "@/lib/content";
+import {
+  getAllLessons,
+  getLessonBySegments,
+  type Lesson,
+} from "@/lib/content";
 import { renderLesson } from "@/lib/mdx";
 import { Shell } from "@/components/layout/Shell";
-import { Hardware } from "@/components/mdx/Hardware";
+import { Hardware, Objectives, Prerequisites } from "@/components/mdx";
+import { Badge, Pagination } from "@/components/ui";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
@@ -18,6 +23,28 @@ interface PageProps {
 
 export function generateStaticParams() {
   return getAllLessons().map((l) => ({ slug: l.segments }));
+}
+
+function resolvePrerequisites(
+  prerequisites: string[],
+  lessons: Lesson[],
+) {
+  return prerequisites.map((item) => {
+    const normalized = item.replace(/^\/?lekcje\//, "");
+    const match = lessons.find((lesson) => {
+      const frontmatterSlug = `${lesson.dayFolder}/${lesson.frontmatter.slug}`;
+      const fileSlug = `${lesson.dayFolder}/${lesson.fileSlug}`;
+      return (
+        normalized === frontmatterSlug ||
+        normalized === fileSlug ||
+        item === lesson.href
+      );
+    });
+
+    return match
+      ? { label: match.frontmatter.title, href: match.href }
+      : { label: item };
+  });
 }
 
 export async function generateMetadata(
@@ -37,36 +64,67 @@ export default async function LessonPage({ params }: PageProps) {
   const lesson = getLessonBySegments(slug);
   if (!lesson) notFound();
 
+  const lessons = getAllLessons();
+  const lessonIndex = lessons.findIndex((item) => item.href === lesson.href);
+  const previous = lessonIndex > 0 ? lessons[lessonIndex - 1] : undefined;
+  const next =
+    lessonIndex >= 0 && lessonIndex < lessons.length - 1
+      ? lessons[lessonIndex + 1]
+      : undefined;
   const { content } = await renderLesson(lesson.body);
   const fm = lesson.frontmatter;
 
   return (
-    <Shell>
+    <Shell
+      breadcrumbs={[
+        { label: "Kurs", href: "/" },
+        { label: `Zjazd ${fm.weekend}`, href: "/harmonogram" },
+        { label: `Dzień ${fm.day}`, href: "/harmonogram" },
+        { label: fm.title },
+      ]}
+      progress={{
+        current: lessonIndex + 1,
+        total: lessons.length,
+        title: "Postęp w opublikowanych lekcjach",
+      }}
+    >
       <header className="not-prose mb-6">
-        <p className="text-xs uppercase tracking-wider opacity-60">
-          Dzień {fm.day} · Zjazd {fm.weekend} · Blok B{fm.block} ·{" "}
-          {fm.duration} min
+        <p className="article-meta text-xs uppercase tracking-wider">
+          Dzień {fm.day} · Zjazd {fm.weekend} ·{" "}
+          <Badge variant="block">B{fm.block}</Badge> · {fm.duration} min
         </p>
         <h1 className="mt-1 text-3xl font-semibold">{fm.title}</h1>
-        <p className="mt-2 text-base opacity-80">{fm.summary}</p>
+        <p className="article-summary mt-2 text-base">{fm.summary}</p>
       </header>
 
-      {fm.objectives.length > 0 && (
-        <section className="not-prose mb-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-80">
-            Cele lekcji
-          </h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm">
-            {fm.objectives.map((o) => (
-              <li key={o}>{o}</li>
-            ))}
-          </ul>
-        </section>
+      <Objectives items={fm.objectives} />
+
+      {fm.prerequisites.length > 0 && (
+        <Prerequisites items={resolvePrerequisites(fm.prerequisites, lessons)} />
       )}
 
       {fm.hardware.length > 0 && <Hardware items={fm.hardware} />}
 
       {content}
+
+      <Pagination
+        previous={
+          previous
+            ? {
+                title: previous.frontmatter.title,
+                href: previous.href,
+              }
+            : undefined
+        }
+        next={
+          next
+            ? {
+                title: next.frontmatter.title,
+                href: next.href,
+              }
+            : undefined
+        }
+      />
     </Shell>
   );
 }

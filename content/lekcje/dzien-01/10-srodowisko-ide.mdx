@@ -113,6 +113,12 @@ void loop() {
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
 Następnie **Wgraj** (→). Po chwili dioda na płytce zacznie migać 1 Hz.
 
+<ExpectedOutput title="Efekt po wgraniu">
+Wbudowana dioda LED na płytce Arduino UNO zapala się na 1 sekundę, gaśnie na
+1 sekundę i powtarza ten cykl bez końca. W Arduino IDE nie powinno być
+czerwonych komunikatów o błędach kompilacji.
+</ExpectedOutput>
+
 <Task title="Zadanie 1" estimate="10 min">
 Zmień częstotliwość migania na ok. 4 Hz (dwa razy szybciej w obie strony).
 Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
@@ -122,6 +128,19 @@ Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
 Dodaj komentarz nad każdą linią funkcji `loop()` opisujący w 1 zdaniu po
 polsku, co dana linia robi. Cel: ćwiczenie czytania kodu.
 </Task>
+
+<Troubleshooting>
+  <Issue title="Nie widzę portu COM w Arduino IDE">
+    - Sprawdź, czy kabel USB przesyła dane, a nie służy tylko do ładowania.
+    - Odłącz i podłącz płytkę ponownie, potem otwórz menu **Narzędzia → Port**.
+    - Na Windows zaakceptuj instalację sterownika, jeśli system o to poprosi.
+  </Issue>
+  <Issue title="Program się kompiluje, ale nie wgrywa">
+    - Upewnij się, że wybrana jest płytka **Arduino UNO**.
+    - Zamknij Serial Monitor, jeśli jest otwarty na tym samym porcie.
+    - Naciśnij przycisk RESET na płytce i spróbuj wgrać szkic jeszcze raz.
+  </Issue>
+</Troubleshooting>
 
 ## Podsumowanie
 

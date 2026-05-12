@@ -1,4 +1,12 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <Schematic
+ *     src="/img/lekcje/dzien-01/uklad-led.png"
+ *     caption="Połączenie diody LED z rezystorem"
+ *     alt="Schemat połączenia Arduino, rezystora i diody LED"
+ *   />
+ *
  * <Schematic src="/img/lekcje/dzien-NN/foo.png" caption="…" alt="…" />
  *
  * Wraps a circuit diagram / Fritzing export / photo with a caption.
@@ -28,7 +36,7 @@ export function Schematic({
         alt={alt ?? caption ?? "Schemat"}
         width={width}
         height={height}
-        className="mx-auto rounded-md border border-slate-200 dark:border-slate-700"
+        className="mx-auto rounded-md border border-slate-200"
       />
       {caption && (
         <figcaption className="mt-2 text-center text-sm opacity-70">

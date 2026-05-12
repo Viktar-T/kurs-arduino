@@ -1,17 +1,19 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <Code lang="cpp" file="blink.ino">
+ *   ```cpp
+ *   void setup() {
+ *     pinMode(13, OUTPUT);
+ *   }
+ *   ```
+ *   </Code>
+ *
  * <Code lang="cpp" file="blink.ino">…</Code>
  *
  * Wraps a pre-highlighted code block (from rehype-pretty-code) with
  * a file-name header. The copy-to-clipboard button is a separate
  * client component if/when added — keep this Server-Component-only.
- *
- * Usage in MDX:
- *
- *   <Code lang="cpp" file="blink.ino">
- *   ```cpp
- *   void setup() { … }
- *   ```
- *   </Code>
  */
 import type { ReactNode } from "react";
 
@@ -23,9 +25,9 @@ interface CodeProps {
 
 export function Code({ lang, file, children }: CodeProps) {
   return (
-    <div className="my-4 overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
+    <div className="code-frame">
       {(file || lang) && (
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-3 py-1 text-xs font-mono dark:border-slate-700 dark:bg-slate-800">
+        <div className="code-frame-header flex items-center justify-between px-3 py-1 text-xs font-mono">
           <span className="opacity-80">{file ?? ""}</span>
           {lang && <span className="opacity-60">{lang}</span>}
         </div>

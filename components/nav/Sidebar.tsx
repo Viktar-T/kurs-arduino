@@ -8,6 +8,7 @@
 import Link from "next/link";
 
 import { buildNav } from "@/lib/content";
+import { Badge } from "@/components/ui";
 
 export function Sidebar() {
   const weekends = buildNav();
@@ -23,12 +24,10 @@ export function Sidebar() {
             {w.days.map((d) => (
               <li key={d.day}>
                 <p className="mb-1 font-medium">Dzień {d.day}</p>
-                <ul className="space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700">
+                <ul className="space-y-1 border-l border-slate-200 pl-3">
                   {d.lessons.map((l) => (
                     <li key={l.href} className="flex items-baseline gap-2">
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] uppercase opacity-70 dark:bg-slate-800">
-                        B{l.block}
-                      </span>
+                      <Badge variant="block">B{l.block}</Badge>
                       <Link
                         href={l.href}
                         className="hover:underline"

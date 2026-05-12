@@ -1,4 +1,10 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <MiniProject title="Sygnalizator LED" goal="Połącz kod, rezystor i diodę LED">
+ *   Zbuduj układ i zmień tempo migania diody.
+ *   </MiniProject>
+ *
  * <MiniProject title="…" goal="…">…</MiniProject>
  *
  * End-of-day or end-of-block integrative project. Server Component.
@@ -13,8 +19,8 @@ interface MiniProjectProps {
 
 export function MiniProject({ title, goal, children }: MiniProjectProps) {
   return (
-    <section className="my-8 rounded-lg border-2 border-emerald-300 bg-emerald-50 px-5 py-4 dark:border-emerald-800 dark:bg-emerald-950/30">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-70">
+    <section className="forbot-miniproject border-l-4 px-5 py-4">
+      <p className="forbot-label mb-1 text-xs font-semibold uppercase">
         Mini-projekt
       </p>
       <h3 className="mb-2 text-lg font-semibold">{title}</h3>
@@ -23,9 +29,7 @@ export function MiniProject({ title, goal, children }: MiniProjectProps) {
           <span className="font-semibold">Cel:</span> {goal}
         </p>
       )}
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        {children}
-      </div>
+      <div className="max-w-none text-sm">{children}</div>
     </section>
   );
 }

@@ -1,4 +1,10 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <Callout type="tip" title="Wskazówka">
+ *   Najpierw sprawdź poprawność połączeń na płytce stykowej.
+ *   </Callout>
+ *
  * <Callout type="note|warning|hardware|hazard|tip" title="…">…</Callout>
  *
  * Used in lessons for emphasized blocks. Server Component.
@@ -15,23 +21,23 @@ interface CalloutProps {
 
 const STYLES: Record<CalloutType, { box: string; label: string }> = {
   note: {
-    box: "border-blue-300 bg-blue-50 dark:bg-blue-950/30",
+    box: "forbot-callout-note",
     label: "Notatka",
   },
   tip: {
-    box: "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30",
+    box: "forbot-callout-tip",
     label: "Wskazówka",
   },
   warning: {
-    box: "border-amber-400 bg-amber-50 dark:bg-amber-950/30",
+    box: "forbot-callout-warning",
     label: "Uwaga",
   },
   hazard: {
-    box: "border-red-400 bg-red-50 dark:bg-red-950/30",
+    box: "forbot-callout-hazard",
     label: "Ostrzeżenie",
   },
   hardware: {
-    box: "border-slate-300 bg-slate-50 dark:bg-slate-900/40",
+    box: "forbot-callout-note",
     label: "Sprzęt",
   },
 };
@@ -41,14 +47,12 @@ export function Callout({ type = "note", title, children }: CalloutProps) {
   return (
     <aside
       role="note"
-      className={`my-4 rounded-md border-l-4 px-4 py-3 ${style.box}`}
+      className={`forbot-callout px-4 py-3 ${style.box}`}
     >
-      <p className="mb-1 text-sm font-semibold uppercase tracking-wide opacity-80">
+      <p className="forbot-label mb-1 text-sm font-semibold uppercase">
         {title ?? style.label}
       </p>
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        {children}
-      </div>
+      <div className="max-w-none text-sm">{children}</div>
     </aside>
   );
 }

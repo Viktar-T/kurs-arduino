@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 
 import { buildNav } from "@/lib/content";
 import { Shell } from "@/components/layout/Shell";
+import { Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Harmonogram — 10 dni · Kurs Arduino",
@@ -27,7 +28,7 @@ export default function HarmonogramPage() {
   return (
     <Shell>
       <h1>Harmonogram — 10 dni szkoleniowych</h1>
-      <p className="opacity-80">
+      <p className="article-summary">
         Plan kursu rozłożony na 5 zjazdów weekendowych, 10 dni po 8 godzin
         dydaktycznych (łącznie 80 h).
       </p>
@@ -38,7 +39,7 @@ export default function HarmonogramPage() {
           <code>content/lekcje/dzien-NN/</code>.
         </p>
       ) : (
-        <div className="space-y-8 not-prose">
+        <div className="space-y-8">
           {weekends.map((w) => (
             <section key={w.weekend}>
               <h2 className="text-lg font-semibold">
@@ -49,14 +50,12 @@ export default function HarmonogramPage() {
               </h2>
               <div className="mt-2 space-y-3">
                 {w.days.map((d) => (
-                  <article key={d.day} className="rounded-md border border-slate-200 p-3 dark:border-slate-700">
+                  <article key={d.day} className="forbot-card p-3">
                     <h3 className="text-base font-medium">Dzień {d.day}</h3>
                     <ul className="mt-1 space-y-1 text-sm">
                       {d.lessons.map((l) => (
                         <li key={l.href} className="flex items-baseline gap-2">
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] uppercase opacity-70 dark:bg-slate-800">
-                            B{l.block}
-                          </span>
+                          <Badge variant="block">B{l.block}</Badge>
                           <Link href={l.href} className="hover:underline">
                             {l.title}
                           </Link>

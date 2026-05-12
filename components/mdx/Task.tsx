@@ -1,4 +1,10 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <Task title="Sprawdź działanie LED" estimate="10 min">
+ *   Wgraj program, a potem zmień czas świecenia diody.
+ *   </Task>
+ *
  * <Task title="…" estimate="15 min">…</Task>
  *
  * Student task box. Polish-labeled. Server Component.
@@ -13,18 +19,16 @@ interface TaskProps {
 
 export function Task({ title = "Zadanie", estimate, children }: TaskProps) {
   return (
-    <section className="my-6 rounded-md border border-indigo-300 bg-indigo-50 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-950/30">
+    <section className="forbot-task border-l-4 px-4 py-3">
       <header className="mb-2 flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide opacity-80">
+        <h3 className="forbot-label text-sm font-semibold uppercase">
           {title}
         </h3>
         {estimate && (
           <span className="text-xs opacity-70">~{estimate}</span>
         )}
       </header>
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        {children}
-      </div>
+      <div className="max-w-none text-sm">{children}</div>
     </section>
   );
 }

@@ -1,4 +1,10 @@
 /**
+ * Jak używać w lekcji MDX:
+ *
+ *   <Hardware
+ *     items={[{ name: "Arduino UNO R3", qty: 1 }, { name: "Dioda LED", qty: 1 }]}
+ *   />
+ *
  * <Hardware items={[{ name, qty, optional?, note? }]} />
  *
  * Renders the bench-required components list. Server Component.
@@ -14,8 +20,8 @@ interface HardwareProps {
 export function Hardware({ items, title = "Potrzebny sprzęt" }: HardwareProps) {
   if (items.length === 0) return null;
   return (
-    <section className="my-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/40">
-      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-80">
+    <section className="forbot-hardware border-l-4 px-4 py-3">
+      <h3 className="forbot-label mb-2 text-sm font-semibold uppercase">
         {title}
       </h3>
       <ul className="space-y-1 text-sm">

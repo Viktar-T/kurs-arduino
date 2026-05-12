@@ -9,15 +9,15 @@ export default function Home() {
   const total = getAllLessons().length;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className="site-shell mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <header className="space-y-3">
-        <p className="text-xs uppercase tracking-wider opacity-60">
+        <p className="article-meta text-xs uppercase tracking-wider">
           Technikum Technologii Cyfrowych · Szczecin · 2026
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">
           Podstawy programowania i budowy robotów z Arduino
         </h1>
-        <p className="text-lg opacity-80">
+        <p className="article-summary text-lg">
           80 godzin dydaktycznych · 10 dni szkoleniowych · 5 zjazdów weekendowych
           (maj–czerwiec 2026). Materiały kursu w formie lekcji online.
         </p>
@@ -26,7 +26,7 @@ export default function Home() {
       <section className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/harmonogram"
-          className="rounded-lg border border-slate-200 p-5 transition-colors hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500"
+          className="landing-card p-5 transition-colors"
         >
           <h2 className="text-lg font-semibold">Harmonogram</h2>
           <p className="mt-1 text-sm opacity-70">
@@ -35,7 +35,7 @@ export default function Home() {
         </Link>
         <Link
           href="/program"
-          className="rounded-lg border border-slate-200 p-5 transition-colors hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500"
+          className="landing-card p-5 transition-colors"
         >
           <h2 className="text-lg font-semibold">Program kursu</h2>
           <p className="mt-1 text-sm opacity-70">
