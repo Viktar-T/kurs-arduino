@@ -349,10 +349,19 @@ a:hover {
 .forbot-table-figure {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--forbot-line);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.04);
 }
 
 .forbot-table-caption {
   order: -1;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--forbot-line);
+  background: #f6fbf9;
 }
 
 /* Base table styles (used by both MDX children and props-based) */
@@ -378,7 +387,7 @@ a:hover {
 .forbot-table thead th {
   padding-bottom: 0.65rem;
   border-bottom: 2px solid var(--forbot-green);
-  background: transparent;
+  background: #eef8f5;
   color: #1a2e35;
   font-weight: 700;
   font-size: 0.8rem;

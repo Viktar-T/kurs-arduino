@@ -42,15 +42,15 @@ export function Table({ caption, headers, rows, children }: TableProps) {
           {caption}
         </figcaption>
       )}
-      {children ? (
-        <div className="forbot-table-wrap overflow-x-auto">
+      <div className="forbot-table-wrap overflow-x-auto">
+        {children ? (
           <table className="forbot-table w-full">
             {children}
           </table>
-        </div>
-      ) : (
-        <BaseTable headers={headers} rows={rows} />
-      )}
+        ) : (
+          <BaseTable headers={headers} rows={rows} />
+        )}
+      </div>
     </figure>
   );
 }

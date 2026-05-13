@@ -81,7 +81,7 @@ Arduino IDE ma dwa kluczowe przyciski w pasku narzędzi:
 - **Weryfikuj** (ikona ✓) — kompiluje kod i sprawdza błędy składni, ale **nie wysyła** programu na płytkę. Używaj przed wgraniem, żeby upewnić się, że kod jest poprawny.
 - **Wgraj** (ikona →) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
 
-<Photo file="06-Arduino_IDE_instalacja_blink3.png" day="dzien-01" width={40} height={20} caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
+<Photo file="06-Arduino_IDE_instalacja_blink3.png" day="dzien-01" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
 
 Jak wgrać program krok po kroku:
 
@@ -120,7 +120,36 @@ void loop() {
 
 ## 5. Pierwszy szkic — `Blink`
 
-Wczytaj gotowy przykład: **Plik → Przykłady → 01.Basics → Blink**.
+Wpisz lub wklej poniższy kod:
+
+<Code lang="cpp">
+```cpp
+// Miga wbudowaną diodą LED na pinie 13.
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT); //Konfiguracja pinu 8 jako wyjście
+  
+  digitalWrite(LED_BUILTIN, HIGH); //Włączenie diody
+  delay(2000); //Odczekanie 1 sekundy
+  digitalWrite(LED_BUILTIN, LOW); //Wyłączenie diody
+  delay(2000); //Odczekanie jednej sekundy
+  
+  digitalWrite(LED_BUILTIN, HIGH); //Włączenie diody
+  delay(2000); //Odczekanie 1 sekundy
+  digitalWrite(LED_BUILTIN, LOW); //Wyłączenie diody
+  delay(2000); //Odczekanie jednej sekundy
+}
+
+void loop() {
+  
+}
+```
+</Code>
+Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,5 Hz.
+
+Policz ilość migań diody. Następnie naciśnij reset na płytce Arduino. Co się stało po wciśnięciu reset?
+
+Wczytaj następny gotowy przykład: **Plik → Przykłady → 01.Basics → Blink**.
 
 <Code lang="cpp" file="Blink.ino">
 ```cpp
@@ -150,11 +179,6 @@ czerwonych komunikatów o błędach kompilacji.
 <Task title="Zadanie 1" estimate="10 min">
 Zmień częstotliwość migania na ok. 4 Hz (dwa razy szybciej w obie strony).
 Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
-</Task>
-
-<Task title="Zadanie 2" estimate="15 min">
-Dodaj komentarz nad każdą linią funkcji `loop()` opisujący w 1 zdaniu po
-polsku, co dana linia robi. Cel: ćwiczenie czytania kodu.
 </Task>
 
 <Troubleshooting>

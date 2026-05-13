@@ -49,15 +49,27 @@ export function Photo({
 }: PhotoProps) {
   const imageSrc = resolvePhotoSrc({ src, file, day });
 
+  // width ≤ 100 → percentage of container; > 100 → pixel cap
+  const figureStyle =
+    width <= 100
+      ? { maxWidth: `${width}%` }
+      : width < 960
+      ? { maxWidth: `${width}px` }
+      : undefined;
+
+  // Intrinsic dimensions for Next.js Image (must be > 100 to avoid tiny optimized images)
+  const intrinsicW = width <= 100 ? 960 : width;
+  const intrinsicH = height <= 100 ? 640 : height;
+
   return (
-    <figure className="my-6">
+    <figure className="my-6 mx-auto" style={figureStyle}>
       <Image
         src={imageSrc}
         alt={alt ?? caption ?? "Zdjęcie z lekcji"}
-        width={width}
-        height={height}
+        width={intrinsicW}
+        height={intrinsicH}
         priority={priority}
-        className="mx-auto h-auto rounded-lg border border-slate-200 shadow-sm"
+        className="w-full h-auto rounded-lg border border-slate-200 shadow-sm"
       />
       {caption && (
         <figcaption className="mt-2 text-center text-sm opacity-70">

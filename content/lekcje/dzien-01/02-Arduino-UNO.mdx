@@ -53,9 +53,9 @@ napiszemy pierwszą linię kodu, każdy uczeń musi wiedzieć, gdzie na płytce
 znajduje się mikrokontroler, gdzie podłączamy zasilanie, którymi pinami
 „rozmawiamy ze światem” i co oznaczają migające diody.
 
-{/* TODO: dodać plik graficzny `02-arduino-uno-overview.jpg` w public/img/lekcje/dzien-01/ — zdjęcie płytki UNO R3 z góry */}
+{/* TODO: dodać plik graficzny `02-arduino_layobut_uno_plytka-1536x1024.webp` w public/img/lekcje/dzien-01/ — zdjęcie płytki UNO R3 z góry */}
 <Photo
-  file="02-arduino-uno-overview.jpg"
+  file="02-arduino_layobut_uno_plytka-1536x1024.webp"
   day="dzien-01"
   caption="Arduino UNO R3 — wersja, którą będziemy używać przez całe 80 godzin kursu."
   alt="Płytka Arduino UNO R3 widziana z góry, z widocznymi złączami goldpin, gniazdem USB-B i mikrokontrolerem ATmega328P."
@@ -111,12 +111,27 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
   ]}
 />
 
-{/* TODO: dodać plik `02-arduino-uno-strefy.png` — zdjęcie/diagram z czterema obrysowanymi strefami */}
-<Schematic
-  src="/img/lekcje/dzien-01/02-arduino-uno-strefy.png"
-  caption="Cztery strefy płytki UNO — wejścia cyfrowe (góra), analogowe i zasilanie (dół), komunikacja (lewo), logika (środek)."
-  alt="Płytka Arduino UNO z czterema kolorowymi obrysami stref: cyfrowe góra, analogowe dół, USB lewo, ATmega środek."
-/>
+
+<Photo file="03-Arduino_UNO_pinout_2_numery.webp" day="dzien-01" caption="Szczegółowy rysunek z numeracją pinów Arduino UNO" alt="Arduino UNO z numeracją pinów" />
+
+1. **Złącze USB** - wykorzystywane do zasilania, programowania oraz komunikacji z komputerem
+2. **Złącze zasilania** (optymalnie 7V - 12V)
+3. **Stabilizator napięcia** - napięcie wejściowe ze złącza nr 2 obniżane jest do 5V dzięki temu układowi
+4. **Przycisk resetu** - resetuje płytkę Arduino
+5. **Mikrokontroler** odpowiedzialny za komunikację z komputerem przez USB
+6. **Złącze programowania** do mikrokontrolera z punktu 5.
+7. Złącze sygnałowe*
+8. Złącze sygnałowe*
+9. Dioda LED sygnalizująca podłączenie napięcia do Arduino
+10. Wyjście programatora dla mikrokontrolera z punktu 13.
+11. Złącze sygnałowe*
+12. Złącze zasilania*
+13. **Serce Arduino**, główny mikrokontroler AVR ATmega328
+14. **Diody LED** sygnalizujące transmisję do/z komputera
+15. **Dioda LED** do dyspozycji użytkownika
+16. **Rezonator ceramiczny** taktujący mikrokontroler (punkt 13) z częstotliwością 16MHz
+17. **Zworka**, której przecięcie wyłącza automatyczne resetowanie Arduino.
+18. **Pola lutownicze** z wyprowadzonymi sygnałami mikrokontrolera z punktu 5, używane ekstremalnie rzadko w bardzo specyficznych i niestandardowych sytuacjach.
 
 ## 2. Mikrokontroler ATmega328P — mózg płytki
 
