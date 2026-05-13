@@ -72,9 +72,35 @@ W IDE: **Narzędzia → Płytka → Arduino UNO**, następnie **Narzędzia → P
 i wybierz port szeregowy, pod którym widnieje płytka (zwykle `COM3+` na
 Windows lub `/dev/cu.usbmodem*` na macOS/Linux).
 
-<Photo file="05-Arduino_IDE_instalacja_blink2-726x320.webp" day="dzien-01" caption="Wybór odpowiedniej płytki Arduino" alt="Wybór odpowiedniej płytki Arduino" />
+<Photo file="05-Arduino_IDE_instalacja_blink2-726x320.png" day="dzien-01" caption="Wybór odpowiedniej płytki Arduino" alt="Wybór odpowiedniej płytki Arduino" />
 
-## 3. Struktura szkicu — `setup()` i `loop()`
+## 3. Wgrywanie programu na płytkę
+
+Arduino IDE ma dwa kluczowe przyciski w pasku narzędzi:
+
+- **Weryfikuj** (ikona ✓) — kompiluje kod i sprawdza błędy składni, ale **nie wysyła** programu na płytkę. Używaj przed wgraniem, żeby upewnić się, że kod jest poprawny.
+- **Wgraj** (ikona →) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
+
+<Photo file="06-Arduino_IDE_instalacja_blink3.png" day="dzien-01" width={40} height={20} caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
+
+Jak wgrać program krok po kroku:
+
+1. Upewnij się, że płytka jest podłączona i wybrany jest właściwy port (**Narzędzia → Port**).
+2. Kliknij **Wgraj** (→) lub naciśnij `Ctrl+U` (Windows/Linux) albo `Cmd+U` (macOS).
+3. W dolnym panelu IDE zobaczysz komunikaty kompilacji, a następnie pasek postępu przesyłania.
+4. Komunikat **„Wgrywanie zakończone"** (*Done uploading*) oznacza sukces — płytka automatycznie się resetuje i uruchamia nowy program.
+
+<Photo file="07-Arduino_IDE_instalacja_blink4.png" day="dzien-01" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
+
+<Callout type="note" title="Diody TX i RX">
+W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
+</Callout>
+
+Po wgraniu programu dioda LED na pinie 13 powinna zacząć migać:
+
+<Photo file="08-Arduino-UNO-pin13-miga.png" day="dzien-01" caption="Dioda LED na pinie 13 miga — program działa!" alt="Arduino UNO z migającą diodą LED na pinie 13" />
+
+## 4. Struktura szkicu — `setup()` i `loop()`
 
 Każdy program Arduino („szkic”) ma dwie funkcje, które muszą istnieć:
 
@@ -92,7 +118,7 @@ void loop() {
 ```
 </Code>
 
-## 4. Pierwszy szkic — `Blink`
+## 5. Pierwszy szkic — `Blink`
 
 Wczytaj gotowy przykład: **Plik → Przykłady → 01.Basics → Blink**.
 
@@ -113,7 +139,7 @@ void loop() {
 </Code>
 
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→). Po chwili dioda na płytce zacznie migać 1 Hz.
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 1 Hz.
 
 <ExpectedOutput title="Efekt po wgraniu">
 Wbudowana dioda LED na płytce Arduino UNO zapala się na 1 sekundę, gaśnie na
