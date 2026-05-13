@@ -1,0 +1,1 @@
+- Algorytmy + struktury danych = programy

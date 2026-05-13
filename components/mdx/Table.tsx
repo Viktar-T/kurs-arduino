@@ -36,15 +36,17 @@ interface TableProps {
 
 export function Table({ caption, headers, rows, children }: TableProps) {
   return (
-    <figure className="my-6">
+    <figure className="forbot-table-figure my-6">
       {caption && (
-        <figcaption className="forbot-table-caption">
+        <figcaption className="forbot-table-caption mb-2 text-[0.82rem] font-medium uppercase tracking-wide text-[#5a6b73]">
           {caption}
         </figcaption>
       )}
       {children ? (
-        <div className="forbot-table-wrap">
-          <table className="forbot-table">{children}</table>
+        <div className="forbot-table-wrap overflow-x-auto">
+          <table className="forbot-table w-full">
+            {children}
+          </table>
         </div>
       ) : (
         <BaseTable headers={headers} rows={rows} />

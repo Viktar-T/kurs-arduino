@@ -8,13 +8,13 @@ interface TableProps {
 
 export function Table({ headers, rows, children }: TableProps) {
   return (
-    <div className="my-5 overflow-x-auto rounded-md border border-[var(--forbot-line)]">
-      <table className="min-w-full border-collapse text-sm">
+    <div className="overflow-x-auto">
+      <table className="forbot-base-table w-full text-sm">
         {headers && (
-          <thead className="bg-[var(--forbot-green-soft)] text-left">
+          <thead>
             <tr>
               {headers.map((header, index) => (
-                <th key={index} scope="col" className="px-3 py-2 font-semibold">
+                <th key={index} scope="col">
                   {header}
                 </th>
               ))}
@@ -24,9 +24,9 @@ export function Table({ headers, rows, children }: TableProps) {
         {rows ? (
           <tbody>
             {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-t border-[var(--forbot-line)]">
+              <tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="px-3 py-2 align-top">
+                  <td key={cellIndex}>
                     {cell}
                   </td>
                 ))}

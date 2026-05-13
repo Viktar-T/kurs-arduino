@@ -152,11 +152,38 @@ A reference lesson lives at `content/lekcje/dzien-01/01-srodowisko-ide.mdx` — 
 
 ## 9. Where to look for the curriculum
 
+**Hard rule when authoring course content** (lessons, exercises, mini-projects, sample code, slides, handouts): **always consult `public/docs/` first**. This is the canonical, site-served mirror of the didactic source materials — Forbot dictates topic order and depth, the Simon Monk ebooks supply the explanations and reference sketches, and the analysis file maps ebook chapters to our 13 program blocks. Everything under `public/docs/` is shipped by Next.js at the `/docs/...` URL, so students can also reach it directly from the site. Cite the materials you actually used in the lesson's `sources:` frontmatter — see §4.1 of `PROJECT_BRIEF.md` for the URL/wiki-link format.
+
+### Curriculum map (program contract, in the vault)
+
 - 13 program blocks (client contract): `../20_program/01_Program-kursu.md`
 - 10-day timetable: `../20_program/02_Harmonogram-zjazdow.md`
-- Forbot reference (chapters / examples): `../40_materialy/forbot.pl.md`
-- Helion ebooks (Simon Monk B & C) and their mapping to the program: `../40_materialy/Ebooki Arduino - Helion/Analiza-ksiazek-i-mapa-do-kursu.md`
-- Topics not covered by ebooks (need external sources): see `../CLAUDE.md` §6.
+
+### `public/docs/` — source materials (read before writing any lesson)
+
+Served by Next.js at `/docs/...` after build.
+
+- `public/docs/index.md` — map of the folder; check it before a longer authoring session.
+- `public/docs/forbot.pl.md` — notes from all three Forbot courses (Arduino basics, level II, robots). **Forbot is the structural backbone of our course** — start here to find the right chapter/topic, then deepen with the ebooks.
+- `public/docs/Ebooki Arduino - Helion/` — Simon Monk ebooks (PDF) under `ksiazki/`, plus `Analiza-ksiazek-i-mapa-do-kursu.md` that maps chapters to our 13 blocks. **First-choice source for theoretical explanations and reference sketches.**
+  - Książka B (`arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf`) — read first.
+  - Książka C (`arduino-dla-poczatkujacych-kolejny-krok-2-239s..pdf`) — read second.
+  - Książka A (wydanie 1) — skip (superseded by B).
+- `public/docs/ArduinoDocs.md` — pointers to the official `docs.arduino.cc` reference for API/syntax verification.
+
+### Topics not covered by `public/docs/` (need external sources)
+
+DC motors via H-bridge (L298N / TB6612), DHT11/DHT22 with the DHT library, IR remote with the IRremote library, 7-segment displays. When a lesson hits one of these, supplement with vetted external references (datasheets, library docs, Forbot articles) and cite them as plain URLs in `sources:`. Instructor's in-house notes for some of these may exist in the parent vault outside `public/docs/`; if you need them, ask the user.
+
+### Citation format in lesson MDX
+
+In every lesson's `sources:` frontmatter:
+- Forbot URLs as plain strings: `"https://forbot.pl/blog/..."`.
+- Ebooks as **site-served `/docs/` URLs**: `"/docs/Ebooki Arduino - Helion/ksiazki/<file>#page=N (Książka B, r. N)"`.
+- `public/docs/` markdown notes as `/docs/...` URLs: `"/docs/<file>.md (label)"`.
+- External authoritative refs (datasheets, library docs): plain URLs.
+
+If the surrounding ecosystem (Obsidian vault, exported handouts) still expects wiki-link form for ebook references, keep the URL form as the primary citation and add a wiki-link in the lesson body where it helps the instructor preparing offline.
 
 ---
 

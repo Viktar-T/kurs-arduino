@@ -1,0 +1,172 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Źródła informacji — gdzie szukać pomocy z Arduino"
+slug: "zrodla-informacji"
+summary: "Przegląd najważniejszych zasobów do samodzielnej nauki Arduino: oficjalna dokumentacja docs.arduino.cc, Forbot.pl, ebooki Simona Monka, YouTube i fora. Po tej lekcji każdy uczeń wie, gdzie szukać odpowiedzi na pytania, które pojawią się po kursie."
+
+day: 1
+weekend: 1
+order: 5
+duration: 20
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 1
+
+objectives:
+  - "Wymienić co najmniej cztery wiarygodne źródła wiedzy o Arduino"
+  - "Odszukać dokumentację funkcji (np. digitalWrite) w docs.arduino.cc"
+  - "Znaleźć właściwy kurs na Forbot.pl i przejść do wybranego rozdziału"
+  - "Wiedzieć, kiedy sięgnąć po forum (Arduino Forum, Stack Overflow), a kiedy po dokumentację"
+
+prerequisites:
+  - "dzien-01/03-srodowisko-ide"
+
+hardware: []
+
+tags: [zasoby, dokumentacja, forbot, arduino-docs, samodzielna-nauka]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
+  - "https://docs.arduino.cc/language-reference/"
+
+publish: true
+updated: "2026-05-12"
+---
+
+## Po co ta lekcja?
+
+Kurs trwa 80 godzin — a Arduino można zgłębiać latami. Chcemy, żebyś po ostatnim
+zjeździe **nie był uzależniony od trenera**: umiał sam znaleźć odpowiedź, gdy
+utkniesz przy projekcie o północy. Ta lekcja to mapa skarbów.
+
+<Objectives
+  items={[
+    "Wymienić co najmniej cztery wiarygodne źródła wiedzy o Arduino",
+    "Odszukać dokumentację wybranej funkcji w docs.arduino.cc",
+    "Znaleźć właściwy kurs na Forbot.pl i przejść do wybranego rozdziału",
+    "Wiedzieć, kiedy sięgnąć po forum, a kiedy po oficjalną dokumentację",
+  ]}
+/>
+
+## 1. Oficjalna dokumentacja — docs.arduino.cc
+
+**docs.arduino.cc** to pierwsze miejsce, do którego zaglądasz, kiedy nie pamiętasz
+składni funkcji lub chcesz poznać wszystkie jej parametry.
+
+Najczęściej otwierane sekcje:
+
+- **Language Reference** — każda funkcja języka Arduino (`digitalWrite`, `analogRead`,
+  `Serial.print`, `millis`…) z opisem parametrów, wartości zwracanej i przykładem.
+- **Built-in Libraries** — dokumentacja bibliotek dołączonych do IDE (Servo, Wire,
+  SPI, EEPROM…).
+- **Hardware** — schematy, dane techniczne płytek (w tym UNO R3 i R4).
+
+<Callout type="tip" title="Szybki sposób na docs.arduino.cc">
+W Google wpisz `arduino digitalWrite site:docs.arduino.cc` — trafiasz od razu
+do właściwej strony, bez przebijania się przez wyniki sponsorowane.
+</Callout>
+
+## 2. Forbot.pl — po polsku, krok po kroku
+
+**forbot.pl** to największy polskojęzyczny serwis o Arduino i robotyce. Trzy kursy,
+których używamy na tym szkoleniu jako szkielet materiału:
+
+| Kurs | Adres | Co obejmuje |
+|---|---|---|
+| Kurs podstaw Arduino | `forbot.pl/kursy/arduino` | Środowisko, C++, I/O, czujniki — Dni 1–6 |
+| Kurs Arduino poziom II | `forbot.pl/kursy/arduino-poziom-2` | UART, I2C, SPI, LCD, silniki — Dni 3–8 |
+| Kurs budowy robotów | `forbot.pl/kursy/roboty` | Line follower, czujniki IR — Dni 9–10 |
+
+Każdy kurs jest podzielony na rozdziały z kodem i schematami. Jeśli na zajęciach
+coś umknęło — wróć do Forbot i przeczytaj jeszcze raz ze zdjęciami i animacjami.
+
+## 3. Ebooki — Simon Monk / Helion
+
+Na kursie korzystamy z trzech ebooków polskiego Helionu autorstwa Simona Monka:
+
+- **„Arduino dla początkujących: podstawy i szkice"** (wyd. 2) — główna lektura
+  na Dni 1–4. Szczególnie dobre wyjaśnienia C++ i schematy montażowe.
+- **„Arduino dla początkujących: kolejny krok"** — rozszerza wiedzę o biblioteki,
+  silniki, wyświetlacze, komunikację I2C — Dni 4–8.
+
+Pliki PDF masz na serwerze kursu lub na pendrivie od prowadzącego.
+
+<Callout type="note" title="Kindle / aplikacja Kindle">
+Ebooki są dostępne też w formacie Kindle (Amazon). Jeśli masz czytnik lub
+telefon z aplikacją Kindle, możesz czytać bez PDF.
+</Callout>
+
+## 4. YouTube
+
+Gdy tekst nie wystarczy i wolisz zobaczyć, jak coś działa — YouTube:
+
+- **Kanał Arduino** (`youtube.com/@Arduino`) — oficjalne projekty i tutoriale.
+- **Forbot (po polsku)** — wiele lekcji ma odpowiedniki wideo.
+- **Paul McWhorter** — seria „Arduino for Beginners" po angielsku, jeden z
+  najlepiej wytłumaczonych kursów wideo.
+- **DroneBot Workshop** — elektronika i Arduino, świetna jakość nagrań.
+
+## 5. Fora i społeczność
+
+Gdy masz konkretny błąd lub niestandardowy problem:
+
+- **Arduino Forum** (`forum.arduino.cc`) — oficjalne forum, ogromna baza problemów.
+  Wyszukaj po treści błędu lub nazwie funkcji — bardzo często ktoś miał ten sam
+  problem pięć lat temu.
+- **Stack Overflow** — tagi `arduino`, `avr`, `c++`. Zwięzłe pytania i sprawdzone
+  odpowiedzi.
+- **Reddit r/arduino** — mniej formalne, dobre do inspiracji projektami.
+
+<Callout type="tip" title="Jak zadawać pytanie na forum">
+Dobry post zawiera: opis problemu (co chcesz osiągnąć), cały kod (nie fragment),
+schemat połączeń lub opis układu oraz treść komunikatu błędu. Bez tych czterech
+elementów odpowiedź będzie odgadywaniem.
+</Callout>
+
+## 6. AI — pomocnik, nie wyrocznia
+
+[Dedykowany AI pmocnik do naszego kursu](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing)
+
+ChatGPT, Claude i podobne narzędzia mogą **szybko wyjaśnić koncepcję, napisać
+prosty szkic lub wyszukać błąd w kodzie**. Ale:
+
+- Modele językowe czasem wymyślają funkcje, które nie istnieją.
+- Kod wygenerowany przez AI **zawsze sprawdź w dokumentacji i przetestuj**.
+- Do nauki lepiej rozumieć, co AI napisało, niż kopiować bez czytania.
+
+Traktuj AI jak mądrego kolegę, który szybko odpowie, ale może się mylić —
+zawsze weryfikuj w `docs.arduino.cc`.
+
+## Zadanie
+
+<Task title="Znajdź funkcję w dokumentacji" estimate="5 min">
+Otwórz `docs.arduino.cc/language-reference/` i znajdź dokumentację funkcji
+`analogWrite()`. Odpowiedz na pytania:
+
+1. Jakie są parametry tej funkcji?
+2. Jakie wartości przyjmuje drugi parametr (`value`)?
+3. Na których pinach Arduino UNO możesz użyć `analogWrite()`?
+
+Zapisz odpowiedzi — wrócimy do nich, kiedy będziemy podłączać diodę LED do pinu PWM.
+</Task>
+
+## Podsumowanie
+
+| Zasób | Kiedy sięgać |
+|---|---|
+| `docs.arduino.cc` | Zawsze — składnia funkcji, parametry, przykłady |
+| Forbot.pl | Pełne lekcje po polsku z kodem i schematami |
+| Ebooki Monka | Głębsze wyjaśnienia teorii i ćwiczenia |
+| YouTube | Gdy potrzebujesz zobaczyć, jak coś wygląda na żywo |
+| Forum / Stack Overflow | Konkretny błąd lub problem, którego nie ma w docs |
+| AI | Szybka odpowiedź — zawsze weryfikuj w dokumentacji |
+
+Teraz, gdy wiesz, gdzie szukać pomocy, jesteś gotowy na samodzielną pracę.
+W kolejnych lekcjach będziemy regularnie zaglądać do `docs.arduino.cc` — każda
+nowa funkcja oznacza wizytę w dokumentacji.

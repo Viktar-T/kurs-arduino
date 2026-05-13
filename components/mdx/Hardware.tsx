@@ -18,7 +18,7 @@ interface HardwareProps {
 }
 
 export function Hardware({ items, title = "Potrzebny sprzęt" }: HardwareProps) {
-  if (items.length === 0) return null;
+  if (!items || items.length === 0) return null;
   return (
     <section className="forbot-hardware border-l-4 px-4 py-3">
       <h3 className="forbot-label mb-2 text-sm font-semibold uppercase">

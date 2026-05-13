@@ -84,7 +84,7 @@ export function getAllLessons(): Lesson[] {
     return (
       fa.weekend - fb.weekend ||
       fa.day - fb.day ||
-      fa.order - fb.order
+      a.fileSlug.localeCompare(b.fileSlug)
     );
   });
 
