@@ -112,6 +112,20 @@ Otwórz teraz **Serial Plotter** (Narzędzia → Serial Plotter) i kręć potenc
 Nie możesz otworzyć obu jednocześnie — zajmują ten sam port szeregowy. Zamknij jedno przed otwarciem drugiego.
 </Callout>
 
+<Expandable title="Jak często można odświeżać wykres?" heading="###">
+
+Serial Plotter odczytuje dane tak szybko, jak Arduino je wysyła. Przy `delay(200)` dostajesz 5 próbek na sekundę — przy `delay(50)` już 20, obraz jest wyraźnie płynniejszy.
+
+Baud rate (`Serial.begin(9600)`) przy prostych liczbach nie jest wąskim gardłem. Jednak przy bardzo krótkich opóźnieniach (< 10 ms) warto zwiększyć go do `115200`, żeby dane nie zalegały w buforze portu i wykres odzwierciedlał aktualny stan układu:
+
+```cpp
+void setup() {
+  Serial.begin(115200); // szybsza transmisja = aktualniejszy wykres
+}
+```
+
+</Expandable>
+
 <Task title="Zadanie 1" estimate="5 min">
 Zmień wartość `delay(200)` na `50` i obserwuj, jak wykres staje się bardziej szczegółowy. Co się stanie przy `delay(10)`?
 </Task>
@@ -204,6 +218,20 @@ void loop() {
   height={300}
 />
 
+<Expandable title="pulseIn() — timeout i tryb nieblokujący" heading="###">
+
+`pulseIn(pin, HIGH)` czeka, aż sygnał przejdzie z LOW na HIGH, po czym mierzy czas trwania impulsu. Domyślnie czeka maksymalnie **1 sekundę** — gdy nic nie stoi przed czujnikiem, program „zamarza" na tę chwilę przy każdym pomiarze.
+
+Możesz to naprawić, przekazując trzeci argument — limit czasu w mikrosekundach:
+
+```cpp
+czas = pulseIn(echoPin, HIGH, 25000); // max 25 ms → odpowiada ~4 m
+```
+
+Fala dźwiękowa przy 400 cm przebywa trasę tam i z powrotem w ok. 23 ms, więc 25 000 µs w zupełności wystarczy. Gdy nic nie wykryto, funkcja zwraca `0` natychmiast, zamiast czekać pełną sekundę — pętla `loop()` pracuje wyraźnie szybciej.
+
+</Expandable>
+
 ## 3. Wykres kilku wartości
 
 Serial Plotter potrafi rysować kilka serii jednocześnie. Wystarczy wysłać wartości oddzielone tabulatorem (`\t`) i zakończyć linię `println`:
@@ -227,6 +255,22 @@ Serial.println("");
   width={500}
   height={300}
 />
+
+<Expandable title="Nazwane serie w Serial Plotter (Arduino IDE 2)" heading="###">
+
+Arduino IDE 2.x obsługuje etykiety serii. Jeśli wyślesz dane w formacie `Etykieta:Wartość`, Plotter wyświetli legendę zamiast domyślnych `Data0`, `Data1`:
+
+```cpp
+Serial.print("potencjometr:");
+Serial.print(analogRead(A5));
+Serial.print("\t");
+Serial.print("odleglosc:");
+Serial.println(dystans);
+```
+
+Na wykresie zobaczysz wtedy czytelną legendę z nazwami. Uwaga: w starszym IDE 1.x ten format nie jest obsługiwany — wyświetli się surowy tekst w Monitorze portu zamiast wykresu.
+
+</Expandable>
 
 <Task title="Zadanie 2" estimate="10 min">
 Wyślij jednocześnie odczyt z potencjometru (A5) i odległość z HC-SR04. Obserwuj oba wykresy nakładające się na siebie. Co się dzieje z wykresem czujnika, gdy zasłonisz go dłonią?
@@ -462,6 +506,29 @@ void loop() {
   ]}
 />
 
+<Expandable title="Operator ! i prawa De Morgana" heading="###">
+
+Operator `!` odwraca wartość logiczną: `!true` daje `false` i odwrotnie. Przydaje się, gdy chcesz sprawdzić, że coś **nie** jest prawdziwe:
+
+```cpp
+if (!digitalRead(8)) { ... }  // równoważne: digitalRead(8) == LOW
+```
+
+**Prawo De Morgana** pozwala przekształcać złożone warunki:
+- `!(A && B)` jest równoważne `!A || !B`
+- `!(A || B)` jest równoważne `!A && !B`
+
+XOR z Zadania 4 możesz więc zapisać na dwa równoważne sposoby:
+
+```cpp
+(A || B) && !(A && B)    // tradycyjny zapis
+(A || B) && (!A || !B)   // po rozwinięciu De Morgana
+```
+
+Obie wersje dają identyczny wynik — wybierz tę, która jest dla ciebie czytelniejsza.
+
+</Expandable>
+
 <Task title="Zadanie 4" estimate="10 min">
 Dodaj do programu trzecią diodę (pin `6`), która świeci tylko gdy **jeden** z przycisków jest wciśnięty (ale nie oba razem). Wskazówka: użyj XOR-a zapisanego jako `(A || B) && !(A && B)`.
 </Task>
@@ -516,6 +583,33 @@ void loop() {
 <Callout type="tip" title="Czytaj warunek od prawej do lewej">
 `(dystans > 20 && dystans < 40) || digitalRead(10) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
 </Callout>
+
+<Expandable title="Histereza — jak unikać drgania alarmu na granicy" heading="###">
+
+Gdy obiekt stoi dokładnie 20 cm od czujnika, drobny szum pomiaru sprawia, że odczyt skacze: 19, 21, 20, 19, 21 cm. Alarm włącza i wyłącza się kilka razy na sekundę — to niepożądane zjawisko zwane *chattering*.
+
+Rozwiązanie to **histereza**: dwie różne granice — osobna dla włączania, osobna dla wyłączania:
+
+```cpp
+bool alarm = false;
+
+void loop() {
+  long dystans = zmierzOdleglosc();
+
+  if (!alarm && dystans < 25) {
+    alarm = true;   // włącz, gdy obiekt bliżej niż 25 cm
+  }
+  if (alarm && dystans > 30) {
+    alarm = false;  // wyłącz dopiero gdy dalej niż 30 cm
+  }
+
+  digitalWrite(11, alarm ? HIGH : LOW);
+}
+```
+
+Masz teraz 5 cm „strefy buforowej" — alarm nie będzie drżał przy granicy progu.
+
+</Expandable>
 
 <MiniProject title="System parkowania" estimate="20 min">
 

@@ -139,6 +139,16 @@ Zmienna `float` na Arduino UNO ma ograniczoną dokładność. Nawet jeśli popro
 Możesz wypisać wiele cyfr po przecinku, ale część z nich będzie wynikiem przybliżenia. W pomiarach z czujników zwykle lepiej pokazywać rozsądną liczbę miejsc po przecinku niż udawać dokładność, której układ nie ma.
 </Callout>
 
+<Expandable title="Jak float przechowuje liczby — standard IEEE 754" heading="###">
+
+Typ `float` w Arduino to 32-bitowa liczba zmiennoprzecinkowa zapisana zgodnie ze standardem **IEEE 754**. Te 32 bity dzielą się na trzy pola: 1 bit znaku, 8 bitów wykładnika i 23 bity mantysy.
+
+Mantysa przechowuje znaczące cyfry liczby. 23 bity odpowiadają mniej więcej **7 cyfrom dziesiętnym** dokładności — to nieprzekraczalny sufit dla `float`. Liczba `3.14159265` jest przechowywana tylko jako przybliżenie.
+
+**Ważne dla Arduino AVR:** Na UNO, Mega i Nano (procesor ATmega) typy `float` i `double` mają **identyczny rozmiar** — oba zajmują 32 bity. Prawdziwy 64-bitowy `double` z prawie 16 cyframi dokładności jest dostępny tylko na płytkach z procesorem ARM: Arduino Due, Nano 33 BLE czy MKR Zero.
+
+</Expandable>
+
 ## 3. `Serial.print()` kontra `Serial.println()`
 
 `Serial.println()` dopisuje na końcu przejście do nowej linii. `Serial.print()` wysyła tekst lub liczbę bez kończenia wiersza. Dzięki temu kilka wartości można złożyć w jeden czytelny komunikat.
@@ -317,6 +327,16 @@ void loop() {
 `break` kończy wykonywanie instrukcji `switch`. Bez niego program przeszedłby do kolejnego przypadku, co zwykle prowadzi do błędów trudnych do zauważenia.
 </Callout>
 
+<Expandable title="Fall-through — kiedy brak break jest celowy" heading="###">
+
+Pominięcie `break` w jednym `case` powoduje, że wykonanie „spada" do następnego bloku — jest to tzw. **fall-through**. Zwykle to błąd, ale można go użyć celowo, gdy kilka wartości ma wywołać ten sam kod.
+
+Przykład: chcemy obsłużyć zarówno `'d'`, jak i `'D'` jako polecenie wypisania w systemie dziesiętnym. Wystarczy napisać dwa puste `case` jeden pod drugim — `case 'D':` bez własnego kodu spada do `case 'd':` i wykonuje jego blok. Taki wzorzec często stosuje się do obsługi dużych i małych liter bez duplikowania kodu.
+
+Wielu kompilatorów C++ ostrzega przed nieumyślnym fall-through. Jeśli chcesz oznaczyć, że to świadomy wybór, wstaw komentarz `/* fall-through */` lub (od C++17) atrybut `[[fallthrough]]`.
+
+</Expandable>
+
 <Task title="Zadanie 2" estimate="15 min">
 Wróć do programu sterującego diodami przez UART z lekcji o komunikacji z PC. Przepisz obsługę komend tak, aby zamiast kilku `if` używać `switch` i pojedynczych znaków poleceń.
 </Task>
@@ -417,6 +437,16 @@ void loop() {
 </Code>
 
 Funkcja `abs()` zwraca wartość bezwzględną. Dzięki temu nie ma znaczenia, czy nowa pozycja jest większa, czy mniejsza od poprzedniej. Liczy się tylko wielkość zmiany.
+
+<Expandable title="Dlaczego próg 5 — histereza w pomiarach" heading="###">
+
+Warunek `abs(pozycja - pozycjaPoprzednia) > 5` to przykład **histerezy** (lub strefy martwej). Każdy czujnik analogowy generuje drobny szum elektryczny — nawet przy nieruchomym fotorezystorze wartości ADC mogą „drżeć" o kilka jednostek.
+
+Gdybyśmy ruszali serwem przy każdej zmianie o 1 jednostkę, wskazówka trzęsłaby się bez przerwy. Próg 5 mówi układowi: „reaguj tylko na zmiany, które są naprawdę znaczące".
+
+To samo podejście stosuje się wszędzie tam, gdzie sterujemy urządzeniem mechanicznym na podstawie zaszumionego pomiaru: w termostatach, regulatorach prędkości silników, stabilizatorach kamery. Im większy próg, tym bardziej stabilna praca, ale mniejsza czułość na powolne zmiany. Wartość dobierasz eksperymentalnie dla swojego czujnika i warunków oświetlenia.
+
+</Expandable>
 
 <Photo
   file="09.11-serwo-wskaznik-swiatla.gif"

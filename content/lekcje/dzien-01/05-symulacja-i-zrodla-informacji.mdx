@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Symulacja i źródła informacji — Tinkercad oraz gdzie szukać pomocy z Arduino"
 slug: "symulacja-i-zrodla-informacji"
-summary: "Najpierw ćwiczymy w symulatorze Tinkercad — żeby nie spalić sprzętu. Potem przegląd najważniejszych zasobów do samodzielnej nauki Arduino: oficjalna dokumentacja docs.arduino.cc, Forbot.pl, ebooki Simona Monka, YouTube i fora. Po tej lekcji każdy uczeń wie, gdzie szukać odpowiedzi na pytania, które pojawią się po kursie."
+summary: "Najpierw badamy symulator Tinkercad — żeby nie spalić sprzętu podczas nauki. Potem przegląd najważniejszych zasobów do samodzielnej nauki Arduino: oficjalna dokumentacja docs.arduino.cc, Forbot.pl, ebooki Simona Monka, YouTube i fora. Po tej lekcji każdy uczeń wie, gdzie szukać odpowiedzi na pytania, które pojawią się po kursie."
 
 day: 1
 weekend: 1
@@ -93,7 +93,7 @@ zresetujesz symulację i spróbujesz ponownie.
 3. Przeciągnij z panelu po prawej płytkę **Arduino UNO** na obszar roboczy.
 4. Dodaj komponenty (LED, rezystor, przewody) i kliknij **Start Simulation**.
 
-Będziemy korzystać z Tinkercad regularnie przez pierwsze dni kursu.
+Będziemy korzystać z Tinkercad regularnie.
 
 ## 2. Oficjalna dokumentacja — docs.arduino.cc
 
@@ -102,11 +102,11 @@ składni funkcji lub chcesz poznać wszystkie jej parametry.
 
 Najczęściej otwierane sekcje:
 
-- **Language Reference** — każda funkcja języka Arduino (`digitalWrite`, `analogRead`,
+- **[Language Reference](https://docs.arduino.cc/language-reference/)** — każda funkcja języka Arduino (`digitalWrite`, `analogRead`,
   `Serial.print`, `millis`…) z opisem parametrów, wartości zwracanej i przykładem.
-- **Built-in Libraries** — dokumentacja bibliotek dołączonych do IDE (Servo, Wire,
+- **[Built-in Libraries](https://docs.arduino.cc/libraries/)** — dokumentacja bibliotek dołączonych do IDE (Servo, Wire,
   SPI, EEPROM…).
-- **Hardware** — schematy, dane techniczne płytek (w tym UNO R3 i R4).
+- **[Hardware](https://docs.arduino.cc/hardware/)** — schematy, dane techniczne płytek (w tym UNO R3 i R4).
 
 <Callout type="tip" title="Szybki sposób na docs.arduino.cc">
 W Google wpisz `arduino digitalWrite site:docs.arduino.cc` — trafiasz od razu
@@ -120,20 +120,20 @@ których używamy na tym szkoleniu jako szkielet materiału:
 
 | Kurs | Adres | Co obejmuje |
 |---|---|---|
-| Kurs podstaw Arduino | `forbot.pl/kursy/arduino` | Środowisko, C++, I/O, czujniki — Dni 1–6 |
-| Kurs Arduino poziom II | `forbot.pl/kursy/arduino-poziom-2` | UART, I2C, SPI, LCD, silniki — Dni 3–8 |
-| Kurs budowy robotów | `forbot.pl/kursy/roboty` | Line follower, czujniki IR — Dni 9–10 |
+| Kurs podstaw Arduino | [forbot.pl → Kurs Arduino poziom I](https://forbot.pl/blog/kurs-arduino-podstawy-programowania-spis-tresci-kursu-id5290) | Środowisko, C++, I/O, czujniki — Dni 1–6 |
+| Kurs Arduino poziom II | [forbot.pl → Kurs Arduino poziom II](https://forbot.pl/blog/kurs-arduino-ii-wstep-spis-tresci-id15494) | UART, I2C, SPI, LCD, silniki — Dni 3–8 |
+| Kurs budowy robotów | [forbot.pl → Kurs budowy robotów](https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935) | Line follower, czujniki IR — Dni 9–10 |
 
 Każdy kurs jest podzielony na rozdziały z kodem i schematami. Jeśli na zajęciach
 coś umknęło — wróć do Forbot i przeczytaj jeszcze raz ze zdjęciami i animacjami.
 
 ## 4. Ebooki — Simon Monk / Helion
 
-Na kursie korzystamy z trzech ebooków polskiego Helionu autorstwa Simona Monka:
+Na kursie korzystamy z dwóch ebooków polskiego Helionu autorstwa Simona Monka:
 
-- **„Arduino dla początkujących: podstawy i szkice"** (wyd. 2) — główna lektura
+- **[„Arduino dla początkujących: podstawy i szkice" (wyd. 2)](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf)** — główna lektura
   na Dni 1–4. Szczególnie dobre wyjaśnienia C++ i schematy montażowe.
-- **„Arduino dla początkujących: kolejny krok"** — rozszerza wiedzę o biblioteki,
+- **[„Arduino dla początkujących: kolejny krok"](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-kolejny-krok-2-239s..pdf)** — rozszerza wiedzę o biblioteki,
   silniki, wyświetlacze, komunikację I2C — Dni 4–8.
 
 Pliki PDF masz na serwerze kursu lub na pendrivie od prowadzącego.
@@ -147,22 +147,22 @@ telefon z aplikacją Kindle, możesz czytać bez PDF.
 
 Gdy tekst nie wystarczy i wolisz zobaczyć, jak coś działa — YouTube:
 
-- **Kanał Arduino** (`youtube.com/@Arduino`) — oficjalne projekty i tutoriale.
-- **Forbot (po polsku)** — wiele lekcji ma odpowiedniki wideo.
-- **Paul McWhorter** — seria „Arduino for Beginners" po angielsku, jeden z
+- **[Kanał Arduino](https://www.youtube.com/@Arduino)** — oficjalne projekty i tutoriale.
+- **[Forbot (po polsku)](https://www.youtube.com/@forbot)** — wiele lekcji ma odpowiedniki wideo.
+- **[Paul McWhorter](https://www.youtube.com/@paulmcwhorter)** — seria „Arduino for Beginners" po angielsku, jeden z
   najlepiej wytłumaczonych kursów wideo.
-- **DroneBot Workshop** — elektronika i Arduino, świetna jakość nagrań.
+- **[DroneBot Workshop](https://www.youtube.com/@dronebotworkshop)** — elektronika i Arduino, świetna jakość nagrań.
 
 ## 6. Fora i społeczność
 
 Gdy masz konkretny błąd lub niestandardowy problem:
 
-- **Arduino Forum** (`forum.arduino.cc`) — oficjalne forum, ogromna baza problemów.
+- **[Arduino Forum](https://forum.arduino.cc/)** — oficjalne forum, ogromna baza problemów.
   Wyszukaj po treści błędu lub nazwie funkcji — bardzo często ktoś miał ten sam
   problem pięć lat temu.
-- **Stack Overflow** — tagi `arduino`, `avr`, `c++`. Zwięzłe pytania i sprawdzone
+- **[Stack Overflow](https://stackoverflow.com/questions/tagged/arduino)** — tagi `arduino`, `avr`, `c++`. Zwięzłe pytania i sprawdzone
   odpowiedzi.
-- **Reddit r/arduino** — mniej formalne, dobre do inspiracji projektami.
+- **[Reddit r/arduino](https://www.reddit.com/r/arduino/)** — mniej formalne, dobre do inspiracji projektami.
 
 <Callout type="tip" title="Jak zadawać pytanie na forum">
 Dobry post zawiera: opis problemu (co chcesz osiągnąć), cały kod (nie fragment),
@@ -174,7 +174,7 @@ elementów odpowiedź będzie odgadywaniem.
 
 [Dedykowany AI pomocnik do naszego kursu](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing)
 
-ChatGPT, Claude i podobne narzędzia mogą **szybko wyjaśnić koncepcję, napisać
+[ChatGPT](https://chatgpt.com/), [Claude](https://claude.ai/) i podobne narzędzia mogą **szybko wyjaśnić koncepcję, napisać
 prosty szkic lub wyszukać błąd w kodzie**. Ale:
 
 - Modele językowe czasem wymyślają funkcje, które nie istnieją.
@@ -182,32 +182,34 @@ prosty szkic lub wyszukać błąd w kodzie**. Ale:
 - Do nauki lepiej rozumieć, co AI napisało, niż kopiować bez czytania.
 
 Traktuj AI jak mądrego kolegę, który szybko odpowie, ale może się mylić —
-zawsze weryfikuj w `docs.arduino.cc`.
+zawsze weryfikuj w [docs.arduino.cc](https://docs.arduino.cc/).
 
 ## Zadanie
 
-<Task title="Znajdź funkcję w dokumentacji" estimate="5 min">
-Otwórz `docs.arduino.cc/language-reference/` i znajdź dokumentację funkcji
-`analogWrite()`. Odpowiedz na pytania:
+<Task title="Znajdź funkcję w dokumentacji" estimate="10 min">
+1. Otwórz [docs.arduino.cc/language-reference/](https://docs.arduino.cc/language-reference/) i znajdź dokumentację funkcji `analogWrite()`. Odpowiedz na pytania:
+   - Jakie są parametry tej funkcji?
+   - Jakie wartości przyjmuje drugi parametr (`value`)?
+   - Na których pinach Arduino UNO możesz użyć `analogWrite()`?
 
-1. Jakie są parametry tej funkcji?
-2. Jakie wartości przyjmuje drugi parametr (`value`)?
-3. Na których pinach Arduino UNO możesz użyć `analogWrite()`?
+   Zapisz odpowiedzi — wrócimy do nich, kiedy będziemy podłączać diodę LED do pinu PWM.
 
-Zapisz odpowiedzi — wrócimy do nich, kiedy będziemy podłączać diodę LED do pinu PWM.
+2. Otwórz [docs.arduino.cc/libraries/](https://docs.arduino.cc/libraries/) i znajdź dowolną bibliotekę. Przejrzyj jej stronę — jakie funkcje udostępnia?
+
+3. Otwórz [projecthub.arduino.cc](https://projecthub.arduino.cc/) i znajdź ciekawy projekt. Zanotuj, jakich komponentów używa.
 </Task>
 
 ## Podsumowanie
 
 | Zasób | Kiedy sięgać |
 |---|---|
-| Tinkercad | Zawsze — przed przejściem na fizyczną płytkę |
-| `docs.arduino.cc` | Zawsze — składnia funkcji, parametry, przykłady |
-| Forbot.pl | Pełne lekcje po polsku z kodem i schematami |
+| [Tinkercad](https://www.tinkercad.com/) | Zawsze — przed przejściem na fizyczną płytkę |
+| [docs.arduino.cc](https://docs.arduino.cc/) | Zawsze — składnia funkcji, parametry, przykłady |
+| [Forbot.pl](https://forbot.pl/blog/kursy) | Pełne lekcje po polsku z kodem i schematami |
 | Ebooki Monka | Głębsze wyjaśnienia teorii i ćwiczenia |
-| YouTube | Gdy potrzebujesz zobaczyć, jak coś wygląda na żywo |
-| Forum / Stack Overflow | Konkretny błąd lub problem, którego nie ma w docs |
-| AI | Szybka odpowiedź — zawsze weryfikuj w dokumentacji |
+| [YouTube](https://www.youtube.com/@Arduino) | Gdy potrzebujesz zobaczyć, jak coś wygląda na żywo |
+| [Forum](https://forum.arduino.cc/) / [Stack Overflow](https://stackoverflow.com/questions/tagged/arduino) | Konkretny błąd lub problem, którego nie ma w docs |
+| [ChatGPT](https://chatgpt.com/) / [Claude](https://claude.ai/) | Szybka odpowiedź — zawsze weryfikuj w dokumentacji |
 
 Teraz, gdy wiesz, gdzie szukać pomocy, jesteś gotowy na samodzielną pracę.
 W kolejnych lekcjach będziemy regularnie zaglądać do `docs.arduino.cc` — każda

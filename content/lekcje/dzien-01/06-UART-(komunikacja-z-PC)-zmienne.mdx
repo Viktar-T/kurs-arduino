@@ -121,6 +121,16 @@ Gdy korzystasz z `Serial`, nie traktuj ich jak zwykłych pinów I/O do LED,
 przycisków albo czujników.
 </Callout>
 
+<Expandable title="Głębiej: jak USB zamienia się na UART na Arduino UNO?" heading="###">
+
+Komputer nie mówi TTL UART — mówi USB. Na płytce Arduino UNO siedzi dodatkowy układ scalony (w zależności od wersji: **CH340** lub **ATmega16U2**), który pełni rolę mostka USB↔UART. Jego jedyne zadanie to tłumaczenie pakietów USB na sygnały TTL 5 V i z powrotem.
+
+Gdy podłączasz Arduino kablem USB, system operacyjny wykrywa mostek i tworzy **wirtualny port COM** (Windows: `COMx`, Linux/macOS: `/dev/ttyUSB0` lub `/dev/tty.usbmodem...`). Właśnie z tym portem łączy się Monitor portu szeregowego.
+
+Sygnał UART między mostkiem a mikrokontrolererem ATmega328P płynie po śladach PCB do fizycznych pinów `D0` i `D1`. Dlatego zajęte są dokładnie te dwa piny, a diody `TX` i `RX` na płytce mrugają przy każdym przesyłaniu danych.
+
+</Expandable>
+
 ## 2. Ramka UART i prędkość transmisji
 
 UART wysyła dane szeregowo, czyli bit po bicie. Pojedynczy bajt nie leci jako
@@ -163,6 +173,19 @@ Odbiornik próbuje czytać linię dokładnie w tych odstępach czasu. Jeśli Ard
 nadaje z prędkością `9600`, a Monitor portu szeregowego jest ustawiony na inną
 wartość, komputer próbuje próbkować sygnał w złych momentach. W efekcie składa
 bity w niepoprawne znaki i na ekranie pojawiają się losowe symbole.
+</Expandable>
+
+<Expandable title="Głębiej: format ramki 8N1 i inne opcje UART" heading="###">
+
+`Serial.begin(9600)` używa domyślnego formatu **8N1**, co oznacza:
+- **8** bitów danych,
+- **N** — brak bitu parzystości (No parity),
+- **1** bit stopu.
+
+Możesz przekazać format jawnie: `Serial.begin(9600, SERIAL_8N1)`. Arduino obsługuje też warianty z parzystością, np. `SERIAL_8E1` (parzystość parzysta) lub `SERIAL_8O1` (nieparzysta). Bit parzystości to jeden dodatkowy bit na końcu danych, który pozwala wykryć pojedynczy błąd transmisji — ale nie naprawić go.
+
+Do komunikacji z Monitorem portu szeregowego zawsze używaj `8N1` — to domyślny format PC i niemal wszystkich urządzeń. Inne formaty przydają się, gdy integrujesz Arduino z modułami przemysłowymi o ściśle określonej specyfikacji.
+
 </Expandable>
 
 ## 3. Pierwszy program z Serial Monitor
@@ -340,6 +363,24 @@ początku wiedzieć, że duże teksty, tablice, `float` i intensywne używanie
 pierwszy kontakt z komendami tekstowymi.
 </Callout>
 
+<Expandable title="Głębiej: trzy rodzaje pamięci w Arduino UNO" heading="###">
+
+Arduino UNO (ATmega328P) ma trzy oddzielne obszary pamięci:
+
+| Pamięć | Rozmiar | Co tu mieszka | Czy zanika po wyłączeniu? |
+|---|---|---|---|
+| **Flash** | 32 KB | skompilowany kod szkicu | nie — trwała |
+| **SRAM** | 2 KB | zmienne, stos wywołań, bufor Serial | tak — ulotna |
+| **EEPROM** | 1 KB | dane konfiguracyjne do zachowania po restarcie | nie — trwała |
+
+**Flash** jest zapisywany przy każdym wgraniu szkicu. Zmienne globalne, stałe i literały tekstowe zaczynają życie we Flash, ale przy starcie programu są kopiowane do SRAM.
+
+**SRAM** to pamięć robocza. Zmienne, tablica `Serial` (64-bajtowy bufor odbiorczy!) i stos rekurencji — wszystko tu. Gdy SRAM się przepełni, program zaczyna zachowywać się losowo bez żadnego komunikatu błędu.
+
+**EEPROM** czyta się i zapisuje przez bibliotekę `EEPROM.h`. Ma ograniczoną trwałość zapisu (~100 000 cykli na komórkę), więc nie nadaje się do danych zmienianych w każdym obiegu `loop()`.
+
+</Expandable>
+
 ## 7. Licznik wysyłany przez UART
 
 Najprostszy program ze zmienną to licznik. Deklarujemy go przed `setup()`, czyli
@@ -388,6 +429,21 @@ Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
 </Task>
 
+<Expandable title="Głębiej: przepełnienie liczby całkowitej (integer overflow)" heading="###">
+
+W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — wartość po prostu zawija się na drugi koniec zakresu. Jest to zachowanie zdefiniowane dla typów bez znaku i powszechnie spotykane dla typów ze znakiem na AVR.
+
+| Typ | Zakres | Po przekroczeniu max |
+|---|---|---|
+| `byte` (= `uint8_t`) | 0 … 255 | 255 + 1 = **0** |
+| `int` (= `int16_t`) | -32 768 … 32 767 | 32 767 + 1 = **-32 768** |
+| `unsigned int` | 0 … 65 535 | 65 535 + 1 = **0** |
+| `unsigned long` | 0 … 4 294 967 295 | zawija się do **0** |
+
+To zjawisko ma praktyczne skutki: funkcja `millis()` zwraca `unsigned long` i po ~49 dniach zawija się do zera. Kod, który poprawnie obsługuje zawijaniew `millis()`, musi używać odejmowania, a nie porównywania `>=`. Ten wzorzec poznasz w lekcji o wielozadaniowości.
+
+</Expandable>
+
 ## 8. Odbieranie danych z komputera
 
 UART działa w dwie strony. Arduino może nie tylko wysyłać dane do komputera,
@@ -420,6 +476,29 @@ Monitor portu szeregowego wysyła znaki ASCII. Gdy wpisujesz `0`, Arduino odbier
 znak `'0'`, którego kod liczbowy to `48`, a nie wartość liczbową `0`. Dlatego w
 prostych komendach porównujemy `znak == '0'`, a nie `znak == 0`.
 </Callout>
+
+<Expandable title="Głębiej: tablica ASCII — skąd bierze się kod 48?" heading="###">
+
+ASCII (American Standard Code for Information Interchange) przypisuje każdemu znakowi unikalny kod od 0 do 127. Wybrane wartości:
+
+| Kod | Znak | Uwaga |
+|---|---|---|
+| 10 | `\n` | nowa linia (LF) |
+| 13 | `\r` | powrót karetki (CR) |
+| 32 | ` ` | spacja |
+| 48–57 | `0`–`9` | cyfry |
+| 65–90 | `A`–`Z` | wielkie litery |
+| 97–122 | `a`–`z` | małe litery |
+
+Kilka praktycznych wzorców, które zobaczysz w kodzie Arduino:
+
+- Konwersja znaku cyfry na liczbę: `int n = znak - '0';` (odejmuje 48)
+- Zamiana małej litery na wielką: `char w = znak - 32;`
+- Sprawdzenie, czy odebrany bajt to cyfra: `if (znak >= '0' && znak <= '9')`
+
+Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porównuje z kodem SOH (Start of Heading) — kontrolnym znakiem, który nigdy nie przyjedzie z klawiatury.
+
+</Expandable>
 
 <Photo
   file="06.06-uart-wysylanie-imienia.png"

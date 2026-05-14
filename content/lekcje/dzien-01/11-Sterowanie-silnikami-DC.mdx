@@ -98,6 +98,16 @@ Arduino UNO może bezpiecznie sterować małymi sygnałami. Typowy pin mikrokont
 
 Silnik jest też źródłem zakłóceń i przepięć. Bez elementu pośredniczącego łatwo doprowadzić do resetów programu, niestabilnej pracy albo trwałego uszkodzenia mikrokontrolera.
 
+<Expandable title="Back-EMF — skąd biorą się przepięcia od silnika?" heading="###">
+
+Gdy wirnik silnika obraca się w polu magnetycznym, sam zachowuje się jak generator i wytwarza napięcie skierowane przeciwnie do źródła zasilania. Nazywamy to **siłą przeciwelektromotoryczną** (ang. *back-EMF*).
+
+Poważniejszy problem pojawia się w chwili nagłego odcięcia zasilania. Energia zgromadzona w uzwojeniach nie znika natychmiast — silnik „wyrzuca" wtedy skok napięcia z powrotem do układu. Bez ochrony takie przepięcie może zniszczyć tranzystory sterownika lub mikrokontroler.
+
+Rozwiązaniem są **diody swobodne** (*flyback diodes*), podłączone równolegle do silnika i skierowane tak, by przepięcie odprowadzało się do szyny zasilania. Litera **D** w nazwie `L293D` oznacza właśnie, że scalak ma wbudowane diody ochronne — starszy `L293` (bez litery D) ich nie posiada i wymaga diod zewnętrznych.
+
+</Expandable>
+
 ## 3. Mostek H w pigułce
 
 Między Arduino a silnikiem wstawiamy sterownik. Najczęściej jest to mostek H, czyli układ, który pozwala sterować kierunkiem przepływu prądu przez silnik. Dzięki temu ten sam silnik może obracać się w lewo albo w prawo.
@@ -126,6 +136,16 @@ Układ `L293D` ma oddzielne zasilanie logiki i silników. Pin `16` zasila częś
 <Callout type="warning" title="Sprawdź prąd silnika">
 L293D może dostarczyć ograniczony prąd. W praktyce silnik powinien pobierać mniej niż około `0,6 A` na kanał podczas normalnej pracy. Prąd rozruchowy i prąd zablokowanego silnika mogą być dużo większe.
 </Callout>
+
+<Expandable title="Co kryje się wewnątrz mostka H?" heading="###">
+
+Nazwa „mostek H" pochodzi od wyglądu schematu: cztery tranzystory tworzą kształt litery **H**, a silnik podłączony jest poprzecznie — w poziomej belce łączącej obie gałęzie.
+
+Aby silnik kręcił się w jedną stronę, włączamy tranzystory T1 i T4 (prąd płynie przez silnik od lewej do prawej). Odwrócenie kierunku wymaga pary T2 i T3. Jednoczesne włączenie T1 i T3 (albo T2 i T4) zwierałoby zasilanie z masą — dlatego sterowniki mostkowe mają wbudowaną logikę blokującą takie kombinacje.
+
+W układzie `L293D` rolę tranzystorów pełnią struktury Darlingtona sterowane bezpośrednio napięciem logicznym `5 V`. Wbudowane diody ochronne (wspomniane przy back-EMF wyżej) siedzą w tych samych „nogach" obudowy co tranzystory.
+
+</Expandable>
 
 ## 4. Kierunek obrotów i tabela prawdy
 
@@ -307,6 +327,24 @@ void loop() {
 </Code>
 
 Wartości `analogWrite()` od `0` do `255` odpowiadają wypełnieniu PWM od `0%` do `100%`. Rzeczywisty silnik może nie ruszyć przy bardzo małych wartościach, bo musi pokonać tarcie i bezwładność.
+
+<Expandable title="Minimalny próg uruchomienia silnika i kalibracja PWM" heading="###">
+
+Każdy silnik ma tzw. **próg uruchomienia** (*stall threshold*) — minimalną wartość PWM, poniżej której moment obrotowy jest za mały, by pokonać tarcie i ruszyć wał. Dla małych silników DC przez `L293D` ten próg wynosi najczęściej gdzieś między `60` a `150` (skala `0`–`255`), ale zależy od silnika, obciążenia i napięcia zasilania.
+
+Warto wyznaczyć go doświadczalnie — wystarczy prosta pętla:
+
+```cpp
+for (int i = 0; i <= 255; i++) {
+  analogWrite(6, i);
+  Serial.println(i);
+  delay(100);
+}
+```
+
+Obserwuj, przy jakiej wartości silnik faktycznie rusza. To jest Twoje `MIN_PWM`. Przy budowie sterownika robota warto ustawić dolną granicę prędkości właśnie na tę wartość — żeby komenda „jedź powoli" nie oznaczała „stój w miejscu i piszcz".
+
+</Expandable>
 
 ## 9. Pętla `for` w Arduino
 

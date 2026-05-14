@@ -109,6 +109,16 @@ LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 
   ]}
 />
 
+<Expandable title="Tryb 4-bitowy kontra 8-bitowy — jak to działa?" heading="###">
+
+Sterownik HD44780 przyjmuje dane w bajtach (8 bitów na raz). W **trybie 8-bitowym** wszystkie 8 linii danych (D0–D7) jest podłączonych do Arduino i każdy bajt jest wysyłany jednym impulsem na linii E.
+
+W **trybie 4-bitowym** używamy tylko linii D4–D7. Jeden bajt jest wysyłany w dwóch etapach: najpierw starsze 4 bity (nibble), potem młodsze 4 bity. Biblioteka `LiquidCrystal` robi to automatycznie — z perspektywy programu oba tryby działają identycznie.
+
+Tryb 4-bitowy jest popularniejszy, bo oszczędza 4 piny Arduino. Te piny można przeznaczyć na przyciski, czujniki lub inne peryferia. Prędkość przesyłania danych do wyświetlacza jest w obu przypadkach wystarczająca dla tekstu, który zmienia się wolno.
+
+</Expandable>
+
 ## 3. Podłączenie LCD do Arduino
 
 Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjometru do regulacji kontrastu i przewodów. Potencjometr działa jako dzielnik napięcia, którego środkowy pin podłączamy do wejścia kontrastu `V0`.
@@ -175,6 +185,16 @@ void loop() {
 <Callout type="warning" title="Co jeśli nie działa?">
 Sprawdź kolejno: zasilanie LCD, masę, kolejność przewodów sygnałowych, zgodność pinów w `LiquidCrystal lcd(...)` oraz ustawienie kontrastu. Te punkty rozwiązują większość problemów z pierwszym uruchomieniem LCD.
 </Callout>
+
+<Expandable title="Własne znaki na LCD — lcd.createChar()" heading="###">
+
+Sterownik HD44780 ma pamięć na **8 własnych znaków** w slotach 0–7. Każdy znak to siatka **5×8 pikseli**. Możesz zaprojektować własne ikony: strzałki, symbol stopnia Celsjusza, baterię czy proste emoji.
+
+Każdy znak jest tablicą 8 bajtów — jeden bajt to jeden wiersz siatki. Bity 0–4 każdego bajtu odpowiadają kolumnom (bit 4 to lewa kolumna, bit 0 to prawa). Wypełniony prostokąt wyglądałby tak: `{0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F}`.
+
+Znak wgrywasz przez `lcd.createChar(numer, tablica)` w `setup()`, a wyświetlasz przez `lcd.write(numer)`. Projektowanie wzorów ułatwiają generatory online — wystarczy wyszukać „HD44780 custom char generator".
+
+</Expandable>
 
 <Task title="Zadanie 1" estimate="10 min">
 Napisz program, który w pierwszej linii wyświetla Twoje imię, a w drugiej krótki adres lub hasło kursu. Pamiętaj o limicie 16 znaków w jednej linii.
@@ -390,6 +410,16 @@ void loop() {
 }
 ```
 </Code>
+
+<Expandable title="Moduł I2C do LCD — ten sam wyświetlacz, dużo mniej przewodów" heading="###">
+
+Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C do LCD** — małej płytki z ekspanderem portów PCF8574, którą przykręca się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA i SCL** (plus zasilanie i masę).
+
+Biblioteka `LiquidCrystal_I2C` (dostępna w Menedżerze bibliotek Arduino IDE) działa niemal identycznie jak `LiquidCrystal`. Zamiast `LiquidCrystal lcd(2,3,4,5,6,7)` piszesz `LiquidCrystal_I2C lcd(0x27, 16, 2)`, gdzie `0x27` to domyślny adres I2C modułu (może być też `0x3F` — sprawdzasz skanerem I2C).
+
+Moduł I2C jest szczególnie przydatny, gdy brakuje Ci wolnych pinów cyfrowych. Wadą jest drobne opóźnienie transmisji I2C, ale przy wolno zmieniającym się tekście jest ono zupełnie niezauważalne.
+
+</Expandable>
 
 ## Podsumowanie
 

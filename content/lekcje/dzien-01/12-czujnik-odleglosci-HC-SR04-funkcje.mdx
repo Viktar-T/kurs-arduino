@@ -296,6 +296,18 @@ Czujnik ma cztery piny:
 3. Mierzymy czas trwania stanu wysokiego na `Echo` — to czas podróży dźwięku (tam i z powrotem).
 4. Dzielimy przez `58`, żeby otrzymać odległość w centymetrach.
 
+<Expandable title="Ograniczenia i martwa strefa czujnika HC-SR04" heading="###">
+
+HC-SR04 to prosty i tani czujnik, ale ma kilka praktycznych ograniczeń:
+
+- **Martwa strefa:** obiekt bliższy niż ok. `2–3 cm` nie zostanie wykryty — echo wraca zbyt szybko, zanim czujnik zdąży przełączyć się w tryb nasłuchiwania.
+- **Maksymalny zasięg:** producent deklaruje ok. `400 cm`, ale powyżej `200–250 cm` pomiary stają się niestabilne.
+- **Kąt wiązki:** czujnik „widzi" stożek o półkącie ok. `15°`. Obiekt pod dużym skosem może odbić sygnał w bok i nie wrócić do czujnika.
+- **Materiały pochłaniające:** miękkie powierzchnie (tkaniny, piana, futro) pochłaniają ultradźwięki i zwracają słabe echo lub w ogóle go nie zwracają.
+- **Fałszywe echa:** w pomieszczeniach z wieloma powierzchniami echo może wielokrotnie odbijać się od ścian. `pulseIn()` chwyta pierwsze echo — zazwyczaj poprawne, ale przy skomplikowanej geometrii mogą pojawiać się skoki odczytu.
+
+</Expandable>
+
 ## 5. Miernik odległości
 
 Podłącz czujnik do Arduino jak na schemacie:
@@ -378,6 +390,34 @@ void loop() {
 Dźwięk przebywa w powietrzu ok. 340 m/s. Impuls pokonuje dystans dwukrotnie (tam i z powrotem), a `pulseIn()` zwraca czas w mikrosekundach. Dzielenie przez 58 daje przybliżenie odległości w centymetrach: 1 cm = 58 µs.
 </Callout>
 
+<Expandable title="Kompensacja temperatury — kiedy dzielnik 58 nie wystarczy" heading="###">
+
+Prędkość dźwięku w powietrzu zależy od temperatury. Wzór przybliżony:
+
+> v ≈ 331,3 + 0,606 × T [m/s]
+
+Przy `20 °C` wynosi ok. `343 m/s`, a przy `0 °C` ok. `331 m/s`. Dzielnik `58` odpowiada temperaturze pokojowej — przy mrozie lub upale wynik jest nieco zaburzony.
+
+Jeśli masz dostęp do czujnika temperatury (np. DHT11 z kolejnych lekcji), możesz na bieżąco przeliczać dzielnik:
+
+```cpp
+long zmierzOdlegloscDokl(float temperatura) {
+  float v = 331.3 + 0.606 * temperatura; // m/s
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long czas = pulseIn(echoPin, HIGH);
+  // czas [µs] * v [m/s] / 20000 → dystans [cm]
+  return (long)(czas * v / 20000.0);
+}
+```
+
+W sali szkolnej różnica temperatury między zimą a latem to ok. `20 °C`, co przekłada się na błąd pomiaru ok. `3%`. Przy zasięgu `100 cm` to ok. `3 cm` — często pomijalne, ale przy precyzyjnym omijaniu przeszkód warto mieć to z tyłu głowy.
+
+</Expandable>
+
 ## 6. Funkcja zwracająca odległość
 
 Zamknijmy cały pomiar w jednej funkcji — kod `loop()` będzie wtedy bardzo przejrzysty:
@@ -419,6 +459,25 @@ int zmierzOdleglosc() {
 <Task title="Zadanie 3" estimate="10 min">
 Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością.
 </Task>
+
+<Expandable title="Uśrednianie pomiarów — stabilniejsze wskazania" heading="###">
+
+Pojedynczy odczyt HC-SR04 może czasem „skoczyć" o kilka centymetrów z powodu przypadkowego echa lub drgań zasilania. Uśrednianie kilku pomiarów znacząco poprawia stabilność:
+
+```cpp
+int zmierzOdlegloscUsredniona(int probek) {
+  long suma = 0;
+  for (int i = 0; i < probek; i++) {
+    suma += zmierzOdleglosc();
+    delay(20);
+  }
+  return suma / probek;
+}
+```
+
+Wywołanie `zmierzOdlegloscUsredniona(5)` pobiera `5` pomiarów i zwraca ich średnią. Jedno `delay(20)` to `20 ms` przerwy między próbkami — pięć próbek zajmuje łącznie ok. `100 ms`. Im więcej próbek, tym wolniejsza reakcja programu. W robotach mobilnych `3`–`5` pomiarów to zazwyczaj dobry kompromis między stabilnością odczytu a szybkością reagowania na przeszkody.
+
+</Expandable>
 
 ## 7. Sprawdzanie zakresu odległości
 
