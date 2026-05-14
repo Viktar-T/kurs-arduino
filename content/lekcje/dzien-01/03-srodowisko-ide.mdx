@@ -1,4 +1,4 @@
----
+﻿---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -72,7 +72,7 @@ W IDE: **Narzędzia → Płytka → Arduino UNO**, następnie **Narzędzia → P
 i wybierz port szeregowy, pod którym widnieje płytka (zwykle `COM3+` na
 Windows lub `/dev/cu.usbmodem*` na macOS/Linux).
 
-<Photo file="05-Arduino_IDE_instalacja_blink2-726x320.png" day="dzien-01" caption="Wybór odpowiedniej płytki Arduino" alt="Wybór odpowiedniej płytki Arduino" />
+<Photo file="03.01-Arduino_IDE_instalacja_blink2-726x320.png" day="dzien-01" caption="Wybór odpowiedniej płytki Arduino" alt="Wybór odpowiedniej płytki Arduino" />
 
 ## 3. Wgrywanie programu na płytkę
 
@@ -81,7 +81,7 @@ Arduino IDE ma dwa kluczowe przyciski w pasku narzędzi:
 - **Weryfikuj** (ikona ✓) — kompiluje kod i sprawdza błędy składni, ale **nie wysyła** programu na płytkę. Używaj przed wgraniem, żeby upewnić się, że kod jest poprawny.
 - **Wgraj** (ikona →) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
 
-<Photo file="06-Arduino_IDE_instalacja_blink3.png" day="dzien-01" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
+<Photo file="03.02-Arduino_IDE_instalacja_blink3.png" day="dzien-01" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
 
 Jak wgrać program krok po kroku:
 
@@ -90,7 +90,7 @@ Jak wgrać program krok po kroku:
 3. W dolnym panelu IDE zobaczysz komunikaty kompilacji, a następnie pasek postępu przesyłania.
 4. Komunikat **„Wgrywanie zakończone"** (*Done uploading*) oznacza sukces — płytka automatycznie się resetuje i uruchamia nowy program.
 
-<Photo file="07-Arduino_IDE_instalacja_blink4.png" day="dzien-01" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
+<Photo file="03.03-Arduino_IDE_instalacja_blink4.png" day="dzien-01" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
 
 <Callout type="note" title="Diody TX i RX">
 W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
@@ -98,7 +98,7 @@ W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to nor
 
 Po wgraniu programu dioda LED na pinie 13 powinna zacząć migać:
 
-<Photo file="08-Arduino-UNO-pin13-miga.png" day="dzien-01" caption="Dioda LED na pinie 13 miga — program działa!" alt="Arduino UNO z migającą diodą LED na pinie 13" />
+<Photo file="03.04-Arduino-UNO-pin13-miga.png" day="dzien-01" caption="Dioda LED na pinie 13 miga — program działa!" alt="Arduino UNO z migającą diodą LED na pinie 13" />
 
 ## 4. Struktura szkicu — `setup()` i `loop()`
 

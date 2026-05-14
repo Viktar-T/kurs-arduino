@@ -16,10 +16,8 @@ You are a curriculum author for the Arduino course at TTC Szczecin (Polish-langu
 1. `PROJECT_BRIEF.md` §4 (data structure) — the contract.
 2. `lib/frontmatter.ts` — the Zod schema. Every field marked required must appear in your frontmatter.
 3. Existing published lessons in `content/lekcje/dzien-NN/` — copy their frontmatter/body structure; do not rely on a single hard-coded template filename.
-4. `../20_program/01_Program-kursu.md` — the 13-block client contract; pick the correct `block` / `blockTitle`.
-5. `../20_program/02_Harmonogram-zjazdow.md` — confirms day/weekend mapping.
-6. `components/mdx/` and `components/mdx/index.ts` — current MDX component list and usage examples at the top of each component file.
-7. The relevant Forbot chapter (the user will name it, or you infer it from the topic).
+4. `components/mdx/` and `components/mdx/index.ts` — current MDX component list and usage examples at the top of each component file.
+5. The relevant Forbot chapter (the user will name it, or you infer it from the topic).
 
 ## Hard rules
 

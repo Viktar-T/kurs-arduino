@@ -1,0 +1,550 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Czujnik odległości HC-SR04 i funkcje"
+slug: "czujnik-odleglosci-hc-sr04-funkcje"
+summary: "Plan lekcji na podstawie kursu Forbot #9: własne funkcje bez argumentów i z argumentami, funkcje zwracające wynik, czujnik ultradźwiękowy HC-SR04, pomiar czasu impulsu i sprawdzanie zakresu odległości."
+
+day: 1
+weekend: 1
+order: 12
+duration: 60
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 9
+
+objectives:
+  - "Podłączyć czujnik ultradźwiękowy HC-SR04 do Arduino"
+  - "Wyjaśnić zasadę pomiaru odległości za pomocą impulsu ultradźwiękowego"
+  - "Napisać własną funkcję z argumentami i wartością zwracaną"
+  - "Zmierzyć odległość i wykorzystać ją w warunkach programu"
+
+prerequisites:
+  - "dzien-01/11-sterowanie-silnikami-dc"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Czujnik odległości HC-SR04", qty: 1 }
+  - { name: "Dioda LED", qty: 3, optional: true }
+  - { name: "Rezystor 220 Ω", qty: 3, optional: true }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, hc-sr04, czujnik-odleglosci, funkcje, pulsein, ultradzwieki]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-czujnik-odleglosci-hc-sr04-funkcje-id4290"
+
+publish: true
+updated: "2026-05-13"
+---
+
+W tej lekcji nauczysz się pisać własne funkcje w C++ — zarówno proste, jak i z argumentami oraz wartością zwracaną. Następnie poznasz czujnik ultradźwiękowy HC-SR04 i użyjesz go razem z funkcją do zbudowania prostego alarmu zbliżeniowego.
+
+<Photo
+  file="12.01-led-miganie-animacja.gif"
+  day="dzien-01"
+  caption="Miganie diodą — klasyczny przykład do nauki własnych funkcji."
+  alt="Animacja migającej diody LED na płytce Arduino"
+  width={341}
+  height={341}
+/>
+
+## 1. Własne funkcje bez argumentów
+
+Do tej pory cały kod umieszczaliśmy w `setup()` i `loop()`. Gdy program zaczyna rosnąć, warto wydzielić powtarzające się fragmenty do osobnych funkcji. Funkcja to nazwany blok kodu, który wywołujemy jedną linią zamiast kopiować kilkanaście.
+
+Poniżej prosty program migający diodą — najpierw bez funkcji:
+
+<Code lang="cpp" file="blink-bez-funkcji.ino">
+```cpp
+void setup() {
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(1000);
+  digitalWrite(13, LOW);
+  delay(1000);
+}
+```
+</Code>
+
+Teraz ten sam efekt z własną funkcją `zamigajLED()`:
+
+<Code lang="cpp" file="blink-funkcja.ino">
+```cpp
+void setup() {
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  zamigajLED();
+}
+
+void zamigajLED() {
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+  delay(500);
+}
+```
+</Code>
+
+Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości. Ciało funkcji (kod między `{` a `}`) wykonuje się za każdym razem, gdy napiszemy `zamigajLED()`.
+
+<Callout type="note" title="Gdzie umieszczać definicje funkcji?">
+Funkcję możesz zdefiniować przed `setup()` lub po `loop()` — Arduino IDE nie wymaga wcześniejszej deklaracji. Dla czytelności warto trzymać `setup()` i `loop()` na górze, a pomocnicze funkcje poniżej.
+</Callout>
+
+<Task title="Zadanie 1" estimate="5 min">
+Przepisz program z lekcji o miganiu diodą tak, żeby sekwencja migania była w osobnej funkcji `migaj()`. Wywołaj ją z `loop()`.
+</Task>
+
+## 2. Funkcje z argumentami
+
+Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie-takich-samych funkcji dla różnych czasów migania, piszemy jedną z parametrem:
+
+<Code lang="cpp" file="blink-z-argumentem.ino">
+```cpp
+void setup() {
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  zamigajLED(50);
+}
+
+void zamigajLED(int czas) {
+  digitalWrite(13, HIGH);
+  delay(czas);
+  digitalWrite(13, LOW);
+  delay(czas);
+}
+```
+</Code>
+
+Wartość `50` przekazana przy wywołaniu trafia do zmiennej `czas` wewnątrz funkcji. Możemy teraz wywołać `zamigajLED(100)` albo `zamigajLED(500)` i za każdym razem dioda mignie inaczej.
+
+### Wiele argumentów
+
+Dodajmy drugi argument — liczbę mignięć:
+
+<Code lang="cpp" file="blink-dwa-argumenty.ino">
+```cpp
+void setup() {
+  pinMode(13, OUTPUT);
+  zamigajLED(100, 5);
+}
+
+void loop() {
+}
+
+void zamigajLED(int czas, int ile) {
+  for (int i = 0; i < ile; i++) {
+    digitalWrite(13, HIGH);
+    delay(czas);
+    digitalWrite(13, LOW);
+    delay(czas);
+  }
+}
+```
+</Code>
+
+Trzeci argument może wskazywać numer pinu, co pozwala sterować różnymi diodami tą samą funkcją:
+
+<Code lang="cpp" file="blink-trzy-argumenty.ino">
+```cpp
+void setup() {
+  zamigajLED(100, 5, 13);
+  zamigajLED(150, 4, 8);
+}
+
+void loop() {
+}
+
+void zamigajLED(int czas, int ile, int pin) {
+  pinMode(pin, OUTPUT);
+
+  for (int i = 0; i < ile; i++) {
+    digitalWrite(pin, HIGH);
+    delay(czas);
+    digitalWrite(pin, LOW);
+    delay(czas);
+  }
+}
+```
+</Code>
+
+<Task title="Zadanie 2" estimate="10 min">
+Napisz funkcję `sygnalSOS()` bez argumentów, która wyda trzy krótkie i trzy długie mignięcia diodą, korzystając wewnętrznie z funkcji `zamigajLED(int czas, int ile, int pin)`.
+</Task>
+
+## 3. Funkcje zwracające wynik
+
+Funkcja może nie tylko coś robić, ale też oddać wynik do miejsca wywołania. Deklarujemy wtedy typ zwracany (np. `int`) zamiast `void`, a wewnątrz używamy `return`:
+
+<Code lang="cpp" file="funkcja-zwracajaca.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int wynik = kwadratPole(4);
+  Serial.println(wynik);
+  delay(500);
+}
+
+int kwadratPole(int a) {
+  return a * a;
+}
+```
+</Code>
+
+Możemy też wstawić wywołanie bezpośrednio w argumencie `Serial.println()`:
+
+```cpp
+Serial.println(kwadratPole(4));
+```
+
+Funkcja zwracająca wartość sprawdza się wszędzie tam, gdzie potrzebujemy obliczyć coś i użyć wyniku w dalszej logice — na przykład przy pomiarze odległości.
+
+<Expandable title="Interaktywny przykład — pole kwadratu z UART" heading="###">
+
+Program czyta liczbę wpisaną w Monitorze portu szeregowego, oblicza pole kwadratu i odpowiada wynikiem:
+
+```cpp
+String odebraneDane = "";
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    odebraneDane = Serial.readStringUntil('\n');
+    int wynik = kwadratPole(odebraneDane.toInt());
+    Serial.println(wynik);
+  }
+}
+
+int kwadratPole(int a) {
+  return a * a;
+}
+```
+
+Wpisz `5` w terminalu — powinieneś otrzymać `25`.
+
+</Expandable>
+
+## 4. Czujnik ultradźwiękowy HC-SR04
+
+HC-SR04 mierzy odległość za pomocą ultradźwięków — wysyła krótki impuls dźwiękowy i mierzy czas, po jakim echo wraca do czujnika.
+
+<Photo
+  file="12.02-hc-sr04-tyl.jpg"
+  day="dzien-01"
+  caption="Tylna strona czujnika HC-SR04 z opisem wyprowadzeń."
+  alt="Czujnik odległości HC-SR04 — widok od tyłu"
+  width={400}
+  height={267}
+/>
+
+<Photo
+  file="12.03-hc-sr04-przod.jpg"
+  day="dzien-01"
+  caption="Przednia strona czujnika — dwie 'oczy' to przetwornik nadawczy i odbiorczy."
+  alt="Czujnik odległości HC-SR04 — widok od przodu"
+  width={400}
+  height={267}
+/>
+
+Czujnik ma cztery piny:
+
+<Table
+  caption="Wyprowadzenia czujnika HC-SR04"
+  headers={["Pin", "Opis", "Podłączenie"]}
+  rows={[
+    ["Vcc", "Zasilanie", "5 V z Arduino"],
+    ["Trig", "Wyzwolenie pomiaru (wejście)", "Dowolny pin cyfrowy"],
+    ["Echo", "Sygnał echa (wyjście)", "Dowolny pin cyfrowy"],
+    ["GND", "Masa", "GND Arduino"],
+  ]}
+/>
+
+<Photo
+  file="12.04-hc-sr04-piny-opis.jpg"
+  day="dzien-01"
+  caption="Opis pinów czujnika HC-SR04."
+  alt="Diagram pinów HC-SR04: Vcc, Trig, Echo, GND"
+  width={400}
+  height={267}
+/>
+
+### Zasada działania
+
+1. Na pin `Trig` podajemy impuls wysoki trwający **10 µs** — czujnik wysyła 8 impulsów ultradźwiękowych.
+2. Pin `Echo` przechodzi w stan wysoki i pozostaje tam przez czas proporcjonalny do zmierzonej odległości.
+3. Mierzymy czas trwania stanu wysokiego na `Echo` — to czas podróży dźwięku (tam i z powrotem).
+4. Dzielimy przez `58`, żeby otrzymać odległość w centymetrach.
+
+## 5. Miernik odległości
+
+Podłącz czujnik do Arduino jak na schemacie:
+
+<Schematic
+  src="/img/lekcje/dzien-01/12.05-hc-sr04-schemat-polaczen.png"
+  caption="Schemat podłączenia HC-SR04 do Arduino UNO."
+  alt="Schemat połączeń: Arduino UNO z czujnikiem HC-SR04"
+  width={600}
+  height={400}
+/>
+
+<Photo
+  file="12.06-hc-sr04-podlaczenie-foto.jpg"
+  day="dzien-01"
+  caption="Zmontowany układ — HC-SR04 na płytce stykowej podłączony do Arduino."
+  alt="Fotografia Arduino UNO z czujnikiem HC-SR04 na płytce stykowej"
+  width={650}
+  height={433}
+/>
+
+Zaczynamy od podstawowego programu wyzwalającego pomiar:
+
+<Code lang="cpp" file="hc-sr04-wyzwolenie.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  // Wyzwolenie pomiaru
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+}
+```
+</Code>
+
+Teraz mierzymy czas echa funkcją `pulseIn()` i przeliczamy na centymetry:
+
+<Code lang="cpp" file="hc-sr04-dystans-cm.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  Serial.print(dystans);
+  Serial.println(" cm");
+
+  delay(500);
+}
+```
+</Code>
+
+<Callout type="note" title="Skąd wzięło się 58?">
+Dźwięk przebywa w powietrzu ok. 340 m/s. Impuls pokonuje dystans dwukrotnie (tam i z powrotem), a `pulseIn()` zwraca czas w mikrosekundach. Dzielenie przez 58 daje przybliżenie odległości w centymetrach: 1 cm = 58 µs.
+</Callout>
+
+## 6. Funkcja zwracająca odległość
+
+Zamknijmy cały pomiar w jednej funkcji — kod `loop()` będzie wtedy bardzo przejrzysty:
+
+<Code lang="cpp" file="hc-sr04-funkcja.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  Serial.print(zmierzOdleglosc());
+  Serial.println(" cm");
+  delay(500);
+}
+
+int zmierzOdleglosc() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  return dystans;
+}
+```
+</Code>
+
+<Task title="Zadanie 3" estimate="10 min">
+Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością.
+</Task>
+
+## 7. Sprawdzanie zakresu odległości
+
+Możemy napisać funkcję `zakres()`, która sprawdza, czy zmierzona odległość mieści się w podanym przedziale, i reaguje stanem pinu (np. buzzera lub diody):
+
+<Code lang="cpp" file="hc-sr04-zakres.ino">
+```cpp
+void zakres(int a, int b) {
+  int jakDaleko = zmierzOdleglosc();
+  if ((jakDaleko > a) && (jakDaleko < b)) {
+    digitalWrite(2, HIGH);
+  } else {
+    digitalWrite(2, LOW);
+  }
+}
+```
+</Code>
+
+### Kompletny program alarmu zbliżeniowego
+
+Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się w odległości od 10 do 25 cm:
+
+<Photo
+  file="12.07-buzzer-z-etykieta.jpg"
+  day="dzien-01"
+  caption="Buzzer z naklejką — naklejka tłumi dźwięk, zdejm ją przed użyciem."
+  alt="Buzzer pasywny z etykietą fabryczną"
+  width={300}
+  height={225}
+/>
+
+<Photo
+  file="12.08-buzzer-bez-etykiety.jpg"
+  day="dzien-01"
+  caption="Buzzer po zdjęciu naklejki."
+  alt="Buzzer pasywny bez naklejki"
+  width={300}
+  height={225}
+/>
+
+<Schematic
+  src="/img/lekcje/dzien-01/12.09-schemat-hc-sr04-buzzer.jpg"
+  caption="Schemat układu: Arduino, HC-SR04 i buzzer."
+  alt="Schemat połączeń: Arduino UNO, czujnik HC-SR04 i buzzer"
+  width={700}
+  height={400}
+/>
+
+<Photo
+  file="12.10-montaz-hc-sr04-buzzer.jpg"
+  day="dzien-01"
+  caption="Zmontowany układ: czujnik HC-SR04 i buzzer na płytce stykowej."
+  alt="Fotografia zmontowanego układu: Arduino z HC-SR04 i buzzerem"
+  width={650}
+  height={433}
+/>
+
+<Code lang="cpp" file="alarm-zblizkowy.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(2, OUTPUT);
+}
+
+void loop() {
+  zakres(10, 25);
+  delay(100);
+}
+
+int zmierzOdleglosc() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  return dystans;
+}
+
+void zakres(int a, int b) {
+  int jakDaleko = zmierzOdleglosc();
+  if ((jakDaleko > a) && (jakDaleko < b)) {
+    digitalWrite(2, HIGH);
+  } else {
+    digitalWrite(2, LOW);
+  }
+}
+```
+</Code>
+
+<Task title="Zadanie 4" estimate="15 min">
+Zmień granice `zakres(10, 25)` na własne wartości. Następnie dodaj drugą diodę LED i napisz funkcję `zakres2()`, która reaguje na inny przedział odległości. Przy okazji: czy dało się skrócić kod, przekazując pin jako argument?
+</Task>
+
+<MiniProject title="Wizualny wskaźnik odległości" estimate="20 min">
+
+<Photo
+  file="12.11-wskaznik-led-odleglosc.png"
+  day="dzien-01"
+  caption="Rząd diod LED jako wizualny wskaźnik odległości — im bliżej, tym więcej diod świeci."
+  alt="Schemat: rząd diod LED imitujący pasek postępu odległości"
+  width={600}
+  height={200}
+/>
+
+Masz do dyspozycji 3 diody LED (piny `2`, `3`, `4`). Napisz program:
+- 1 dioda świeci, gdy obiekt jest dalej niż 30 cm,
+- 2 diody świecą przy 15–30 cm,
+- 3 diody świecą przy bliżej niż 15 cm.
+
+Skorzystaj z funkcji `zmierzOdleglosc()` i trzech wywołań `zakres()` albo warunków `if-else if-else`.
+
+</MiniProject>
+
+## Podsumowanie
+
+Własne funkcje porządkują kod: wydzielasz powtarzające się bloki, nadajesz im nazwy i możesz wielokrotnie wywoływać jedną linijką. Argumenty sprawiają, że funkcja jest elastyczna — jeden fragment kodu działa dla różnych wartości. Funkcja zwracająca wynik pozwala użyć obliczonej wartości tam, gdzie jej potrzebujesz.
+
+Czujnik HC-SR04 mierzy odległość ultradźwiękami: krótki impuls na `Trig`, pomiar czasu echa na `Echo` przez `pulseIn()`, przeliczenie przez `58` — i masz odległość w centymetrach. Zamknięcie pomiaru w funkcji `zmierzOdleglosc()` dało przejrzysty program alarmu zbliżeniowego, w którym `loop()` robi jedną rzecz: sprawdza zakres.

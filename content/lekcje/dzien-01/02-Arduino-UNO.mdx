@@ -1,4 +1,4 @@
----
+﻿---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -53,9 +53,9 @@ napiszemy pierwszą linię kodu, każdy uczeń musi wiedzieć, gdzie na płytce
 znajduje się mikrokontroler, gdzie podłączamy zasilanie, którymi pinami
 „rozmawiamy ze światem” i co oznaczają migające diody.
 
-{/* TODO: dodać plik graficzny `02-arduino_layobut_uno_plytka-1536x1024.webp` w public/img/lekcje/dzien-01/ — zdjęcie płytki UNO R3 z góry */}
+{/* TODO: dodać plik graficzny `02.01-arduino_layobut_uno_plytka-1536x1024.webp` w public/img/lekcje/dzien-01/ — zdjęcie płytki UNO R3 z góry */}
 <Photo
-  file="02-arduino_layobut_uno_plytka-1536x1024.webp"
+  file="02.01-arduino_layobut_uno_plytka-1536x1024.webp"
   day="dzien-01"
   caption="Arduino UNO R3 — wersja, którą będziemy używać przez całe 80 godzin kursu."
   alt="Płytka Arduino UNO R3 widziana z góry, z widocznymi złączami goldpin, gniazdem USB-B i mikrokontrolerem ATmega328P."
@@ -102,17 +102,40 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
 
 <Table
   caption="Cztery strefy płytki UNO — od razu naucz się je rozpoznawać na pamięć."
-  headers={["Strefa", "Gdzie się znajduje", "Po co tam jest"]}
-  rows={[
-    ["Wejścia/wyjścia cyfrowe (0-13)", "Górna listwa goldpin", "Tu podłączysz diody, przyciski, czujniki cyfrowe, sterowniki silników"],
-    ["Wejścia analogowe (A0-A5) + zasilanie", "Dolna listwa goldpin", "A0-A5: czujniki analogowe; obok piny 5 V, 3,3 V, GND, Vin"],
-    ["Komunikacja i programowanie", "Lewy bok: USB-B + złącze DC", "USB do PC (programowanie i zasilanie) oraz gniazdo DC 7-12 V"],
-    ["Logika i sygnalizacja", "Środek płytki", "ATmega328P, kwarc 16 MHz, regulator napięcia, przycisk RESET, diody ON, L, TX, RX"],
-  ]}
-/>
+>
+  <thead>
+    <tr>
+      <th>Strefa</th>
+      <th>Gdzie się znajduje</th>
+      <th>Po co tam jest</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Wejścia/wyjścia cyfrowe (0-13)</td>
+      <td>Górna listwa goldpin</td>
+      <td>Tu podłączysz diody, przyciski, czujniki cyfrowe, sterowniki silników</td>
+    </tr>
+    <tr>
+      <td>Wejścia analogowe (A0-A5) + zasilanie</td>
+      <td>Dolna listwa goldpin</td>
+      <td>A0-A5: czujniki analogowe; obok piny 5 V, 3,3 V, GND, Vin</td>
+    </tr>
+    <tr>
+      <td>Komunikacja i programowanie</td>
+      <td>Lewy bok: USB-B + złącze DC</td>
+      <td>USB do PC (programowanie i zasilanie) oraz gniazdo DC 7-12 V</td>
+    </tr>
+    <tr>
+      <td>Logika i sygnalizacja</td>
+      <td>Środek płytki</td>
+      <td>ATmega328P, kwarc 16 MHz, regulator napięcia, przycisk RESET, diody ON, L, TX, RX</td>
+    </tr>
+  </tbody>
+</Table>
 
 
-<Photo file="03-Arduino_UNO_pinout_2_numery.webp" day="dzien-01" caption="Szczegółowy rysunek z numeracją pinów Arduino UNO" alt="Arduino UNO z numeracją pinów" />
+<Photo file="02.02-Arduino_UNO_pinout_2_numery.webp" day="dzien-01" caption="Szczegółowy rysunek z numeracją pinów Arduino UNO" alt="Arduino UNO z numeracją pinów" />
 
 1. **Złącze USB** - wykorzystywane do zasilania, programowania oraz komunikacji z komputerem
 2. **Złącze zasilania** (optymalnie 7V - 12V)

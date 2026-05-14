@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:forbot.pl)",
+      "Bash(curl -s -o __TRACKED_VAR__/12.01-led-miganie-animacja.gif __TRACKED_VAR__/2013/12/ArduinoLED_Blink.gif)",
+      "Bash(curl -s -o __TRACKED_VAR__/12.02-hc-sr04-tyl.jpg __TRACKED_VAR__/2015/09/Ard_9_1.jpg)",
+      "Bash(curl -s -o __TRACKED_VAR__/12.03-hc-sr04-przod.jpg __TRACKED_VAR__/2015/09/Ard_9_3.jpg)",
+      "Bash(curl -s -o __TRACKED_VAR__/12.04-hc-sr04-piny-opis.jpg __TRACKED_VAR__/2015/09/Ard_9_4.jpg)",
+      "Bash(curl -s -o __TRACKED_VAR__/12.05-hc-sr04-schemat-polaczen.png __TRACKED_VAR__/2015/09/Ard_9_11.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/13.01-arduino-ide-opcje-plotter.png __TRACKED_VAR__/2016/01/arduino_opcje.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/13.02-potencjometr-schemat.png __TRACKED_VAR__/2015/05/ard_4_1.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/13.03-potencjometr-terminal.gif __TRACKED_VAR__/2016/01/potencjometr_terminal.gif)",
+      "Bash(curl -s -o __TRACKED_VAR__/13.04-potencjometr-wykres.gif __TRACKED_VAR__/2016/01/potencjometr_terminal_wykres.gif)",
+      "Bash(curl -s -o __TRACKED_VAR__/13.05-czujnik-wykres-blad.png __TRACKED_VAR__/2016/01/czujnik_wykres_blad.png)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o __TRACKED_VAR__/04.01-arduino-uno-pinout.png __TRACKED_VAR__/Arduino_UNO_pinout_2.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/04.02-dioda-led-schemat.png __TRACKED_VAR__/Arduino_01_01.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/04.03-przycisk-schemat.png __TRACKED_VAR__/Arduino_01_02_v2.png)",
+      "Bash(curl -s -o __TRACKED_VAR__/04.04-swiatla-drogowe-schemat.png __TRACKED_VAR__/Arduino_01_03_v2.png)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\public\\\\img\\\\lekcje\\\\dzien-01\" -File)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(Sort-Object Name)"
+    ]
+  }
+}

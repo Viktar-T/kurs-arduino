@@ -25,8 +25,6 @@
  */
 import type { ReactNode } from "react";
 
-import { Table as BaseTable } from "@/components/ui/Table";
-
 interface TableProps {
   caption?: string;
   headers?: ReactNode[];
@@ -35,6 +33,9 @@ interface TableProps {
 }
 
 export function Table({ caption, headers, rows, children }: TableProps) {
+  const hasHeaders = Boolean(headers?.length);
+  const hasRows = Boolean(rows?.length);
+
   return (
     <figure className="forbot-table-figure my-6">
       {caption && (
@@ -43,13 +44,33 @@ export function Table({ caption, headers, rows, children }: TableProps) {
         </figcaption>
       )}
       <div className="forbot-table-wrap overflow-x-auto">
-        {children ? (
-          <table className="forbot-table w-full">
-            {children}
-          </table>
-        ) : (
-          <BaseTable headers={headers} rows={rows} />
-        )}
+        <table className="forbot-table w-full">
+          {hasHeaders && (
+            <thead>
+              <tr>
+                {headers!.map((header, index) => (
+                  <th key={index} scope="col">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
+
+          {hasRows ? (
+            <tbody>
+              {rows!.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={cellIndex}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          ) : (
+            children
+          )}
+        </table>
       </div>
     </figure>
   );

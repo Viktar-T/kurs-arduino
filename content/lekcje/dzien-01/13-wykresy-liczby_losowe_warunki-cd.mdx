@@ -1,0 +1,533 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Wykresy, liczby losowe i warunki — ciąg dalszy"
+slug: "wykresy-liczby-losowe-warunki-cd"
+summary: "Plan lekcji na podstawie kursu Forbot #10: rysowanie wykresów z danych Arduino, wykres odległości z HC-SR04, kilka wartości na wykresie, liczby losowe oraz łączenie warunków logicznych."
+
+day: 1
+weekend: 1
+order: 13
+duration: 60
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 10
+
+objectives:
+  - "Wysyłać dane z Arduino w formie nadającej się do rysowania wykresów"
+  - "Pokazać na wykresie odczyty z czujnika odległości"
+  - "Użyć liczb losowych w prostym programie"
+  - "Łączyć warunki logiczne w bardziej złożone decyzje programu"
+
+prerequisites:
+  - "dzien-01/12-czujnik-odleglosci-hc-sr04-funkcje"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Czujnik odległości HC-SR04", qty: 1 }
+  - { name: "Dioda LED", qty: 3 }
+  - { name: "Rezystor 220 Ω", qty: 3 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, wykresy, serial-plotter, liczby-losowe, warunki, hc-sr04]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
+
+publish: true
+updated: "2026-05-13"
+---
+
+W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym, generować liczby losowe oraz łączyć warunki logiczne w bardziej złożone decyzje. To ostatnia lekcja pierwszego dnia — zamkniemy go praktycznym przykładem alarmu z czujnikiem odległości i przyciskiem.
+
+## 1. Rysowanie wykresów z Arduino
+
+Arduino IDE ma wbudowane narzędzie — **Serial Plotter** — które rysuje wykres z danych przesyłanych przez port szeregowy. Wystarczy, że program wysyła liczby przez `Serial.println()`, a wykres aktualizuje się na bieżąco.
+
+<Photo
+  file="13.01-arduino-ide-opcje-plotter.png"
+  day="dzien-01"
+  caption="Serial Plotter w menu Narzędzia Arduino IDE."
+  alt="Zrzut ekranu menu Arduino IDE z opcją Serial Plotter"
+  width={400}
+  height={300}
+/>
+
+### Prosty wykres z potencjometru
+
+Podłącz potencjometr do pinu `A5` (środkowy nóżka do A5, skrajne do 5 V i GND):
+
+<Schematic
+  src="/img/lekcje/dzien-01/13.02-potencjometr-schemat.png"
+  caption="Podłączenie potencjometru do pinu A5."
+  alt="Schemat połączenia potencjometru do Arduino UNO, pin A5"
+  width={400}
+  height={300}
+/>
+
+<Code lang="cpp" file="potencjometr-wykres.ino">
+```cpp
+int odczytanaWartosc = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+  Serial.println(odczytanaWartosc);
+  delay(200);
+}
+```
+</Code>
+
+<Photo
+  file="13.03-potencjometr-terminal.gif"
+  day="dzien-01"
+  caption="Zmiany wartości ADC w Monitorze portu szeregowego podczas kręcenia potencjometrem."
+  alt="Animacja: Monitor portu szeregowego pokazuje zmieniające się wartości ADC"
+  width={400}
+  height={200}
+/>
+
+Otwórz teraz **Serial Plotter** (Narzędzia → Serial Plotter) i kręć potencjometrem — powinieneś zobaczyć płynny wykres:
+
+<Photo
+  file="13.04-potencjometr-wykres.gif"
+  day="dzien-01"
+  caption="Serial Plotter rysuje wykres wartości ADC z potencjometru w czasie rzeczywistym."
+  alt="Animacja: Serial Plotter wyświetla wykres zmian napięcia z potencjometru"
+  width={500}
+  height={300}
+/>
+
+<Callout type="note" title="Serial Plotter vs Serial Monitor">
+Nie możesz otworzyć obu jednocześnie — zajmują ten sam port szeregowy. Zamknij jedno przed otwarciem drugiego.
+</Callout>
+
+<Task title="Zadanie 1" estimate="5 min">
+Zmień wartość `delay(200)` na `50` i obserwuj, jak wykres staje się bardziej szczegółowy. Co się stanie przy `delay(10)`?
+</Task>
+
+## 2. Wykres odległości od przeszkody
+
+Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w lekcji 12 (`trigPin = 12`, `echoPin = 11`):
+
+<Code lang="cpp" file="hc-sr04-wykres.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  Serial.println(dystans);
+  delay(100);
+}
+```
+</Code>
+
+Gdy nic nie stoi przed czujnikiem, `pulseIn()` czeka na echo zbyt długo i zwraca `0` albo bardzo dużą wartość. Widać to na wykresie jako piki:
+
+<Photo
+  file="13.05-czujnik-wykres-blad.png"
+  day="dzien-01"
+  caption="Wykres z błędną wartością 2000 cm — czujnik nie wykrył echa w ustalonym czasie."
+  alt="Serial Plotter: pik 2000 cm w danych z czujnika HC-SR04"
+  width={500}
+  height={250}
+/>
+
+Naprawmy to: ograniczmy maksymalną wartość do zakresu podawanego przez producenta (400 cm):
+
+<Code lang="cpp" file="hc-sr04-wykres-poprawiony.ino">
+```cpp
+#define trigPin 12
+#define echoPin 11
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  if (dystans > 400) {
+    dystans = 400;
+  }
+
+  Serial.println(dystans);
+  delay(100);
+}
+```
+</Code>
+
+<Photo
+  file="13.06-czujnik-wykres-poprawiony.gif"
+  day="dzien-01"
+  caption="Poprawiony wykres — wartości ograniczone do 400 cm, piki znikają."
+  alt="Animacja: Serial Plotter z czystym wykresem danych z czujnika HC-SR04"
+  width={500}
+  height={300}
+/>
+
+## 3. Wykres kilku wartości
+
+Serial Plotter potrafi rysować kilka serii jednocześnie. Wystarczy wysłać wartości oddzielone tabulatorem (`\t`) i zakończyć linię `println`:
+
+<Code lang="cpp" file="wykres-kilka-wartosci.ino">
+```cpp
+Serial.print(Wartosc1);
+Serial.print("\t");
+Serial.print(Wartosc2);
+Serial.print("\t");
+Serial.print(Wartosc3);
+Serial.println("");
+```
+</Code>
+
+<Photo
+  file="13.07-wykres-kilku-wartosci.gif"
+  day="dzien-01"
+  caption="Serial Plotter wyświetla trzy serie danych jednocześnie."
+  alt="Animacja: Serial Plotter z trzema kolorowymi wykresami"
+  width={500}
+  height={300}
+/>
+
+<Task title="Zadanie 2" estimate="10 min">
+Wyślij jednocześnie odczyt z potencjometru (A5) i odległość z HC-SR04. Obserwuj oba wykresy nakładające się na siebie. Co się dzieje z wykresem czujnika, gdy zasłonisz go dłonią?
+</Task>
+
+## 4. Liczby losowe
+
+Funkcja `random(n)` zwraca pseudolosową liczbę z zakresu od `0` do `n-1`. Nie wymaga żadnego podłączenia — działa czysto programowo:
+
+<Photo
+  file="13.08-kostki-losowe.jpg"
+  day="dzien-01"
+  caption="Liczby losowe — jak rzut kostką, ale w kodzie."
+  alt="Kostki do gry symbolizujące losowość"
+  width={400}
+  height={267}
+/>
+
+<Code lang="cpp" file="liczby-losowe.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.println(random(300));
+  delay(1000);
+}
+```
+</Code>
+
+<Photo
+  file="13.09-random-wyjscie-1.png"
+  day="dzien-01"
+  caption="Pierwsze uruchomienie — losowe liczby z zakresu 0–299."
+  alt="Monitor portu szeregowego: pierwsze uruchomienie random(300)"
+  width={350}
+  height={250}
+/>
+
+### Pułapka: powtarzające się sekwencje
+
+Arduino to deterministyczna maszyna — generator liczb losowych startuje zawsze z tego samego miejsca. Przy każdym resecie zobaczysz tę samą sekwencję:
+
+<Photo
+  file="13.10-random-wyjscie-2.png"
+  day="dzien-01"
+  caption="Drugie uruchomienie — identyczna sekwencja jak za pierwszym razem."
+  alt="Monitor portu szeregowego: drugie uruchomienie pokazuje te same liczby"
+  width={350}
+  height={250}
+/>
+
+<Photo
+  file="13.11-random-wyjscie-3.png"
+  day="dzien-01"
+  caption="Trzecie uruchomienie — wciąż ta sama sekwencja."
+  alt="Monitor portu szeregowego: trzecie uruchomienie random(300)"
+  width={350}
+  height={250}
+/>
+
+<Photo
+  file="13.12-random-wyjscie-4.png"
+  day="dzien-01"
+  caption="Czwarte uruchomienie — identyczna seria. Widać, że to pseudolosowość."
+  alt="Monitor portu szeregowego: czwarte uruchomienie random(300)"
+  width={350}
+  height={250}
+/>
+
+### Losowe ziarno — `randomSeed()`
+
+Żeby sekwencje były naprawdę różne po każdym uruchomieniu, inicjujemy generator losowym ziarnem. Pin `A0` niepodłączony do niczego ma przypadkowy szum — świetne źródło ziarna:
+
+<Code lang="cpp" file="liczby-losowe-seed.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  Serial.println(random(300));
+  delay(1000);
+}
+```
+</Code>
+
+<Photo
+  file="13.13-random-seed-1.png"
+  day="dzien-01"
+  caption="Z randomSeed — pierwsze uruchomienie daje inną sekwencję niż poprzednie."
+  alt="Monitor portu szeregowego: pierwsze uruchomienie z randomSeed"
+  width={350}
+  height={250}
+/>
+
+<Photo
+  file="13.14-random-seed-2.png"
+  day="dzien-01"
+  caption="Z randomSeed — drugie uruchomienie, inna sekwencja."
+  alt="Monitor portu szeregowego: drugie uruchomienie z randomSeed"
+  width={350}
+  height={250}
+/>
+
+<Photo
+  file="13.15-random-seed-3.png"
+  day="dzien-01"
+  caption="Z randomSeed — trzecie uruchomienie, ponownie inna sekwencja."
+  alt="Monitor portu szeregowego: trzecie uruchomienie z randomSeed"
+  width={350}
+  height={250}
+/>
+
+<Expandable title="Zakres z dolnym limitem: random(a, b)" heading="###">
+
+`random(300)` daje zakres `0–299`. Jeśli chcesz zakres `10–99`, użyj:
+
+```cpp
+random(10, 100)   // wynik: 10, 11, ..., 99
+```
+
+Obie formy można mieszać: `random(50)` i `random(10, 50)` to różne zakresy.
+
+</Expandable>
+
+## 5. Losowe miganie diodą
+
+Łączymy liczby losowe z PWM i pętlą główną, żeby dioda migała w nieprzewidywalny sposób:
+
+<Code lang="cpp" file="losowe-miganie.ino">
+```cpp
+void setup() {
+  pinMode(13, OUTPUT);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  int czasWlaczona = random(10, 100) * 10;  // 100–990 ms, skok co 10
+  int czasWylaczona = random(5, 50) * 10;   // 50–490 ms, skok co 10
+
+  digitalWrite(13, HIGH);
+  delay(czasWlaczona);
+  digitalWrite(13, LOW);
+  delay(czasWylaczona);
+}
+```
+</Code>
+
+<Task title="Zadanie 3" estimate="10 min">
+Napisz program z dwiema diodami (piny 12 i 13). W każdym obiegu pętli losuj, która z nich zapali się i na jak długo. Druga ma być w tym czasie wyłączona.
+</Task>
+
+## 6. Łączenie instrukcji warunkowych
+
+Operator `||` to **lub** — warunek jest spełniony, gdy przynajmniej jedna część jest prawdziwa. Operator `&&` to **i** — obie muszą być prawdziwe.
+
+<Schematic
+  src="/img/lekcje/dzien-01/13.16-schemat-przyciski-diody.png"
+  caption="Schemat układu: dwa przyciski (piny 9 i 10) i dwie diody LED (piny 7 i 8)."
+  alt="Schemat elektryczny z dwoma przyciskami i dwiema diodami LED podłączonymi do Arduino"
+  width={600}
+  height={400}
+/>
+
+Podłącz dwa przyciski do pinów `9` i `10` (z `INPUT_PULLUP`), a dwie diody do pinów `7` i `8`.
+
+### Operator OR — dioda zielona
+
+Dioda zielona (pin `8`) świeci, gdy **którykolwiek** przycisk jest wciśnięty:
+
+<Code lang="cpp" file="warunki-or.ino">
+```cpp
+void setup() {
+  pinMode(10, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
+  pinMode(8, OUTPUT);
+  pinMode(7, OUTPUT);
+  digitalWrite(8, LOW);
+  digitalWrite(7, LOW);
+}
+
+void loop() {
+  if (digitalRead(9) == LOW || digitalRead(10) == LOW) {
+    digitalWrite(8, HIGH);
+  } else {
+    digitalWrite(8, LOW);
+  }
+}
+```
+</Code>
+
+### Operator AND — dioda czerwona
+
+Dioda czerwona (pin `7`) świeci tylko wtedy, gdy **oba** przyciski są wciśnięte jednocześnie:
+
+<Code lang="cpp" file="warunki-and-or.ino">
+```cpp
+void setup() {
+  pinMode(10, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
+  pinMode(8, OUTPUT);
+  pinMode(7, OUTPUT);
+  digitalWrite(8, LOW);
+  digitalWrite(7, LOW);
+}
+
+void loop() {
+  if (digitalRead(9) == LOW || digitalRead(10) == LOW) {
+    digitalWrite(8, HIGH);
+  } else {
+    digitalWrite(8, LOW);
+  }
+
+  if (digitalRead(9) == LOW && digitalRead(10) == LOW) {
+    digitalWrite(7, HIGH);
+  } else {
+    digitalWrite(7, LOW);
+  }
+}
+```
+</Code>
+
+<Table
+  caption="Operatory logiczne w C++"
+  headers={["Operator", "Symbol", "Kiedy prawdziwy"]}
+  rows={[
+    ["Lub", "||", "Co najmniej jeden warunek spełniony"],
+    ["I", "&&", "Oba warunki spełnione jednocześnie"],
+    ["Negacja", "!", "Odwrócenie wartości logicznej"],
+  ]}
+/>
+
+<Task title="Zadanie 4" estimate="10 min">
+Dodaj do programu trzecią diodę (pin `6`), która świeci tylko gdy **jeden** z przycisków jest wciśnięty (ale nie oba razem). Wskazówka: użyj XOR-a zapisanego jako `(A || B) && !(A && B)`.
+</Task>
+
+## 7. Warunki w praktyce — alarm z czujnikiem i przyciskiem
+
+Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 20–40 cm **lub** gdy przycisk jest wciśnięty — alarm działa zarówno automatycznie, jak i ręcznie:
+
+<Photo
+  file="13.17-montaz-czujnik-buzzer.jpg"
+  day="dzien-01"
+  caption="Układ z czujnikiem HC-SR04, przyciskiem i buzzerem."
+  alt="Fotografia zmontowanego układu: Arduino, HC-SR04, przycisk i buzzer"
+  width={650}
+  height={433}
+/>
+
+<Code lang="cpp" file="alarm-czujnik-przycisk.ino">
+```cpp
+#define trigPin 12
+#define echoPin 9
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(10, INPUT_PULLUP);  // Przycisk
+  pinMode(11, OUTPUT);        // Buzzer
+  digitalWrite(11, LOW);
+}
+
+void loop() {
+  long czas, dystans;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  czas = pulseIn(echoPin, HIGH);
+  dystans = czas / 58;
+
+  if ((dystans > 20 && dystans < 40) || digitalRead(10) == LOW) {
+    digitalWrite(11, HIGH);
+  } else {
+    digitalWrite(11, LOW);
+  }
+}
+```
+</Code>
+
+<Callout type="tip" title="Czytaj warunek od prawej do lewej">
+`(dystans > 20 && dystans < 40) || digitalRead(10) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
+</Callout>
+
+<MiniProject title="System parkowania" estimate="20 min">
+
+Zbuduj uproszczony system pomocy parkowania:
+- Odległość > 40 cm: cisza, dioda zielona.
+- Odległość 20–40 cm: dioda żółta, buzzer „pika" wolno (1 sek. przerwy).
+- Odległość < 20 cm: dioda czerwona, buzzer „pika" szybko (200 ms przerwy).
+
+Skorzystaj z funkcji `zmierzOdleglosc()` z poprzedniej lekcji i warunków `if-else if-else`.
+
+</MiniProject>
+
+## Podsumowanie
+
+Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Liczby losowe (`random()`) ożywiają efekty świetlne i gry, a `randomSeed(analogRead(0))` sprawia, że każde uruchomienie daje inną sekwencję. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.

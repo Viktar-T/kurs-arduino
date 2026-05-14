@@ -1,0 +1,396 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Wyświetlacz tekstowy LCD 2×16"
+slug: "wyswietlacz-tekstowy-lcd"
+summary: "Wyświetlacze tekstowe LCD 2×16, sterownik HD44780, podłączenie do Arduino, biblioteka LiquidCrystal, kursor, czyszczenie ekranu, wynik ADC i podświetlenie."
+
+day: 1
+weekend: 1
+order: 10
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 7
+
+objectives:
+  - "Wyjaśnić, do czego służy wyświetlacz tekstowy LCD 2×16"
+  - "Podłączyć wyświetlacz LCD do Arduino"
+  - "Wyświetlić tekst i proste dane pomiarowe"
+  - "Sterować kursorem, czyszczeniem ekranu i podświetleniem"
+
+prerequisites:
+  - "dzien-01/09-kontynuacja-uart-serwomechanizmy"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Wyświetlacz LCD 2×16", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1, note: "regulacja kontrastu LCD" }
+  - { name: "Fotorezystor", qty: 1 }
+  - { name: "Rezystor 10 kΩ", qty: 1 }
+  - { name: "Rezystor 220 Ω", qty: 1, optional: true, note: "podświetlenie LCD, zależnie od modułu" }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 18 }
+
+tags: [arduino, lcd, wyswietlacz-tekstowy, liquidcrystal, adc]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-wyswietlacz-tekstowy-lcd-id4263"
+
+cover: "/img/lekcje/dzien-01/10.01-lcd-tekstowy-przykladowy-napis.jpg"
+publish: true
+updated: "2026-05-13"
+---
+
+Do tej pory Arduino komunikowało się z nami głównie przez diody LED i Monitor portu szeregowego. Diody są proste, ale pokazują niewiele. UART daje dużo informacji, ale wymaga komputera. Wyświetlacz tekstowy LCD pozwala zbudować urządzenie, które pokazuje dane samodzielnie, bez podłączonego terminala.
+
+<Photo
+  file="10.01-lcd-tekstowy-przykladowy-napis.jpg"
+  day="dzien-01"
+  caption="Przykładowy tekst pokazany na wyświetlaczu LCD 2×16."
+  alt="Wyświetlacz tekstowy LCD z napisem sterowanym przez Arduino"
+  width={650}
+  height={427}
+/>
+
+<Callout type="note" title="LCD jako lokalny interfejs">
+LCD nie zastępuje UART podczas debugowania, ale świetnie sprawdza się w gotowym urządzeniu: mierniku, liczniku, prostym panelu sterującym albo robocie pokazującym swój stan.
+</Callout>
+
+## 1. Krótki wstęp o wyświetlaczach
+
+Wyświetlacz tekstowy LCD 2×16 ma dwa wiersze po 16 znaków. Każdy znak składa się z pikseli, ale my nie sterujemy nimi pojedynczo. Wyświetlacz ma własny sterownik, który wie, jak narysować litery, cyfry i kilka symboli.
+
+W tej lekcji używamy monochromatycznego wyświetlacza tekstowego zgodnego ze sterownikiem **HD44780**. To bardzo popularny standard, dlatego Arduino ma gotową bibliotekę do jego obsługi.
+
+<Table
+  caption="LCD tekstowy 2×16 w praktyce"
+  headers={["Cecha", "Znaczenie"]}
+  rows={[
+    ["2 wiersze", "Możemy pokazać dwie linie tekstu"],
+    ["16 znaków w wierszu", "Krótki komunikat musi zmieścić się w 16 kolumnach"],
+    ["Sterownik HD44780", "Arduino wysyła znaki i komendy, a sterownik zajmuje się pikselami"],
+    ["Kontrast", "Regulowany potencjometrem, bez niego tekst może być niewidoczny"],
+  ]}
+/>
+
+## 2. Piny wyświetlacza LCD 2×16
+
+Typowy moduł LCD ma 16-pinowe złącze. Część pinów odpowiada za zasilanie, część za sterowanie, część za dane, a dwa ostatnie za podświetlenie ekranu.
+
+<Schematic
+  src="/img/lekcje/dzien-01/10.02-lcd-2x16-piny.png"
+  caption="Wyświetlacz LCD 2×16 ma zwykle 16 wyprowadzeń."
+  alt="Wyświetlacz tekstowy LCD 2x16 z opisem pinów"
+  width={936}
+  height={475}
+/>
+
+LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 8-bitowym potrzeba więcej przewodów. W kursie używamy trybu 4-bitowego, bo oszczędza piny Arduino i nadal pozwala korzystać z najważniejszych funkcji.
+
+<Table
+  caption="Najważniejsze piny LCD w naszym układzie"
+  headers={["Pin LCD", "Nazwa", "Rola"]}
+  rows={[
+    ["1", "GND", "Masa"],
+    ["2", "VCC", "Zasilanie 5 V"],
+    ["3", "V0", "Regulacja kontrastu"],
+    ["4", "RS", "Wybór komendy albo danych"],
+    ["5", "RW", "Tryb odczytu/zapisu, zwykle podłączony do GND"],
+    ["6", "E", "Sygnał zatwierdzający przesłanie danych"],
+    ["11-14", "D4-D7", "Cztery linie danych w trybie 4-bitowym"],
+    ["15-16", "LED+/LED-", "Podświetlenie wyświetlacza"],
+  ]}
+/>
+
+## 3. Podłączenie LCD do Arduino
+
+Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjometru do regulacji kontrastu i przewodów. Potencjometr działa jako dzielnik napięcia, którego środkowy pin podłączamy do wejścia kontrastu `V0`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/10.03-podlaczenie-lcd-do-arduino.png"
+  caption="Podłączenie LCD do Arduino w trybie 4-bitowym."
+  alt="Schemat połączenia wyświetlacza LCD 2x16 z Arduino UNO"
+  width={450}
+  height={652}
+/>
+
+Po podłączeniu zasilania ekran powinien się podświetlić. Jeżeli program nie jest jeszcze wgrany, często zobaczysz pusty ekran albo górny wiersz wypełniony prostokątami. To nie musi oznaczać awarii — zwykle wystarczy ustawić kontrast.
+
+<Photo
+  file="10.04-lcd-zle-ustawiony-kontrast.jpg"
+  day="dzien-01"
+  caption="Źle ustawiony kontrast może pokazać prostokąty albo pusty ekran."
+  alt="Wyświetlacz LCD z widocznymi prostokątami przy złym kontraście"
+  width={800}
+  height={278}
+/>
+
+<Callout type="tip" title="Najpierw ustaw kontrast">
+Przed szukaniem błędów w kodzie przekręć potencjometr kontrastu. Bardzo często tekst „nie działa” tylko dlatego, że jest niewidoczny.
+</Callout>
+
+## 4. Pierwszy program: wyświetlanie tekstu
+
+Do obsługi LCD używamy biblioteki `LiquidCrystal`. Najpierw dołączamy bibliotekę, potem tworzymy obiekt `lcd`, w którym podajemy piny Arduino połączone z wyświetlaczem.
+
+<Code lang="cpp" file="lcd-pierwszy-tekst.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+void setup() {
+  lcd.begin(16, 2);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Kurs Arduino");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Na Forbocie!");
+}
+
+void loop() {
+}
+```
+</Code>
+
+`lcd.begin(16, 2)` informuje bibliotekę, że pracujemy z wyświetlaczem 16 znaków na 2 wiersze. `lcd.setCursor(kolumna, wiersz)` ustawia miejsce pisania. Numeracja zaczyna się od zera, więc `(0, 0)` to pierwszy znak pierwszego wiersza, a `(0, 1)` to pierwszy znak drugiego wiersza.
+
+<Photo
+  file="10.05-lcd-pierwszy-tekst-arduino.jpg"
+  day="dzien-01"
+  caption="Pierwszy tekst wyświetlony na LCD z Arduino."
+  alt="Wyświetlacz LCD pokazujący tekst Kurs Arduino i Na Forbocie"
+  width={800}
+  height={533}
+/>
+
+<Callout type="warning" title="Co jeśli nie działa?">
+Sprawdź kolejno: zasilanie LCD, masę, kolejność przewodów sygnałowych, zgodność pinów w `LiquidCrystal lcd(...)` oraz ustawienie kontrastu. Te punkty rozwiązują większość problemów z pierwszym uruchomieniem LCD.
+</Callout>
+
+<Task title="Zadanie 1" estimate="10 min">
+Napisz program, który w pierwszej linii wyświetla Twoje imię, a w drugiej krótki adres lub hasło kursu. Pamiętaj o limicie 16 znaków w jednej linii.
+</Task>
+
+## 5. Kursor i miganie kursora
+
+Wyświetlacz LCD może pokazywać kursor. Domyślnie jest on wyłączony. Funkcja `lcd.cursor()` włącza podkreślenie w miejscu kursora, a `lcd.noCursor()` je wyłącza.
+
+<Code lang="cpp" file="lcd-kursor.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("Kurs Arduino");
+  lcd.setCursor(0, 1);
+  lcd.print("Na Forbocie!");
+  lcd.cursor();
+}
+
+void loop() {
+}
+```
+</Code>
+
+<Photo
+  file="10.06-lcd-wlaczony-kursor.jpg"
+  day="dzien-01"
+  caption="LCD z włączonym kursorem podkreślającym aktualną pozycję."
+  alt="Wyświetlacz LCD z włączonym kursorem"
+  width={800}
+  height={533}
+/>
+
+Drugi wariant to migający blok kursora. Włączamy go funkcją `lcd.blink()`, a wyłączamy przez `lcd.noBlink()`.
+
+<Photo
+  file="10.07-lcd-migajacy-kursor.gif"
+  day="dzien-01"
+  caption="Migający kursor LCD można włączyć funkcją lcd.blink()."
+  alt="Animacja migającego kursora na wyświetlaczu LCD"
+  width={550}
+  height={401}
+/>
+
+<Code lang="cpp" file="lcd-miganie-kursora.ino">
+```cpp
+void loop() {
+  lcd.noCursor();
+  delay(250);
+
+  lcd.cursor();
+  delay(250);
+}
+```
+</Code>
+
+## 6. Włączanie, wyłączanie i czyszczenie ekranu
+
+Funkcje `lcd.display()` i `lcd.noDisplay()` włączają lub wyłączają widoczność tekstu. Nie kasują pamięci wyświetlacza i nie sterują podświetleniem. Po ponownym włączeniu tekst wraca.
+
+<Code lang="cpp" file="lcd-display-nodisplay.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("Kurs Arduino");
+  lcd.setCursor(0, 1);
+  lcd.print("Na Forbocie!");
+}
+
+void loop() {
+  lcd.noDisplay();
+  delay(500);
+
+  lcd.display();
+  delay(500);
+}
+```
+</Code>
+
+<Photo
+  file="10.08-lcd-wlaczanie-wylaczanie-wyswietlacza.gif"
+  day="dzien-01"
+  caption="lcd.noDisplay() ukrywa tekst, a lcd.display() pokazuje go ponownie."
+  alt="Animacja chwilowego wyłączania tekstu na LCD"
+  width={550}
+  height={401}
+/>
+
+Do kasowania zawartości służy `lcd.clear()`. Nie warto jednak czyścić ekranu w każdym obiegu pętli bez potrzeby, bo może to powodować miganie i utrudniać odczyt.
+
+<Task title="Zadanie 2" estimate="10 min">
+Sprawdź różnicę między `lcd.noDisplay()` i `lcd.clear()`. Najpierw ukryj tekst i pokaż go ponownie, a potem wyczyść ekran i spróbuj odzyskać tekst bez ponownego `lcd.print()`.
+</Task>
+
+## 7. Wynik ADC na wyświetlaczu
+
+LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC na napięcie i pokazuje go w drugiej linii LCD.
+
+<Schematic
+  src="/img/lekcje/dzien-01/10.09-lcd-czujnik-swiatla-schemat.png"
+  caption="Fotorezystor z rezystorem tworzy dzielnik napięcia podłączony do A0."
+  alt="Schemat podłączenia czujnika światła do Arduino i LCD"
+  width={444}
+  height={680}
+/>
+
+<Code lang="cpp" file="lcd-pomiar-napiecia.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+double odczyt;
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Nap. odczytane");
+
+  lcd.setCursor(0, 1);
+  lcd.print("0.00V");
+}
+
+void loop() {
+  odczyt = analogRead(A0) * 5.0 / 1024.0;
+
+  lcd.setCursor(0, 1);
+  lcd.print(odczyt);
+  lcd.print("V ");
+
+  delay(250);
+}
+```
+</Code>
+
+<Photo
+  file="10.10-lcd-pomiar-napiecia-fotorezystor.jpg"
+  day="dzien-01"
+  caption="Przenośny miernik światła pokazujący wynik bez Monitora portu szeregowego."
+  alt="Arduino z LCD pokazującym napięcie z fotorezystora"
+  width={800}
+  height={592}
+/>
+
+Zwróć uwagę, że stały tekst pierwszej linii wpisujemy tylko raz w `setup()`. W pętli aktualizujemy tylko fragment z wynikiem. To ogranicza miganie i sprawia, że ekran jest czytelniejszy.
+
+<Task title="Zadanie 3" estimate="15 min">
+Zmień program tak, aby oprócz napięcia pokazywał też surową wartość ADC. W pierwszej linii wyświetl `ADC: XXXX`, a w drugiej `U: X.XXV`.
+</Task>
+
+<Task title="Zadanie 4" estimate="20 min">
+Napisz prosty stoper na LCD. Jeden przycisk uruchamia pomiar czasu, drugi zatrzymuje go i wyświetla napis `Koniec` oraz zmierzony czas w sekundach.
+</Task>
+
+## 8. Podświetlenie LCD i PWM
+
+Podświetlenie LCD to dioda LED wbudowana w moduł. W wielu wyświetlaczach jest już rezystor ograniczający prąd, ale nie należy zakładać tego bez sprawdzenia dokumentacji lub pomiaru prądu. Dla bezpieczeństwa można użyć rezystora albo tranzystora.
+
+<Schematic
+  src="/img/lekcje/dzien-01/10.11-lcd-sterowanie-podswietleniem-pwm.png"
+  caption="Podświetlenie LCD można sterować z pinu PWM, ale trzeba pilnować prądu."
+  alt="Schemat sterowania podświetleniem LCD z Arduino przez pin PWM"
+  width={492}
+  height={662}
+/>
+
+<Callout type="hazard" title="Sprawdź prąd podświetlenia">
+Pin Arduino nie jest zasilaczem dużej mocy. Jeśli nie wiesz, ile prądu pobiera podświetlenie LCD, użyj rezystora ograniczającego prąd albo tranzystora sterującego.
+</Callout>
+
+Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM, możemy płynnie zmieniać jasność przez `analogWrite()`.
+
+<Code lang="cpp" file="lcd-pwm-podswietlenie.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+int jasnosc = 0;
+int zmiana = 5;
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Witaj na");
+  lcd.setCursor(0, 1);
+  lcd.print("FORBOT.pl");
+}
+
+void loop() {
+  analogWrite(11, jasnosc);
+
+  jasnosc = jasnosc + zmiana;
+
+  if (jasnosc == 0 || jasnosc == 255) {
+    zmiana = -zmiana;
+  }
+
+  delay(30);
+}
+```
+</Code>
+
+## Podsumowanie
+
+Wyświetlacz LCD 2×16 pozwala Arduino prezentować informacje bez komputera. Wiesz już, czym jest sterownik HD44780, jak podłączyć LCD w trybie 4-bitowym, jak użyć biblioteki `LiquidCrystal`, ustawiać kursor, czyścić ekran i aktualizować tylko wybrane fragmenty tekstu. Potrafisz też pokazać wynik ADC na LCD oraz rozumiesz, że podświetlenie trzeba traktować jak zwykłą diodę LED z ograniczeniem prądu.

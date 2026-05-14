@@ -1,0 +1,466 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Kontynuacja UART i serwomechanizmy"
+slug: "kontynuacja-uart-serwomechanizmy"
+summary: "Rozwinięcie UART: formatowanie liczb, precyzja float, print kontra println, instrukcja switch oraz analogowy wskaźnik światła z serwomechanizmem."
+
+day: 1
+weekend: 1
+order: 9
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 6
+
+objectives:
+  - "Poprawnie formatować dane wysyłane przez UART"
+  - "Rozumieć ograniczenia precyzji liczb niecałkowitych"
+  - "Zastosować instrukcję `switch` do obsługi kilku komend"
+  - "Zbudować plan programu dla wskaźnika światła z serwem"
+
+prerequisites:
+  - "dzien-01/08-pwm-serwomechanizmy-biblioteki"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Serwomechanizm", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Fotorezystor", qty: 1 }
+  - { name: "Rezystor 10 kΩ", qty: 1 }
+  - { name: "Stabilizator LM7805", qty: 1 }
+  - { name: "Bateria 9 V z klipsem", qty: 1 }
+  - { name: "Kondensator filtrujący", qty: 2 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 16 }
+
+tags: [arduino, uart, serial, switch, servo, fotorezystor]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-kontynuacja-uart-serwomechanizmy-id7520"
+
+cover: "/img/lekcje/dzien-01/09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
+publish: true
+updated: "2026-05-13"
+---
+
+W tej lekcji wracamy na chwilę do UART, żeby uporządkować formatowanie danych w Monitorze portu szeregowego. Potem poznajemy instrukcję `switch`, a na końcu łączymy ADC, serwomechanizm i UART w praktyczny projekt: analogowy wskaźnik światła.
+
+<Photo
+  file="09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
+  day="dzien-01"
+  caption="Kontynuacja UART, instrukcja switch i praktyczne użycie serwomechanizmu."
+  alt="Grafika kursu Arduino o kontynuacji UART i serwomechanizmach"
+  width={700}
+  height={466}
+/>
+
+<Callout type="note" title="To jest lekcja łącząca tematy">
+Będziemy korzystać z wcześniejszych elementów: `Serial`, `analogRead()`, `map()`, biblioteki `Servo` oraz dzielnika napięcia z fotorezystorem. Jeśli któryś z tych tematów jest niejasny, wróć na chwilę do poprzednich lekcji.
+</Callout>
+
+## 1. Reprezentacja liczb w terminalu
+
+Do tej pory najczęściej wysyłaliśmy dane przez UART w najprostszej formie: `Serial.println(liczba)` albo `Serial.println("tekst")`. Arduino zamieniało liczby na tekst, który człowiek może odczytać w Monitorze portu szeregowego.
+
+Domyślnie liczby są wypisywane w systemie dziesiętnym, ale `Serial.println()` pozwala wybrać również inne reprezentacje. To przydaje się szczególnie wtedy, gdy chcemy zobaczyć bity, bajty lub wartości konfiguracyjne w formie szesnastkowej.
+
+<Code lang="cpp" file="reprezentacje-liczb-uart.ino">
+```cpp
+void setup() {
+  int liczba = 2345;
+
+  Serial.begin(9600);
+
+  Serial.println(liczba);
+  Serial.println(liczba, DEC);
+  Serial.println(liczba, HEX);
+  Serial.println(liczba, OCT);
+  Serial.println(liczba, BIN);
+}
+
+void loop() {
+}
+```
+</Code>
+
+<Table
+  caption="Systemy zapisu dostępne przy wypisywaniu liczb"
+  headers={["Stała", "System", "Kiedy bywa przydatny"]}
+  rows={[
+    ["DEC", "dziesiętny", "Najczytelniejszy dla człowieka"],
+    ["HEX", "szesnastkowy", "Wygodny przy bajtach, adresach i rejestrach"],
+    ["OCT", "ósemkowy", "Rzadziej używany, ale dostępny"],
+    ["BIN", "binarny", "Pokazuje bezpośrednio bity liczby"],
+  ]}
+/>
+
+## 2. Precyzja liczb niecałkowitych
+
+Arduino potrafi przechowywać liczby z częścią ułamkową w typie `float`, ale na małych mikrokontrolerach warto używać ich ostrożnie. Operacje zmiennoprzecinkowe są wolniejsze i mają ograniczoną precyzję.
+
+Funkcja `Serial.println()` może otrzymać drugi argument określający liczbę miejsc po przecinku.
+
+<Code lang="cpp" file="precyzja-float-uart.ino">
+```cpp
+void setup() {
+  float liczbaPI = 3.1415;
+
+  Serial.begin(9600);
+
+  Serial.println(liczbaPI, 4);
+  Serial.println(liczbaPI, 0);
+  Serial.println(PI);
+}
+
+void loop() {
+}
+```
+</Code>
+
+<Photo
+  file="09.02-precyzja-liczb-float-terminal.png"
+  day="dzien-01"
+  caption="Przykład wpływu drugiego argumentu Serial.println() na liczbę miejsc po przecinku."
+  alt="Monitor portu szeregowego z przykładami precyzji liczb float"
+  width={503}
+  height={316}
+/>
+
+Zmienna `float` na Arduino UNO ma ograniczoną dokładność. Nawet jeśli poprosimy o bardzo wiele miejsc po przecinku, nie oznacza to, że wszystkie cyfry będą prawdziwe. Stała `PI` również ma skończoną precyzję.
+
+<Callout type="warning" title="Nie myl liczby cyfr z prawdziwą dokładnością">
+Możesz wypisać wiele cyfr po przecinku, ale część z nich będzie wynikiem przybliżenia. W pomiarach z czujników zwykle lepiej pokazywać rozsądną liczbę miejsc po przecinku niż udawać dokładność, której układ nie ma.
+</Callout>
+
+## 3. `Serial.print()` kontra `Serial.println()`
+
+`Serial.println()` dopisuje na końcu przejście do nowej linii. `Serial.print()` wysyła tekst lub liczbę bez kończenia wiersza. Dzięki temu kilka wartości można złożyć w jeden czytelny komunikat.
+
+<Code lang="cpp" file="print-bez-nowej-linii.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.print("Witaj w kursie na Forbot.pl! ");
+  delay(1000);
+}
+```
+</Code>
+
+<Photo
+  file="09.03-serial-print-bez-nowej-linii.png"
+  day="dzien-01"
+  caption="Serial.print() nie przechodzi automatycznie do nowej linii."
+  alt="Monitor portu szeregowego pokazujący powtarzany tekst w jednej linii"
+  width={503}
+  height={316}
+/>
+
+Nową linię możemy dodać na kilka sposobów: przez pusty `Serial.println()`, przez użycie `Serial.println("tekst")` albo przez znak specjalny `\n` w tekście. Do wyrównywania kolumn przydaje się też tabulator `\t`.
+
+<Code lang="cpp" file="nowe-linie-i-tabulator.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+
+  Serial.print("Pierwsza linia");
+  Serial.println();
+  Serial.print("Druga linia\nTrzecia linia\n");
+  Serial.print("A\tB\tC\n");
+}
+
+void loop() {
+}
+```
+</Code>
+
+## 4. UART w praktyce: kilka reprezentacji ADC w jednym wierszu
+
+Teraz połączymy `analogRead()` z formatowaniem UART. Układ jest taki sam jak w lekcji o ADC: potencjometr działa jako dzielnik napięcia, a jego środkowa nóżka jest podłączona do wejścia `A5`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/09.04-potencjometr-a5-uart-reprezentacje.png"
+  caption="Potencjometr podłączony do A5 pozwala zmieniać odczyt ADC obserwowany w terminalu."
+  alt="Schemat Arduino z potencjometrem podłączonym do wejścia A5"
+  width={783}
+  height={466}
+/>
+
+Program wypisuje ten sam odczyt ADC w czterech systemach liczbowych, w jednym wierszu. Do oddzielania kolumn używa tabulatorów.
+
+<Code lang="cpp" file="adc-reprezentacje-uart.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int potencjometr = analogRead(A5);
+
+  Serial.print("Odczyt: ");
+  Serial.print(potencjometr, DEC);
+  Serial.print("[DEC]\t");
+  Serial.print(potencjometr, HEX);
+  Serial.print("[HEX]\t");
+  Serial.print(potencjometr, OCT);
+  Serial.print("[OCT]\t");
+  Serial.print(potencjometr, BIN);
+  Serial.print("[BIN]\n");
+
+  delay(1000);
+}
+```
+</Code>
+
+<Photo
+  file="09.05-adc-w-roznych-systemach-liczbowych.png"
+  day="dzien-01"
+  caption="Ten sam odczyt ADC pokazany jako DEC, HEX, OCT i BIN."
+  alt="Monitor portu szeregowego z odczytem ADC w różnych systemach liczbowych"
+  width={720}
+  height={316}
+/>
+
+<Task title="Zadanie 1" estimate="15 min">
+Napisz program, który odczytuje dwa fotorezystory i potencjometr. Po wciśnięciu przycisku wyślij jedną linijkę w formacie: `Fotorezystor 1: XXX, fotorezystor 2: XXX, potencjometr: XXX, przycisk wciśnięto XX razy`.
+</Task>
+
+## 5. Instrukcja `switch`
+
+Gdy program ma wykonać jedną z kilku akcji zależnie od wartości jednej zmiennej, wiele instrukcji `if` szybko robi się mało czytelne. W takich sytuacjach używamy `switch`.
+
+Najpierw spójrz na wersję z klasycznymi warunkami. Program odczytuje potencjometr i wysyła wynik w formacie wybranym przez użytkownika: `d`, `h`, `o` albo `b`.
+
+<Code lang="cpp" file="format-adc-if.ino">
+```cpp
+String odebraneDane = "";
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int potencjometr = analogRead(A5);
+
+  if (Serial.available() > 0) {
+    odebraneDane = Serial.readStringUntil('\n');
+  }
+
+  if (odebraneDane == "d") {
+    Serial.println(potencjometr, DEC);
+  } else if (odebraneDane == "h") {
+    Serial.println(potencjometr, HEX);
+  } else if (odebraneDane == "o") {
+    Serial.println(potencjometr, OCT);
+  } else if (odebraneDane == "b") {
+    Serial.println(potencjometr, BIN);
+  }
+
+  delay(1000);
+}
+```
+</Code>
+
+Ta wersja działa, ale `switch` zapisze ten sam pomysł czytelniej. W przykładzie odczytujemy tylko pierwszy znak z UART przez `Serial.read()`, a w `case` porównujemy go z kodami znaków zapisanymi w apostrofach.
+
+<Code lang="cpp" file="format-adc-switch.ino">
+```cpp
+int odebraneDane = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int potencjometr = analogRead(A5);
+
+  if (Serial.available() > 0) {
+    odebraneDane = Serial.read();
+  }
+
+  switch (odebraneDane) {
+    case 'd':
+      Serial.println(potencjometr, DEC);
+      break;
+
+    case 'h':
+      Serial.println(potencjometr, HEX);
+      break;
+
+    case 'o':
+      Serial.println(potencjometr, OCT);
+      break;
+
+    case 'b':
+      Serial.println(potencjometr, BIN);
+      break;
+
+    default:
+      break;
+  }
+
+  delay(1000);
+}
+```
+</Code>
+
+<Callout type="tip" title="Po co jest break?">
+`break` kończy wykonywanie instrukcji `switch`. Bez niego program przeszedłby do kolejnego przypadku, co zwykle prowadzi do błędów trudnych do zauważenia.
+</Callout>
+
+<Task title="Zadanie 2" estimate="15 min">
+Wróć do programu sterującego diodami przez UART z lekcji o komunikacji z PC. Przepisz obsługę komend tak, aby zamiast kilku `if` używać `switch` i pojedynczych znaków poleceń.
+</Task>
+
+## 6. Serwomechanizm jako analogowy wskaźnik światła
+
+Nie każdą wartość trzeba pokazywać na ekranie. Czasem czytelniejszy jest klasyczny wskaźnik ze wskazówką, podobny do mierników analogowych. Zbudujemy taki wskaźnik z serwomechanizmu i fotorezystora.
+
+<Photo
+  file="09.06-wskazniki-analogowe-przyklady.jpg"
+  day="dzien-01"
+  caption="Tradycyjne wskaźniki analogowe dobrze pokazują wartości zmieniające się płynnie."
+  alt="Przykłady analogowych wskaźników i mierników ze wskazówkami"
+  width={400}
+  height={300}
+/>
+
+Układ składa się z dwóch znanych części: serwomechanizmu z osobnym zasilaniem oraz dzielnika napięcia z fotorezystorem podłączonego do `A5`. Wartość światła przeliczamy na pozycję serwa.
+
+<Schematic
+  src="/img/lekcje/dzien-01/09.07-wskaznik-swiatla-serwo-schemat.png"
+  caption="Schemat wskaźnika światła: fotorezystor mierzy jasność, a serwo porusza wskazówką."
+  alt="Schemat Arduino z fotorezystorem i serwomechanizmem jako wskaźnikiem światła"
+  width={1244}
+  height={711}
+/>
+
+<Callout type="hazard" title="Uważaj na zasilanie serwa">
+Serwo nie powinno pobierać dużego prądu z pinu Arduino. Zachowaj wspólną masę, sprawdź polaryzację baterii i stabilizatora oraz nie podłączaj elementów przy włączonym zasilaniu.
+</Callout>
+
+## 7. Część mechaniczna projektu
+
+Wskaźnik potrzebuje tarczy i wskazówki. Możesz zrobić je z kartonu, wydrukowanej skali, wizytówek albo cienkiej tektury. Do mocowania najlepiej użyć taśmy dwustronnej lub kleju na ciepło.
+
+<Callout type="warning" title="Nie sklej ruchomych części serwa">
+Kleje typu „kropelka” łatwo wpływają w szczeliny i mogą zablokować mechanizm. Jeśli serwo zostanie sklejone, zwykle nie da się go już naprawić.
+</Callout>
+
+<Photo
+  file="09.08-tarcza-wskaznika-analogowego.png"
+  day="dzien-01"
+  caption="Przykładowa tarcza wskaźnika przygotowana z prostych materiałów."
+  alt="Tarcza analogowego wskaźnika bez wskazówki"
+  width={650}
+  height={488}
+/>
+
+<Photo
+  file="09.09-wskaznik-analogowy-widok-tyl.png"
+  day="dzien-01"
+  caption="Widok od tyłu pokazuje sposób mocowania serwomechanizmu."
+  alt="Widok od tyłu analogowego wskaźnika z serwomechanizmem"
+  width={650}
+  height={488}
+/>
+
+<Photo
+  file="09.10-gotowy-wskaznik-analogowy.png"
+  day="dzien-01"
+  caption="Gotowy wskaźnik analogowy z tarczą i wskazówką."
+  alt="Gotowy wskaźnik analogowy wykonany z Arduino i serwomechanizmu"
+  width={650}
+  height={488}
+/>
+
+## 8. Program wskaźnika światła
+
+Program odczytuje fotorezystor, przelicza wynik na kąt serwa i porusza wskazówką tylko wtedy, gdy zmiana jest wystarczająco duża. Dzięki temu wskazówka nie drży przy małych zakłóceniach pomiaru.
+
+<Code lang="cpp" file="wskaznik-swiatla-serwo.ino">
+```cpp
+#include <Servo.h>
+
+Servo serwomechanizm;
+
+byte pozycja = 0;
+int pozycjaPoprzednia = 0;
+
+void setup() {
+  serwomechanizm.attach(11);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int odczytCzujnika = analogRead(A5);
+  pozycja = map(odczytCzujnika, 0, 900, 0, 180);
+
+  if (abs(pozycja - pozycjaPoprzednia) > 5) {
+    serwomechanizm.write(pozycja);
+    pozycjaPoprzednia = pozycja;
+  }
+
+  Serial.println(odczytCzujnika);
+  delay(300);
+}
+```
+</Code>
+
+Funkcja `abs()` zwraca wartość bezwzględną. Dzięki temu nie ma znaczenia, czy nowa pozycja jest większa, czy mniejsza od poprzedniej. Liczy się tylko wielkość zmiany.
+
+<Photo
+  file="09.11-serwo-wskaznik-swiatla.gif"
+  day="dzien-01"
+  caption="Przykładowe działanie wskaźnika: fotorezystor jest zasłaniany i oświetlany."
+  alt="Animacja działania analogowego wskaźnika światła z serwomechanizmem"
+  width={650}
+  height={359}
+/>
+
+## 9. Kalibracja wskaźnika
+
+Każdy układ będzie miał trochę inne wartości odczytu. Zależą one od fotorezystora, rezystora, oświetlenia sali i sposobu ustawienia czujnika. Dlatego najpierw obserwuj wartości w Monitorze portu szeregowego, a dopiero potem dopasuj zakres funkcji `map()`.
+
+<Code lang="cpp" file="linia-kalibracji.ino">
+```cpp
+pozycja = map(odczytCzujnika, 0, 900, 0, 180);
+```
+</Code>
+
+Jeśli przy zasłoniętym czujniku widzisz około `120`, a przy mocnym świetle około `780`, możesz zacząć od takiej wersji:
+
+<Code lang="cpp" file="linia-kalibracji-przyklad.ino">
+```cpp
+pozycja = map(odczytCzujnika, 120, 780, 0, 180);
+```
+</Code>
+
+<Task title="Zadanie 3" estimate="20 min">
+Skalibruj swój wskaźnik: odczytaj minimalną i maksymalną wartość z fotorezystora, wpisz je do `map()`, a potem sprawdź, czy wskazówka wykorzystuje możliwie duży zakres ruchu serwa.
+</Task>
+
+<Task title="Zadanie 4" estimate="20 min">
+Rozbuduj projekt o tryb diagnostyczny uruchamiany z UART. Po wysłaniu znaku `d` Arduino ma przez 10 sekund wypisywać odczyt czujnika i aktualną pozycję serwa w jednym wierszu.
+</Task>
+
+<Expandable title="Pomysły na własny wskaźnik" heading="###">
+
+1. Zamiast jasności pokazuj temperaturę z czujnika analogowego.
+2. Dodaj przełączanie skali przez UART: `l` dla światła, `s` dla surowego ADC, `p` dla pozycji serwa.
+3. Zrób większą tarczę i zaznacz na niej zakresy: ciemno, normalnie, bardzo jasno.
+
+</Expandable>
+
+## Podsumowanie
+
+W tej lekcji rozwinęliśmy UART o formatowanie liczb, świadome używanie `Serial.print()` i `Serial.println()` oraz znaki specjalne `\n` i `\t`. Poznaliśmy też ograniczenia liczb `float` i instrukcję `switch`, która upraszcza obsługę wielu komend. Na koniec połączyliśmy ADC, serwomechanizm i UART w analogowy wskaźnik światła, który można kalibrować na podstawie danych z terminala.

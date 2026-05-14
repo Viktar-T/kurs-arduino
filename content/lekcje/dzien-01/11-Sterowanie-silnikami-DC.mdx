@@ -1,0 +1,396 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Sterowanie silnikami DC"
+slug: "sterowanie-silnikami-dc"
+summary: "Bezpieczne sterowanie małymi silnikami DC przez mostek H L293D, symulacja silnika diodami, kierunek obrotów, PWM do regulacji prędkości oraz pętla for."
+
+day: 1
+weekend: 1
+order: 11
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 8
+
+objectives:
+  - "Wyjaśnić, dlaczego silnika DC nie wolno zasilać bezpośrednio z pinu Arduino"
+  - "Opisać rolę mostka H w sterowaniu kierunkiem obrotów"
+  - "Zastosować PWM do regulacji prędkości silnika"
+  - "Użyć pętli `for` do powtarzalnej zmiany wartości"
+
+prerequisites:
+  - "dzien-01/10-wyswietlacz-tekstowy-lcd"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Układ L293D", qty: 1 }
+  - { name: "Silnik DC", qty: 1, optional: true }
+  - { name: "Dioda LED", qty: 2, note: "symulacja kierunku pracy silnika" }
+  - { name: "Rezystor 1 kΩ", qty: 1, note: "ograniczenie prądu diod symulujących silnik" }
+  - { name: "Bateria 9 V z klipsem", qty: 1 }
+  - { name: "Kondensator filtrujący", qty: 2 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 20 }
+
+tags: [arduino, silnik-dc, mostek-h, l293d, pwm, petla-for]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-sterowanie-silnikami-dc-petla-for-id8311"
+  - "https://forbot.pl/blog/wp-content/uploads/2015/08/Mostek-H-L293.pdf"
+
+cover: "/img/lekcje/dzien-01/11.01-sterowanie-silnikami-dc-okladka.png"
+publish: true
+updated: "2026-05-13"
+---
+
+W tej lekcji zajmiemy się małymi silnikami DC. Nauczysz się, dlaczego nie wolno podłączać ich bezpośrednio do pinów Arduino, do czego służy mostek H, jak zmieniać kierunek obrotów i jak regulować prędkość przez PWM. Przy okazji poznamy pętlę `for`, która bardzo ułatwia płynne zmiany wartości.
+
+<Photo
+  file="11.01-sterowanie-silnikami-dc-okladka.png"
+  day="dzien-01"
+  caption="Sterowanie silnikami DC wymaga elementu pośredniczącego między Arduino a napędem."
+  alt="Grafika kursu Arduino o sterowaniu silnikami DC i pętli for"
+  width={700}
+  height={466}
+/>
+
+<Callout type="hazard" title="Najważniejsza zasada tej lekcji">
+Nigdy nie podłączaj zwykłego silnika DC bezpośrednio do pinu Arduino. Pin mikrokontrolera służy do sterowania sygnałem, a nie do zasilania obciążenia pobierającego setki miliamperów.
+</Callout>
+
+## 1. Dlaczego łączymy silniki z Arduino
+
+Sterowanie kierunkiem i prędkością silnika DC otwiera drogę do wielu projektów: prostych robotów mobilnych, pojazdów zdalnie sterowanych, mechanizmów przesuwających elementy albo urządzeń automatyki. Dwa silniki wystarczą do zbudowania wielu konstrukcji jeżdżących.
+
+W tej lekcji mówimy o szczotkowych silnikach DC, czyli popularnych małych napędach spotykanych w zabawkach, robotach i modelach. Nie zajmujemy się tutaj serwomechanizmami, bo one mają własny sterownik wewnątrz obudowy.
+
+<Photo
+  file="11.02-przykladowy-silnik-dc.jpg"
+  day="dzien-01"
+  caption="Przykładowy mały silnik DC z przekładnią."
+  alt="Mały silnik DC firmy Pololu"
+  width={650}
+  height={362}
+/>
+
+Na potrzeby kursu interesują nas małe silniki zasilane zwykle napięciem około `5`-`9 V`, których prąd pracy mieści się w możliwościach użytego sterownika. Sama zasada sterowania jest jednak uniwersalna: mocniejszy silnik wymaga mocniejszego sterownika i odpowiedniego zasilania.
+
+## 2. Dlaczego silnika nie wolno podłączać bezpośrednio
+
+Arduino UNO może bezpiecznie sterować małymi sygnałami. Typowy pin mikrokontrolera może dostarczyć tylko niewielki prąd, rzędu kilkunastu lub kilkudziesięciu miliamperów. Silnik DC podczas pracy, a szczególnie przy starcie lub zablokowaniu wału, może pobierać setki miliamperów albo więcej.
+
+<Table
+  caption="Pin Arduino kontra silnik DC"
+  headers={["Element", "Typowe wymagania", "Wniosek"]}
+  rows={[
+    ["Pin Arduino", "mały prąd sterujący", "Nadaje się do sygnałów logicznych"],
+    ["Silnik DC", "duży prąd i zakłócenia", "Wymaga osobnego zasilania i sterownika"],
+    ["Mostek H", "pośrednik między logiką i silnikiem", "Chroni Arduino i zmienia kierunek prądu"],
+  ]}
+/>
+
+Silnik jest też źródłem zakłóceń i przepięć. Bez elementu pośredniczącego łatwo doprowadzić do resetów programu, niestabilnej pracy albo trwałego uszkodzenia mikrokontrolera.
+
+## 3. Mostek H w pigułce
+
+Między Arduino a silnikiem wstawiamy sterownik. Najczęściej jest to mostek H, czyli układ, który pozwala sterować kierunkiem przepływu prądu przez silnik. Dzięki temu ten sam silnik może obracać się w lewo albo w prawo.
+
+W kursie użyjemy układu `L293D`. To starszy, ale popularny scalony mostek H w obudowie przewlekanej, którą wygodnie wkłada się do płytki stykowej. W jednej obudowie znajdują się dwa mostki, więc układ może sterować dwoma małymi silnikami.
+
+<Photo
+  file="11.03-uklad-l293d-mostek-h.jpg"
+  day="dzien-01"
+  caption="Układ L293D zawiera dwa mostki H w jednej obudowie."
+  alt="Scalony mostek H L293D"
+  width={300}
+  height={225}
+/>
+
+<Schematic
+  src="/img/lekcje/dzien-01/11.04-l293d-pinout-mostek-h.jpg"
+  caption="Najważniejsze wyprowadzenia układu L293D według noty katalogowej."
+  alt="Pinout układu L293D jako mostka H"
+  width={566}
+  height={490}
+/>
+
+Układ `L293D` ma oddzielne zasilanie logiki i silników. Pin `16` zasila część logiczną napięciem `5 V`, a pin `8` zasila silniki. Masy obu źródeł muszą być połączone.
+
+<Callout type="warning" title="Sprawdź prąd silnika">
+L293D może dostarczyć ograniczony prąd. W praktyce silnik powinien pobierać mniej niż około `0,6 A` na kanał podczas normalnej pracy. Prąd rozruchowy i prąd zablokowanego silnika mogą być dużo większe.
+</Callout>
+
+## 4. Kierunek obrotów i tabela prawdy
+
+Do sterowania jednym silnikiem używamy dwóch wejść kierunku oraz wejścia `ENABLE`. Dwa wejścia kierunku decydują, w którą stronę popłynie prąd przez silnik. `ENABLE` włącza dany kanał i później może otrzymać sygnał PWM do regulacji prędkości.
+
+<Schematic
+  src="/img/lekcje/dzien-01/11.05-tabela-prawdy-mostka-h.png"
+  caption="Tabela prawdy pokazuje, jak stany wejść wpływają na kierunek pracy silnika."
+  alt="Tabela prawdy mostka H dla sterowania silnikiem"
+  width={290}
+  height={99}
+/>
+
+Dwie różne kombinacje zatrzymują silnik. W zależności od sterownika może to oznaczać swobodne wytracanie prędkości albo mocniejsze hamowanie. Szczegóły zawsze sprawdza się w nocie katalogowej konkretnego układu.
+
+## 5. Zasilanie i pierwsze podłączenie L293D
+
+Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB, a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
+
+<Schematic
+  src="/img/lekcje/dzien-01/11.06-l293d-zasilanie-i-wyjscie-silnika.png"
+  caption="Podstawowe połączenia L293D: masa, zasilanie logiki, zasilanie silników i wyjście na silnik."
+  alt="Schemat podłączenia L293D z Arduino i zasilaniem silnika"
+  width={1042}
+  height={326}
+/>
+
+<Callout type="hazard" title="Bateria 9 V to tylko demonstracja">
+Klasyczna bateria 9 V ma małą wydajność prądową. W kursie wystarcza do demonstracji i symulacji, ale do robota z prawdziwymi silnikami zwykle potrzebne są akumulatory o dużo większej wydajności.
+</Callout>
+
+Na płytce stykowej warto zacząć od połączenia pinów masy układu `L293D`. Można użyć krótkich odcinków przewodu albo odciętych nóżek rezystorów.
+
+<Photo
+  file="11.07-polaczenie-mas-l293d.jpg"
+  day="dzien-01"
+  caption="Połączenie pinów masy mostka H na płytce stykowej."
+  alt="Połączenie mas układu L293D na płytce stykowej"
+  width={650}
+  height={433}
+/>
+
+Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz sygnałów sterujących z Arduino.
+
+<Photo
+  file="11.08-l293d-podlaczenie-masy.jpg"
+  day="dzien-01"
+  caption="Podłączenie masy do układu L293D."
+  alt="Płytka stykowa z podłączoną masą do L293D"
+  width={600}
+  height={400}
+/>
+
+<Photo
+  file="11.09-l293d-podlaczenie-9v-silniki.jpg"
+  day="dzien-01"
+  caption="Podłączenie zasilania silników do mostka H."
+  alt="Płytka stykowa z podłączonym zasilaniem 9 V dla silników"
+  width={600}
+  height={400}
+/>
+
+<Photo
+  file="11.10-l293d-podlaczenie-5v-logika.jpg"
+  day="dzien-01"
+  caption="Podłączenie zasilania części logicznej mostka H."
+  alt="Płytka stykowa z podłączonym zasilaniem 5 V dla logiki L293D"
+  width={600}
+  height={400}
+/>
+
+<Photo
+  file="11.11-l293d-podlaczenie-sygnalow-sterujacych.jpg"
+  day="dzien-01"
+  caption="Podłączenie sygnałów sterujących z Arduino do L293D."
+  alt="Płytka stykowa z przewodami sterującymi mostkiem H"
+  width={600}
+  height={400}
+/>
+
+## 6. Symulacja silnika diodami LED
+
+W zestawie kursowym nie musi być silnika DC, dlatego działanie mostka H można zasymulować dwiema diodami LED połączonymi przeciwnie. Gdy prąd popłynie w jedną stronę, zaświeci jedna dioda. Gdy kierunek prądu się odwróci, zaświeci druga.
+
+<Schematic
+  src="/img/lekcje/dzien-01/11.12-symulacja-silnika-dwie-diody.png"
+  caption="Dwie przeciwnie połączone diody LED mogą zastąpić silnik w ćwiczeniu."
+  alt="Schemat symulacji silnika za pomocą dwóch przeciwnie połączonych diod LED"
+  width={346}
+  height={151}
+/>
+
+<Schematic
+  src="/img/lekcje/dzien-01/11.13-kompletny-schemat-mostek-h-diody.png"
+  caption="Kompletny układ do ćwiczeń z mostkiem H i symulacją silnika."
+  alt="Kompletny schemat Arduino, L293D i diod symulujących silnik"
+  width={1094}
+  height={355}
+/>
+
+<Callout type="tip" title="Dlaczego dwie diody?">
+Pojedyncza dioda świeci tylko przy jednym kierunku przepływu prądu. Dwie diody połączone przeciwnie pozwalają zobaczyć zmianę kierunku, czyli najważniejszy efekt działania mostka H.
+</Callout>
+
+## 7. Proste sterowanie kierunkiem
+
+W naszym układzie przyjmujemy, że pin `6` Arduino steruje wejściem `ENABLE`, a piny `7` i `8` sterują kierunkiem pierwszego kanału mostka. Jeśli nie regulujemy prędkości, na pinie `6` ustawiamy stan wysoki.
+
+<Code lang="cpp" file="silnik-kierunek.ino">
+```cpp
+void setup() {
+  pinMode(6, OUTPUT);
+  digitalWrite(6, HIGH);
+
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(7, LOW);
+  digitalWrite(8, HIGH);
+  delay(3000);
+
+  digitalWrite(7, HIGH);
+  digitalWrite(8, LOW);
+  delay(3000);
+}
+```
+</Code>
+
+Po wgraniu programu diody powinny świecić naprzemiennie. Nie jest to zwykłe miganie: zmienia się kierunek przepływu prądu przez element podłączony w miejscu silnika.
+
+<Photo
+  file="11.14-silnik-lewo-pomiar-napiecia.png"
+  day="dzien-01"
+  caption="Symulowany silnik w jednym kierunku: napięcie ma określoną polaryzację."
+  alt="Pomiar napięcia na wyjściu mostka H dla obrotów w lewo"
+  width={559}
+  height={255}
+/>
+
+<Photo
+  file="11.15-silnik-prawo-pomiar-napiecia.png"
+  day="dzien-01"
+  caption="Po zmianie kierunku polaryzacja napięcia jest odwrotna."
+  alt="Pomiar napięcia na wyjściu mostka H dla obrotów w prawo"
+  width={562}
+  height={261}
+/>
+
+<Task title="Zadanie 1" estimate="10 min">
+Zmień czasy `delay(3000)` na różne wartości, np. `1000` i `5000`. Sprawdź, czy potrafisz przewidzieć, która dioda będzie świecić dłużej.
+</Task>
+
+## 8. Sterowanie prędkością przez PWM
+
+Wejście `ENABLE` mostka H można sterować sygnałem PWM. Wtedy mostek bardzo szybko włącza i wyłącza zasilanie silnika, a średnia moc zależy od wypełnienia sygnału. W symulacji zobaczysz zmianę jasności diody.
+
+<Code lang="cpp" file="silnik-pwm-dwie-predkosci.ino">
+```cpp
+void setup() {
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+}
+
+void loop() {
+  analogWrite(6, 100);
+  digitalWrite(7, LOW);
+  digitalWrite(8, HIGH);
+  delay(3000);
+
+  analogWrite(6, 255);
+  digitalWrite(7, LOW);
+  digitalWrite(8, HIGH);
+  delay(3000);
+}
+```
+</Code>
+
+Wartości `analogWrite()` od `0` do `255` odpowiadają wypełnieniu PWM od `0%` do `100%`. Rzeczywisty silnik może nie ruszyć przy bardzo małych wartościach, bo musi pokonać tarcie i bezwładność.
+
+## 9. Pętla `for` w Arduino
+
+Pętla `for` wykonuje wskazany blok kodu określoną liczbę razy. Składa się z trzech części: inicjalizacji licznika, warunku kontynuowania i operacji wykonywanej po każdym obiegu.
+
+<Code lang="cpp" file="for-powitanie-uart.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+
+  for (int i = 0; i < 25; i++) {
+    Serial.println("Witaj na Forbot.pl");
+    delay(200);
+  }
+}
+
+void loop() {
+}
+```
+</Code>
+
+<Photo
+  file="11.16-petla-for-wynik-terminal.png"
+  day="dzien-01"
+  caption="Efekt działania pętli for widoczny w Monitorze portu szeregowego."
+  alt="Monitor portu szeregowego z wielokrotnie wypisanym tekstem"
+  width={720}
+  height={533}
+/>
+
+Najczęstszy zapis `for (int i = 0; i < 25; i++)` oznacza: utwórz licznik `i` od zera, wykonuj pętlę dopóki `i` jest mniejsze od `25`, a po każdym obiegu zwiększ `i` o jeden. W efekcie pętla wykona się 25 razy dla wartości `0`-`24`.
+
+<Expandable title="Inne sposoby zapisania 25 obiegów" heading="###">
+
+Każdy z poniższych zapisów może wykonać blok 25 razy, ale licznik przyjmie inne wartości:
+
+```cpp
+for (int i = 0; i <= 24; i++) {}
+for (int i = 1; i <= 25; i++) {}
+for (int i = 1; i < 26; i++) {}
+for (int i = 0; i < 50; i = i + 2) {}
+for (int i = 25; i > 0; i--) {}
+```
+
+</Expandable>
+
+<Task title="Zadanie 2" estimate="15 min">
+Napisz program, który za pomocą pętli `for` miga diodą 5 razy. Następnie spróbuj napisać ten sam program z użyciem pętli `while`.
+</Task>
+
+<Task title="Zadanie 3" estimate="15 min">
+Napisz program, który odczytuje z UART liczbę z zakresu `0`-`9`, a następnie wypisuje w terminalu tyle znaków `*`, ile wynosi odebrana liczba.
+</Task>
+
+## 10. Płynne rozpędzanie silnika
+
+Skoro licznik pętli `for` może przyjmować kolejne wartości, możemy użyć go jako wypełnienia PWM. Dzięki temu silnik będzie stopniowo zwiększał prędkość, a dioda w symulacji będzie płynnie się rozjaśniać.
+
+<Code lang="cpp" file="silnik-plynne-rozpedzanie.ino">
+```cpp
+void setup() {
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+
+  digitalWrite(7, LOW);
+  digitalWrite(8, HIGH);
+}
+
+void loop() {
+  for (int i = 0; i <= 255; i++) {
+    analogWrite(6, i);
+    delay(25);
+  }
+}
+```
+</Code>
+
+Rozruch prawdziwego silnika jest trudniejszy niż świecenie diody. Silnik musi pokonać tarcie, może piszczeć przy małym PWM i ruszyć dopiero od pewnej wartości. Jeśli robot nie rusza, problemem może być zbyt słabe zasilanie albo zbyt małe wypełnienie PWM.
+
+<Task title="Zadanie 4" estimate="20 min">
+Napisz program, który używa dwóch pętli `for`: pierwsza płynnie rozpędza silnik od `0` do `255`, a druga płynnie hamuje od `255` do `0`.
+</Task>
+
+## Podsumowanie
+
+Silniki DC dają Arduino dużo nowych możliwości, ale wymagają poprawnego sterowania. Pin mikrokontrolera nie zasila silnika bezpośrednio — wysyła tylko sygnały do mostka H. Układ `L293D` pozwala zmieniać kierunek przepływu prądu przez silnik, a wejście `ENABLE` można sterować PWM, aby regulować prędkość. Poznałeś też pętlę `for`, która pozwala wykonywać kod wiele razy i płynnie zmieniać wartości, np. przy rozpędzaniu oraz hamowaniu napędu.

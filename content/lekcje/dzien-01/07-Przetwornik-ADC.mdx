@@ -1,0 +1,385 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Przetwornik ADC — pomiar napięcia"
+slug: "przetwornik-adc-pomiar-napiecia"
+summary: "Wejścia analogowe Arduino, przetwornik ADC, pomiar napięcia, prosty woltomierz, sterowanie programem potencjometrem oraz lampka reagująca na światło."
+
+day: 1
+weekend: 1
+order: 7
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 4
+
+objectives:
+  - "Wyjaśnić różnicę między sygnałem cyfrowym i analogowym"
+  - "Odczytać wartość z wejścia analogowego Arduino"
+  - "Przeliczyć wynik ADC na napięcie"
+  - "Wykorzystać czujnik analogowy do sterowania zachowaniem programu"
+
+prerequisites:
+  - "dzien-01/06-uart-komunikacja-z-pc-zmienne"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Fotorezystor", qty: 1 }
+  - { name: "Dioda LED", qty: 5 }
+  - { name: "Rezystor 220 Ω", qty: 5 }
+  - { name: "Rezystor 1 kΩ", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 20 }
+
+tags: [arduino, adc, analogread, potencjometr, fotorezystor, pomiar-napiecia]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-pomiar-napiecia-przetwornik-adc-id3819"
+
+cover: "/img/lekcje/dzien-01/07.01-arduino-uno-pinout-adc.png"
+publish: true
+updated: "2026-05-13"
+---
+
+W poprzednich lekcjach pracowaliśmy głównie z sygnałami cyfrowymi: pin był w stanie `HIGH` albo `LOW`, przycisk był wciśnięty albo puszczony, a dioda świeciła albo nie. W praktycznych układach często chcemy jednak mierzyć coś płynnego: napięcie, położenie pokrętła, jasność albo odległość. Do takiego zadania Arduino wykorzystuje wejścia analogowe oraz przetwornik ADC.
+
+<Callout type="hazard" title="Najważniejsza granica bezpieczeństwa">
+Wejścia analogowe Arduino UNO mierzą napięcia z zakresu od `0 V` do około `5 V`. Nie podłączaj do pinów analogowych baterii 9 V, zasilaczy 12 V ani żadnych nieznanych źródeł napięcia. Przekroczenie dopuszczalnego zakresu może uszkodzić płytkę i komputer podłączony przez USB.
+</Callout>
+
+## 1. Po co są wejścia analogowe
+
+Elektronika cyfrowa opisuje sygnały dwoma stanami. To wystarcza do przycisków, krańcówek i prostych czujników typu „jest / nie ma”. Świat zewnętrzny jest jednak w dużej części analogowy: jasność zmienia się płynnie, temperatura nie skacze tylko między dwoma wartościami, a potencjometr może być ustawiony w dowolnym położeniu.
+
+Jeśli czujnik podaje napięcie proporcjonalne do mierzonej wielkości, mikrokontroler musi zamienić to napięcie na liczbę. Tym zajmuje się ADC, czyli **Analog-Digital Converter** — przetwornik analogowo-cyfrowy.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.01-arduino-uno-pinout-adc.png"
+  caption="Wejścia analogowe Arduino UNO znajdują się przy pinach A0-A5."
+  alt="Pinout Arduino UNO z zaznaczonymi wejściami analogowymi A0-A5"
+  width={650}
+  height={533}
+/>
+
+Arduino UNO udostępnia wejścia `A0`-`A5`. W środku mikrokontrolera nie ma osobnego przetwornika dla każdego pinu. Jest jeden ADC, a kolejne kanały są do niego przełączane wewnętrznym multiplekserem. Dla nas oznacza to prosty interfejs programowy: wybieramy pin i wywołujemy `analogRead()`.
+
+<Table
+  caption="ADC w Arduino UNO — wartości, które trzeba zapamiętać"
+  headers={["Cecha", "Wartość", "Znaczenie praktyczne"]}
+  rows={[
+    ["Zakres napięcia", "0-5 V", "Tylko taki zakres można bezpośrednio mierzyć na standardowym UNO"],
+    ["Rozdzielczość", "10 bitów", "Wynik ma 1024 możliwe wartości"],
+    ["Wynik `analogRead()`", "0-1023", "0 oznacza około 0 V, 1023 oznacza napięcie bliskie 5 V"],
+    ["Wejścia", "A0-A5", "Sześć kanałów analogowych dostępnych na złączu płytki"],
+  ]}
+/>
+
+<Expandable title="Dlaczego 10 bitów daje 1024 wartości?" heading="###">
+Jeden bit ma dwa stany. Dziesięć bitów daje `2^10`, czyli `1024` kombinacje. Liczenie zaczyna się od zera, dlatego w programie widzimy wartości od `0` do `1023`.
+</Expandable>
+
+## 2. ADC w praktyce: potencjometr jako źródło napięcia
+
+Najprostszy test wejścia analogowego wykonamy z potencjometrem. Dwie skrajne nóżki potencjometru podłączamy do `5V` i `GND`, a środkową nóżkę do wejścia analogowego `A5`. W takim układzie potencjometr działa jak regulowany dzielnik napięcia: na środkowej nóżce pojawia się napięcie zależne od położenia pokrętła.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.02-potencjometr-pomiar-adc.png"
+  caption="Potencjometr podłączony do A5 pozwala płynnie zmieniać napięcie mierzone przez ADC."
+  alt="Schemat połączenia Arduino UNO z potencjometrem podłączonym do wejścia A5"
+  width={783}
+  height={466}
+/>
+
+Pierwszy program tylko odczytuje surową wartość z ADC i wysyła ją do Monitora portu szeregowego. Dzięki temu od razu zobaczysz, jak kręcenie potencjometrem zmienia liczby w zakresie `0`-`1023`.
+
+<Code lang="cpp" file="adc-surowy-odczyt.ino">
+```cpp
+int odczytanaWartosc = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+  Serial.println(odczytanaWartosc);
+  delay(200);
+}
+```
+</Code>
+
+Po wgraniu programu otwórz Monitor portu szeregowego i ustaw prędkość `9600`. Obracaj potencjometr od jednej skrajnej pozycji do drugiej. Wynik nie musi idealnie dochodzić do `0` i `1023`, bo zależy od elementu, styków, przewodów i zasilania, ale powinien wyraźnie zmieniać się w całym zakresie.
+
+<Task title="Zadanie 1" estimate="8 min">
+Odczytaj trzy wartości z Monitora portu szeregowego: przy potencjometrze ustawionym skrajnie w lewo, mniej więcej w połowie i skrajnie w prawo. Zapisz wyniki i sprawdź, czy środkowe położenie daje wartość bliską połowie zakresu.
+</Task>
+
+## 3. Prosty woltomierz
+
+Surowa liczba z ADC jest wygodna dla programu, ale człowiekowi łatwiej interpretować napięcie w woltach. Skoro `0` odpowiada około `0 V`, a `1023` odpowiada napięciu bliskiemu `5 V`, to pojedynczy krok ADC ma wartość około:
+
+`5 V / 1024 = 0,00488 V`
+
+W programie możemy więc pomnożyć odczyt przez `5.0 / 1024.0`. Użycie liczb z `.0` jest ważne, bo wymusza obliczenia zmiennoprzecinkowe.
+
+<Code lang="cpp" file="prosty-woltomierz.ino">
+```cpp
+int odczytanaWartosc = 0;
+float napiecie = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+  napiecie = odczytanaWartosc * (5.0 / 1024.0);
+
+  Serial.print("ADC: ");
+  Serial.print(odczytanaWartosc);
+  Serial.print("  napiecie: ");
+  Serial.print(napiecie);
+  Serial.println(" V");
+
+  delay(200);
+}
+```
+</Code>
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.03-prosty-woltomierz-arduino.png"
+  caption="Prosty woltomierz na Arduino mierzy tylko napięcia bezpieczne dla wejścia ADC."
+  alt="Prosty woltomierz zbudowany na Arduino"
+  width={503}
+  height={316}
+/>
+
+Tak zbudowany woltomierz jest dobrym ćwiczeniem, ale nie zastępuje prawdziwego miernika. Wejście analogowe zbiera zakłócenia, zasilanie USB nie zawsze ma idealnie `5 V`, a samo Arduino nie jest zabezpieczone przed zbyt wysokim napięciem.
+
+<Callout type="tip" title="Kiedy można mierzyć baterię AA?">
+Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie wejścia Arduino UNO. Jeśli wykonujesz taki test, połącz minus baterii z `GND` Arduino, a plus baterii przyłóż do przewodu idącego na `A5`. Nie rób tak z baterią 9 V.
+</Callout>
+
+## 4. Regulacja pracy programu potencjometrem
+
+Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED z rezystorem. Dioda jest podłączona do pinu `2`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.04-potencjometr-regulacja-migania-led.png"
+  caption="Potencjometr mierzymy na A5, a dioda LED podłączona do pinu 2 pokazuje efekt regulacji."
+  alt="Schemat Arduino z potencjometrem na A5 i diodą LED na pinie 2"
+  width={765}
+  height={585}
+/>
+
+<Code lang="cpp" file="potencjometr-reguluje-miganie.ino">
+```cpp
+int odczytanaWartosc = 0;
+
+void setup() {
+  pinMode(2, OUTPUT);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+
+  digitalWrite(2, HIGH);
+  delay(odczytanaWartosc);
+
+  digitalWrite(2, LOW);
+  delay(odczytanaWartosc);
+}
+```
+</Code>
+
+Gdy odczyt ADC jest mały, opóźnienie jest krótkie i dioda miga szybko. Gdy odczyt jest duży, opóźnienie rośnie nawet do około jednej sekundy. W jednej ze skrajnych pozycji potencjometru dioda może wyglądać, jakby świeciła prawie stale, bo program wykonuje bardzo krótkie opóźnienia.
+
+<Task title="Zadanie 2" estimate="10 min">
+Zmień program tak, aby dioda nigdy nie migała z opóźnieniem mniejszym niż `50 ms`. Wskazówka: możesz dodać stałą wartość do wyniku `analogRead()` albo użyć funkcji `map()` z innym zakresem wyjściowym.
+</Task>
+
+## 5. Funkcja `map()` i wskaźnik na pięciu diodach
+
+Często nie potrzebujemy pełnego zakresu `0`-`1023`. Jeśli budujemy wskaźnik na pięciu diodach, wygodniej zamienić odczyt ADC na przedział `1`-`5`. Do tego służy funkcja `map()`.
+
+<Code lang="cpp" file="map-przyklad.ino">
+```cpp
+int poziom = map(odczytanaWartosc, 0, 1023, 1, 5);
+```
+</Code>
+
+Pierwszy argument to wartość wejściowa, drugi i trzeci określają jej pierwotny zakres, a czwarty i piąty podają nowy zakres. Teraz zbudujemy układ, w którym kolejne położenia potencjometru zapalają jedną z pięciu diod.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.05-wskaznik-na-diodach-adc.png"
+  caption="Wskaźnik ADC: potencjometr wybiera, która z pięciu diod ma świecić."
+  alt="Schemat Arduino z potencjometrem i pięcioma diodami LED"
+  width={798}
+  height={501}
+/>
+
+<Code lang="cpp" file="wskaznik-adc-led.ino">
+```cpp
+int odczytanaWartosc = 0;
+
+void setup() {
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+  odczytanaWartosc = map(odczytanaWartosc, 0, 1023, 1, 5);
+
+  if (odczytanaWartosc == 1) {
+    digitalWrite(8, HIGH);
+    digitalWrite(9, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(11, LOW);
+    digitalWrite(12, LOW);
+  } else if (odczytanaWartosc == 2) {
+    digitalWrite(8, LOW);
+    digitalWrite(9, HIGH);
+    digitalWrite(10, LOW);
+    digitalWrite(11, LOW);
+    digitalWrite(12, LOW);
+  } else if (odczytanaWartosc == 3) {
+    digitalWrite(8, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(10, HIGH);
+    digitalWrite(11, LOW);
+    digitalWrite(12, LOW);
+  } else if (odczytanaWartosc == 4) {
+    digitalWrite(8, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(11, HIGH);
+    digitalWrite(12, LOW);
+  } else {
+    digitalWrite(8, LOW);
+    digitalWrite(9, LOW);
+    digitalWrite(10, LOW);
+    digitalWrite(11, LOW);
+    digitalWrite(12, HIGH);
+  }
+
+  delay(50);
+}
+```
+</Code>
+
+Kod jest celowo zapisany wprost, żeby było widać działanie instrukcji `if` oraz `else if`. W kolejnych lekcjach takie przypadki będziemy upraszczać, między innymi za pomocą tablic oraz konstrukcji `switch`.
+
+<Task title="Zadanie 3" estimate="12 min">
+Kręć potencjometrem bardzo powoli i obserwuj przełączanie diod. Jeśli ostatnia dioda zapala się niestabilnie albo prawie nigdy, zmień górną granicę w `map()` z `1023` na `1021` i porównaj zachowanie układu.
+</Task>
+
+<Task title="Zadanie 4" estimate="8 min">
+Odłącz przewód sygnałowy od potencjometru i zostaw wejście analogowe w powietrzu. Obserwuj, jak zachowują się diody po zbliżeniu ręki do przewodu. Po eksperymencie podłącz przewód z powrotem. Wniosek: wejść mikrokontrolera nie zostawiamy niepodłączonych, jeśli program ma działać przewidywalnie.
+</Task>
+
+## 6. Lampka uruchamiana w ciemności
+
+Fotorezystor zmienia rezystancję pod wpływem światła. Im mocniej jest oświetlony, tym mniejszą ma rezystancję. Łącząc fotorezystor z rezystorem tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.06-fotorezystor-lampka-zmierzchowa.png"
+  caption="Fotorezystor i rezystor tworzą dzielnik napięcia podłączony do wejścia A5."
+  alt="Schemat lampki zmierzchowej z Arduino, fotorezystorem i diodą LED"
+  width={764}
+  height={492}
+/>
+
+W tym ćwiczeniu dioda na pinie `8` zapala się, gdy odczyt z dzielnika spadnie poniżej ustalonego progu. Próg trzeba dobrać do warunków w sali, dlatego warto najpierw sprawdzić wartości w Monitorze portu szeregowego, a dopiero potem wpisać granicę do programu.
+
+<Code lang="cpp" file="lampka-zmierzchowa.ino">
+```cpp
+int odczytanaWartosc = 0;
+
+void setup() {
+  pinMode(8, OUTPUT);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+
+  if (odczytanaWartosc < 100) {
+    digitalWrite(8, HIGH);
+  } else {
+    digitalWrite(8, LOW);
+  }
+
+  delay(50);
+}
+```
+</Code>
+
+Jeśli dioda nie reaguje tak, jak oczekujesz, zmień wartość `100`. Dobrą metodą jest rozpoczęcie od większej wartości, na przykład `500`, a potem stopniowe zmniejszanie progu do momentu, w którym zasłonięcie fotorezystora ręką włącza diodę.
+
+<Task title="Zadanie 5" estimate="15 min">
+Dodaj `Serial.begin(9600)` oraz `Serial.println(odczytanaWartosc)`, aby obserwować wskazania fotorezystora. Odczytaj wartość przy oświetlonym czujniku i po jego zasłonięciu. Na tej podstawie dobierz własny próg dla instrukcji `if`.
+</Task>
+
+## 7. Lampka z regulowanym progiem
+
+Stała wpisana w kodzie działa tylko dla konkretnych warunków oświetlenia. Jeśli przeniesiesz układ w inne miejsce, próg może wymagać poprawki. Wygodniejsze rozwiązanie to drugi odczyt analogowy: fotorezystor mierzy jasność, a potencjometr ustawia próg włączenia.
+
+<Schematic
+  src="/img/lekcje/dzien-01/07.07-fotorezystor-lampka-regulowany-prog.png"
+  caption="Potencjometr na A4 ustawia próg, a fotorezystor na A5 mierzy jasność."
+  alt="Schemat lampki zmierzchowej z regulowanym progiem na potencjometrze"
+  width={788}
+  height={461}
+/>
+
+<Code lang="cpp" file="lampka-z-regulowanym-progiem.ino">
+```cpp
+int odczytanaWartosc = 0;
+int prog = 0;
+
+void setup() {
+  pinMode(8, OUTPUT);
+}
+
+void loop() {
+  odczytanaWartosc = analogRead(A5);
+  prog = analogRead(A4);
+
+  if (odczytanaWartosc < prog) {
+    digitalWrite(8, HIGH);
+  } else {
+    digitalWrite(8, LOW);
+  }
+
+  delay(50);
+}
+```
+</Code>
+
+Regulacja jest prosta: ustaw układ w świetle, przy którym dioda ma być jeszcze zgaszona, a następnie powoli kręć potencjometrem do granicy przełączenia. Po takim dostrojeniu nawet niewielkie zasłonięcie fotorezystora powinno włączyć diodę.
+
+<Task title="Zadanie 6" estimate="20 min">
+Rozbuduj lampkę tak, aby po włączeniu diody wysłała do Monitora portu szeregowego jedną informację: aktualny odczyt z fotorezystora oraz aktualny próg z potencjometru. Komunikat nie powinien powtarzać się bez końca, gdy dioda pozostaje włączona.
+</Task>
+
+<Expandable title="Pomysły na rozszerzenia" heading="###">
+
+1. Zbuduj prostą grę: ustaw potencjometr w losowej pozycji, a gracz próbuje wpisać przez Monitor portu szeregowego wartość zbliżoną do odczytu ADC.
+2. Użyj dwóch fotorezystorów po przeciwnych stronach płytki i porównuj ich wskazania, aby określić, z której strony pada mocniejsze światło.
+3. Zamień jedną diodę na pięciostopniowy wskaźnik jasności, podobny do wskaźnika z potencjometrem.
+
+</Expandable>
+
+## Podsumowanie
+
+W tej lekcji wejścia analogowe Arduino zmieniły się z tajemniczych pinów `A0`-`A5` w praktyczne narzędzie pomiarowe. Wiesz już, że `analogRead()` zwraca wartości od `0` do `1023`, potrafisz przeliczyć odczyt ADC na napięcie, użyć potencjometru jako regulatora oraz zbudować prostą lampkę zmierzchową z fotorezystorem. Najważniejsza zasada bezpieczeństwa pozostaje bez zmian: na wejście Arduino UNO podajemy tylko napięcia z zakresu `0-5 V` i nie zostawiamy wejść pomiarowych bez ustalonego stanu, jeśli zależy nam na stabilnym działaniu programu.

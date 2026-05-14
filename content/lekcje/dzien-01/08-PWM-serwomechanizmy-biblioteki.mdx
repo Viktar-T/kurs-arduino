@@ -1,0 +1,362 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "PWM, serwomechanizmy i biblioteki"
+slug: "pwm-serwomechanizmy-biblioteki"
+summary: "Sygnał PWM, wypełnienie impulsu, sterowanie jasnością LED przez analogWrite(), podstawy serwomechanizmów, biblioteka Servo oraz bezpieczne zasilanie elementów wykonawczych."
+
+day: 1
+weekend: 1
+order: 8
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 5
+
+objectives:
+  - "Wyjaśnić, czym jest PWM i do czego służy"
+  - "Sterować jasnością diody LED za pomocą `analogWrite()`"
+  - "Uruchomić serwomechanizm z użyciem biblioteki Servo"
+  - "Wskazać ograniczenia zasilania serw i silników z Arduino"
+
+prerequisites:
+  - "dzien-01/07-przetwornik-adc-pomiar-napiecia"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED", qty: 1 }
+  - { name: "Rezystor 220 Ω", qty: 1 }
+  - { name: "Serwomechanizm", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Stabilizator LM7805", qty: 1 }
+  - { name: "Bateria 9 V z klipsem", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 12 }
+
+tags: [arduino, pwm, analogwrite, servo, biblioteki, serwomechanizm]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-silniki-pwm-serwomechanizm-zewnetrzne-biblioteki-id3913"
+
+cover: "/img/lekcje/dzien-01/08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
+publish: true
+updated: "2026-05-13"
+---
+
+W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC. Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM, czyli modulacja szerokości impulsu. Na końcu wykorzystamy też bibliotekę `Servo`, aby sterować położeniem serwomechanizmu.
+
+<Photo
+  file="08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
+  day="dzien-01"
+  caption="Tematy tej lekcji: PWM, serwomechanizmy i biblioteki Arduino."
+  alt="Grafika kursu Arduino o PWM, serwomechanizmach i bibliotekach"
+  width={700}
+  height={466}
+/>
+
+<Callout type="note" title="Kierunek działania">
+ADC zamieniał napięcie analogowe na liczbę. PWM działa odwrotnie z punktu widzenia efektu: program podaje liczbę, a pin Arduino bardzo szybko przełącza się między `HIGH` i `LOW`, tworząc wrażenie płynnej regulacji mocy.
+</Callout>
+
+## 1. Czym jest sygnał PWM
+
+Zacznijmy od zwykłego migania diodą. Jeżeli przez sekundę podajemy na pin `HIGH`, a przez kolejną sekundę `LOW`, to na wyjściu powstaje przebieg prostokątny. Dioda przez połowę czasu świeci, a przez połowę czasu jest zgaszona.
+
+<Code lang="cpp" file="miganie-50-procent.ino">
+```cpp
+void setup() {
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3, HIGH);
+  delay(1000);
+
+  digitalWrite(3, LOW);
+  delay(1000);
+}
+```
+</Code>
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.02-pwm-wypelnienie-50-procent.png"
+  caption="Przebieg prostokątny: sygnał jest w stanie wysokim przez połowę okresu."
+  alt="Wykres przebiegu prostokątnego o wypełnieniu 50 procent"
+  width={390}
+  height={145}
+/>
+
+Najważniejsze pojęcia są trzy: czas stanu wysokiego, okres oraz wypełnienie. Okres to czas jednego pełnego cyklu sygnału. Wypełnienie mówi, przez jaką część tego cyklu sygnał pozostaje w stanie wysokim.
+
+<Table
+  caption="Parametry pierwszego przebiegu"
+  headers={["Parametr", "Wartość", "Znaczenie"]}
+  rows={[
+    ["Amplituda", "około 5 V", "Napięcie stanu wysokiego na Arduino UNO"],
+    ["Okres", "2 s", "1 s świecenia + 1 s przerwy"],
+    ["Częstotliwość", "0,5 Hz", "Jeden cykl trwa dwie sekundy"],
+    ["Wypełnienie", "50%", "Przez połowę czasu pin jest w stanie `HIGH`"],
+  ]}
+/>
+
+Jeśli wydłużymy czas świecenia i skrócimy czas zgaszenia, wypełnienie wzrośnie. Okres może pozostać taki sam, ale średni efekt działania sygnału będzie inny.
+
+<Code lang="cpp" file="miganie-duze-wypelnienie.ino">
+```cpp
+void setup() {
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3, HIGH);
+  delay(1667);
+
+  digitalWrite(3, LOW);
+  delay(333);
+}
+```
+</Code>
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.03-pwm-duze-wypelnienie.png"
+  caption="Duże wypełnienie: stan wysoki trwa przez większość okresu."
+  alt="Wykres przebiegu PWM o dużym wypełnieniu"
+  width={390}
+  height={143}
+/>
+
+Gdy zamienimy czasy miejscami, otrzymamy małe wypełnienie. Pin jest w stanie wysokim tylko przez krótki fragment okresu.
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.04-pwm-male-wypelnienie.png"
+  caption="Małe wypełnienie: stan wysoki trwa krótko, a przerwa jest długa."
+  alt="Wykres przebiegu PWM o małym wypełnieniu"
+  width={390}
+  height={149}
+/>
+
+PWM polega właśnie na szybkim przełączaniu sygnału prostokątnego i regulacji jego wypełnienia. Jeżeli dzieje się to wystarczająco szybko, dioda nie wygląda jak migająca, tylko jak świecąca słabiej albo mocniej. Podobnie silnik może pracować wolniej albo szybciej, bo dostaje energię tylko przez część czasu.
+
+## 2. Do czego używamy PWM
+
+PWM jest bardzo popularny, bo pozwala sterować elementami wykonawczymi z poziomu układu cyfrowego. Arduino nadal wystawia tylko `LOW` albo `HIGH`, ale zmienia proporcje czasu między tymi stanami.
+
+<Table
+  caption="Typowe zastosowania PWM"
+  headers={["Zastosowanie", "Co regulujemy", "Co obserwujemy"]}
+  rows={[
+    ["Dioda LED", "Jasność", "Dioda świeci słabiej lub mocniej"],
+    ["Silnik DC", "Średnią moc", "Silnik obraca się wolniej lub szybciej"],
+    ["Serwomechanizm", "Szerokość impulsu sterującego", "Wał ustawia się pod zadanym kątem"],
+  ]}
+/>
+
+<Callout type="tip" title="PWM nie jest prawdziwym napięciem analogowym">
+Na pinie nadal pojawia się tylko `0 V` albo około `5 V`. Zmienia się czas trwania stanu wysokiego. Wiele elementów reaguje na wartość średnią takiego sygnału, dlatego efekt przypomina regulację analogową.
+</Callout>
+
+## 3. Piny PWM i funkcja `analogWrite()`
+
+Arduino UNO ma kilka pinów sprzętowego PWM. Na płytce są one oznaczone tyldą `~`. Sprzętowy PWM oznacza, że mikrokontroler potrafi generować taki sygnał samodzielnie, bez ręcznego wpisywania bardzo krótkich `delay()` w programie.
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.05-arduino-uno-pinout-pwm.png"
+  caption="Piny PWM Arduino UNO są oznaczone symbolem tyldy przy numerze pinu."
+  alt="Pinout Arduino UNO z pinami obsługującymi PWM"
+  width={650}
+  height={533}
+/>
+
+Do generowania PWM używamy funkcji `analogWrite(pin, wartosc)`. Nazwa może być myląca: nie tworzy ona prawdziwego napięcia analogowego, tylko sygnał PWM. Wartość mieści się w zakresie `0`-`255`, bo PWM w Arduino UNO jest 8-bitowy.
+
+<Table
+  caption="Zakres funkcji analogWrite()"
+  headers={["Wartość", "Wypełnienie", "Efekt dla diody LED"]}
+  rows={[
+    ["0", "0%", "Dioda zgaszona"],
+    ["64", "około 25%", "Dioda świeci słabo"],
+    ["128", "około 50%", "Dioda świeci średnio"],
+    ["255", "100%", "Dioda świeci pełną jasnością"],
+  ]}
+/>
+
+## 4. Sterowanie jasnością diody LED
+
+Pierwszy praktyczny układ jest prosty: dioda LED z rezystorem podłączona do pinu `3`, czyli jednego z pinów PWM. Będziemy stopniowo zwiększać wypełnienie sygnału, aby dioda płynnie się rozjaśniała.
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.06-dioda-led-sterowanie-pwm.png"
+  caption="Dioda LED podłączona do pinu 3 pozwala sprawdzić działanie PWM w praktyce."
+  alt="Schemat Arduino z diodą LED sterowaną sygnałem PWM na pinie 3"
+  width={464}
+  height={341}
+/>
+
+<Code lang="cpp" file="pwm-rozjasnianie-led.ino">
+```cpp
+#define diodaPIN 3
+
+int wypelnienie = 0;
+int zmiana = 5;
+
+void setup() {
+  pinMode(diodaPIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(diodaPIN, wypelnienie);
+
+  if (wypelnienie < 255) {
+    wypelnienie = wypelnienie + zmiana;
+  } else {
+    wypelnienie = 0;
+  }
+
+  delay(50);
+}
+```
+</Code>
+
+Program zwiększa wypełnienie co `50 ms`. Gdy dojdzie do wartości bliskiej pełnej jasności, wraca do zera i zaczyna rozjaśnianie od początku. To najprostszy sposób pokazania, że PWM może sterować „siłą” działania elementu.
+
+<Task title="Zadanie 1" estimate="10 min">
+Zmień wartość zmiennej `zmiana` na `1`, `10` i `25`. Porównaj, jak zmienia się szybkość rozjaśniania diody i zapisz, która wartość daje najbardziej płynny efekt.
+</Task>
+
+<Task title="Zadanie 2" estimate="15 min">
+Zmień program tak, aby po dojściu do `255` dioda nie gasła nagle, tylko stopniowo przyciemniała się do zera. Wykorzystaj dodatkową zmienną, która określa kierunek zmiany jasności.
+</Task>
+
+## 5. Serwomechanizm: czym jest i jak działa
+
+Serwomechanizm to mały napęd, w którym w jednej obudowie znajdują się silnik, przekładnia oraz sterownik. Typowe serwo modelarskie nie obraca się bez końca jak zwykły silnik DC. Zamiast tego ustawia wał w zadanej pozycji, najczęściej w zakresie około `0`-`180°`.
+
+<Photo
+  file="08.07-serwomechanizm-micro-sg90.png"
+  day="dzien-01"
+  caption="Serwomechanizm typu micro, podobny do popularnego SG90."
+  alt="Mały serwomechanizm modelarski typu micro"
+  width={546}
+  height={364}
+/>
+
+Serwo ma zwykle trzy przewody: masę, zasilanie oraz sygnał sterujący. Kolory mogą różnić się zależnie od producenta, ale masa jest najczęściej czarna lub brązowa, zasilanie czerwone, a sygnał żółty, pomarańczowy albo biały.
+
+<Callout type="hazard" title="Nie obracaj ramienia serwa na siłę">
+W środku małego serwa są delikatne plastikowe koła zębate. Ręczne przekręcanie wału bez potrzeby może uszkodzić przekładnię. Pozycję serwa zmieniamy programowo.
+</Callout>
+
+Standardowy sygnał sterujący serwem ma okres około `20 ms`. Długość impulsu w tym okresie informuje elektronikę serwa, pod jakim kątem ma ustawić wał. W praktyce nie będziemy generować tych impulsów ręcznie, bo Arduino ma gotową bibliotekę `Servo`.
+
+## 6. Zasilanie serwomechanizmu
+
+Serwo zawiera silnik, a silniki potrafią pobierać duży prąd, szczególnie podczas startu i przy obciążeniu. Zasilanie serwa bezpośrednio z tego samego źródła co mikrokontroler może powodować reset Arduino, zakłócenia pracy układu albo uszkodzenie elementów.
+
+<Callout type="warning" title="Wspólna masa jest obowiązkowa">
+Jeżeli serwo ma osobne zasilanie, masa tego zasilania musi być połączona z masą Arduino. Bez wspólnego punktu odniesienia sygnał sterujący z pinu Arduino nie będzie jednoznaczny dla elektroniki serwa.
+</Callout>
+
+W ćwiczeniu wykorzystujemy układ ze stabilizatorem `LM7805`, który zasila serwomechanizm napięciem około `5 V`. Sygnał sterujący podłączamy do pinu `9` Arduino.
+
+<Schematic
+  src="/img/lekcje/dzien-01/08.08-podlaczenie-serwomechanizmu-arduino.png"
+  caption="Podłączenie serwomechanizmu: osobne zasilanie 5 V, wspólna masa i sygnał z pinu 9."
+  alt="Schemat podłączenia serwomechanizmu do Arduino ze stabilizatorem zasilania"
+  width={676}
+  height={356}
+/>
+
+## 7. Biblioteka `Servo` w praktyce
+
+Biblioteka to gotowy zestaw funkcji i typów, które rozszerzają możliwości programu. Dzięki `Servo.h` nie musimy samodzielnie liczyć czasów impulsów. Wystarczy utworzyć obiekt serwa, wskazać pin i podać żądany kąt.
+
+<Code lang="cpp" file="servo-pierwszy-ruch.ino">
+```cpp
+#include <Servo.h>
+
+Servo serwomechanizm;
+
+int pozycja = 0;
+int zmiana = 6;
+
+void setup() {
+  serwomechanizm.attach(9);
+}
+
+void loop() {
+  if (pozycja < 180) {
+    serwomechanizm.write(pozycja);
+  } else {
+    pozycja = 0;
+  }
+
+  pozycja = pozycja + zmiana;
+  delay(200);
+}
+```
+</Code>
+
+W programie `#include <Servo.h>` dołącza bibliotekę. Linia `Servo serwomechanizm;` tworzy obiekt, przez który będziemy sterować napędem. Funkcja `attach(9)` przypisuje serwo do pinu `9`, a `write(pozycja)` ustawia kąt z zakresu `0`-`180`.
+
+<Task title="Zadanie 3" estimate="10 min">
+Zmień wartość zmiennej `zmiana` na `1`, `3`, `10` i `30`. Sprawdź, jak wpływa to na płynność oraz szybkość ruchu serwa.
+</Task>
+
+<Task title="Zadanie 4" estimate="20 min">
+Napisz program, który ustawia serwo w pozycji przesłanej z Monitora portu szeregowego. Akceptuj tylko liczby od `0` do `180`. Dla innych wartości wyświetl komunikat o błędzie.
+</Task>
+
+## 8. Sterowanie serwem potencjometrem
+
+W poprzedniej lekcji odczytywaliśmy potencjometr przez ADC. Teraz możemy połączyć te umiejętności: odczyt z `analogRead()` ma zakres `0`-`1023`, a serwo przyjmuje kąt `0`-`180`. Funkcja `map()` pozwala przeskalować jeden zakres na drugi.
+
+<Code lang="cpp" file="servo-potencjometr.ino">
+```cpp
+#include <Servo.h>
+
+Servo serwomechanizm;
+
+int odczyt = 0;
+int pozycja = 0;
+
+void setup() {
+  serwomechanizm.attach(9);
+}
+
+void loop() {
+  odczyt = analogRead(A5);
+  pozycja = map(odczyt, 0, 1023, 0, 180);
+
+  serwomechanizm.write(pozycja);
+  delay(20);
+}
+```
+</Code>
+
+<Task title="Zadanie 5" estimate="15 min">
+Podłącz potencjometr jako dzielnik napięcia do wejścia `A5` i uruchom program `servo-potencjometr.ino`. Ustaw potencjometr w trzech pozycjach: minimum, środek i maksimum. Sprawdź, czy ramię serwa odpowiada tym ustawieniom.
+</Task>
+
+<Expandable title="Dlaczego serwo może drżeć?" heading="###">
+Lekkie drżenie może wynikać z zakłóceń zasilania, słabych styków na płytce stykowej, zbyt dużego obciążenia ramienia albo niestabilnego odczytu z potencjometru. Najpierw sprawdź wspólną masę i zasilanie serwa, a dopiero potem poprawiaj program.
+</Expandable>
+
+## 9. Nie podłączaj zwykłych silników bezpośrednio do Arduino
+
+W tej lekcji sterujemy serwem, ale sygnał z pinu Arduino trafia tylko do wewnętrznego sterownika serwomechanizmu. Pin nie zasila silnika bezpośrednio. To bardzo ważna różnica.
+
+<Callout type="hazard" title="Silnik DC wymaga sterownika">
+Zwykły silnik DC potrafi pobrać wielokrotnie więcej prądu niż pin Arduino może bezpiecznie dostarczyć. Nie podłączaj silnika bezpośrednio do pinu mikrokontrolera. Do sterowania silnikami używa się elementów pośredniczących, na przykład tranzystorów, modułów MOSFET albo mostków H.
+</Callout>
+
+W kolejnych lekcjach wrócimy do silników DC i pokażemy, jak sterować nimi poprawnie. Na tym etapie zapamiętaj zasadę: pin Arduino steruje, ale nie zasila dużych obciążeń.
+
+## Podsumowanie
+
+PWM pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji przez szybkie przełączanie pinu między stanami `HIGH` i `LOW`. Wypełnienie sygnału decyduje o średnim efekcie: jasności diody, prędkości silnika albo pozycji interpretowanej przez serwo. Wiesz już, jak użyć `analogWrite()` na pinach PWM, jak dołączyć bibliotekę `Servo`, jak ustawić pozycję serwomechanizmu oraz dlaczego elementy wykonawcze wymagają ostrożności przy zasilaniu.

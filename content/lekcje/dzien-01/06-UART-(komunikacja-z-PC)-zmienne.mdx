@@ -1,0 +1,548 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "UART — komunikacja z PC i zmienne"
+slug: "uart-komunikacja-z-pc-zmienne"
+summary: "Komunikacja Arduino z komputerem przez UART: Serial Monitor, ramka danych, prędkość transmisji, zmienne, stałe, licznik oraz sterowanie diodami z terminala."
+
+day: 1
+weekend: 1
+order: 6
+duration: 90
+block: 4
+blockTitle: "Komunikacja UART i diagnostyka programu"
+forbotCourse: 1
+forbotChapter: 3
+
+objectives:
+  - "Wyjaśnić, do czego służy UART w Arduino"
+  - "Uruchomić komunikację przez Serial Monitor"
+  - "Użyć zmiennych do przechowywania stanu programu"
+  - "Sterować prostym układem przez komendy wysyłane z komputera"
+
+prerequisites:
+  - "dzien-01/04-podstawy-programowania-porty-io"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED", qty: 2 }
+  - { name: "Rezystor 220 Ω", qty: 2 }
+  - { name: "Przycisk tact-switch", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 8 }
+
+tags: [arduino, uart, serial, zmienne, monitor-portu-szeregowego, ascii]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-uart-komunikacja-z-komputerem-pc-zmienne-id3836"
+  - "public/docs/teoria-niektore-tematy/programowanie/06_UART.md"
+  - "public/docs/teoria-niektore-tematy/plytka-elektronika/03.01_komunikacja-UART.md"
+  - "public/docs/teoria-niektore-tematy/programowanie/04_Zmienne.md"
+  - "public/docs/teoria-niektore-tematy/plytka-elektronika/01_infor-podstawowe.md"
+
+publish: true
+updated: "2026-05-13"
+---
+
+## Czego się dziś nauczymy
+
+Do tej pory Arduino wykonywało program, a my obserwowaliśmy głównie diody i
+przycisk. W tej lekcji otwieramy drugi kanał obserwacji: komunikację z
+komputerem. Użyjemy Monitora portu szeregowego, aby Arduino mogło wysyłać
+komunikaty diagnostyczne, liczniki i odpowiedzi na komendy wpisane z klawiatury.
+
+<Callout type="note" title="Materiał źródłowy">
+Lekcja bazuje na rozdziale Forbot #3 o UART i zmiennych. Dodatkowe wyjaśnienia
+pochodzą z lokalnych notatek o UART, pamięci Arduino UNO, znakach ASCII oraz
+różnicy między `#define`, `const byte` i zmiennymi.
+</Callout>
+
+<Objectives
+  items={[
+    "uruchomić komunikację szeregową przez Serial.begin()",
+    "wysyłać dane z Arduino do komputera przez Serial.print() i Serial.println()",
+    "wyjaśnić, co oznacza prędkość 9600 baud i dlaczego obie strony muszą mieć tę samą wartość",
+    "użyć zmiennych do zapamiętywania liczników, tekstu i stanu programu",
+    "odebrać komendę z Monitora portu szeregowego i sterować diodami LED",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    "umiesz podłączyć LED przez rezystor do pinu cyfrowego",
+    "rozumiesz podstawową strukturę setup() i loop()",
+    "wiesz, czym różni się digitalWrite() od digitalRead()",
+    "znasz INPUT_PULLUP i odwróconą logikę przycisku",
+  ]}
+/>
+
+<Hardware
+  items={[
+    { name: "Arduino UNO R3", qty: 1 },
+    { name: "Kabel USB-A — USB-B", qty: 1 },
+    { name: "Dioda LED", qty: 2 },
+    { name: "Rezystor 220 Ω", qty: 2 },
+    { name: "Przycisk tact-switch", qty: 1 },
+    { name: "Płytka stykowa", qty: 1 },
+    { name: "Przewody połączeniowe", qty: 8 },
+  ]}
+/>
+
+## 1. Po co Arduino rozmawia z komputerem
+
+Mikrokontroler nie ma ekranu, klawiatury ani systemowego okna z komunikatami.
+Jeśli program działa źle, sama dioda LED często nie wystarcza do diagnozy.
+Komunikacja przez `Serial` pozwala wypisywać na komputerze informacje typu:
+
+- aktualny stan przycisku,
+- licznik obiegów pętli,
+- wynik obliczenia,
+- komunikat alarmowy,
+- tekst odebrany z Monitora portu szeregowego.
+
+Na Arduino UNO komunikacja z komputerem odbywa się przez kabel USB, ale wewnątrz
+płytki sygnał jest zamieniany na UART. Dlatego w kodzie używamy obiektu
+`Serial`, a na płytce mogą migać diody `TX` i `RX`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/06.01-komunikacja-usb-uart.png"
+  caption="Arduino UNO komunikuje się z PC przez USB, a na płytce sygnał trafia do interfejsu UART mikrokontrolera."
+  alt="Schemat pokazujący komputer PC połączony przez USB z Arduino i mikrokontrolerem"
+/>
+
+<Callout type="warning" title="Piny 0 i 1">
+Na Arduino UNO piny cyfrowe `0` (`RX`) i `1` (`TX`) są używane przez UART.
+Gdy korzystasz z `Serial`, nie traktuj ich jak zwykłych pinów I/O do LED,
+przycisków albo czujników.
+</Callout>
+
+## 2. Ramka UART i prędkość transmisji
+
+UART wysyła dane szeregowo, czyli bit po bicie. Pojedynczy bajt nie leci jako
+„cała paczka naraz”, tylko jako sekwencja stanów logicznych w czasie. Typowa
+ramka zawiera:
+
+- bit startu, który informuje odbiornik, że transmisja się zaczyna,
+- bity danych, najczęściej 8 bitów,
+- bit stopu, który kończy ramkę i pozwala linii wrócić do stanu spoczynku.
+
+<Photo
+  file="06.02-ramka-uart.png"
+  day="dzien-01"
+  caption="Uproszczona ramka UART: bit startu, bity danych i bit stopu."
+  alt="Rysunek ramki UART z bitem startu, ośmioma bitami danych i bitem stopu"
+  width={560}
+  height={220}
+/>
+
+Ponieważ UART jest asynchroniczny, nie ma osobnej linii zegarowej. Komputer i
+Arduino muszą więc wcześniej umówić się na prędkość transmisji. Gdy w programie
+piszemy `Serial.begin(9600)`, wybieramy prędkość 9600 baud, czyli w uproszczeniu
+9600 bitów na sekundę.
+
+<Table
+  caption="Najważniejsze pojęcia UART"
+  headers={["Pojęcie", "Znaczenie w praktyce"]}
+  rows={[
+    ["TX", "Transmit, czyli linia nadawania danych"],
+    ["RX", "Receive, czyli linia odbierania danych"],
+    ["baud", "tempo transmisji; obie strony muszą mieć tę samą wartość"],
+    ["bit startu", "sygnał początku ramki danych"],
+    ["bit stopu", "sygnał końca ramki danych"],
+  ]}
+/>
+
+<Expandable title="Dlaczego przy złej prędkości widać śmieci?" heading="###">
+Przy `9600 baud` jeden bit trwa około `1 / 9600 s`, czyli około `104 µs`.
+Odbiornik próbuje czytać linię dokładnie w tych odstępach czasu. Jeśli Arduino
+nadaje z prędkością `9600`, a Monitor portu szeregowego jest ustawiony na inną
+wartość, komputer próbuje próbkować sygnał w złych momentach. W efekcie składa
+bity w niepoprawne znaki i na ekranie pojawiają się losowe symbole.
+</Expandable>
+
+## 3. Pierwszy program z Serial Monitor
+
+Komunikację uruchamiamy raz w `setup()`. To pasuje do roli tej funkcji: w
+`setup()` konfigurujemy sprzęt, piny i połączenia. `loop()` pracuje później bez
+końca i może cyklicznie wysyłać dane.
+
+<Code lang="cpp" file="serial-hello.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Arduino gotowe do pracy");
+}
+
+void loop() {
+  Serial.println("Minelo 5 sekund");
+  delay(5000);
+}
+```
+</Code>
+
+Po wgraniu programu otwórz Monitor portu szeregowego i ustaw prędkość `9600`.
+Pierwszy komunikat pojawi się raz po resecie, a kolejne będą dopisywane co 5
+sekund.
+
+<Photo
+  file="06.03-monitor-portu-szeregowego.png"
+  day="dzien-01"
+  caption="Monitor portu szeregowego pozwala obserwować tekst wysyłany przez Arduino."
+  alt="Zrzut okna Monitora portu szeregowego Arduino IDE"
+  width={620}
+  height={360}
+/>
+
+`Serial.print()` wypisuje tekst bez przechodzenia do nowej linii, a
+`Serial.println()` dodaje koniec linii. W diagnostyce najczęściej zaczynamy od
+`println()`, bo kolejne pomiary są wtedy czytelniejsze.
+
+<Task title="Zadanie 1" estimate="8 min">
+Zmień prędkość w Monitorze portu szeregowego na inną niż `9600`, nie zmieniając
+kodu programu. Zanotuj, co dzieje się z tekstem. Potem ustaw z powrotem `9600`
+i sprawdź, czy komunikaty wracają do normalnej postaci.
+</Task>
+
+## 4. Alarm okna: komunikat tylko wtedy, gdy coś się zmienia
+
+Teraz użyjemy UART jako narzędzia diagnostycznego w układzie z przyciskiem i
+dwiema diodami. Przycisk udaje czujnik w ramie okna:
+
+- przycisk wciśnięty oznacza okno zamknięte,
+- przycisk puszczony oznacza okno otwarte,
+- zielona LED sygnalizuje stan bezpieczny,
+- czerwona LED i komunikat w terminalu sygnalizują alarm.
+
+<Schematic
+  src="/img/lekcje/dzien-01/06.04-alarm-okna-led-przycisk.png"
+  caption="Układ alarmu okna: przycisk jako czujnik oraz dwie diody LED."
+  alt="Schemat połączenia Arduino z przyciskiem i dwiema diodami LED"
+  width={820}
+  height={520}
+/>
+
+Pierwsza wersja programu może wypisywać alarm bez przerwy, bo `loop()` wykonuje
+się bardzo szybko. Wersja poniżej po wykryciu otwartego okna zatrzymuje się w
+pętli `while()` do czasu ponownego zamknięcia czujnika.
+
+<Code lang="cpp" file="alarm-okna.ino">
+```cpp
+const byte pinCzerwona = 8;
+const byte pinZielona = 9;
+const byte pinCzujnikOkna = 10;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(pinCzerwona, OUTPUT);
+  pinMode(pinZielona, OUTPUT);
+  pinMode(pinCzujnikOkna, INPUT_PULLUP);
+
+  digitalWrite(pinCzerwona, LOW);
+  digitalWrite(pinZielona, LOW);
+}
+
+void loop() {
+  if (digitalRead(pinCzujnikOkna) == LOW) {
+    digitalWrite(pinZielona, HIGH);
+    digitalWrite(pinCzerwona, LOW);
+  } else {
+    digitalWrite(pinZielona, LOW);
+    digitalWrite(pinCzerwona, HIGH);
+    Serial.println("Uwaga! Alarm! Okno nie jest zamkniete!");
+
+    while (digitalRead(pinCzujnikOkna) == HIGH) {
+      delay(25);
+    }
+  }
+}
+```
+</Code>
+
+<Callout type="tip" title="Dlaczego const byte zamiast #define?">
+Forbot pokazuje w tym miejscu `#define`, bo to szybki sposób nadawania nazw
+pinom. Na zajęciach preferujemy `const byte` dla numerów pinów: ma typ, daje
+lepsze komunikaty błędów i dobrze pasuje do małych wartości `0-19` na Arduino
+UNO.
+</Callout>
+
+## 5. `#define`, `const` i „magiczne liczby”
+
+Kod z samymi liczbami szybko robi się nieczytelny. Jeśli w wielu miejscach
+występuje `8`, po tygodniu trudno pamiętać, czy chodzi o pin czerwonej diody,
+zielonej diody, czy może o coś zupełnie innego. Dlatego numerom pinów nadajemy
+nazwy.
+
+<Table
+  caption="Porównanie #define i const byte w kodzie Arduino"
+  headers={["Cecha", "#define", "const byte"]}
+  rows={[
+    ["Kiedy działa", "przed kompilacją, jako podstawienie tekstu", "podczas kompilacji, jako stała o określonym typie"],
+    ["Kontrola typu", "bardzo słaba", "dobra, kompilator wie, że to liczba typu byte"],
+    ["Typowe użycie", "stare przykłady, makra, warunkowa kompilacja", "numery pinów, stałe konfiguracyjne"],
+    ["Czytelność błędów", "czasem błąd pojawia się daleko od definicji", "błąd zwykle wskazuje problem z typem"],
+  ]}
+/>
+
+<Code lang="cpp" file="nazwy-pinow.ino">
+```cpp
+const byte pinLed = 8;
+
+void setup() {
+  pinMode(pinLed, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(pinLed, HIGH);
+  delay(500);
+  digitalWrite(pinLed, LOW);
+  delay(500);
+}
+```
+</Code>
+
+<Expandable title="Co dokładnie robi #define?" heading="###">
+`#define pinLed 8` działa jak automatyczne „znajdź i zamień” wykonane przed
+kompilacją. Preprocesor znajduje każde wystąpienie `pinLed` i wstawia tam `8`.
+To nie jest zmienna i nie ma typu. Dlatego `#define` bywa użyteczne, ale w
+codziennych szkicach dla numerów pinów bezpieczniej używać `const byte`.
+</Expandable>
+
+## 6. Zmienne jako pamięć programu
+
+Zmienna to nazwana „szufladka” w pamięci, w której program może zapisać wartość,
+odczytać ją później i zmienić w trakcie działania. Na Arduino UNO trzeba o nich
+myśleć praktycznie: płytka ma tylko `2 KB` pamięci SRAM, więc każda większa
+zmienna i każdy tekst typu `String` mają znaczenie.
+
+<Table
+  caption="Podstawowe typy danych na Arduino UNO"
+  headers={["Typ", "Co przechowuje", "Typowe użycie"]}
+  rows={[
+    ["bool", "true albo false", "stan alarmu, flaga zdarzenia"],
+    ["byte", "liczby 0-255", "numery pinów, małe liczniki, wartości PWM"],
+    ["int", "liczby całkowite od -32768 do 32767", "liczniki, odczyty analogowe, obliczenia"],
+    ["long", "duże liczby całkowite", "czas, większe liczniki"],
+    ["char", "jeden znak ASCII", "pojedyncza komenda, np. '0' albo '1'"],
+    ["String", "tekst", "proste komendy tekstowe w ćwiczeniach"],
+  ]}
+/>
+
+<Callout type="warning" title="RAM w Arduino UNO jest mały">
+Arduino UNO ma tylko `2 KB` SRAM. To wystarcza do wielu ćwiczeń, ale warto od
+początku wiedzieć, że duże teksty, tablice, `float` i intensywne używanie
+`String` mogą szybko zużyć pamięć. W tej lekcji używamy `String`, bo upraszcza
+pierwszy kontakt z komendami tekstowymi.
+</Callout>
+
+## 7. Licznik wysyłany przez UART
+
+Najprostszy program ze zmienną to licznik. Deklarujemy go przed `setup()`, czyli
+jako zmienną globalną. Dzięki temu zachowuje wartość między kolejnymi obiegami
+`loop()`.
+
+<Code lang="cpp" file="licznik-uart.ino">
+```cpp
+int licznik = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.println(licznik);
+  licznik = licznik + 1;
+  delay(100);
+}
+```
+</Code>
+
+Linia `licznik = licznik + 1;` nie oznacza równania matematycznego. W
+programowaniu znak `=` oznacza przypisanie:
+
+1. weź obecną wartość `licznik`,
+2. dodaj `1`,
+3. zapisz wynik z powrotem do `licznik`.
+
+<Photo
+  file="06.05-licznik-zmienna-terminal.png"
+  day="dzien-01"
+  caption="Wynik działania licznika wypisywanego przez UART."
+  alt="Monitor portu szeregowego pokazujący kolejne wartości licznika"
+  width={520}
+  height={380}
+/>
+
+<Task title="Zadanie 2" estimate="10 min">
+Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji
+`loop()`. Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
+</Task>
+
+<Task title="Zadanie 3" estimate="10 min">
+Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
+portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
+</Task>
+
+## 8. Odbieranie danych z komputera
+
+UART działa w dwie strony. Arduino może nie tylko wysyłać dane do komputera,
+ale też odbierać znaki wpisane w Monitorze portu szeregowego.
+
+Najbezpieczniejszy wzorzec dla pojedynczych znaków wygląda tak:
+
+<Code lang="cpp" file="serial-char.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char znak = Serial.read();
+    Serial.print("Odebrano znak: ");
+    Serial.println(znak);
+  }
+}
+```
+</Code>
+
+`Serial.available()` sprawdza, czy w buforze odbiorczym czeka przynajmniej jeden
+bajt. Dopiero wtedy wywołujemy `Serial.read()`. Bez tego `Serial.read()` może
+zwrócić `-1`, czyli informację „nic nie przyszło”.
+
+<Callout type="note" title="ASCII: znak to też liczba">
+Monitor portu szeregowego wysyła znaki ASCII. Gdy wpisujesz `0`, Arduino odbiera
+znak `'0'`, którego kod liczbowy to `48`, a nie wartość liczbową `0`. Dlatego w
+prostych komendach porównujemy `znak == '0'`, a nie `znak == 0`.
+</Callout>
+
+<Photo
+  file="06.06-uart-wysylanie-imienia.png"
+  day="dzien-01"
+  caption="Monitor portu szeregowego może wysyłać tekst z komputera do Arduino."
+  alt="Monitor portu szeregowego z wpisanym tekstem wysyłanym do Arduino"
+  width={520}
+  height={360}
+/>
+
+<Photo
+  file="06.07-uart-odpowiedz-arduino.png"
+  day="dzien-01"
+  caption="Arduino może odpowiedzieć na odebrany tekst własnym komunikatem."
+  alt="Monitor portu szeregowego pokazujący odpowiedź Arduino na wpisany tekst"
+  width={520}
+  height={360}
+/>
+
+## 9. Sterowanie diodami przez UART
+
+Na końcu połączymy wszystko: nazwy pinów, zmienne tekstowe, odbiór danych i
+sterowanie diodami. Układ ma dwie diody podłączone do pinów `8` i `9`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/06.08-sterowanie-diodami-przez-uart.png"
+  caption="Dwie diody LED sterowane komendami wpisywanymi w Monitorze portu szeregowego."
+  alt="Schemat Arduino z dwiema diodami LED podłączonymi do pinów 8 i 9"
+  width={860}
+  height={430}
+/>
+
+W Monitorze portu szeregowego wpisujemy `zielona` albo `czerwona`. Program
+odczytuje tekst do znaku końca linii i na sekundę zapala odpowiednią diodę.
+
+<Code lang="cpp" file="diody-komendy-uart.ino">
+```cpp
+const byte pinZielona = 8;
+const byte pinCzerwona = 9;
+
+String odebraneDane = "";
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(pinZielona, OUTPUT);
+  pinMode(pinCzerwona, OUTPUT);
+
+  digitalWrite(pinZielona, LOW);
+  digitalWrite(pinCzerwona, LOW);
+
+  Serial.println("Wpisz: zielona albo czerwona");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    odebraneDane = Serial.readStringUntil('\n');
+    odebraneDane.trim();
+
+    if (odebraneDane == "zielona") {
+      digitalWrite(pinZielona, HIGH);
+      delay(1000);
+      digitalWrite(pinZielona, LOW);
+    } else if (odebraneDane == "czerwona") {
+      digitalWrite(pinCzerwona, HIGH);
+      delay(1000);
+      digitalWrite(pinCzerwona, LOW);
+    } else {
+      Serial.print("Nie znam komendy: ");
+      Serial.println(odebraneDane);
+    }
+  }
+}
+```
+</Code>
+
+<Callout type="tip" title="Ustaw koniec linii">
+Jeśli korzystasz z `readStringUntil('\n')`, w Monitorze portu szeregowego ustaw
+wysyłanie znaku końca linii. `trim()` usuwa dodatkowe białe znaki, więc program
+jest odporniejszy na różne ustawienia terminala.
+</Callout>
+
+<Task title="Zadanie 4" estimate="15 min">
+Rozbuduj program tak, aby komenda `obie` zapalała obie diody na sekundę, a
+komenda `wylacz` natychmiast gasiła obie diody.
+</Task>
+
+<Task title="Zadanie 5" estimate="20 min">
+Zamiast zapalać diodę tylko na sekundę, zapamiętaj jej stan w zmiennej `bool`.
+Po wpisaniu `zielona` zielona dioda ma zmienić stan na przeciwny: jeśli świeci,
+ma zgasnąć; jeśli jest zgaszona, ma się zapalić.
+</Task>
+
+<Troubleshooting>
+  <Issue title="W Monitorze portu szeregowego widać dziwne znaki">
+    - Sprawdź, czy prędkość Monitora jest taka sama jak w `Serial.begin()`.
+    - Dla tej lekcji ustaw `9600` po obu stronach.
+    - Zresetuj płytkę po zmianie ustawień, jeśli komunikaty nadal wyglądają źle.
+  </Issue>
+  <Issue title="Arduino nie reaguje na komendę tekstową">
+    - Sprawdź, czy po wpisaniu komendy klikasz `Wyślij` albo naciskasz Enter.
+    - Ustaw wysyłanie znaku końca linii, jeśli program używa `readStringUntil('\n')`.
+    - Dodaj `Serial.println(odebraneDane);`, żeby zobaczyć, co naprawdę odebrała płytka.
+  </Issue>
+  <Issue title="Dioda nie świeci mimo poprawnej komendy">
+    - Sprawdź polaryzację diody LED i rezystor do `GND`.
+    - Porównaj numer pinu w kodzie z połączeniem na płytce.
+    - Nie używaj pinów `0` i `1` do LED, gdy działa komunikacja `Serial`.
+  </Issue>
+</Troubleshooting>
+
+## Podsumowanie
+
+- `Serial.begin(9600)` uruchamia komunikację z komputerem z wybraną prędkością.
+- `Serial.print()` i `Serial.println()` wysyłają dane z Arduino do Monitora
+  portu szeregowego.
+- UART przesyła bity po kolei, w ramkach z bitem startu i stopu.
+- Arduino i komputer muszą mieć tę samą prędkość transmisji.
+- Zmienne przechowują stan programu: licznik, odebrany tekst albo informację,
+  czy dioda jest włączona.
+- Dla numerów pinów warto stosować `const byte`, bo kod jest czytelny i typowany.
+- `Serial.available()` sprawdza, czy są dane do odczytu, a `Serial.read()` albo
+  `readStringUntil()` pozwalają je pobrać.
+
+W kolejnych lekcjach wykorzystamy UART nie tylko do tekstowych komunikatów, ale
+też do debugowania pomiarów analogowych, serwomechanizmów i czujników.
