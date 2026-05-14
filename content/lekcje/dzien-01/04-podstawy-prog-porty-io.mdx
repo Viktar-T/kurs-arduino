@@ -1,0 +1,497 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Podstawy programowania i porty I/O"
+slug: "podstawy-prog-porty-io"
+summary: "Szkielet programu Arduino (setup/loop), konfiguracja i sterowanie pinami cyfrowymi, miganie diodą LED, odczyt przycisku z INPUT_PULLUP, instrukcja if/else, pętla while oraz projekt: symulacja świateł drogowych sterowanych przyciskiem."
+
+day: 1
+weekend: 1
+order: 4
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 2
+
+objectives:
+  - "Opisać role funkcji setup() i loop() w programie Arduino"
+  - "Skonfigurować pin jako wyjście i sterować diodą LED za pomocą pinMode() i digitalWrite()"
+  - "Użyć delay() do uzyskania migania diodą"
+  - "Skonfigurować pin jako wejście z INPUT_PULLUP i odczytać stan przycisku przez digitalRead()"
+  - "Zastosować instrukcję if/else do warunkowego sterowania wyjściem"
+  - "Wyjaśnić, kiedy używać pętli while() zamiast delay()"
+
+prerequisites:
+  - "dzien-01/03-srodowisko-ide"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED", qty: 3 }
+  - { name: "Rezystor 330 Ω", qty: 3 }
+  - { name: "Przycisk chwilowy (tact switch)", qty: 1 }
+  - { name: "Płytka stykowa (breadboard)", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 10 }
+
+tags: [arduino, setup, loop, pinmode, digitalwrite, digitalread, delay, if-else, while, dioda-led, przycisk, swiatla-drogowe]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-podstawy-programowania-porty-io-id3648"
+
+publish: true
+updated: "2026-05-14"
+---
+
+W tej lekcji piszemy pierwsze działające programy na Arduino. Zaczniemy od struktury szkicu — funkcji `setup()` i `loop()` — a skończymy na symulacji świateł drogowych sterowanych przyciskiem. Po drodze poznasz wszystkie podstawowe funkcje wejścia/wyjścia: `pinMode()`, `digitalWrite()`, `digitalRead()` i `delay()`.
+
+<Photo file="04.10-kurs-arduino-porty-io-okladka.jpg" day="dzien-01" caption="Kurs Arduino — część 2: programowanie i porty I/O" alt="Okładka drugiej części kursu Arduino na portalu Forbot — programowanie i porty I/O" />
+
+## 1. Szkielet programu Arduino
+
+Każdy program komputerowy to zbiór rozkazów. W języku C/C++ (który stosujemy w Arduino) podstawowy program wygląda tak:
+
+```cpp
+int main() {
+  // Zawartość programu
+}
+```
+
+Arduino upraszcza ten zapis do dwóch specjalnych funkcji:
+
+<Code lang="cpp" file="szkielet.ino">
+```cpp
+void setup() {
+  // Instrukcje, które wykonają się jeden raz
+}
+
+void loop() {
+  // Instrukcje, które będą wykonywały się w pętli
+}
+```
+</Code>
+
+`setup()` uruchamia się **raz** — zaraz po włączeniu lub zresetowaniu Arduino. Umieszczamy tu wszystko, co wymaga jednorazowej inicjalizacji: konfigurację pinów, uruchomienie komunikacji, ustawienie wartości startowych.
+
+`loop()` to pętla nieskończona — po wykonaniu ostatniej linii wraca do początku i powtarza się bez końca, dopóki Arduino ma zasilanie.
+
+<Callout type="note" title="Komentarze w kodzie">
+Tekst po `//` to komentarz — kompilator go ignoruje, ale programista może dzięki niemu wyjaśnić, co robi dany fragment kodu. Pisz komentarze po polsku lub angielsku, żeby za tydzień móc zrozumieć własny kod. Komentarze wieloliniowe otwiera `/*` i zamyka `*/`.
+</Callout>
+
+## 2. Funkcje — bloki kodu wielokrotnego użytku
+
+Funkcja to wydzielony blok rozkazów, który można wywołać w dowolnym miejscu programu tyle razy, ile potrzeba — bez kopiowania tego samego kodu. `setup()` i `loop()` to funkcje wbudowane w środowisko Arduino; sam będziesz pisać własne funkcje w dalszej części kursu.
+
+Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości — po prostu wykonuje zadanie i kończy działanie.
+
+## 3. Wyprowadzenia (piny) Arduino UNO
+
+Zanim zaczniesz pisać program sterujący pinami, warto poznać mapę wyprowadzeń płytki:
+
+<Schematic
+  src="/img/lekcje/dzien-01/04.11-arduino-uno-pinout.png"
+  caption="Mapa wyprowadzeń Arduino UNO — piny cyfrowe, analogowe i specjalne."
+  alt="Schemat pinout Arduino UNO z opisanymi grupami wyprowadzeń: cyfrowe I/O, PWM, analogowe, zasilanie, komunikacja"
+  width={800}
+  height={500}
+/>
+
+<Table
+  caption="Grupy pinów Arduino UNO"
+  headers={["Kolor (schemat)", "Grupa", "Piny", "Opis"]}
+  rows={[
+    ["Ciemnozielony", "Cyfrowe wejścia/wyjścia", "D0–D13 (0–13)", "Stan LOW (0 V) lub HIGH (5 V); pin 13 ma wbudowaną diodę LED"],
+    ["Jasnozielony", "Analogowe wejścia", "A0–A5", "Pomiar napięcia 0–5 V (10-bitowy ADC); mogą też pracować jako cyfrowe I/O"],
+    ["Niebieski", "Funkcje specjalne", "0 (RX), 1 (TX), A4 (SDA), A5 (SCL), 3/5/6/9/10/11 (PWM)", "UART, I²C, sygnał PWM, wbudowana dioda (pin 13)"],
+    ["Pomarańczowy", "Zasilanie", "5 V, 3,3 V, GND, Vin", "Piny nieprogrAmowalne — zasilanie i masa układu"],
+  ]}
+/>
+
+<Expandable title="Głębiej: limity prądowe pinów Arduino" heading="####">
+
+Każdy pin cyfrowy Arduino UNO może bezpiecznie **dostarczyć lub pochłonąć maksymalnie 40 mA**. Łączny prąd ze wszystkich pinów I/O nie może przekroczyć **200 mA** — inaczej grozi uszkodzenie mikrokontrolera ATmega328P.
+
+Typowa dioda LED świeci już przy 10–20 mA. Bez rezystora napięcie 5 V przy niskiej rezystancji diody wytworzyłoby prąd nawet 100 mA — trzykrotnie powyżej limitu.
+
+Dobór rezystora ze wzoru: `R = (Vcc − Vf) / If`. Dla czerwonej diody (Vf ≈ 2 V, If = 20 mA): `R = (5 − 2) / 0,02 = 150 Ω`. W praktyce stosujemy **330 Ω** jako bezpieczny zapas.
+
+Piny analogowe A0–A5 mają te same limity prądowe co cyfrowe — mogą pracować jako wyjścia cyfrowe z identycznymi ograniczeniami.
+
+*Źródło: [docs.arduino.cc — Digital Pins](https://docs.arduino.cc/learn/microcontrollers/digital-pins/)*
+
+</Expandable>
+
+## 4. Wyjścia w praktyce — zapalamy diodę LED
+
+Żeby zapalić diodę LED, musimy:
+1. Powiedzieć Arduino, że dany pin będzie **wyjściem** — funkcja `pinMode(numer, tryb)`.
+2. Ustawić na nim stan wysoki — funkcja `digitalWrite(numer, stan)`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/04.12-dioda-led-schemat.png"
+  caption="Podłączenie diody LED do pinu 8 przez rezystor 330 Ω."
+  alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 330 om"
+  width={600}
+  height={400}
+/>
+
+<Callout type="hazard" title="Rezystor jest obowiązkowy!">
+Bez rezystora przez diodę LED popłynie zbyt duży prąd i zniszczy ją — a może też uszkodzić pin Arduino. Dla typowych diod 5 mm stosuj rezystor **500-1000 Ω**.
+</Callout>
+
+Program zapalający diodę podłączoną do pinu 8:
+
+<Code lang="cpp" file="dioda-wlaczona.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);       // Konfiguracja pinu 8 jako wyjście
+  digitalWrite(8, HIGH);   // Włączenie diody (5 V na pinie)
+}
+
+void loop() {
+  // Nic do roboty — dioda ma świecić cały czas
+}
+```
+</Code>
+
+`pinMode(numer_pinu, tryb)` — konfiguruje pin. `OUTPUT` to wyjście (Arduino steruje napięciem), `INPUT` to wejście (Arduino odczytuje napięcie).
+
+`digitalWrite(numer_pinu, stan)` — ustawia stan wyjścia: `HIGH` (5 V) lub `LOW` (0 V).
+
+## 5. Miganie diodą — funkcja delay()
+
+Funkcja `delay(ms)` wstrzymuje wykonanie programu na podaną liczbę milisekund (1000 ms = 1 s). Bez opóźnień Arduino przełączałoby pin miliony razy na sekundę — ludzkie oko nie zdążyłoby tego zauważyć.
+
+<Code lang="cpp" file="miganie-led.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);   // Konfiguracja pinu 8 jako wyjście
+}
+
+void loop() {
+  digitalWrite(8, HIGH);   // Włącz diodę
+  delay(1000);             // Odczekaj 1 sekundę
+  digitalWrite(8, LOW);    // Wyłącz diodę
+  delay(1000);             // Odczekaj 1 sekundę
+}
+```
+</Code>
+
+Wgraj program i obserwuj migającą diodę. Eksperymentuj ze zmianą wartości `delay()`.
+
+<Task title="Zadanie 1.1 — minimalne miganie" estimate="10 min">
+Zmniejszaj wartość `delay()` i sprawdź, jaka jest **minimalna wartość** przy której nadal widzisz miganie. Zanotuj wynik. Następnie podłącz drugą diodę do pinu 9 i napisz program, w którym diody migają **naprzemiennie** — gdy jedna świeci, druga jest wyłączona.
+</Task>
+
+<Expandable title="Głębiej: co tak naprawdę robi delay()?" heading="####">
+
+`delay(ms)` to **aktywne czekanie** (busy-wait). Arduino UNO pracuje z zegarem 16 MHz — wykonuje 16 milionów prostych operacji na sekundę. Podczas `delay(1000)` procesor wciąż pracuje, ale zamiast wykonywać użyteczny kod, w kółko sprawdza jedno pytanie: *czy minęło już 1000 ms?*
+
+Oznacza to, że przez cały czas trwania `delay()` Arduino **nie czyta żadnych wejść, nie wysyła danych UART, nie aktualizuje żadnych wyjść**. W przykładzie z włącznikiem (sekcja 7) wciśnięcie przycisku podczas 10-sekundowego `delay()` jest całkowicie ignorowane.
+
+W dalszej części kursu poznasz funkcję `millis()`, która zwraca czas w milisekundach od uruchomienia płytki. Zamiast "stać w miejscu", program regularnie sprawdza: *czy upłynął już wymagany czas?* — i przy okazji obsługuje inne zadania. To podejście nosi nazwę **nieblokującego kodu** (non-blocking code).
+
+*Źródło: [docs.arduino.cc — delay()](https://docs.arduino.cc/language-reference/en/functions/time/delay/) · Książka B, r. 3 (pętle i timing)*
+
+</Expandable>
+
+## 6. Wejścia układu — przycisk i instrukcja if/else
+
+Do odczytu stanu przycisku lub innego sygnału wejściowego używamy `digitalRead()`. Wcześniej musimy skonfigurować pin jako wejście za pomocą `pinMode`.
+
+<Schematic
+  src="/img/lekcje/dzien-01/04.13-przycisk-schemat.png"
+  caption="Podłączenie przycisku chwilowego do pinu 7 z wykorzystaniem INPUT_PULLUP."
+  alt="Schemat Fritzing: przycisk tact-switch połączony z pinem 7 Arduino bez zewnętrznego rezystora"
+  width={600}
+  height={400}
+/>
+
+### Tryb INPUT_PULLUP
+
+Zamiast zewnętrznego rezystora podciągającego używamy wbudowanego rezystora Arduino:
+
+```cpp
+pinMode(7, INPUT_PULLUP);
+```
+
+- Przycisk **nie wciśnięty** → pin ma stan `HIGH` (5 V, wewnętrzny rezystor ciągnie do zasilania).
+- Przycisk **wciśnięty** → pin jest zwierany do masy → stan `LOW` (0 V).
+
+Dlatego warunek wciśnięcia sprawdzamy jako `== LOW`.
+
+<Expandable title="Głębiej: drgania styków przycisku (button bouncing)" heading="####">
+
+Mechaniczne przyciski nie przełączają się idealnie — metalowe styki przez kilka do kilkudziesięciu milisekund **drgają** (odbijają się od siebie), zanim ustabilizują się w nowej pozycji. Arduino jest szybsze niż te drgania i może zarejestrować jedno naciśnięcie jako kilkanaście błyskawicznych impulsów `HIGH → LOW → HIGH → LOW...`.
+
+W prostych programach tego nie widać, bo `loop()` ma inne opóźnienia. Problem ujawnia się, gdy zliczasz wciśnięcia lub uruchamiasz akcje z jednego naciśnięcia.
+
+Najprostsze rozwiązanie programowe — **opóźnieniowy debouncing**: po wykryciu `LOW` odczekaj 50 ms, zanim zareagujesz. W tym czasie drgania zdążą ustąpić i odczyt stanie się wiarygodny.
+
+Istnieje też zaawansowana metoda oparta na `millis()`, która nie blokuje programu — poznasz ją w lekcji o wielozadaniowości. Sprzętowe rozwiązanie to kondensator ceramiczny 100 nF równolegle do przycisku.
+
+*Źródło: [docs.arduino.cc — Debounce](https://docs.arduino.cc/built-in-examples/digital/Debounce/) · Książka B, r. 6*
+
+</Expandable>
+
+### Instrukcja warunkowa if/else
+
+<Code lang="cpp" file="przycisk-dioda.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);          // Dioda jako wyjście
+  pinMode(7, INPUT_PULLUP);    // Przycisk jako wejście z wewnętrznym rezystorem
+  digitalWrite(8, LOW);        // Dioda wyłączona na start
+}
+
+void loop() {
+  if (digitalRead(7) == LOW) {   // Jeśli przycisk wciśnięty (stan LOW)
+    digitalWrite(8, HIGH);       // Włącz diodę
+  } else {                       // Jeśli warunek nie jest spełniony
+    digitalWrite(8, LOW);        // Wyłącz diodę
+  }
+}
+```
+</Code>
+
+`if (warunek) { ... } else { ... }` — sprawdza warunek. Jeśli prawdziwy, wykonuje pierwszy blok; w przeciwnym razie — blok `else`. Część `else` jest opcjonalna.
+
+<Task title="Zadanie 1.2 — if bez else" estimate="5 min">
+Przepisz program tak, żeby nie zawierał bloku `else`. Czy działanie programu jest takie samo? Jak Arduino zachowuje się, gdy przycisk nie jest wciśnięty?
+</Task>
+
+<Expandable title="Zadanie 1.3 (Mid) — włącznik bistabilny ★★☆" heading="####">
+
+*Zadania oznaczone **Mid** i **Adv** nie są obowiązkowe — to propozycje dla chętnych, którzy chcą pójść krok dalej.*
+
+Napisz program realizujący **włącznik bistabilny**: każde wciśnięcie przycisku **przełącza** stan diody — jeśli świeciła, gaśnie; jeśli była zgaszona, zapala się.
+
+Wskazówki:
+- Zadeklaruj poza `loop()` zmienną `bool ledState = false;` — będzie pamiętać aktualny stan diody.
+- Gdy wykryjesz `LOW` na pinie 7, zmień wartość: `ledState = !ledState;` i wywołaj `digitalWrite(8, ledState)`.
+- Dodaj `delay(200)` po wykryciu wciśnięcia, żeby uniknąć wielokrotnego przełączania z powodu drgań styków.
+
+Oczekiwany efekt: pierwsze wciśnięcie zapala diodę, drugie gasi, trzecie znów zapala — i tak dalej.
+
+</Expandable>
+
+<Expandable title="Zadanie 1.4 (Adv) — licznik wciśnięć i pasek diod ★★★" heading="####">
+
+*Zadania oznaczone **Mid** i **Adv** nie są obowiązkowe — to propozycje dla chętnych, którzy chcą pójść krok dalej.*
+
+Zbuduj **pasek postępu z trzech diod LED** (piny 8, 9, 10): trzy diody wizualnie pokazują, ile razy wciśnięto przycisk. Po 3. wciśnięciu wszystkie świecą przez 1 sekundę, po czym gasną i odliczanie zaczyna się od nowa.
+
+Wymagania:
+- Zmienna `int count = 0;` przechowuje liczbę wciśnięć.
+- Po każdym wciśnięciu ustaw odpowiednią liczbę diod: `count == 1` → tylko pin 8 `HIGH`; `count == 2` → piny 8 i 9 `HIGH`; `count == 3` → wszystkie trzy `HIGH`.
+- Po osiągnięciu 3 wciśnięć: `delay(1000)`, wyłącz wszystkie diody, zresetuj `count = 0`.
+- Pamiętaj o antydrganiowym `delay(200)` po wykryciu każdego wciśnięcia.
+
+Podpowiedź: `else if` lub tablica pinów `int pins[] = {8, 9, 10};` z pętlą `for` — oba podejścia działają.
+
+</Expandable>
+
+## 7. Przykład — włącznik z czasomierzem
+
+Wciśnięcie przycisku włącza diodę na 10 sekund, po czym automatycznie ją wyłącza:
+
+<Code lang="cpp" file="wlacznik-czasomierz.ino">
+```cpp
+void setup() {
+  pinMode(8, OUTPUT);          // Dioda jako wyjście
+  pinMode(7, INPUT_PULLUP);    // Przycisk jako wejście
+  digitalWrite(8, LOW);        // Wyłączenie diody
+}
+
+void loop() {
+  if (digitalRead(7) == LOW) {   // Jeśli przycisk wciśnięty
+    digitalWrite(8, HIGH);       // Włącz diodę
+    delay(10000);                // Świeć przez 10 sekund
+    digitalWrite(8, LOW);        // Wyłącz diodę
+  }
+}
+```
+</Code>
+
+<Callout type="warning" title="delay() blokuje cały program">
+Przez 10 sekund, gdy trwa `delay()`, Arduino nie reaguje na nic innego — przyciski, czujniki, komunikację. W późniejszych lekcjach poznasz `millis()`, które pozwala mierzyć czas bez blokowania.
+</Callout>
+
+## 8. Przykład — symulacja świateł drogowych
+
+Trzy diody LED (czerwona → pin 10, żółta → pin 9, zielona → pin 8) i przycisk → pin 7.
+
+<Schematic
+  src="/img/lekcje/dzien-01/04.14-swiatla-drogowe-schemat.png"
+  caption="Schemat układu: trzy diody LED (czerwona, żółta, zielona) i przycisk podłączone do Arduino UNO."
+  alt="Schemat Fritzing: trzy diody LED na pinach 8, 9, 10 i przycisk na pinie 7 Arduino UNO"
+  width={700}
+  height={450}
+/>
+
+Na początku inicjalizujemy wszystkie piny w `setup()`:
+
+<Code lang="cpp" file="swiatla-inicjalizacja.ino">
+```cpp
+void setup() {
+  pinMode(10, OUTPUT);       // Dioda czerwona
+  pinMode(9, OUTPUT);        // Dioda żółta
+  pinMode(8, OUTPUT);        // Dioda zielona
+  pinMode(7, INPUT_PULLUP);  // Przycisk
+  digitalWrite(10, LOW);     // Wszystkie diody wyłączone
+  digitalWrite(9, LOW);
+  digitalWrite(8, LOW);
+}
+
+void loop() {
+  // Tu wstawiamy logikę świateł
+}
+```
+</Code>
+
+### Wersja automatyczna z opóźnieniami
+
+Każdy kolor świeci dokładnie 1 sekundę:
+
+<Code lang="cpp" file="swiatla-automatyczne.ino">
+```cpp
+void setup() {
+  pinMode(10, OUTPUT);   // Czerwona
+  pinMode(9, OUTPUT);    // Żółta
+  pinMode(8, OUTPUT);    // Zielona
+  pinMode(7, INPUT_PULLUP);
+  digitalWrite(10, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(8, LOW);
+}
+
+void loop() {
+  // Zielona
+  digitalWrite(10, LOW);  digitalWrite(9, LOW);  digitalWrite(8, HIGH);
+  delay(1000);
+
+  // Żółta
+  digitalWrite(10, LOW);  digitalWrite(9, HIGH); digitalWrite(8, LOW);
+  delay(1000);
+
+  // Czerwona
+  digitalWrite(10, HIGH); digitalWrite(9, LOW);  digitalWrite(8, LOW);
+  delay(1000);
+
+  // Czerwona + żółta (faza przejściowa)
+  digitalWrite(10, HIGH); digitalWrite(9, HIGH); digitalWrite(8, LOW);
+  delay(1000);
+}
+```
+</Code>
+
+## 9. Pętla while
+
+`while (warunek) { ... }` wykonuje blok kodu **tak długo, jak warunek jest prawdziwy**. Gdy warunek staje się fałszywy, program przechodzi dalej.
+
+Klasyczny wzorzec — czekaj, aż przycisk zostanie wciśnięty:
+
+```cpp
+while (digitalRead(7) == HIGH) {}   // Kręć się w kółko, dopóki przycisk nie jest wciśnięty
+```
+
+Pusta klamra `{}` oznacza, że w pętli nie ma żadnego kodu — program tylko sprawdza warunek.
+
+### Wersja świateł sterowanych przyciskiem
+
+Zamiast `delay()` każda faza trwa aż do wciśnięcia przycisku:
+
+<Code lang="cpp" file="swiatla-while.ino">
+```cpp
+void setup() {
+  pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(7, INPUT_PULLUP);
+  digitalWrite(10, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(8, LOW);
+}
+
+void loop() {
+  digitalWrite(10, LOW);  digitalWrite(9, LOW);  digitalWrite(8, HIGH);   // Zielona
+  while (digitalRead(7) == HIGH) {}   // Czekaj na przycisk
+
+  digitalWrite(10, LOW);  digitalWrite(9, HIGH); digitalWrite(8, LOW);    // Żółta
+  while (digitalRead(7) == HIGH) {}
+
+  digitalWrite(10, HIGH); digitalWrite(9, LOW);  digitalWrite(8, LOW);    // Czerwona
+  while (digitalRead(7) == HIGH) {}
+
+  digitalWrite(10, HIGH); digitalWrite(9, HIGH); digitalWrite(8, LOW);    // Czerwona + żółta
+  while (digitalRead(7) == HIGH) {}
+}
+```
+</Code>
+
+### Wersja łączona — minimalne opóźnienie + przycisk
+
+Krótkie `delay()` przed sprawdzaniem przycisku zapobiega przypadkowemu wciśnięciu:
+
+<Code lang="cpp" file="swiatla-delay-while.ino">
+```cpp
+void setup() {
+  pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(7, INPUT_PULLUP);
+  digitalWrite(10, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(8, LOW);
+}
+
+void loop() {
+  digitalWrite(10, LOW);  digitalWrite(9, LOW);  digitalWrite(8, HIGH);   // Zielona
+  delay(1000);
+  while (digitalRead(7) == HIGH) {}
+
+  digitalWrite(10, LOW);  digitalWrite(9, HIGH); digitalWrite(8, LOW);    // Żółta
+  delay(1000);
+  while (digitalRead(7) == HIGH) {}
+
+  digitalWrite(10, HIGH); digitalWrite(9, LOW);  digitalWrite(8, LOW);    // Czerwona
+  delay(1000);
+  while (digitalRead(7) == HIGH) {}
+
+  digitalWrite(10, HIGH); digitalWrite(9, HIGH); digitalWrite(8, LOW);    // Czerwona + żółta
+  delay(1000);
+  while (digitalRead(7) == HIGH) {}
+}
+```
+</Code>
+
+<Expandable title="Dlaczego while() a nie if() do czekania na przycisk?" heading="####">
+
+`if()` sprawdza warunek **raz** i idzie dalej — niezależnie od wyniku. Jeśli przycisk nie był wciśnięty w tej jednej chwili, program po prostu przechodzi do kolejnej linii.
+
+`while()` sprawdza warunek **w kółko** i stoi w miejscu, aż warunek się zmieni. Pętla `while (digitalRead(7) == HIGH) {}` mówi: *kręć się dopóki pin jest HIGH — to znaczy dopóki przycisk nie jest wciśnięty*. Gdy przycisk zostanie naciśnięty, pin zmienia się na LOW, warunek staje się fałszywy i pętla kończy działanie.
+
+</Expandable>
+
+<Task title="Zadanie końcowe — rozbudowa świateł" estimate="15 min">
+1. Ustaw różne czasy dla każdej fazy: zielona — 3 s, żółta — 1 s, czerwona — 2 s.
+2. Podłącz dodatkową diodę LED jako „sygnał dla pieszych" (świeci tylko gdy czerwona jest aktywna).
+3. Dodaj komunikaty w Monitorze portu szeregowego: wywołaj `Serial.begin(9600)` w `setup()`, a przy każdej zmianie fazy użyj `Serial.println("Zielona")` itd. — zobaczysz w terminalu, na którym kolorze aktualnie jest program.
+4. **Dodatkowe:** Sprawdź, jaka jest minimalna wartość `delay()` przed pętlą `while()`, przy której przycisk reaguje niezawodnie.
+</Task>
+
+## Podsumowanie
+
+- Każdy szkic Arduino ma dwie obowiązkowe funkcje: `setup()` (jednorazowo) i `loop()` (w nieskończoność).
+- `pinMode()` konfiguruje pin jako wejście lub wyjście; `OUTPUT` — Arduino steruje napięciem, `INPUT_PULLUP` — Arduino odczytuje z wbudowanym rezystorem podciągającym.
+- `digitalWrite()` ustawia stan wyjścia (`HIGH`/`LOW`), `digitalRead()` odczytuje stan wejścia.
+- `delay(ms)` wstrzymuje program na podaną liczbę milisekund — wygodne, ale blokuje całą płytkę.
+- `if/else` podejmuje decyzje na podstawie warunku; `while()` czeka tak długo, jak warunek jest prawdziwy.
+- Łącząc te elementy, zbudowałeś pełny system świateł drogowych sterowany przyciskiem.
+
+W następnej lekcji wyjdziemy poza binarne wejście/wyjście i poznamy symulatory oraz dodatkowe źródła wiedzy przydatne w dalszej pracy.

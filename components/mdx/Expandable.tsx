@@ -5,7 +5,7 @@
  *   Sprawdź, czy dioda LED jest wpięta dobrą stroną.
  *   </Expandable>
  *
- *   <Expandable title="Większy nagłówek" heading="##" defaultOpen>
+ *   <Expandable title="Większy nagłówek" heading="####" defaultOpen>
  *   Ta sekcja jest domyślnie rozwinięta.
  *   </Expandable>
  *
@@ -34,7 +34,7 @@ export function Expandable({
   title,
   children,
   defaultOpen = false,
-  heading = "###",
+  heading = "####",
 }: ExpandableProps) {
   return (
     <details

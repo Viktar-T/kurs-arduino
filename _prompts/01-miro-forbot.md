@@ -1,7 +1,7 @@
 
-Please download all the images from https://forbot.pl/blog/kurs-arduino-podstawy-programowania-porty-io-id3648 and save them sequentially in the public/img/lekcje/dzien-01 directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 04.01 (e.g., 04.01-image-name.jpg, 04.02-another-image.jpg).
+Please download all the images from https://forbot.pl/blog/kurs-arduino-podstawy-programowania-porty-io-id3648 and save them sequentially in the public/img/lekcje/dzien-01 directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 04.10 (e.g., 04.10-image-name.jpg, 04.11-another-image.jpg).
 
-Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-01\04-podstawy-programowania-porty-io.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 04.01-..., 04.02-...) in their corresponding places within the MDX text.
+Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and build new file content\lekcje\dzien-01\04-podstawy-prog-porty-io.mdx with the lesson content inside. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 04.10-..., 04.11-...) in their corresponding places within the MDX text.
 
 ---
 

@@ -93,7 +93,7 @@ Jak wgrać program krok po kroku:
 <Photo file="03.03-Arduino_IDE_instalacja_blink4.png" day="dzien-01" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
 
 <Callout type="note" title="Diody TX i RX">
-W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
+W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Komunikacja odbywa poprzez protokół (interface) komunikacji szeregowej **UART**. Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
 </Callout>
 
 Po wgraniu programu dioda LED na pinie 13 powinna zacząć migać:
@@ -145,7 +145,7 @@ void loop() {
 ```
 </Code>
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,5 Hz.
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,25 Hz (1000 milisekund to 1 sekunda). 
 
 Policz ilość migań diody. Następnie naciśnij reset na płytce Arduino. Co się stało po wciśnięciu reset?
 
@@ -168,7 +168,7 @@ void loop() {
 </Code>
 
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 1 Hz.
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,5 Hz.
 
 <ExpectedOutput title="Efekt po wgraniu">
 Wbudowana dioda LED na płytce Arduino UNO zapala się na 1 sekundę, gaśnie na

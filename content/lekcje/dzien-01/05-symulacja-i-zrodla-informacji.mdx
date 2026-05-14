@@ -6,20 +6,22 @@ status: draft
 sensitivity: low
 
 # --- Site-driving fields ---
-title: "Źródła informacji — gdzie szukać pomocy z Arduino"
-slug: "zrodla-informacji"
-summary: "Przegląd najważniejszych zasobów do samodzielnej nauki Arduino: oficjalna dokumentacja docs.arduino.cc, Forbot.pl, ebooki Simona Monka, YouTube i fora. Po tej lekcji każdy uczeń wie, gdzie szukać odpowiedzi na pytania, które pojawią się po kursie."
+title: "Symulacja i źródła informacji — Tinkercad oraz gdzie szukać pomocy z Arduino"
+slug: "symulacja-i-zrodla-informacji"
+summary: "Najpierw ćwiczymy w symulatorze Tinkercad — żeby nie spalić sprzętu. Potem przegląd najważniejszych zasobów do samodzielnej nauki Arduino: oficjalna dokumentacja docs.arduino.cc, Forbot.pl, ebooki Simona Monka, YouTube i fora. Po tej lekcji każdy uczeń wie, gdzie szukać odpowiedzi na pytania, które pojawią się po kursie."
 
 day: 1
 weekend: 1
 order: 5
-duration: 20
+duration: 25
 block: 1
 blockTitle: "Podstawy Arduino oraz środowisko programowania"
 forbotCourse: 1
 forbotChapter: 1
 
 objectives:
+  - "Zarejestrować się i uruchomić symulator obwodów w Tinkercad"
+  - "Zbudować prosty obwód w symulatorze przed przejściem na fizyczną płytkę"
   - "Wymienić co najmniej cztery wiarygodne źródła wiedzy o Arduino"
   - "Odszukać dokumentację funkcji (np. digitalWrite) w docs.arduino.cc"
   - "Znaleźć właściwy kurs na Forbot.pl i przejść do wybranego rozdziału"
@@ -30,23 +32,27 @@ prerequisites:
 
 hardware: []
 
-tags: [zasoby, dokumentacja, forbot, arduino-docs, samodzielna-nauka]
+tags: [tinkercad, symulator, zasoby, dokumentacja, forbot, arduino-docs, samodzielna-nauka]
 sources:
+  - "https://www.tinkercad.com/"
   - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
   - "https://docs.arduino.cc/language-reference/"
 
 publish: true
-updated: "2026-05-12"
+updated: "2026-05-14"
 ---
 
 ## Po co ta lekcja?
 
-Kurs trwa 80 godzin — a Arduino można zgłębiać latami. Chcemy, żebyś po ostatnim
-zjeździe **nie był uzależniony od trenera**: umiał sam znaleźć odpowiedź, gdy
+Kurs trwa 80 godzin — a Arduino można zgłębiać latami. Zanim przejdziemy do
+prawdziwej płytki, nauczymy się najpierw budować obwody wirtualnie, żeby nie
+spalić komponentów podczas nauki. A potem pokażemy, gdzie szukać pomocy, gdy
 utkniesz przy projekcie o północy. Ta lekcja to mapa skarbów.
 
 <Objectives
   items={[
+    "Zarejestrować się i uruchomić symulator obwodów w Tinkercad",
+    "Zbudować prosty obwód w symulatorze przed przejściem na fizyczną płytkę",
     "Wymienić co najmniej cztery wiarygodne źródła wiedzy o Arduino",
     "Odszukać dokumentację wybranej funkcji w docs.arduino.cc",
     "Znaleźć właściwy kurs na Forbot.pl i przejść do wybranego rozdziału",
@@ -54,7 +60,42 @@ utkniesz przy projekcie o północy. Ta lekcja to mapa skarbów.
   ]}
 />
 
-## 1. Oficjalna dokumentacja — docs.arduino.cc
+## 1. Tinkercad — najpierw symulator, potem rzeczywista płytka
+
+**[Tinkercad](https://www.tinkercad.com/)** to darmowy, przeglądarkowy symulator
+elektroniki firmy Autodesk. Pozwala budować i testować obwody z Arduino **bez
+ryzyka spalenia podzespołów** — idealne miejsce do ćwiczeń przed przejściem na
+prawdziwy sprzęt.
+
+<Photo
+  src="/img/lekcje/dzien-01/05.01-TinkerCad.png"
+  alt="Interfejs Tinkercad — symulator obwodów Arduino"
+  caption="Tinkercad: budujemy i testujemy obwód wirtualnie, zanim przejdziemy na rzeczywistą płytkę."
+/>
+
+Jak to wygląda w praktyce na naszym kursie:
+
+1. **Nowy temat** → najpierw budujemy i uruchamiamy obwód w Tinkercad.
+2. Gdy obwód działa w symulatorze → przenosimy go na **fizyczną płytkę Arduino**.
+3. Różnice między symulacją a rzeczywistością omawiamy razem.
+
+<Callout type="tip" title="Dlaczego nie od razu na płytce?">
+Rzeczywiste komponenty można uszkodzić błędnym podłączeniem zasilania lub zbyt
+dużym prądem. Tinkercad nie popełnia takich błędów na zawsze — po prostu
+zresetujesz symulację i spróbujesz ponownie.
+</Callout>
+
+**Jak zacząć?**
+
+1. Wejdź na [tinkercad.com](https://www.tinkercad.com/) i utwórz darmowe konto
+   (można użyć konta Google lub szkolnego).
+2. Wybierz **Circuits** → **Create new Circuit**.
+3. Przeciągnij z panelu po prawej płytkę **Arduino UNO** na obszar roboczy.
+4. Dodaj komponenty (LED, rezystor, przewody) i kliknij **Start Simulation**.
+
+Będziemy korzystać z Tinkercad regularnie przez pierwsze dni kursu.
+
+## 2. Oficjalna dokumentacja — docs.arduino.cc
 
 **docs.arduino.cc** to pierwsze miejsce, do którego zaglądasz, kiedy nie pamiętasz
 składni funkcji lub chcesz poznać wszystkie jej parametry.
@@ -72,7 +113,7 @@ W Google wpisz `arduino digitalWrite site:docs.arduino.cc` — trafiasz od razu
 do właściwej strony, bez przebijania się przez wyniki sponsorowane.
 </Callout>
 
-## 2. Forbot.pl — po polsku, krok po kroku
+## 3. Forbot.pl — po polsku, krok po kroku
 
 **forbot.pl** to największy polskojęzyczny serwis o Arduino i robotyce. Trzy kursy,
 których używamy na tym szkoleniu jako szkielet materiału:
@@ -86,7 +127,7 @@ których używamy na tym szkoleniu jako szkielet materiału:
 Każdy kurs jest podzielony na rozdziały z kodem i schematami. Jeśli na zajęciach
 coś umknęło — wróć do Forbot i przeczytaj jeszcze raz ze zdjęciami i animacjami.
 
-## 3. Ebooki — Simon Monk / Helion
+## 4. Ebooki — Simon Monk / Helion
 
 Na kursie korzystamy z trzech ebooków polskiego Helionu autorstwa Simona Monka:
 
@@ -102,7 +143,7 @@ Ebooki są dostępne też w formacie Kindle (Amazon). Jeśli masz czytnik lub
 telefon z aplikacją Kindle, możesz czytać bez PDF.
 </Callout>
 
-## 4. YouTube
+## 5. YouTube
 
 Gdy tekst nie wystarczy i wolisz zobaczyć, jak coś działa — YouTube:
 
@@ -112,7 +153,7 @@ Gdy tekst nie wystarczy i wolisz zobaczyć, jak coś działa — YouTube:
   najlepiej wytłumaczonych kursów wideo.
 - **DroneBot Workshop** — elektronika i Arduino, świetna jakość nagrań.
 
-## 5. Fora i społeczność
+## 6. Fora i społeczność
 
 Gdy masz konkretny błąd lub niestandardowy problem:
 
@@ -129,9 +170,9 @@ schemat połączeń lub opis układu oraz treść komunikatu błędu. Bez tych c
 elementów odpowiedź będzie odgadywaniem.
 </Callout>
 
-## 6. AI — pomocnik, nie wyrocznia
+## 7. AI — pomocnik, nie wyrocznia
 
-[Dedykowany AI pmocnik do naszego kursu](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing)
+[Dedykowany AI pomocnik do naszego kursu](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing)
 
 ChatGPT, Claude i podobne narzędzia mogą **szybko wyjaśnić koncepcję, napisać
 prosty szkic lub wyszukać błąd w kodzie**. Ale:
@@ -160,6 +201,7 @@ Zapisz odpowiedzi — wrócimy do nich, kiedy będziemy podłączać diodę LED 
 
 | Zasób | Kiedy sięgać |
 |---|---|
+| Tinkercad | Zawsze — przed przejściem na fizyczną płytkę |
 | `docs.arduino.cc` | Zawsze — składnia funkcji, parametry, przykłady |
 | Forbot.pl | Pełne lekcje po polsku z kodem i schematami |
 | Ebooki Monka | Głębsze wyjaśnienia teorii i ćwiczenia |
