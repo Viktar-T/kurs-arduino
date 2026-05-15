@@ -76,9 +76,9 @@ Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-cyfro
 Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\20-Cyfrowy-czujnik-wilgotnosci-dht11.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 20.01-..., 20.02-...) in their corresponding places within the MDX text.
 
 -----------
-Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-wielozadaniowosc-opoznienia-z-millis-id18418 and save them sequentially in the public/img/lekcje directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 21.01 (e.g., 21.01-image-name.jpg, 21.02-another-image.jpg).
+Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-wielozadaniowosc-opoznienia-z-millis-id18418 and save them sequentially in the public/img/lekcje directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 21.00.01 (e.g., 21.00.01-image-name.jpg, 21.00.02-another-image.jpg).
 
-Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\21-Wielozadaniowosc-opoznienia-z-millis.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 21.01-..., 21.02-...) in their corresponding places within the MDX text.
+Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\21-Wielozadaniowosc-opoznienia-z-millis.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 21.00.01-..., 21.00.02-...) in their corresponding places within the MDX text.
 
 -----------
 -----------

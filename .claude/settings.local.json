@@ -38,7 +38,9 @@
       "Bash(Start-Sleep -Seconds 8)",
       "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $output | Where-Object { $_ -match \"Error|error|Invalid|termometry|lm35|19|lekcje\" } | Select-Object -First 20)",
       "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $output | Where-Object { $_ -match \"termometry|19-Term|dzien-04/19|lm35-cyfrowe|Error\" } | Select-Object -First 20)",
-      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $lines = $output -join \"`n\"; Write-Host \\($lines | Select-String \"termometr|lm35|ds18b20|19-|21-wiel|prerender|Error occurred\" -AllMatches\\).Matches.Value)"
+      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $lines = $output -join \"`n\"; Write-Host \\($lines | Select-String \"termometr|lm35|ds18b20|19-|21-wiel|prerender|Error occurred\" -AllMatches\\).Matches.Value)",
+      "Bash(Remove-Item \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\content\\\\lekcje\\\\dzien-04\\\\21-wielozadaniowosc-opoznienia-z-millis.mdx\" -Force)",
+      "Bash(Remove-Item \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\content\\\\lekcje\\\\dzien-04\\\\22-Wielozadaniowosc-opoznienia-z-millis.mdx\" -Force)"
     ]
   }
 }
