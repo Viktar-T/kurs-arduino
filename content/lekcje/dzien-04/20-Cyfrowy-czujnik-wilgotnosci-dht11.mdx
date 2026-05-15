@@ -55,7 +55,6 @@ W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej
 
 <Photo
   file="20.01-okladka-kurs-dht11.png"
-  day="dzien-04"
   caption="Kurs Arduino II – #8 – cyfrowy czujnik wilgotności DHT-11."
   alt="Grafika tytułowa lekcji o czujniku DHT-11"
 />
@@ -64,7 +63,6 @@ W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej
 
 <Photo
   file="20.02-czym-jest-wilgotnosc.png"
-  day="dzien-04"
   caption="Wilgotność względna opisuje ilość pary wodnej w powietrzu w stosunku do maksymalnej możliwej przy danej temperaturze."
   alt="Schemat ilustrujący pojęcie wilgotności względnej"
 />
@@ -83,7 +81,6 @@ Ilość wody, którą powietrze może pomieścić, zależy od jego temperatury �
 
 <Photo
   file="20.03-dht11-czujnik.png"
-  day="dzien-04"
   caption="Czujnik DHT-11 w niebieskiej obudowie — łączy termometr i czujnik wilgotności w jednym module."
   alt="Widok czujnika DHT-11 w niebieskiej obudowie"
 />
@@ -114,21 +111,18 @@ Na tylnej ściance obudowy DHT-11 producent często drukuje najważniejsze param
 
 <Photo
   file="20.04-dht11-przod.jpg"
-  day="dzien-04"
   caption="DHT-11 — widok od przodu z czterema wyprowadzeniami (VCC, DATA, NC, GND)."
   alt="Widok czujnika DHT-11 od przodu"
 />
 
 <Photo
   file="20.05-dht11-tyl.jpg"
-  day="dzien-04"
   caption="Tył obudowy — producent często drukuje tu skrócone parametry czujnika."
   alt="Widok czujnika DHT-11 od tyłu z nadrukiem parametrów"
 />
 
 <Photo
   file="20.06-dht11-wnetrze.jpg"
-  day="dzien-04"
   caption="Wnętrze obudowy DHT-11 — element pojemnościowy mierzący wilgotność i termometr NTC."
   alt="Wnętrze obudowy czujnika DHT-11"
 />
@@ -143,14 +137,12 @@ Podłączenie jest bardzo proste — czujnik ma tylko jeden pin danych. Konieczn
 
 <Photo
   file="20.07-dht11-podlaczenie.jpg"
-  day="dzien-04"
   caption="Schemat montażowy: DHT-11 podłączony do pinu 2 Arduino z rezystorem podciągającym 4,7 kΩ."
   alt="Schemat Fritzing pokazujący podłączenie DHT-11 do Arduino UNO"
 />
 
 <Photo
   file="20.08-dht11-zblizenie.jpg"
-  day="dzien-04"
   caption="Zbliżenie na podłączenie czujnika DHT-11 — widoczny rezystor 4,7 kΩ między VCC a DATA."
   alt="Zbliżenie na wyprowadzenia czujnika DHT-11 podłączonego do płytki stykowej"
 />
@@ -255,7 +247,6 @@ Wynik w Monitorze portu szeregowego wygląda następująco (poniżej animacja po
 
 <Photo
   file="20.09-dht11-demo-chuchniecie.gif"
-  day="dzien-04"
   caption="Animacja: chuchnięcie na DHT-11 powoduje widoczny wzrost wilgotności w Monitorze portu szeregowego."
   alt="Animacja GIF monitora portu szeregowego — wzrost wilgotności po chuchnięciu na czujnik"
 />
@@ -270,7 +261,6 @@ Czasem komunikacja z czujnikiem może się nie udać — w Monitorze pojawia si�
 
 <Photo
   file="20.10-dht11-blad-odczytu.png"
-  day="dzien-04"
   caption="Błąd odczytu wyświetla 0 dla wilgotności i temperatury — bez obsługi błędów trudno odróżnić go od prawidłowego wyniku."
   alt="Zrzut ekranu Monitora portu szeregowego z błędnym odczytem 0%RH i 0°C"
 />
@@ -315,7 +305,6 @@ void loop()
 
 <Photo
   file="20.11-dht11-obsluga-bledow.gif"
-  day="dzien-04"
   caption="Animacja: po odłączeniu przewodu czujnika Monitor przestaje wyświetlać dane — błędy są ignorowane przez warunek getStatusString()."
   alt="Animacja GIF monitora portu szeregowego — brak wyświetlania przy odłączonym czujniku"
 />
@@ -334,7 +323,6 @@ Serial.println("F");
 
 <Photo
   file="20.12-dht11-fahrenheit.gif"
-  day="dzien-04"
   caption="Animacja: Monitor portu szeregowego wyświetla jednocześnie temperaturę w °C i °F."
   alt="Animacja GIF monitora portu szeregowego z temperaturą w stopniach Celsjusza i Fahrenheita"
 />
