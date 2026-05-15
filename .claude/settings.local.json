@@ -26,7 +26,8 @@
       "Bash(curl -s \"http://localhost:3000/lekcje/dzien-01/06-UART-%28komunikacja-z-PC%29-zmienne\")",
       "PowerShell(Rename-Item -Path \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\content\\\\lekcje\\\\dzien-01\\\\06-UART-\\(komunikacja-z-PC\\)-zmienne.mdx\" -NewName \"06.01-UART-\\(komunikacja-z-PC\\)-zmienne.mdx\")",
       "Bash(npx next *)",
-      "Bash(npx @mdx-js/mdx \"content/lekcje/dzien-01/07-Przetwornik-ADC.mdx\")"
+      "Bash(npx @mdx-js/mdx \"content/lekcje/dzien-01/07-Przetwornik-ADC.mdx\")",
+      "Bash(xargs -I{} basename {})"
     ]
   }
 }
