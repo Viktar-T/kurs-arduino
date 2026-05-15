@@ -33,7 +33,7 @@ hardware:
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
   - { name: "Dioda LED", qty: 3 }
-  - { name: "Rezystor 220 Ω", qty: 3 }
+  - { name: "Rezystor 1000 Ω", qty: 3 }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 1 }
 
@@ -112,7 +112,7 @@ Otwórz teraz **Serial Plotter** (Narzędzia → Serial Plotter) i kręć potenc
 Nie możesz otworzyć obu jednocześnie — zajmują ten sam port szeregowy. Zamknij jedno przed otwarciem drugiego.
 </Callout>
 
-<Expandable title="Jak często można odświeżać wykres?" heading="###">
+<Expandable title="Jak często można odświeżać wykres?" heading="####">
 
 Serial Plotter odczytuje dane tak szybko, jak Arduino je wysyła. Przy `delay(200)` dostajesz 5 próbek na sekundę — przy `delay(50)` już 20, obraz jest wyraźnie płynniejszy.
 
@@ -218,7 +218,7 @@ void loop() {
   height={300}
 />
 
-<Expandable title="pulseIn() — timeout i tryb nieblokujący" heading="###">
+<Expandable title="pulseIn() — timeout i tryb nieblokujący" heading="####">
 
 `pulseIn(pin, HIGH)` czeka, aż sygnał przejdzie z LOW na HIGH, po czym mierzy czas trwania impulsu. Domyślnie czeka maksymalnie **1 sekundę** — gdy nic nie stoi przed czujnikiem, program „zamarza" na tę chwilę przy każdym pomiarze.
 
@@ -256,7 +256,7 @@ Serial.println("");
   height={300}
 />
 
-<Expandable title="Nazwane serie w Serial Plotter (Arduino IDE 2)" heading="###">
+<Expandable title="Nazwane serie w Serial Plotter (Arduino IDE 2)" heading="####">
 
 Arduino IDE 2.x obsługuje etykiety serii. Jeśli wyślesz dane w formacie `Etykieta:Wartość`, Plotter wyświetli legendę zamiast domyślnych `Data0`, `Data1`:
 
@@ -387,7 +387,7 @@ void loop() {
   height={250}
 />
 
-<Expandable title="Zakres z dolnym limitem: random(a, b)" heading="###">
+<Expandable title="Zakres z dolnym limitem: random(a, b)" heading="####">
 
 `random(300)` daje zakres `0–299`. Jeśli chcesz zakres `10–99`, użyj:
 
@@ -506,7 +506,7 @@ void loop() {
   ]}
 />
 
-<Expandable title="Operator ! i prawa De Morgana" heading="###">
+<Expandable title="Operator ! i prawa De Morgana" heading="####">
 
 Operator `!` odwraca wartość logiczną: `!true` daje `false` i odwrotnie. Przydaje się, gdy chcesz sprawdzić, że coś **nie** jest prawdziwe:
 
@@ -584,7 +584,7 @@ void loop() {
 `(dystans > 20 && dystans < 40) || digitalRead(10) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
 </Callout>
 
-<Expandable title="Histereza — jak unikać drgania alarmu na granicy" heading="###">
+<Expandable title="Histereza — jak unikać drgania alarmu na granicy" heading="####">
 
 Gdy obiekt stoi dokładnie 20 cm od czujnika, drobny szum pomiaru sprawia, że odczyt skacze: 19, 21, 20, 19, 21 cm. Alarm włącza i wyłącza się kilka razy na sekundę — to niepożądane zjawisko zwane *chattering*.
 

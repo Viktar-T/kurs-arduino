@@ -32,7 +32,7 @@ hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda LED", qty: 1 }
-  - { name: "Rezystor 220 Ω", qty: 1 }
+  - { name: "Rezystor 1000 Ω", qty: 1 }
   - { name: "Serwomechanizm", qty: 1 }
   - { name: "Potencjometr 10 kΩ", qty: 1 }
   - { name: "Stabilizator LM7805", qty: 1 }
@@ -143,7 +143,7 @@ Gdy zamienimy czasy miejscami, otrzymamy małe wypełnienie. Pin jest w stanie w
 
 PWM polega właśnie na szybkim przełączaniu sygnału prostokątnego i regulacji jego wypełnienia. Jeżeli dzieje się to wystarczająco szybko, dioda nie wygląda jak migająca, tylko jak świecąca słabiej albo mocniej. Podobnie silnik może pracować wolniej albo szybciej, bo dostaje energię tylko przez część czasu.
 
-<Expandable title="Głębiej: częstotliwość sprzętowego PWM w Arduino UNO" heading="###">
+<Expandable title="Głębiej: częstotliwość sprzętowego PWM w Arduino UNO" heading="####">
 W powyższych przykładach używamy opóźnień jednej sekundy i dioda widocznie miga. Sprzętowy PWM na pinach oznaczonych `~` działa domyślnie znacznie szybciej: piny `3`, `9`, `10`, `11` generują sygnał z częstotliwością **490 Hz**, a piny `5` i `6` — **980 Hz**. Jeden cykl trwa odpowiednio około `2 ms` i `1 ms` — zbyt szybko, żeby ludzkie oko mogło śledzić miganie.
 
 Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy `20 ms` niezależnie od sprzętowego PWM.
@@ -192,7 +192,7 @@ Do generowania PWM używamy funkcji `analogWrite(pin, wartosc)`. Nazwa może by�
   ]}
 />
 
-<Expandable title="Głębiej: 8 bitów PWM kontra 10 bitów ADC" heading="###">
+<Expandable title="Głębiej: 8 bitów PWM kontra 10 bitów ADC" heading="####">
 `analogRead()` zwraca wartości `0`–`1023` (10-bitowa rozdzielczość), natomiast `analogWrite()` przyjmuje wartości `0`–`255` (8-bitowa rozdzielczość). Ta asymetria bywa myląca.
 
 ADC ma wyższą rozdzielczość, bo precyzja pomiaru jest ważna — 10-bitowy ADC mierzy napięcie z krokiem około `4,9 mV`. Dla wyjścia PWM 8 bitów daje 256 kroków jasności albo prędkości, co w praktyce jest wystarczające (ludzkie oko nie odróżni 1024 odcieni jasności od 256).
@@ -268,7 +268,7 @@ W środku małego serwa są delikatne plastikowe koła zębate. Ręczne przekrę
 
 Standardowy sygnał sterujący serwem ma okres około `20 ms`. Długość impulsu w tym okresie informuje elektronikę serwa, pod jakim kątem ma ustawić wał. W praktyce nie będziemy generować tych impulsów ręcznie, bo Arduino ma gotową bibliotekę `Servo`.
 
-<Expandable title="Głębiej: jak elektronika serwa interpretuje sygnał sterujący" heading="###">
+<Expandable title="Głębiej: jak elektronika serwa interpretuje sygnał sterujący" heading="####">
 Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz). Elektronika serwa nie patrzy na wypełnienie procentowe, lecz na bezwzględną długość impulsu w stanie wysokim:
 
 - **1 ms** → pozycja `0°`
@@ -367,7 +367,7 @@ void loop() {
 Podłącz potencjometr jako dzielnik napięcia do wejścia `A5` i uruchom program `servo-potencjometr.ino`. Ustaw potencjometr w trzech pozycjach: minimum, środek i maksimum. Sprawdź, czy ramię serwa odpowiada tym ustawieniom.
 </Task>
 
-<Expandable title="Dlaczego serwo może drżeć?" heading="###">
+<Expandable title="Dlaczego serwo może drżeć?" heading="####">
 Lekkie drżenie może wynikać z zakłóceń zasilania, słabych styków na płytce stykowej, zbyt dużego obciążenia ramienia albo niestabilnego odczytu z potencjometru. Najpierw sprawdź wspólną masę i zasilanie serwa, a dopiero potem poprawiaj program.
 </Expandable>
 

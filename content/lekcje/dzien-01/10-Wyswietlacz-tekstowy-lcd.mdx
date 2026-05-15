@@ -35,7 +35,7 @@ hardware:
   - { name: "Potencjometr 10 kΩ", qty: 1, note: "regulacja kontrastu LCD" }
   - { name: "Fotorezystor", qty: 1 }
   - { name: "Rezystor 10 kΩ", qty: 1 }
-  - { name: "Rezystor 220 Ω", qty: 1, optional: true, note: "podświetlenie LCD, zależnie od modułu" }
+  - { name: "Rezystor 1000 Ω", qty: 1, optional: true, note: "podświetlenie LCD, zależnie od modułu" }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 18 }
 
@@ -109,7 +109,7 @@ LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 
   ]}
 />
 
-<Expandable title="Tryb 4-bitowy kontra 8-bitowy — jak to działa?" heading="###">
+<Expandable title="Tryb 4-bitowy kontra 8-bitowy — jak to działa?" heading="####">
 
 Sterownik HD44780 przyjmuje dane w bajtach (8 bitów na raz). W **trybie 8-bitowym** wszystkie 8 linii danych (D0–D7) jest podłączonych do Arduino i każdy bajt jest wysyłany jednym impulsem na linii E.
 
@@ -186,7 +186,7 @@ void loop() {
 Sprawdź kolejno: zasilanie LCD, masę, kolejność przewodów sygnałowych, zgodność pinów w `LiquidCrystal lcd(...)` oraz ustawienie kontrastu. Te punkty rozwiązują większość problemów z pierwszym uruchomieniem LCD.
 </Callout>
 
-<Expandable title="Własne znaki na LCD — lcd.createChar()" heading="###">
+<Expandable title="Własne znaki na LCD — lcd.createChar()" heading="####">
 
 Sterownik HD44780 ma pamięć na **8 własnych znaków** w slotach 0–7. Każdy znak to siatka **5×8 pikseli**. Możesz zaprojektować własne ikony: strzałki, symbol stopnia Celsjusza, baterię czy proste emoji.
 
@@ -411,7 +411,7 @@ void loop() {
 ```
 </Code>
 
-<Expandable title="Moduł I2C do LCD — ten sam wyświetlacz, dużo mniej przewodów" heading="###">
+<Expandable title="Moduł I2C do LCD — ten sam wyświetlacz, dużo mniej przewodów" heading="####">
 
 Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C do LCD** — małej płytki z ekspanderem portów PCF8574, którą przykręca się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA i SCL** (plus zasilanie i masę).
 

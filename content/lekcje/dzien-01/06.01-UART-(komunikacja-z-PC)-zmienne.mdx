@@ -32,7 +32,7 @@ hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda LED", qty: 2 }
-  - { name: "Rezystor 220 Ω", qty: 2 }
+  - { name: "Rezystor 1000 Ω", qty: 2 }
   - { name: "Przycisk tact-switch", qty: 1 }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 8 }
@@ -86,7 +86,7 @@ różnicy między `#define`, `const byte` i zmiennymi.
     { name: "Arduino UNO R3", qty: 1 },
     { name: "Kabel USB-A — USB-B", qty: 1 },
     { name: "Dioda LED", qty: 2 },
-    { name: "Rezystor 220 Ω", qty: 2 },
+    { name: "Rezystor 1000 Ω", qty: 2 },
     { name: "Przycisk tact-switch", qty: 1 },
     { name: "Płytka stykowa", qty: 1 },
     { name: "Przewody połączeniowe", qty: 8 },
@@ -121,13 +121,24 @@ Gdy korzystasz z `Serial`, nie traktuj ich jak zwykłych pinów I/O do LED,
 przycisków albo czujników.
 </Callout>
 
-<Expandable title="Głębiej: jak USB zamienia się na UART na Arduino UNO?" heading="###">
+<Expandable title="Głębiej: jak USB zamienia się na UART na Arduino UNO?" heading="####">
 
 Komputer nie mówi TTL UART — mówi USB. Na płytce Arduino UNO siedzi dodatkowy układ scalony (w zależności od wersji: **CH340** lub **ATmega16U2**), który pełni rolę mostka USB↔UART. Jego jedyne zadanie to tłumaczenie pakietów USB na sygnały TTL 5 V i z powrotem.
 
 Gdy podłączasz Arduino kablem USB, system operacyjny wykrywa mostek i tworzy **wirtualny port COM** (Windows: `COMx`, Linux/macOS: `/dev/ttyUSB0` lub `/dev/tty.usbmodem...`). Właśnie z tym portem łączy się Monitor portu szeregowego.
 
-Sygnał UART między mostkiem a mikrokontrolererem ATmega328P płynie po śladach PCB do fizycznych pinów `D0` i `D1`. Dlatego zajęte są dokładnie te dwa piny, a diody `TX` i `RX` na płytce mrugają przy każdym przesyłaniu danych.
+Sygnał UART między mostkiem a mikrokontrolererem ATmega328P płynie po śladach PCB (Printed Circuit Board, co po polsku oznacza płytkę drukowaną) do fizycznych pinów `D0` i `D1`. Dlatego zajęte są dokładnie te dwa piny, a diody `TX` i `RX` na płytce mrugają przy każdym przesyłaniu danych.
+
+</Expandable>
+
+<Expandable title="Głębiej: co to jest TTL?" heading="####">
+
+TTL to skrót od Transistor-Transistor Logic (logika tranzystorowo-tranzystorowa). Choć to nazwa technologii produkcji układów scalonych, w świecie Arduino używamy tego terminu głównie do opisania poziomów napięć, jakie reprezentują stany logiczne w komunikacji szeregowej (UART).  
+W Twoim Arduino UNO R3, które pracuje w logice 5 V, poziomy TTL wyglądają następująco:  
+- Stan NISKI (0 / LOW): napięcie bliskie 0 V (masa/GND).  
+- Stan WYSOKI (1 / HIGH): napięcie bliskie 5 V.  
+
+To bardzo ważne, ponieważ inne urządzenia (np. nowsze czujniki lub płytki takie jak Raspberry Pi) mogą pracować w standardzie TTL 3,3 V. Podłączenie sygnału 5 V do urządzenia 3,3 V bez zabezpieczenia mogłoby je uszkodzić!
 
 </Expandable>
 
@@ -167,7 +178,7 @@ piszemy `Serial.begin(9600)`, wybieramy prędkość 9600 baud, czyli w uproszcze
   ]}
 />
 
-<Expandable title="Dlaczego przy złej prędkości widać śmieci?" heading="###">
+<Expandable title="Dlaczego przy złej prędkości widać śmieci?" heading="####">
 Przy `9600 baud` jeden bit trwa około `1 / 9600 s`, czyli około `104 µs`.
 Odbiornik próbuje czytać linię dokładnie w tych odstępach czasu. Jeśli Arduino
 nadaje z prędkością `9600`, a Monitor portu szeregowego jest ustawiony na inną
@@ -175,7 +186,7 @@ wartość, komputer próbuje próbkować sygnał w złych momentach. W efekcie s
 bity w niepoprawne znaki i na ekranie pojawiają się losowe symbole.
 </Expandable>
 
-<Expandable title="Głębiej: format ramki 8N1 i inne opcje UART" heading="###">
+<Expandable title="Głębiej: format ramki 8N1 i inne opcje UART" heading="####">
 
 `Serial.begin(9600)` używa domyślnego formatu **8N1**, co oznacza:
 - **8** bitów danych,
@@ -329,7 +340,7 @@ void loop() {
 ```
 </Code>
 
-<Expandable title="Co dokładnie robi #define?" heading="###">
+<Expandable title="Co dokładnie robi #define?" heading="####">
 `#define pinLed 8` działa jak automatyczne „znajdź i zamień” wykonane przed
 kompilacją. Preprocesor znajduje każde wystąpienie `pinLed` i wstawia tam `8`.
 To nie jest zmienna i nie ma typu. Dlatego `#define` bywa użyteczne, ale w
@@ -363,7 +374,7 @@ początku wiedzieć, że duże teksty, tablice, `float` i intensywne używanie
 pierwszy kontakt z komendami tekstowymi.
 </Callout>
 
-<Expandable title="Głębiej: trzy rodzaje pamięci w Arduino UNO" heading="###">
+<Expandable title="Głębiej: trzy rodzaje pamięci w Arduino UNO" heading="####">
 
 Arduino UNO (ATmega328P) ma trzy oddzielne obszary pamięci:
 
@@ -429,7 +440,7 @@ Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
 </Task>
 
-<Expandable title="Głębiej: przepełnienie liczby całkowitej (integer overflow)" heading="###">
+<Expandable title="Głębiej: przepełnienie liczby całkowitej (integer overflow)" heading="####">
 
 W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — wartość po prostu zawija się na drugi koniec zakresu. Jest to zachowanie zdefiniowane dla typów bez znaku i powszechnie spotykane dla typów ze znakiem na AVR.
 
@@ -477,7 +488,7 @@ znak `'0'`, którego kod liczbowy to `48`, a nie wartość liczbową `0`. Dlateg
 prostych komendach porównujemy `znak == '0'`, a nie `znak == 0`.
 </Callout>
 
-<Expandable title="Głębiej: tablica ASCII — skąd bierze się kod 48?" heading="###">
+<Expandable title="Głębiej: tablica ASCII — skąd bierze się kod 48?" heading="####">
 
 ASCII (American Standard Code for Information Interchange) przypisuje każdemu znakowi unikalny kod od 0 do 127. Wybrane wartości:
 

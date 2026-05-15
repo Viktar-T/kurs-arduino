@@ -33,7 +33,7 @@ hardware:
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
   - { name: "Dioda LED", qty: 3, optional: true }
-  - { name: "Rezystor 220 Ω", qty: 3, optional: true }
+  - { name: "Rezystor 1000 Ω", qty: 3, optional: true }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 1 }
 
@@ -217,7 +217,7 @@ Serial.println(kwadratPole(4));
 
 Funkcja zwracająca wartość sprawdza się wszędzie tam, gdzie potrzebujemy obliczyć coś i użyć wyniku w dalszej logice — na przykład przy pomiarze odległości.
 
-<Expandable title="Interaktywny przykład — pole kwadratu z UART" heading="###">
+<Expandable title="Interaktywny przykład — pole kwadratu z UART" heading="####">
 
 Program czyta liczbę wpisaną w Monitorze portu szeregowego, oblicza pole kwadratu i odpowiada wynikiem:
 
@@ -296,7 +296,7 @@ Czujnik ma cztery piny:
 3. Mierzymy czas trwania stanu wysokiego na `Echo` — to czas podróży dźwięku (tam i z powrotem).
 4. Dzielimy przez `58`, żeby otrzymać odległość w centymetrach.
 
-<Expandable title="Ograniczenia i martwa strefa czujnika HC-SR04" heading="###">
+<Expandable title="Ograniczenia i martwa strefa czujnika HC-SR04" heading="####">
 
 HC-SR04 to prosty i tani czujnik, ale ma kilka praktycznych ograniczeń:
 
@@ -390,7 +390,7 @@ void loop() {
 Dźwięk przebywa w powietrzu ok. 340 m/s. Impuls pokonuje dystans dwukrotnie (tam i z powrotem), a `pulseIn()` zwraca czas w mikrosekundach. Dzielenie przez 58 daje przybliżenie odległości w centymetrach: 1 cm = 58 µs.
 </Callout>
 
-<Expandable title="Kompensacja temperatury — kiedy dzielnik 58 nie wystarczy" heading="###">
+<Expandable title="Kompensacja temperatury — kiedy dzielnik 58 nie wystarczy" heading="####">
 
 Prędkość dźwięku w powietrzu zależy od temperatury. Wzór przybliżony:
 
@@ -460,7 +460,7 @@ int zmierzOdleglosc() {
 Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością.
 </Task>
 
-<Expandable title="Uśrednianie pomiarów — stabilniejsze wskazania" heading="###">
+<Expandable title="Uśrednianie pomiarów — stabilniejsze wskazania" heading="####">
 
 Pojedynczy odczyt HC-SR04 może czasem „skoczyć" o kilka centymetrów z powodu przypadkowego echa lub drgań zasilania. Uśrednianie kilku pomiarów znacząco poprawia stabilność:
 

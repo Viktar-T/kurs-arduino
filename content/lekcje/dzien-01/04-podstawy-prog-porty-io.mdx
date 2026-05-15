@@ -34,7 +34,7 @@ hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda LED", qty: 3 }
-  - { name: "Rezystor 330 Ω", qty: 3 }
+  - { name: "Rezystor 1000 Ω", qty: 3 }
   - { name: "Przycisk chwilowy (tact switch)", qty: 1 }
   - { name: "Płytka stykowa (breadboard)", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 10 }
@@ -118,7 +118,7 @@ Każdy pin cyfrowy Arduino UNO może bezpiecznie **dostarczyć lub pochłonąć 
 
 Typowa dioda LED świeci już przy 10–20 mA. Bez rezystora napięcie 5 V przy niskiej rezystancji diody wytworzyłoby prąd nawet 100 mA — trzykrotnie powyżej limitu.
 
-Dobór rezystora ze wzoru: `R = (Vcc − Vf) / If`. Dla czerwonej diody (Vf ≈ 2 V, If = 20 mA): `R = (5 − 2) / 0,02 = 150 Ω`. W praktyce stosujemy **330 Ω** jako bezpieczny zapas.
+Dobór rezystora ze wzoru: `R = (Vcc − Vf) / If`. Dla czerwonej diody (Vf ≈ 2 V, If = 20 mA): `R = (5 − 2) / 0,02 = 150 Ω`. W praktyce stosujemy **1000 Ω** — dioda świeci nieco słabiej (ok. 3 mA), ale pin Arduino jest bezpieczny nawet przy długotrwałym użytkowaniu.
 
 Piny analogowe A0–A5 mają te same limity prądowe co cyfrowe — mogą pracować jako wyjścia cyfrowe z identycznymi ograniczeniami.
 
@@ -134,8 +134,8 @@ Piny analogowe A0–A5 mają te same limity prądowe co cyfrowe — mogą pracow
 
 <Schematic
   src="/img/lekcje/dzien-01/04.12-dioda-led-schemat.png"
-  caption="Podłączenie diody LED do pinu 8 przez rezystor 330 Ω."
-  alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 330 om"
+  caption="Podłączenie diody LED do pinu 8 przez rezystor 1000 Ω."
+  alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 1000 om"
   width={600}
   height={400}
 />
@@ -186,6 +186,10 @@ Wgraj program i obserwuj migającą diodę. Eksperymentuj ze zmianą wartości `
 
 <Task title="Zadanie 1.1 — minimalne miganie" estimate="10 min">
 Zmniejszaj wartość `delay()` i sprawdź, jaka jest **minimalna wartość** przy której nadal widzisz miganie. Zanotuj wynik. Następnie podłącz drugą diodę do pinu 9 i napisz program, w którym diody migają **naprzemiennie** — gdy jedna świeci, druga jest wyłączona.
+</Task>
+
+<Task title="Zadanie 1.2 — dwie diody" estimate="15 min">
+Wybierz wolny pin i podłącz do niego drugą diodę LED. Napisz program, który **włącza obie diody jednocześnie**. Następnie napisz drugi program, w którym obie diody migają **na zmianę** — gdy jedna się zapala, druga gaśnie.
 </Task>
 
 <Expandable title="Głębiej: co tak naprawdę robi delay()?" heading="####">
@@ -261,11 +265,11 @@ void loop() {
 
 `if (warunek) { ... } else { ... }` — sprawdza warunek. Jeśli prawdziwy, wykonuje pierwszy blok; w przeciwnym razie — blok `else`. Część `else` jest opcjonalna.
 
-<Task title="Zadanie 1.2 — if bez else" estimate="5 min">
+<Task title="Zadanie 1.3 — if bez else" estimate="5 min">
 Przepisz program tak, żeby nie zawierał bloku `else`. Czy działanie programu jest takie samo? Jak Arduino zachowuje się, gdy przycisk nie jest wciśnięty?
 </Task>
 
-<Expandable title="Zadanie 1.3 (Mid) — włącznik bistabilny ★★☆" heading="####">
+<Expandable title="Zadanie 1.4 (Mid) — włącznik bistabilny ★★☆" heading="####">
 
 *Zadania oznaczone **Mid** i **Adv** nie są obowiązkowe — to propozycje dla chętnych, którzy chcą pójść krok dalej.*
 
@@ -280,7 +284,7 @@ Oczekiwany efekt: pierwsze wciśnięcie zapala diodę, drugie gasi, trzecie znó
 
 </Expandable>
 
-<Expandable title="Zadanie 1.4 (Adv) — licznik wciśnięć i pasek diod ★★★" heading="####">
+<Expandable title="Zadanie 1.5 (Adv) — licznik wciśnięć i pasek diod ★★★" heading="####">
 
 *Zadania oznaczone **Mid** i **Adv** nie są obowiązkowe — to propozycje dla chętnych, którzy chcą pójść krok dalej.*
 

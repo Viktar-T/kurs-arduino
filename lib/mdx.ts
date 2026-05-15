@@ -41,6 +41,7 @@ export async function renderLesson(source: string) {
     source,
     options: {
       parseFrontmatter: false, // frontmatter is parsed separately in lib/content.ts
+      blockJS: false, // allow JSX attribute expressions ({[...]} array props etc.)
       mdxOptions: {
         remarkPlugins: [remarkGfm, remarkMath],
         rehypePlugins: [

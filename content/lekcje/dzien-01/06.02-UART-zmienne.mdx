@@ -1,0 +1,744 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Typy danych, zasięg zmiennych i liczby przez UART"
+slug: "typy-danych-zasieg-uart-parseint"
+summary: "Dogłębny przegląd typów bool, byte, int, long, char, String i float — z pułapką dzielenia całkowitoliczbowego, zasięgiem zmiennych globalnych i lokalnych, skróconymi operatorami ++/--/+=/−= oraz odbieraniem liczb przez Serial.parseInt()."
+
+day: 1
+weekend: 1
+order: 6
+duration: 90
+block: 4
+blockTitle: "Komunikacja UART i diagnostyka programu"
+forbotCourse: 1
+forbotChapter: 3
+
+objectives:
+  - "Dobrać właściwy typ danych (bool, byte, int, long, char, String, float) do konkretnego zastosowania"
+  - "Wyjaśnić i unikać pułapki dzielenia całkowitoliczbowego z float"
+  - "Rozróżniać zmienne globalne i lokalne oraz stosować zasadę minimalnego zasięgu"
+  - "Stosować operatory skrócone ++, --, +=, -= zamiast rozbudowanych przypisań"
+  - "Odbierać liczby z Monitora portu szeregowego za pomocą Serial.parseInt()"
+
+prerequisites:
+  - "dzien-01/uart-komunikacja-z-pc-zmienne"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED czerwona", qty: 1 }
+  - { name: "Dioda LED zielona", qty: 1 }
+  - { name: "Rezystor 220 Ω", qty: 2 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 6 }
+
+tags: [arduino, uart, serial, zmienne, typy-danych, float, zasieg, parseint, operatory]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-uart-komunikacja-z-komputerem-pc-zmienne-id3836"
+  - "https://forbot.pl/blog/kurs-arduino-kontynuacja-uart-serwomechanizmy-id7520"
+  - "/docs/teoria-niektore-tematy/programowanie/typy-danych-arduino.md"
+  - "/docs/teoria-niektore-tematy/programowanie/04.3_scope-Zmiennych.md"
+  - "/docs/teoria-niektore-tematy/programowanie/05_Operatory.md"
+
+publish: true
+updated: "2026-05-14"
+---
+
+## Czego się dziś nauczymy
+
+W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART i zobaczyłeś/aś tabelę typów danych. Teraz czas na głębsze nurkowanie: każdy typ z osobna, analogie z życia, pułapka która potrafi zaskoczyć nawet doświadczonych programistów, oraz nowa supermoc — wpisanie liczby z klawiatury i odebranie jej jako wartości numerycznej, nie tylko jako znaku.
+
+<Callout type="note" title="Lekcja bazuje na">
+Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zmiennych. Masz już za sobą: `Serial.begin/print/println`, ramkę UART, odbieranie znaków przez `Serial.read()` i obsługę komend tekstowych przez `readStringUntil()`. Nie będziemy tego powtarzać — budujemy dalej.
+</Callout>
+
+<Objectives
+  items={[
+    "dobrać właściwy typ danych do konkretnego zastosowania",
+    "wyjaśnić i unikać pułapki dzielenia całkowitoliczbowego",
+    "rozróżniać zmienne globalne i lokalne i stosować zasadę minimalnego zasięgu",
+    "używać operatorów skróconych ++ -- += -= zamiast rozbudowanych przypisań",
+    "odbierać liczby z Monitora portu szeregowego przez Serial.parseInt()",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    "wysyłasz dane przez Serial.println() i Serial.print()",
+    "odbierasz znaki przez Serial.available() i Serial.read()",
+    "wiesz, że Arduino UNO ma tylko 2 KB RAM",
+    "rozumiesz, że const byte to lepsza alternatywa dla #define przy numerach pinów",
+  ]}
+/>
+
+<Hardware
+  items={[
+    { name: "Arduino UNO R3", qty: 1 },
+    { name: "Kabel USB-A — USB-B", qty: 1 },
+    { name: "Dioda LED czerwona", qty: 1 },
+    { name: "Dioda LED zielona", qty: 1 },
+    { name: "Rezystor 220 Ω", qty: 2 },
+    { name: "Płytka stykowa", qty: 1 },
+    { name: "Przewody połączeniowe", qty: 6 },
+  ]}
+/>
+
+---
+
+## 1. Szufladki różnych rozmiarów — typy danych od środka
+
+Wyobraź sobie pamięć Arduino jako biurko z dokładnie **2048 szufladkami**, każda na jeden bajt. To jedyne zasoby robocze, jakie masz. Zmienna o rozmiarze 4 bajtów zajmuje 4 szufladki naraz, `byte` — jedną. Dobieranie zbyt dużego typu marnuje miejsce. Wkładanie za dużej liczby w za małą szufladkę kończy się przepełnieniem.
+
+<Table
+  caption="Typy danych na Arduino UNO — rozmiar, zakres i typowe zastosowanie"
+  headers={["Typ", "Rozmiar [B]", "Zakres", "Kiedy używać?"]}
+  rows={[
+    ["bool", "1", "true / false", "flagi, stany: czy alarm jest aktywny, czy LED świeci"],
+    ["byte", "1", "0 … 255", "numery pinów, wartości PWM, adresy I2C"],
+    ["int", "2", "−32 768 … 32 767", "odczyty analogowe, temperatury, liczniki ogólnego przeznaczenia"],
+    ["long", "4", "±2 147 483 647", "wynik millis(), duże liczniki impulsów"],
+    ["char", "1", "−128 … 127", "pojedynczy znak ASCII, jednobajtowa komenda"],
+    ["String", "zmienny", "dynamiczny (heap)", "proste komendy tekstowe — ostrożnie z RAM!"],
+    ["float", "4", "±3.4 × 10³⁸ (~6 cyfr)", "temperatura, napięcie, ułamki"],
+  ]}
+/>
+
+Przyjrzyjmy się każdemu typowi bliżej — z kodem i analogią.
+
+### bool — włącznik światła
+
+```cpp
+bool alarmAktywny = false;
+bool przyciskWcisniety = true;
+```
+
+`bool` przechowuje jedną z dwóch wartości: `true` (włączone, prawda, 1) lub `false` (wyłączone, fałsz, 0). Mimo że logicznie potrzeba tylko jednego bitu, C++ zajmuje cały bajt. Używaj `bool` zawsze, gdy coś ma tylko dwa stany — stan alarmu, stan diody, czy warunek jest spełniony.
+
+<Code lang="cpp" file="bool-uart.ino">
+```cpp
+bool swiatlo = false;  // stan oświetlenia
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  swiatlo = !swiatlo;  // operator ! odwraca: false → true → false…
+  Serial.print("Swiatlo: ");
+  Serial.println(swiatlo ? "WLACZONE" : "WYLACZONE");
+  delay(1000);
+}
+```
+</Code>
+
+### byte — mała, nieujemna, oszczędna
+
+```cpp
+byte jasnosc = 128;   // 50% PWM (zakres 0–255)
+byte adresI2C = 0x27; // adres wyświetlacza LCD
+```
+
+`byte` jest **bezznakowy** (zawsze >= 0) i zajmuje jeden bajt. Numery pinów Arduino UNO mieszczą się w 0–19, wartości PWM w 0–255, adresy I2C w 0–127 — każdy z tych przypadków to `byte`. Nie marnuj 2 bajtów `int` tam, gdzie jeden wystarczy.
+
+### int — domyślna liczba całkowita
+
+```cpp
+int odczyt = analogRead(A0);  // zwraca 0…1023 — mieści się w int
+int temperatura = -15;        // może być ujemna
+```
+
+`int` to 2 bajty i zakres −32 768 … 32 767. Na Arduino `analogRead()` zwraca właśnie `int`. Codzienne liczniki i wyniki porównań to jego terytorium.
+
+<Callout type="warning" title="int na Arduino ≠ int na PC">
+Na komputerze `int` ma zwykle 4 bajty (zakres ±2 miliardy). Na Arduino UNO to **2 bajty** — maksimum 32 767. Kod pisany na PC i przeniesiony na Arduino może cicho przepełniać zmienne `int`.
+</Callout>
+
+### long — cztery bajty na czas i duże liczniki
+
+```cpp
+unsigned long start = millis();  // millis() zwraca unsigned long!
+long impulsow = 1500000L;
+```
+
+`long` zajmuje 4 bajty i mieści miliardy. Funkcja `millis()` zwraca `unsigned long` — jeśli zapiszesz ją do `int`, dostaniesz przepełnienie już po kilku minutach. Zawsze używaj `unsigned long` dla czasu.
+
+### char — jeden bajt, jeden znak
+
+```cpp
+char komenda = 'Z';  // wartość 90 (kod ASCII litery Z)
+char cyfra   = '5';  // wartość 53, a NIE liczba 5!
+```
+
+Pamiętasz z poprzedniej lekcji, że `Serial.read()` zwraca `char` i że znaki mają kody ASCII? `char` to właśnie ten typ. Jednobajtowe komendy z terminala (np. `'A'` = włącz, `'B'` = wyłącz) to klasyczny przypadek użycia.
+
+### String — wygodna, ale chciwa na RAM
+
+```cpp
+String imie     = "Wiktor";
+String odpowiedz = "Temperatura: " + String(23.5) + " C";
+Serial.println(odpowiedz);
+```
+
+`String` dynamicznie zarządza pamięcią (heap). W krótkich ćwiczeniach — bez problemu. W bardziej rozbudowanych projektach intensywne tworzenie i niszczenie obiektów `String` fragmentuje 2 KB RAM i prowadzi do trudnych do debugowania błędów. Wtedy używa się `char[]`.
+
+---
+
+## 2. float — liczby z przecinkiem i pułapka dzielenia
+
+Kiedy wynik obliczeń nie jest liczbą całkowitą — temperatura 23,5°C, napięcie 3,27 V, odległość 12,8 cm — sięgasz po `float`. To 4-bajtowy typ zmiennoprzecinkowy z precyzją około 6–7 cyfr znaczących.
+
+```cpp
+float temperatura = 23.5;
+float napiecie    = 3.27;
+```
+
+### Pułapka dzielenia całkowitoliczbowego
+
+Jest tu jeden szkopuł, który zaskakuje nawet doświadczonych programistów. Wgraj poniższy kod i obserwuj wyniki:
+
+<Code lang="cpp" file="pulapka-dzielenia.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+
+  int a = 7;
+  int b = 2;
+
+  // ❌ PUŁAPKA: oba operandy to int → dzielenie całkowite, reszta ginie!
+  float wynik1 = a / b;
+  Serial.print("(int)7 / (int)2 = ");
+  Serial.println(wynik1);   // wypisze: 3.00, NIE 3.50!
+
+  // ✅ POPRAWKA A: jeden literal float wystarczy
+  float wynik2 = a / 2.0;
+  Serial.print("7 / 2.0 = ");
+  Serial.println(wynik2);   // wypisze: 3.50
+
+  // ✅ POPRAWKA B: jawne rzutowanie
+  float wynik3 = (float)a / b;
+  Serial.print("(float)a / b = ");
+  Serial.println(wynik3);   // wypisze: 3.50
+}
+
+void loop() {}
+```
+</Code>
+
+**Dlaczego tak działa?** Gdy oba operandy to liczby całkowite, C++ wykonuje dzielenie całkowite — reszta po prostu jest odrzucana. Przypisanie do `float` następuje *po* obliczeniu, więc jest już za późno. Jeśli *przynajmniej jeden* operand jest `float`, wynik jest zmiennoprzecinkowy.
+
+<Callout type="warning" title="Pułapka: float wynik = 7 / 2">
+`float wynik = 7 / 2;` — obliczenie `7 / 2` daje `3` (int!), a dopiero potem `3` jest kopiowane do zmiennej `float` jako `3.0`. Poprawka: `7 / 2.0` lub `(float)7 / 2`.
+</Callout>
+
+<Task title="Zadanie 1 — znajdź i napraw błąd" estimate="8 min">
+Poniższy kod ma przeliczyć odczyt z pinu A0 (wartości 0–1023) na napięcie (0–5 V). Ale wynik zawsze wychodzi `0.00` albo `1.00`. Dlaczego? Napraw jeden błąd.
+
+```cpp
+void setup() {
+  Serial.begin(9600);
+  int surowy = analogRead(A0);
+  float napiecie = surowy / 1023;  // ← co tu jest nie tak?
+  Serial.print("Napiecie: ");
+  Serial.println(napiecie);
+}
+void loop() {}
+```
+</Task>
+
+<Expandable title="Rozwiązanie Zadania 1" heading="####">
+`surowy` to `int`, a `1023` to literał całkowity — oba operandy to `int`, więc dzielenie daje 0 lub 1. Dwie poprawki:
+
+```cpp
+float napiecie = surowy / 1023.0;   // literal float naprawia problem
+// albo:
+float napiecie = (float)surowy / 1023;
+```
+</Expandable>
+
+---
+
+## 3. Operatory skrócone — pisz mniej, znaczy więcej
+
+W poprzedniej lekcji zobaczyłeś/aś licznik zapisany jako:
+```cpp
+licznik = licznik + 1;
+```
+
+To działa, ale C++ ma krótsze formy, które są idiomatyczne — zobaczysz je w każdym kodzie Arduino:
+
+<Table
+  caption="Operatory skrócone — odpowiedniki długich przypisań"
+  headers={["Skrót", "Odpowiednik", "Co robi"]}
+  rows={[
+    ["i++", "i = i + 1", "zwiększ o 1 (postfiksowy — najpierw użyj, potem zwiększ)"],
+    ["i--", "i = i - 1", "zmniejsz o 1"],
+    ["i += n", "i = i + n", "dodaj n do i"],
+    ["i -= n", "i = i - n", "odejmij n od i"],
+    ["i *= n", "i = i * n", "pomnóż i przez n"],
+    ["i /= n", "i = i / n", "podziel i przez n"],
+  ]}
+/>
+
+<Code lang="cpp" file="operatory-skrocone-uart.ino">
+```cpp
+int licznik = 0;
+int suma    = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  licznik++;           // zamiast: licznik = licznik + 1
+  suma += licznik;     // zamiast: suma = suma + licznik
+
+  Serial.print("Krok: ");
+  Serial.print(licznik);
+  Serial.print(" | Suma skumulowana: ");
+  Serial.println(suma);
+
+  delay(500);
+
+  if (licznik >= 10) {
+    licznik = 0;
+    suma = 0;
+    Serial.println("--- reset ---");
+  }
+}
+```
+</Code>
+
+Wgraj kod i obserwuj: suma rośnie szybciej niż licznik (1, 3, 6, 10, 15…), bo w każdym kroku dodajemy coraz większą wartość.
+
+<Task title="Zadanie 2 — przepisz na skróty" estimate="5 min">
+Poniższy fragment działa, ale używa długich form przypisania. Zastąp każde z nich odpowiednim skrótem (`++`, `+=`, `-=`):
+
+```cpp
+void loop() {
+  pomiarow = pomiarow + 1;
+  sumaOdczytow = sumaOdczytow + analogRead(A0);
+  pozostalo = pozostalo - 1;
+  Serial.println(sumaOdczytow / pomiarow);
+  delay(100);
+}
+```
+</Task>
+
+<Expandable title="Rozwiązanie Zadania 2" heading="####">
+```cpp
+void loop() {
+  pomiarow++;
+  sumaOdczytow += analogRead(A0);
+  pozostalo--;
+  Serial.println(sumaOdczytow / pomiarow);
+  delay(100);
+}
+```
+</Expandable>
+
+---
+
+## 4. Zasięg zmiennych — gdzie zmienna „żyje"
+
+W Zadaniu 2 poprzedniej lekcji przeniosłeś/aś `int licznik = 0;` z początku programu do wnętrza `loop()` i licznik przestał rosnąć. Czas wyjaśnić to zjawisko formalnie.
+
+**Zasięg** (ang. *scope*) to obszar kodu, w którym dana zmienna istnieje i jest dostępna. Granicą zasięgu są **klamry `{ }`** — zmienna „rodzi się" przy deklaracji i „umiera" przy zamknięciu bloku.
+
+```
+{                       ← zmienna jeszcze nie istnieje
+  int moja = 0;         ← deklaracja: zmienna się rodzi, zajmuje RAM
+  moja += 5;            ← można używać
+}                       ← koniec bloku: zmienna ginie, RAM zwolniony
+// tutaj: moja nie istnieje — błąd kompilacji gdybyś spróbował!
+```
+
+### Zmienne globalne — pamiętają cały czas
+
+Zmienne zadeklarowane **przed `setup()`** są **globalne**: widoczne w każdej funkcji, żyją od startu do restartu.
+
+<Code lang="cpp" file="globalny-licznik.ino">
+```cpp
+int licznik = 0;  // globalna — widoczna wszędzie, pamięta wartość
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  licznik++;
+  Serial.print("Licznik: ");
+  Serial.println(licznik);  // 1, 2, 3, 4... rośnie!
+  delay(300);
+}
+```
+</Code>
+
+### Zmienne lokalne — żyją tylko w swoim bloku
+
+Zmienne zadeklarowane **wewnątrz** funkcji lub bloku `{}` są **lokalne**: tworzone przy każdym wejściu w klamry, niszczone przy wyjściu.
+
+<Code lang="cpp" file="lokalny-licznik-bugged.ino">
+```cpp
+// ❌ BUG: zmienna lokalna resetuje się co obieg
+void loop() {
+  int licznik = 0;  // tworzony od nowa przy KAŻDYM obiegu pętli!
+  licznik++;
+  Serial.println(licznik);  // zawsze wypisze: 1
+  delay(300);
+}
+```
+</Code>
+
+Wgraj ten kod i przekonaj się — Monitor portu szeregowego będzie pokazywał wyłącznie `1`.
+
+<Callout type="warning" title="Dlaczego lokalny licznik zawsze daje 1?">
+Przy każdym obiegu `loop()` program wchodzi do `{`, deklaruje `int licznik = 0` (reset do zera!), zwiększa do 1, wypisuje, wychodzi z `}` — zmienna znika. Następny obieg: to samo od początku.
+</Callout>
+
+### Zasada minimalnego zasięgu
+
+<Table
+  caption="Kiedy deklarować globalnie, a kiedy lokalnie?"
+  headers={["Sytuacja", "Gdzie deklarować?"]}
+  rows={[
+    ["Musi pamiętać wartość między kolejnymi obiegami loop()", "Globalnie — przed setup()"],
+    ["Konfiguracja jednorazowa, używana tylko w setup()", "Lokalnie wewnątrz setup()"],
+    ["Zmienna robocza na czas jednego przebiegu loop()", "Lokalnie wewnątrz loop()"],
+    ["Wynik pośredni obliczeń w bloku if/else", "Lokalnie wewnątrz bloku"],
+  ]}
+/>
+
+**Zasada:** deklaruj zmienną **tak nisko jak to możliwe**. Zmienne globalne żyją przez cały czas działania programu i zużywają RAM nieprzerwanie. Używaj ich tylko gdy naprawdę potrzebujesz trwałości między obiegami.
+
+<Task title="Zadanie 3 — napraw zasięg" estimate="10 min">
+Program ma liczyć wciśnięcia przycisku podłączonego do pinu 4 (INPUT_PULLUP) i wysyłać aktualny wynik przez UART. Ale coś jest nie tak — napraw jeden błąd:
+
+```cpp
+const byte pinPrzycisk = 4;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinPrzycisk, INPUT_PULLUP);
+}
+
+void loop() {
+  int liczbaWcisniec = 0;         // ← tutaj jest błąd
+
+  if (digitalRead(pinPrzycisk) == LOW) {
+    liczbaWcisniec++;
+    Serial.println(liczbaWcisniec);
+    delay(200);
+  }
+}
+```
+</Task>
+
+<Expandable title="Rozwiązanie Zadania 3" heading="####">
+Przesuń deklarację przed `setup()` — powinna być globalna:
+
+```cpp
+const byte pinPrzycisk = 4;
+int liczbaWcisniec = 0;         // ← globalna: pamięta wartość między obiegami
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinPrzycisk, INPUT_PULLUP);
+}
+
+void loop() {
+  if (digitalRead(pinPrzycisk) == LOW) {
+    liczbaWcisniec++;
+    Serial.println(liczbaWcisniec);
+    delay(200);
+  }
+}
+```
+</Expandable>
+
+<Expandable title="Głębiej: błąd kompilatora przy przekroczeniu zasięgu" heading="####">
+Spróbuj odwołać się do zmiennej lokalnej poza jej blokiem:
+
+```cpp
+void setup() {
+  int pinCzujnika = A0;   // zmienna lokalna w setup()
+  pinMode(pinCzujnika, INPUT);
+}
+
+void loop() {
+  analogRead(pinCzujnika);   // ← błąd!
+  // error: 'pinCzujnika' was not declared in this scope
+}
+```
+
+Komunikat `was not declared in this scope` znaczy dosłownie: poza klamrami `{}` gdzie ją zadeklarowałeś ta zmienna nie istnieje. To nie jest bug kompilatora — to zamierzone zachowanie, które chroni przed przypadkowym dostępem do niezainicjalizowanej pamięci.
+</Expandable>
+
+---
+
+## 5. Odbieranie liczb przez UART — Serial.parseInt()
+
+Do tej pory odbierałeś/aś przez UART albo pojedynczy znak (`Serial.read()`), albo cały tekst do końca linii (`readStringUntil('\n')`). Ale co jeśli chcesz wysłać z komputera liczbę `128` i odebrać ją jako wartość, na której możesz wykonywać działania matematyczne?
+
+### Problem: znaki to nie liczby
+
+Gdy wpisujesz `128` w Monitorze portu szeregowego, Arduino odbiera **trzy oddzielne bajty**:
+- bajt `'1'` — kod ASCII 49
+- bajt `'2'` — kod ASCII 50
+- bajt `'8'` — kod ASCII 56
+
+`Serial.read()` dałby ci kolejno `49`, `50`, `56` — nie liczbę 128. Ręczne składanie cyfr w wartość to żmudna praca. Na szczęście jest gotowa funkcja.
+
+### Serial.parseInt() — parser liczb dla ciebie
+
+```cpp
+long wartosc = Serial.parseInt();
+```
+
+`Serial.parseInt()` czeka, aż w buforze pojawią się cyfry, zbiera je wszystkie, przelicza pozycje dziesiętne i zwraca gotową liczbę jako `long`. Zatrzymuje się gdy napotka znak niebędący cyfrą (np. spację, literę, `\n`) lub gdy minie krótki timeout (domyślnie 1 sekunda).
+
+<Callout type="note" title="Zwracany typ to long">
+`Serial.parseInt()` zwraca `long`. Możesz bezpiecznie przypisać wynik do `int`, jeśli spodziewasz się wartości w zakresie −32 768…32 767. Przy większych wartościach zostaw `long`.
+</Callout>
+
+<Code lang="cpp" file="parseint-hello.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Wpisz liczbe calkowita i nacisnij Enter:");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int liczba = Serial.parseInt();
+
+    Serial.print("Odebrano: ");
+    Serial.println(liczba);
+    Serial.print("Podwojona: ");
+    Serial.println(liczba * 2);
+    Serial.print("Polowa (float!): ");
+    Serial.println(liczba / 2.0);  // bez .0 byloby dzielenie calkowite!
+  }
+}
+```
+</Code>
+
+Wgraj, otwórz Monitor, wpisz `42` i naciśnij Enter. Powinieneś/Powinnaś zobaczyć:
+```
+Odebrano: 42
+Podwojona: 84
+Polowa (float!): 21.00
+```
+
+Teraz wpisz `7` i sprawdź, czy kolumna `Polowa` faktycznie daje `3.50` (a nie `3.00` jak bez `.0`).
+
+### Sterowanie LED na podstawie liczby z UART
+
+Połącz wszystko: odbierz liczbę i zamigaj LED tyle razy. Podłącz LED z rezystorem 220 Ω do pinu 9.
+
+<Code lang="cpp" file="parseint-blink.ino">
+```cpp
+const byte pinLed = 9;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinLed, OUTPUT);
+  Serial.println("Ile razy mam mignac? (1-20)");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int ile = Serial.parseInt();
+
+    if (ile < 1 || ile > 20) {
+      Serial.println("Podaj liczbe od 1 do 20.");
+    } else {
+      Serial.print("Migam ");
+      Serial.print(ile);
+      Serial.println(" razy...");
+
+      for (int i = 0; i < ile; i++) {
+        digitalWrite(pinLed, HIGH);
+        delay(150);
+        digitalWrite(pinLed, LOW);
+        delay(150);
+      }
+      Serial.println("Gotowe!");
+    }
+
+    while (Serial.available()) Serial.read();  // opróżnij bufor (usuwa \n)
+  }
+}
+```
+</Code>
+
+<Callout type="tip" title="Zawsze waliduj dane wejściowe">
+`Serial.parseInt()` zwraca `0` jeśli w buforze nie było cyfr (np. gdy wpisałeś/aś pusty Enter). Zawsze sprawdzaj odebraną wartość przed użyciem — `if (ile < 1 || ile > 20)` chroni logikę programu przed przypadkami brzegowymi.
+</Callout>
+
+<Task title="Zadanie 4 — regulator jasności LED" estimate="15 min">
+Podłącz LED do **pinu 9** (ten pin obsługuje PWM). Odbierz przez UART liczbę od 0 do 255, a następnie ustaw jasność LED funkcją `analogWrite(pinLed, jasnosc)`. Wyślij potwierdzenie: `"Jasnosc ustawiona na: 128"`.
+
+Jeśli wpisana liczba przekracza zakres 0–255, zamiast ustawiać jasność wypisz komunikat o błędzie.
+
+Wskazówka: `analogWrite(pin, wartosc)` przyjmuje wartość 0–255. Jest to zapowiedź PWM, które omawiamy szczegółowo w kolejnej lekcji.
+</Task>
+
+<Expandable title="Rozwiązanie Zadania 4" heading="####">
+```cpp
+const byte pinLed = 9;  // pin z obsługą PWM (tyldą ~ przy numerze)
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinLed, OUTPUT);
+  Serial.println("Wpisz jasnosc LED (0-255):");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int jasnosc = Serial.parseInt();
+
+    if (jasnosc < 0 || jasnosc > 255) {
+      Serial.println("Blad: wpisz liczbe od 0 do 255.");
+    } else {
+      analogWrite(pinLed, jasnosc);
+      Serial.print("Jasnosc ustawiona na: ");
+      Serial.println(jasnosc);
+    }
+
+    while (Serial.available()) Serial.read();
+  }
+}
+```
+</Expandable>
+
+<Expandable title="Głębiej: co zostaje w buforze po parseInt()?" heading="####">
+Po wysłaniu `128\n` bufor UART zawiera cztery bajty: `'1'`, `'2'`, `'8'`, `'\n'`. `parseInt()` odczytuje cyfry 1, 2, 8 i zatrzymuje się na `'\n'` — ten znak **pozostaje** w buforze.
+
+Przy następnym obiegu `loop()` warunek `Serial.available() > 0` będzie prawdziwy (jest `\n`), `parseInt()` nie znajdzie cyfr i zwróci `0`.
+
+Linia `while (Serial.available()) Serial.read();` po każdym odczycie opróżnia bufor z resztek i zapobiega fałszywym zerowym odczytom.
+
+Alternatywnie możesz użyć `readStringUntil('\n')` + `toInt()`:
+```cpp
+String tekst = Serial.readStringUntil('\n');
+tekst.trim();          // usuwa \r, \n i spacje z obu końców
+int liczba = tekst.toInt();
+```
+Ta wersja jest bardziej odporna na różne ustawienia końca linii w terminalach.
+</Expandable>
+
+---
+
+## Mini-projekt: symulowany termometr z klasyfikacją
+
+Połącz wszystko z tej lekcji: `float`, konwersję typów, zasięg globalny, `parseInt()` i odpowiedź przez UART z wizualnym sygnałem LED.
+
+<MiniProject
+  title="Termometr symulowany z klasyfikacją przez UART"
+  estimate="25 min"
+  objective="Wysyłasz przez UART wartości temperatur, Arduino klasyfikuje je i odpowiada komunikatem oraz sygnałem LED."
+>
+
+**Układ:**
+- LED zielona na pinie 8 (bezpieczna temperatura)
+- LED czerwona na pinie 9 (zbyt gorąco lub mróz)
+
+**Co program robi:**
+1. Odbiera przez UART liczbę całkowitą (temperatura w °C).
+2. Przelicza ją na `float` i odsyła z jednym miejscem po przecinku: `Temperatura: 23.0 C`.
+3. Klasyfikuje i odpowiada:
+   - poniżej 0°C → `Mroz!` + czerwona LED
+   - 0–25°C → `OK` + zielona LED
+   - powyżej 25°C → `Za goraco!` + obie LED
+4. Zlicza pomiary w zmiennej globalnej i wypisuje: `Pomiar nr: 5`.
+
+<Code lang="cpp" file="termometr-uart.ino">
+```cpp
+const byte pinZielona  = 8;
+const byte pinCzerwona = 9;
+
+int nrPomiaru = 0;  // globalny licznik pomiarów
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinZielona,  OUTPUT);
+  pinMode(pinCzerwona, OUTPUT);
+  Serial.println("Podaj temperature w stopniach C:");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int surowa = Serial.parseInt();
+    float temp = (float)surowa;  // konwersja int → float
+
+    nrPomiaru++;  // inkrementacja globalnego licznika
+
+    Serial.print("Pomiar nr: ");
+    Serial.println(nrPomiaru);
+    Serial.print("Temperatura: ");
+    Serial.print(temp, 1);  // 1 miejsce po przecinku
+    Serial.println(" C");
+
+    // wygas oba LED przed ustawieniem nowego stanu
+    digitalWrite(pinZielona,  LOW);
+    digitalWrite(pinCzerwona, LOW);
+
+    if (temp < 0.0) {
+      Serial.println("Mroz! Uwazaj na zamarznie.");
+      digitalWrite(pinCzerwona, HIGH);
+    } else if (temp <= 25.0) {
+      Serial.println("OK - temperatura w normie.");
+      digitalWrite(pinZielona, HIGH);
+    } else {
+      Serial.println("Za goraco!");
+      digitalWrite(pinZielona,  HIGH);
+      digitalWrite(pinCzerwona, HIGH);
+    }
+
+    Serial.println();  // pusta linia dla czytelnosci
+    while (Serial.available()) Serial.read();  // opróżnij bufor
+  }
+}
+```
+</Code>
+
+**Rozszerzenie:** Dodaj zmienną `float minTemp` i `float maxTemp` (globalne, zainicjuj je pierwszym odczytem lub wartościami 100.0 i -100.0). Przy każdym pomiarze aktualizuj minimum i maksimum i wypisuj je na końcu wiadomości.
+</MiniProject>
+
+<Troubleshooting>
+  <Issue title="Serial.parseInt() zwraca 0 zamiast wpisanej liczby">
+    - Upewnij się, że wpisujesz cyfrę, nie literę — parseInt() zwraca 0 gdy nie znalazł cyfr.
+    - Sprawdź czy w Monitorze jest ustawione wysyłanie znaku końca linii.
+    - Po poprzednim odczycie w buforze może tkwić '\n' — dodaj `while(Serial.available()) Serial.read();` po odczycie.
+  </Issue>
+  <Issue title="Obliczenie float wychodzi .00 zamiast ułamka">
+    - Szukaj dzielenia całkowitoliczbowego: obaj operandy muszą być int.
+    - Zmień jeden z operandów na float, dodając `.0`: `wartość / 1023.0`.
+    - Możesz też użyć rzutowania: `(float)wartość / 1023`.
+  </Issue>
+  <Issue title="Licznik globalny nie rośnie lub zawsze pokazuje 1">
+    - Sprawdź, czy deklaracja jest PRZED setup(), nie wewnątrz loop() lub setup().
+    - Szukaj przypadkowego `int licznik = 0;` wewnątrz loop() — taka lokalna zmienna resetuje się co obieg.
+  </Issue>
+  <Issue title="analogWrite() nie zmienia jasności LED">
+    - Upewnij się, że LED jest podłączona do pinu PWM (na UNO: 3, 5, 6, 9, 10, 11 — oznaczone tyldą ~).
+    - Pin 13 (wbudowana dioda) nie obsługuje analogWrite().
+    - Sprawdź, czy pinMode(pin, OUTPUT) jest wywołane w setup().
+  </Issue>
+</Troubleshooting>
+
+## Podsumowanie
+
+- Każdy typ danych ma ustalony rozmiar w RAM: `bool`/`byte`/`char` = 1 bajt, `int` = 2 bajty, `float`/`long` = 4 bajty. Dobieraj typ do zadania — na 2 KB RAM każdy bajt ma znaczenie.
+- **Pułapka `float`:** `int / int` to dzielenie całkowite — reszta ginie. Żeby dostać ułamek, przynajmniej jeden operand musi być `float`: `wartość / 1023.0` lub `(float)wartość / 1023`.
+- **Operatory skrócone** (`i++`, `i--`, `i += n`, `i -= n`) to idiom C++ — używaj ich zamiast długich form przypisania.
+- **Zasięg:** zmienne globalne (przed `setup()`) pamiętają wartość przez cały czas działania programu; lokalne (w bloku `{}`) są niszczone przy wychodzeniu z klamry. Deklaruj zmienne tak nisko jak to możliwe.
+- **`Serial.parseInt()`** odbiera wielocyfrową liczbę całkowitą z UART i zwraca ją jako `long` — to o wiele więcej niż `Serial.read()`, który daje pojedynczy bajt ASCII.
+
+W kolejnej lekcji użyjemy przetwornika ADC do odczytu prawdziwych wartości analogowych — napięcia, czujnika temperatury, potencjometru. Znasz już wszystkie narzędzia, żeby wysyłać te dane przez UART i przeliczać je na sensowne jednostki.

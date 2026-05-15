@@ -98,7 +98,7 @@ Arduino UNO może bezpiecznie sterować małymi sygnałami. Typowy pin mikrokont
 
 Silnik jest też źródłem zakłóceń i przepięć. Bez elementu pośredniczącego łatwo doprowadzić do resetów programu, niestabilnej pracy albo trwałego uszkodzenia mikrokontrolera.
 
-<Expandable title="Back-EMF — skąd biorą się przepięcia od silnika?" heading="###">
+<Expandable title="Back-EMF — skąd biorą się przepięcia od silnika?" heading="####">
 
 Gdy wirnik silnika obraca się w polu magnetycznym, sam zachowuje się jak generator i wytwarza napięcie skierowane przeciwnie do źródła zasilania. Nazywamy to **siłą przeciwelektromotoryczną** (ang. *back-EMF*).
 
@@ -137,7 +137,7 @@ Układ `L293D` ma oddzielne zasilanie logiki i silników. Pin `16` zasila częś
 L293D może dostarczyć ograniczony prąd. W praktyce silnik powinien pobierać mniej niż około `0,6 A` na kanał podczas normalnej pracy. Prąd rozruchowy i prąd zablokowanego silnika mogą być dużo większe.
 </Callout>
 
-<Expandable title="Co kryje się wewnątrz mostka H?" heading="###">
+<Expandable title="Co kryje się wewnątrz mostka H?" heading="####">
 
 Nazwa „mostek H" pochodzi od wyglądu schematu: cztery tranzystory tworzą kształt litery **H**, a silnik podłączony jest poprzecznie — w poziomej belce łączącej obie gałęzie.
 
@@ -328,7 +328,7 @@ void loop() {
 
 Wartości `analogWrite()` od `0` do `255` odpowiadają wypełnieniu PWM od `0%` do `100%`. Rzeczywisty silnik może nie ruszyć przy bardzo małych wartościach, bo musi pokonać tarcie i bezwładność.
 
-<Expandable title="Minimalny próg uruchomienia silnika i kalibracja PWM" heading="###">
+<Expandable title="Minimalny próg uruchomienia silnika i kalibracja PWM" heading="####">
 
 Każdy silnik ma tzw. **próg uruchomienia** (*stall threshold*) — minimalną wartość PWM, poniżej której moment obrotowy jest za mały, by pokonać tarcie i ruszyć wał. Dla małych silników DC przez `L293D` ten próg wynosi najczęściej gdzieś między `60` a `150` (skala `0`–`255`), ale zależy od silnika, obciążenia i napięcia zasilania.
 
@@ -377,7 +377,7 @@ void loop() {
 
 Najczęstszy zapis `for (int i = 0; i < 25; i++)` oznacza: utwórz licznik `i` od zera, wykonuj pętlę dopóki `i` jest mniejsze od `25`, a po każdym obiegu zwiększ `i` o jeden. W efekcie pętla wykona się 25 razy dla wartości `0`-`24`.
 
-<Expandable title="Inne sposoby zapisania 25 obiegów" heading="###">
+<Expandable title="Inne sposoby zapisania 25 obiegów" heading="####">
 
 Każdy z poniższych zapisów może wykonać blok 25 razy, ale licznik przyjmie inne wartości:
 
