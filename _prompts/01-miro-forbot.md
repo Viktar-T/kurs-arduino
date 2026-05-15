@@ -59,7 +59,6 @@ Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-klawi
 Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\17-Klawiatura-wlasny-system-alarmowy.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 17.01-..., 17.02-...) in their corresponding places within the MDX text.
 
 ------
-------
 ------------
 Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-wyswietlacze-7-segmentowe-id18413 and save them sequentially in the public/img/lekcje directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 18.01 (e.g., 18.01-image-name.jpg, 18.02-another-image.jpg).
 
@@ -82,6 +81,8 @@ Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-wielo
 Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\21-Wielozadaniowosc-opoznienia-z-millis.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 21.01-..., 21.02-...) in their corresponding places within the MDX text.
 
 -----------
+-----------
+------------
 Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-wielozadaniowosc-opoznienia-z-millis-id18418 and save them sequentially in the public/img/lekcje directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 22.01 (e.g., 22.01-image-name.jpg, 22.02-another-image.jpg).
 
 Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\22-Wielozadaniowosc-opoznienia-z-millis.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 22.01-..., 22.02-...) in their corresponding places within the MDX text.

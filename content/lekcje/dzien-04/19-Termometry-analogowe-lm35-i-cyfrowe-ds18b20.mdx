@@ -1,0 +1,742 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Termometry analogowe LM35 i cyfrowe DS18B20"
+slug: "termometry-analogowe-lm35-cyfrowe-ds18b20"
+summary: "Lekcja z kursu Forbot II #7: porównanie czujników analogowych i cyfrowych na przykładzie LM35 i DS18B20, odczyt temperatury przez ADC i interfejs 1-Wire, śledzenie MIN/MAX, obsługa wielu czujników na jednym pinie, unikalne adresy DS18B20 oraz wizualizacja temperatury na linijce WS2812."
+
+day: 4
+weekend: 2
+order: 7
+duration: 90
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 7
+
+objectives:
+  - "Wyjaśnić różnicę między czujnikiem analogowym a cyfrowym i wskazać wady i zalety obu podejść"
+  - "Podłączyć czujnik LM35 do Arduino i przeliczyć odczyt ADC na temperaturę w stopniach Celsjusza"
+  - "Zaimplementować śledzenie minimalnej i maksymalnej temperatury z poprawną inicjalizacją zmiennych"
+  - "Zainstalować biblioteki OneWire i DallasTemperature oraz odczytać temperaturę z DS18B20"
+  - "Podłączyć kilka czujników DS18B20 do jednego pinu i odczytywać je po indeksie lub unikalnym adresie"
+  - "Zbudować termometr z wizualizacją temperatury na linijce WS2812 (wartości dodatnie na czerwono, ujemne na niebiesko)"
+
+prerequisites:
+  - "dzien-04/diody-rgb-tradycyjne-oraz-ws2812"
+  - "dzien-04/klawiatura-wlasny-system-alarmowy"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Czujnik temperatury LM35", qty: 1 }
+  - { name: "Czujnik temperatury DS18B20", qty: 1 }
+  - { name: "Rezystor 4,7 kΩ", qty: 1 }
+  - { name: "Linijka diod WS2812 (8 diod)", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, lm35, ds18b20, termometr, temperatura, 1-wire, onewire, dallas, adc, analogowy, cyfrowy, ws2812, neopixel, map]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-termometry-analogowe-lm35-i-cyfrowe-ds18b20-id18414"
+
+cover: "/img/lekcje/dzien-04/19.09-ds18b20-zdjecie.jpg"
+publish: true
+updated: "2026-05-15"
+---
+
+W tej lekcji porównamy dwa podejścia do pomiaru temperatury: **analogowe** (czujnik LM35) i **cyfrowe** (czujnik DS18B20). Poznamy zasadę działania obu sensorów, podłączymy je do Arduino i napiszemy programy odczytujące temperaturę — w tym wersję z zapamiętywaniem wartości minimalnej i maksymalnej. Na koniec połączymy DS18B20 z linijką diod WS2812, aby zbudować kolorowy termometr pokojowy.
+
+## 1. Czujnik analogowy a czujnik cyfrowy
+
+Na rynku dostępna jest ogromna liczba czujników. Można je podzielić na dwie główne grupy:
+
+**Czujniki analogowe** zamieniają mierzoną wielkość (np. temperaturę) na wielkość elektryczną proporcjonalną do odczytanej wartości. Wraz ze wzrostem temperatury na wyjściu czujnika rośnie napięcie lub maleje rezystancja.
+
+**Czujniki cyfrowe** wysyłają informację w postaci ciągu bitów. Do odczytania tych danych potrzebny jest mikrokontroler — np. Arduino.
+
+<Photo
+  file="19.01-termometr-analogowy-vs-cyfrowy.gif"
+  caption="Termometr analogowy (1) — na wyjściu napięcie proporcjonalne (3). Termometr cyfrowy (2) — na wyjściu sygnał binarny (4)."
+  alt="Animacja pokazująca różnicę między czujnikiem analogowym a cyfrowym"
+/>
+
+<Table
+  caption="Porównanie czujników analogowych i cyfrowych"
+  headers={["Cecha", "Analogowy (LM35)", "Cyfrowy (DS18B20)"]}
+  rows={[
+    ["Zakres", "0–100 °C", "−50 do +125 °C"],
+    ["Dokładność", "liniowość 10 mV/°C", "±0,5 °C (−10 do +85 °C)"],
+    ["Interfejs", "Pin ADC (analogRead)", "1-Wire (jedna linia danych)"],
+    ["Rezystor pull-up", "nie potrzebny", "wymagany 4,7 kΩ"],
+    ["Wiele czujników", "osobny pin ADC na czujnik", "wiele na jednym pinie"],
+    ["Cena", "niższa", "wyższa"],
+  ]}
+/>
+
+W obecnych czasach czujniki cyfrowe zyskują na popularności — mogą realizować coraz bardziej skomplikowane pomiary, a ich odczytanie bywa wygodniejsze. Wiele osób nadal wybiera jednak czujniki analogowe ze względu na niższą cenę i prostsze podłączenie przy jednokrotnych pomiarach.
+
+---
+
+## 2. Termometr analogowy: LM35
+
+LM35 to popularny czujnik zamknięty w obudowie TO-92 — takiej samej jak wiele tranzystorów. Skrajne wyprowadzenia to zasilanie, a środkowy pin to wyjście pomiarowe.
+
+<Photo
+  file="19.02-lm35-zdjecie.jpg"
+  caption="Czujnik temperatury LM35 — obudowa TO-92."
+  alt="Zdjęcie czujnika temperatury LM35"
+/>
+
+<Photo
+  file="19.03-lm35-pinout.jpg"
+  caption="Opis wyprowadzeń LM35: GND, Vout (pomiar), VCC — kolejność odwrotna niż w DS18B20!"
+  alt="Diagram wyprowadzeń czujnika LM35 z opisem pinów"
+/>
+
+Najważniejsze parametry LM35:
+
+- skalibrowany dla skali Celsjusza: **10 mV/°C** (czujnik liniowy),
+- zakres pomiaru: **0 do 100 °C**,
+- napięcie zasilania: **4 do 30 V**.
+
+Sensor jest **liniowy** — wzrost napięcia wyjściowego o 10 mV oznacza zawsze dodatkowy 1 °C. Przy 25 °C na wyjściu czujnika mierzymy 250 mV.
+
+---
+
+## 3. Podłączenie LM35 do Arduino
+
+Podłączenie LM35 jest wyjątkowo proste. Dwa skrajne piny doprowadzają zasilanie (zgodnie z opisem pinout), a środkowy pin łączymy bezpośrednio z wejściem analogowym Arduino — np. **A5**.
+
+<Photo
+  file="19.04-lm35-podlaczenie-arduino.jpg"
+  caption="Przykładowe podłączenie czujnika LM35 do Arduino — tylko 3 przewody, bez rezystorów."
+  alt="Zdjęcie czujnika LM35 podłączonego do Arduino na płytce stykowej"
+/>
+
+<Callout type="note" title="Najprostsze podłączenie w kursie">
+LM35 to jedno z najprostszych podłączeń w całym kursie — trzy przewody i żadnych dodatkowych elementów. Dla porównania DS18B20 wymaga rezystora pull-up.
+</Callout>
+
+---
+
+## 4. Odczytanie temperatury — LM35
+
+Program musi: odczytać wartość ADC z pinu A5, przeliczyć ją na napięcie (mnożąc przez 5 V / 1024), a następnie pomnożyć przez 100 (bo 10 mV = 1 °C).
+
+<Code lang="cpp" file="lm35-podstawowy.ino">
+```cpp
+#define LM35 A5
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Przeliczenie odczytu ADC na temperaturę
+  float temperatura = ((analogRead(LM35) * 5.0) / 1024.0) * 100;
+
+  Serial.print("Aktualna temperatura: ");
+  Serial.print(temperatura);
+  Serial.println("*C");
+
+  delay(200);
+}
+```
+</Code>
+
+<Photo
+  file="19.05-lm35-odczyt-uart.gif"
+  caption="Zmiana odczytów temperatury w Monitorze portu szeregowego podczas dotykania czujnika palcem."
+  alt="Animacja monitora portu szeregowego pokazująca rosnące odczyty temperatury LM35"
+/>
+
+<Callout type="warning" title="LM35 nie mierzy temperatur ujemnych (w podstawowym podłączeniu)">
+Gdy spróbujesz ochłodzić czujnik kostką lodu, monitor pokaże „tylko" 0 °C — czujnik nie zejdzie poniżej zera w standardowym podłączeniu. Aby mierzyć temperatury ujemne z LM35, należy zmienić schemat podłączenia (pin GND do napięcia ujemnego). DS18B20 radzi sobie z tym bez żadnych modyfikacji.
+</Callout>
+
+---
+
+## 5. Termometr z funkcją MAX/MIN — LM35
+
+Rozbudujemy program o zapamiętywanie najwyższej i najniższej zmierzonej temperatury.
+
+### Śledzenie maksimum
+
+Deklarujemy zmienną **poza** `loop()` — inaczej zeruje się przy każdym obiegu pętli:
+
+```cpp
+float tempMAX = 0; // Aktualna temperatura maksymalna
+```
+
+W każdej iteracji sprawdzamy, czy bieżąca temperatura jest wyższa od zapamiętanej:
+
+<Code lang="cpp" file="lm35-max.ino">
+```cpp
+#define LM35 A5
+
+float tempMAX = 0; // Aktualna temperatura maksymalna
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  float temperatura = ((analogRead(LM35) * 5.0) / 1024.0) * 100;
+
+  if (temperatura > tempMAX) { // Jeśli wyższa od dotychczasowego maksimum
+    tempMAX = temperatura;     // zaktualizuj wartość
+  }
+
+  Serial.print("Max: ");
+  Serial.print(tempMAX);
+  Serial.println("*C");
+
+  delay(200);
+}
+```
+</Code>
+
+<Photo
+  file="19.06-lm35-max-temperatura.gif"
+  caption="Zapamiętywanie wartości maksymalnej — temperatura rośnie po dotknięciu czujnika."
+  alt="Animacja monitora portu szeregowego pokazująca śledzenie maksymalnej temperatury"
+/>
+
+### Śledzenie minimum i maksimum
+
+Pułapka przy śledzeniu minimum: jeśli inicjujemy zmienną wartością `0`, nigdy nie zarejestrujemy niższej temperatury (czujnik nie mierzy ujemnych). Dlatego inicjujemy `tempMIN` wartością maksymalną zakresu — `150`.
+
+<Code lang="cpp" file="lm35-min-max.ino">
+```cpp
+#define LM35 A5
+
+float tempMAX = 0;   // Aktualna temperatura maksymalna
+float tempMIN = 150; // Inicjujemy górną granicą zakresu!
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  float temperatura = ((analogRead(LM35) * 5.0) / 1024.0) * 100;
+
+  if (temperatura > tempMAX) {
+    tempMAX = temperatura;
+    Serial.print("Nowa wartosc max: ");
+    Serial.print(tempMAX);
+    Serial.println("*C");
+  }
+
+  if (temperatura < tempMIN) {
+    tempMIN = temperatura;
+    Serial.print("Nowa wartosc min: ");
+    Serial.print(tempMIN);
+    Serial.println("*C");
+  }
+
+  delay(200);
+}
+```
+</Code>
+
+<Photo
+  file="19.07-lm35-min-max-temperatura.gif"
+  caption="Zapamiętywanie wartości minimalnej i maksymalnej — ogrzewanie i chłodzenie czujnika."
+  alt="Animacja monitora portu szeregowego pokazująca śledzenie minimalnej i maksymalnej temperatury"
+/>
+
+<Expandable title="Dlaczego inicjalizujemy tempMIN = 150?" heading="###">
+Jeśli ustawimy `tempMIN = 0`, a czujnik mierzy +22 °C, warunek `temperatura < tempMIN` nigdy nie będzie spełniony (22 nie jest mniejsze od 0). W efekcie minimum nigdy się nie zaktualizuje. Inicjując zmienną wartością wyższą niż jakakolwiek możliwa temperatura (150), gwarantujemy, że pierwszy prawdziwy odczyt od razu stanie się minimum. W kolejnej sekcji zobaczymy elegantsze rozwiązanie tego problemu (użycie pierwszego odczytu z `setup()`).
+</Expandable>
+
+<Task title="Zadanie 7.1 — dwa czujniki LM35" estimate="15 min">
+Rozbuduj program tak, aby obsługiwał **2 czujniki LM35** podłączone do A4 i A5. Wyświetlaj odczyty z obu czujników obok siebie, a w trzeciej linii — **różnicę** między nimi (wartość bezwzględna). Przykład wyjścia w monitorze:
+
+```
+Czujnik 1: 23.45*C  |  Czujnik 2: 21.78*C  |  Roznica: 1.67*C
+```
+</Task>
+
+---
+
+## 6. Termometr cyfrowy: DS18B20
+
+DS18B20 to bardzo popularny czujnik cyfrowy, który komunikuje się z Arduino przez interfejs **1-Wire** (jedna linia danych).
+
+Obudowa TO-92 wygląda identycznie jak LM35 — jednak uwaga: **kolejność zasilania jest odwrotna!** Mylne podłączenie może uszkodzić czujnik.
+
+<Photo
+  file="19.08-ds18b20-pinout.png"
+  caption="Wyprowadzenia DS18B20 — kolejność pinów odwrotna niż w LM35! GND po lewej, VDD po prawej."
+  alt="Diagram wyprowadzeń czujnika DS18B20 z opisem pinów GND, DQ, VDD"
+/>
+
+<Photo
+  file="19.09-ds18b20-zdjecie.jpg"
+  caption="Czujnik temperatury DS18B20 — wygląda jak LM35, ale ma inne pinout i cyfrowy interfejs 1-Wire."
+  alt="Zdjęcie czujnika temperatury DS18B20"
+/>
+
+<Table
+  caption="Parametry DS18B20"
+  headers={["Parametr", "Wartość"]}
+  rows={[
+    ["Zakres pomiaru", "−50 do +125 °C"],
+    ["Dokładność", "±0,5 °C (w zakresie −10 do +85 °C)"],
+    ["Napięcie zasilania", "3 do 5,5 V"],
+    ["Interfejs komunikacji", "1-Wire (jeden pin danych)"],
+    ["Wiele czujników", "Tak — wiele na jednym pinie, każdy z unikalnym adresem"],
+  ]}
+/>
+
+---
+
+## 7. Podłączenie DS18B20 do Arduino
+
+Podłączenie wygląda podobnie jak LM35 — dwa skrajne piny to zasilanie, środkowy (DQ) to linia danych, którą łączymy z pinem A5. Jednak w przypadku DS18B20 **obowiązkowo** należy dodać rezystor **4,7 kΩ** między linię danych a napięcie zasilające (+5 V).
+
+<Photo
+  file="19.10-ds18b20-podlaczenie.jpg"
+  caption="Podłączenie cyfrowego czujnika DS18B20 do Arduino — rezystor 4,7 kΩ między DQ a VCC jest obowiązkowy."
+  alt="Zdjęcie DS18B20 podłączonego do Arduino z rezystorem pull-up"
+/>
+
+<Photo
+  file="19.11-ds18b20-rezystor-podciagajacy.jpg"
+  caption="Koniecznie pamiętaj o rezystorze 4,7 kΩ — bez niego czujnik nie będzie działał poprawnie!"
+  alt="Zdjęcie zbliżenia na rezystor pull-up 4,7 kΩ w układzie z DS18B20"
+/>
+
+<Callout type="warning" title="Rezystor pull-up jest obowiązkowy">
+Bez rezystora 4,7 kΩ między linią DQ a VCC czujnik DS18B20 nie zadziała — linia 1-Wire wymaga podciągania do wysokiego stanu. To nie jest element opcjonalny! Przy podłączaniu kilku czujników wystarczy jeden rezystor na całą linię danych.
+</Callout>
+
+<Callout type="note" title="Wymagane biblioteki — zainstaluj je przed kontynuowaniem">
+Do obsługi DS18B20 potrzebne są dwie biblioteki:
+
+1. **OneWire** — obsługa protokołu 1-Wire
+2. **DallasTemperature** (Arduino-Temperature-Control-Library) — wysokopoziomowa obsługa czujników Dallas/Maxim
+
+Zainstaluj je w Arduino IDE: **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami**, wyszukaj kolejno „OneWire" i „DallasTemperature".
+</Callout>
+
+---
+
+## 8. Odczytanie temperatury — DS18B20
+
+Komunikacja z DS18B20 przebiega przez bibliotekę `DallasTemperature`. Zaczniemy od odczytu krokowego, a potem pokażemy pełny program.
+
+**Krok 1 — dołącz biblioteki:**
+
+```cpp
+#include <OneWire.h>
+#include <DallasTemperature.h>
+```
+
+**Krok 2 — zadeklaruj podłączenie:**
+
+```cpp
+OneWire oneWire(A5);             // Linia 1-Wire na pinie A5
+DallasTemperature sensors(&oneWire); // Przekaż obiekt oneWire do biblioteki
+```
+
+**Krok 3 — inicjalizacja i odczyt:**
+
+```cpp
+void setup() {
+  Serial.begin(9600);
+  sensors.begin(); // Inicjalizacja czujników
+}
+
+void loop() {
+  sensors.requestTemperatures(); // Pobierz temperatury ze wszystkich czujników
+  Serial.print("Aktualna temperatura: ");
+  Serial.println(sensors.getTempCByIndex(0)); // Czujnik nr 0 w °C
+  delay(500);
+}
+```
+
+Zapis `sensors.getTempCByIndex(0)` oznacza pobranie temperatury z **pierwszego** czujnika (numerowane od 0). Drugi czujnik to `getTempCByIndex(1)`. Dla Fahrenheita: `getTempFByIndex(0)`.
+
+Kompletny program:
+
+<Code lang="cpp" file="ds18b20-podstawowy.ino">
+```cpp
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+OneWire oneWire(A5);              // Linia 1-Wire na pinie A5
+DallasTemperature sensors(&oneWire); // Inicjalizacja biblioteki
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin(); // Inicjalizacja czujników
+}
+
+void loop() {
+  sensors.requestTemperatures();  // Pobierz temperatury
+  Serial.print("Aktualna temperatura: ");
+  Serial.println(sensors.getTempCByIndex(0)); // Pierwszy czujnik, stopnie Celsjusza
+  delay(500);
+}
+```
+</Code>
+
+<Photo
+  file="19.12-ds18b20-odczyt-monitora.gif"
+  caption="Temperatura zmierzona przez DS18B20 wyświetlana w Monitorze portu szeregowego."
+  alt="Animacja monitora portu szeregowego z odczytem temperatury z DS18B20"
+/>
+
+Bonus: DS18B20 mierzy też **temperatury ujemne** bez żadnych modyfikacji podłączenia!
+
+<Photo
+  file="19.13-ds18b20-zamrozony.jpg"
+  caption="Zamrożony termometr DS18B20 — czujnik schłodzony do temperatur ujemnych."
+  alt="Zdjęcie czujnika DS18B20 pokrytego szronem"
+/>
+
+<Photo
+  file="19.14-ds18b20-ujemna-temperatura.png"
+  caption="Odczyt ujemnej temperatury w monitorze — DS18B20 bez problemu mierzy wartości poniżej zera."
+  alt="Zrzut ekranu monitora portu szeregowego pokazujący ujemną temperaturę zmierzoną przez DS18B20"
+/>
+
+<Callout type="warning" title="Ostrożnie ze sprężonym powietrzem!">
+Większość puszek ze sprężonym powietrzem zawiera łatwopalny gaz. Bezpieczniejszym sposobem testowania ujemnych temperatur jest przyłożenie do czujnika kostki lodu w worku foliowym (woda nie uszkodzi elektroniki, a gaz się nie zapali).
+</Callout>
+
+---
+
+## 9. Termometr MAX/MIN — wersja ulepszona
+
+W poprzedniej sekcji inicjalizowaliśmy `tempMIN = 150`. Elegantsze rozwiązanie: **w `setup()` wykonaj pierwszy odczyt** i użyj go jako wartości startowej dla obu zmiennych. Dzięki temu program jest niezależny od zakresu czujnika.
+
+<Code lang="cpp" file="ds18b20-min-max.ino">
+```cpp
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+OneWire oneWire(A5);
+DallasTemperature sensors(&oneWire);
+
+float tempMAX = 0; // Wartość startowa — zostanie nadpisana w setup()
+float tempMIN = 0; // Wartość startowa — zostanie nadpisana w setup()
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();
+
+  // Ustaw pierwszy odczyt jako jednoczesny punkt startu MAX i MIN
+  sensors.requestTemperatures();
+  tempMAX = sensors.getTempCByIndex(0);
+  tempMIN = sensors.getTempCByIndex(0);
+}
+
+void loop() {
+  sensors.requestTemperatures();
+  float temperatura = sensors.getTempCByIndex(0);
+
+  if (temperatura > tempMAX) {
+    tempMAX = temperatura;
+    Serial.print("Nowa wartosc max: ");
+    Serial.print(tempMAX);
+    Serial.println("*C");
+  }
+
+  if (temperatura < tempMIN) {
+    tempMIN = temperatura;
+    Serial.print("Nowa wartosc min: ");
+    Serial.print(tempMIN);
+    Serial.println("*C");
+  }
+
+  delay(500);
+}
+```
+</Code>
+
+<Photo
+  file="19.15-ds18b20-min-max-wynik.png"
+  caption="Monitor portu szeregowego — wykrycie nowej wartości minimalnej i maksymalnej."
+  alt="Zrzut ekranu monitora portu szeregowego pokazujący rejestrowanie nowych wartości MIN i MAX przez DS18B20"
+/>
+
+---
+
+## 10. Kilka czujników DS18B20 na jednym pinie
+
+Ogromną zaletą interfejsu 1-Wire jest możliwość podłączenia **wielu czujników do jednej linii danych**. Wystarczy wpic drugi DS18B20 w te same wiersze na płytce stykowej.
+
+<Photo
+  file="19.16-ds18b20-wiele-czujnikow.jpg"
+  caption="Dwa czujniki DS18B20 na jednym pinie — drugi sensor wsunięty w te same wiersze płytki stykowej."
+  alt="Zdjęcie dwóch czujników DS18B20 podłączonych do Arduino na jednej linii danych"
+/>
+
+<Callout type="note" title="Jeden rezystor na całą linię">
+Przy podłączaniu kolejnych czujników **nie dodajesz nowych rezystorów pull-up**. Jeden rezystor 4,7 kΩ obsługuje całą linię danych — niezależnie od liczby podłączonych czujników.
+</Callout>
+
+Aby odczytać dane z drugiego czujnika, odwołujemy się do indeksu `1`:
+
+<Code lang="cpp" file="ds18b20-dwa-czujniki.ino">
+```cpp
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+OneWire oneWire(A5);
+DallasTemperature sensors(&oneWire);
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();
+}
+
+void loop() {
+  sensors.requestTemperatures(); // Pobierz temperatury ze wszystkich czujników na linii
+  Serial.print("Pierwszy: ");
+  Serial.println(sensors.getTempCByIndex(0)); // Czujnik nr 0
+  Serial.print("Drugi: ");
+  Serial.println(sensors.getTempCByIndex(1)); // Czujnik nr 1
+  delay(500);
+}
+```
+</Code>
+
+<Photo
+  file="19.17-ds18b20-wiele-czujnikow-odczyt.gif"
+  caption="Odczytywanie informacji z dwóch czujników DS18B20 — dwa różne odczyty temperatury w monitorze."
+  alt="Animacja monitora portu szeregowego pokazująca odczyty z dwóch czujników DS18B20"
+/>
+
+---
+
+## 11. Unikalny adres każdego czujnika DS18B20
+
+Podłączanie wielu czujników na jednej linii jest możliwe, ponieważ producent przypisał każdemu DS18B20 **unikalny adres 64-bitowy**. W większych projektach warto posługiwać się adresami zamiast indeksami — uniezależnia to program od kolejności podłączenia.
+
+Aby odczytać adresy, otwórz przykład dołączony do biblioteki: **Plik → Przykłady → OneWire → DS18x20_Temperature**. Przed uruchomieniem zmień linię:
+
+```cpp
+OneWire ds(10);  // na płytce
+```
+
+na:
+
+```cpp
+OneWire ds(A5);  // nasz pin
+```
+
+Po wgraniu i otwarciu monitora zobaczysz adresy w systemie szesnastkowym:
+
+<Photo
+  file="19.18-ds18b20-adres-urzadzenia.png"
+  caption="Odczytane adresy czujników w Monitorze portu szeregowego — każdy DS18B20 ma unikalny 8-bajtowy adres."
+  alt="Zrzut ekranu monitora portu szeregowego pokazujący adresy czujników DS18B20 w systemie szesnastkowym"
+/>
+
+### Korzystanie z adresu w programie
+
+Deklarujemy obiekt typu `DeviceAddress` i wpisujemy odczytany adres:
+
+```cpp
+DeviceAddress termometrZewnetrzny = { 0x10, 0x7A, 0x31, 0x99, 0x1, 0x8, 0x0, 0x4A };
+```
+
+<Callout type="warning" title="Podaj własny adres!">
+Każdy czujnik ma inny adres — skopiuj adres odczytany ze swojego egzemplarza, nie ten z przykładu powyżej.
+</Callout>
+
+Kompletny program z adresowaniem:
+
+<Code lang="cpp" file="ds18b20-adres.ino">
+```cpp
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+OneWire oneWire(A5);
+DallasTemperature sensors(&oneWire);
+
+// Unikalny adres czujnika — odczytaj swój własny!
+DeviceAddress termometrZewnetrzny = { 0x10, 0x7A, 0x31, 0x99, 0x1, 0x8, 0x0, 0x4A };
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();
+}
+
+void loop() {
+  sensors.requestTemperatures();
+  Serial.print("Aktualna temperatura: ");
+  Serial.println(sensors.getTempC(termometrZewnetrzny)); // Odczyt po adresie
+  delay(500);
+}
+```
+</Code>
+
+<Expandable title="Kiedy używać adresów, a kiedy indeksów?" heading="###">
+**Indeksy** (`getTempCByIndex(0)`) są wygodne przy prostych projektach z jednym lub dwoma czujnikami. Problem: kolejność czujników może się zmienić po przepięciu przewodów lub zmianie napięcia zasilania.
+
+**Adresy** (`getTempC(mojCzujnik)`) są niezawodne w instalacjach trwałych — np. jeśli czujniki są rozlokowane po całym budynku. Możesz nadać im opisowe nazwy (`termometrKuchnia`, `termometrPiwnica`) i program pozostaje czytelny niezależnie od kolejności podłączenia.
+</Expandable>
+
+---
+
+## 12. Wizualizacja temperatury na linijce WS2812
+
+Zakończymy budując praktyczny projekt: termometr, w którym linijka 8 diod WS2812 wskazuje aktualną temperaturę. Założenia:
+
+- każda dioda symbolizuje **5 °C**,
+- temperatury **dodatnie** — diody zapalają się od dołu na **czerwono**,
+- temperatury **ujemne** — diody zapalają się od góry na **niebiesko**.
+
+<Photo
+  file="19.19-termometr-rgb-wizualizacja-dodatnia.png"
+  caption="Wizualizacja temperatur dodatnich: kolejno +5 °C, +10 °C, +15 °C, +20 °C — diody świecą od dołu na czerwono."
+  alt="Diagram linijki WS2812 pokazujący wizualizację temperatur dodatnich"
+/>
+
+<Photo
+  file="19.20-termometr-rgb-wizualizacja-ujemna.png"
+  caption="Wizualizacja temperatur ujemnych: kolejno −5 °C, −10 °C, −15 °C, −20 °C — diody świecą od góry na niebiesko."
+  alt="Diagram linijki WS2812 pokazujący wizualizację temperatur ujemnych"
+/>
+
+Linijkę WS2812 podłączamy standardowo do pinu A0:
+
+<Photo
+  file="19.21-rgb-linijka-podlaczenie-przod.jpg"
+  caption="Podłączenie linijki WS2812 do Arduino — widok od przodu."
+  alt="Zdjęcie podłączenia linijki diod WS2812 do Arduino — przód układu"
+/>
+
+<Photo
+  file="19.22-rgb-linijka-podlaczenie-tyl.jpg"
+  caption="Podłączenie linijki WS2812 do Arduino — widok od tyłu."
+  alt="Zdjęcie podłączenia linijki diod WS2812 do Arduino — tył układu"
+/>
+
+### Funkcja `termometrRGB()`
+
+Kluczowa jest funkcja wyświetlająca temperaturę. Zakres: od −40 do +40 °C (powyżej/poniżej — clipping). Używamy `map()` do przeliczenia temperatury na liczbę diod.
+
+<Code lang="cpp" file="termometr-rgb.ino">
+```cpp
+#include <Adafruit_NeoPixel.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Konfiguracja linijki WS2812 — 8 diod, pin A0
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+OneWire oneWire(A5);
+DallasTemperature sensors(&oneWire);
+
+// Wstaw własny adres czujnika odczytany z przykładu OneWire!
+DeviceAddress termometrZewnetrzny = { 0x10, 0x7A, 0x31, 0x99, 0x1, 0x8, 0x0, 0x4A };
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();
+  linijka.begin();
+  linijka.show(); // Wyczyść linijkę przy starcie
+}
+
+void loop() {
+  sensors.requestTemperatures();
+  Serial.print("Aktualna temperatura: ");
+  Serial.println(sensors.getTempC(termometrZewnetrzny));
+
+  int tempLinijka = sensors.getTempC(termometrZewnetrzny); // int, bo nie potrzebujemy ułamków
+  termometrRGB(tempLinijka);
+
+  delay(500);
+}
+
+void termometrRGB(int temperatura) {
+  // Ogranicz zakres do -40...+40 °C
+  if (temperatura > 40) {
+    temperatura = 40;
+  } else if (temperatura < -40) {
+    temperatura = -40;
+  }
+
+  linijka.clear(); // Wyczyść linijkę przed nowym wyświetlaniem
+
+  if (temperatura >= 0) {
+    // Wartości dodatnie — od dołu, na czerwono
+    temperatura = map(temperatura, 0, 40, 1, 8); // Przelicz na liczbę diod (1–8)
+    for (int i = 0; i < temperatura; i++) {
+      linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Czerwony
+    }
+  } else {
+    // Wartości ujemne — od góry, na niebiesko
+    temperatura = map(temperatura, -40, 0, 1, 8); // Przelicz na liczbę diod (1–8)
+    for (int i = 8; i > temperatura; i--) {
+      linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Niebieski
+    }
+  }
+
+  linijka.show(); // Wyślij dane do linijki
+}
+```
+</Code>
+
+<Photo
+  file="19.23-termometr-rgb-animacja.gif"
+  caption="Animacja działania termometru RGB — linijka diod pokazuje aktualną temperaturę zmienianią w czasie."
+  alt="Animacja termometru RGB z linijką diod WS2812 zmieniającą kolor i liczbę świecących diod"
+/>
+
+Po uruchomieniu programu linijka diod będzie na bieżąco wskazywać temperaturę:
+
+<Photo
+  file="19.24-termometr-rgb-plus15.jpg"
+  caption="Odczyt +15 °C — trzy czerwone diody świecą od dołu linijki."
+  alt="Zdjęcie linijki WS2812 pokazującej +15 stopni Celsjusza (trzy czerwone diody)"
+/>
+
+<Photo
+  file="19.25-termometr-rgb-minus15.jpg"
+  caption="Odczyt −15 °C — trzy niebieskie diody świecą od góry linijki."
+  alt="Zdjęcie linijki WS2812 pokazującej -15 stopni Celsjusza (trzy niebieskie diody)"
+/>
+
+<Task title="Zadanie 7.2 — termometr z przyciskami" estimate="20 min">
+Termometr DS18B20 powinien wysyłać aktualną temperaturę do komputera **co 2 sekundy**. Dodaj **dwa przyciski**:
+
+- Przycisk 1 — wyświetla aktualnie zapisaną temperaturę **maksymalną**
+- Przycisk 2 — wyświetla aktualnie zapisaną temperaturę **minimalną**
+
+Użyj zmiennych `tempMAX` i `tempMIN` inicjalizowanych pierwszym odczytem z `setup()`.
+</Task>
+
+<MiniProject title="Rozbudowa termometru RGB" estimate="25 min">
+
+Wybierz jedno z poniższych ulepszeń i zaimplementuj je:
+
+**Opcja A — skala kolorów zamiast jednego koloru:**
+Zamiast stałego koloru czerwonego / niebieskiego, zastosuj płynne przejście kolorów: przy 0 °C — żółty, przy +40 °C — głęboka czerwień, przy −40 °C — głęboki niebieski. Użyj `map()` do wyliczenia składowych R, G, B.
+
+**Opcja B — dioda pulsująca przy ekstremalnej temperaturze:**
+Jeśli temperatura przekroczy +35 °C lub spadnie poniżej −35 °C, ostatnia zapalona dioda niech **miga** (naprzemienne `show()` i `clear()` z krótkim `delay()`), sygnalizując przekroczenie zakresu.
+
+**Opcja C — dwa czujniki, dwa kolory linijki:**
+Podłącz dwa czujniki DS18B20. Pierwszym czterema diodami linijki wyświetlaj temperaturę z czujnika 0 (czerwień), a pozostałymi czterema — z czujnika 1 (niebieski). Każda dioda odpowiada 5 °C powyżej 0 °C.
+
+</MiniProject>
+
+---
+
+## Podsumowanie
+
+Czujnik analogowy **LM35** jest tani i prosty w podłączeniu — wymaga tylko trzech przewodów i odczytu ADC. Jego wady to ograniczony zakres (0–100 °C w podstawowej wersji), wrażliwość na zakłócenia przy długich przewodach i konieczność osobnego pinu ADC dla każdego sensora.
+
+Czujnik cyfrowy **DS18B20** komunikuje się przez interfejs **1-Wire**: wiele czujników na jednym pinie, zakres od −50 do +125 °C i cyfrowa odporność na zakłócenia. Cena jest wyższa, ale biblioteki `OneWire` i `DallasTemperature` ukrywają całą złożoność protokołu. Każdy DS18B20 ma **unikalny 64-bitowy adres** — to pozwala jednoznacznie identyfikować czujniki nawet przy rozbudowanych instalacjach. Projekt termometru RGB pokazuje, jak funkcja `map()` pozwala płynnie przeliczać zakres temperatur na liczbę świecących diod — technikę przydatną wszędzie tam, gdzie chcemy wizualizować wartość ciągłą na dyskretnej skali.

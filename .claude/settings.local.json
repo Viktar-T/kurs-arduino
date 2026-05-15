@@ -28,7 +28,17 @@
       "Bash(npx next *)",
       "Bash(npx @mdx-js/mdx \"content/lekcje/dzien-01/07-Przetwornik-ADC.mdx\")",
       "Bash(xargs -I{} basename {})",
-      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\public\\\\img\\\\lekcje\\\\dzien-04\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\\\\public\\\\img\\\\lekcje\\\\dzien-04\")",
+      "Bash(curl -s -o \"public/img/lekcje/23.01-okladka-kurs-budowy-robotow.png\" \"https://cdn.forbot.pl/blog/wp-content/uploads/2016/12/KursBudowyRotow_1.png\")",
+      "Bash(curl -s -o \"public/img/lekcje/23.02-robot-forbot-przegladowe.jpg\" \"https://cdn.forbot.pl/blog/wp-content/uploads/2016/12/Forbot_kurs_robot.jpg\")",
+      "Bash(curl -s -o \"public/img/lekcje/23.03-tarcza-sterownika-msx.jpg\" \"https://cdn.forbot.pl/blog/wp-content/uploads/2016/12/MSX_robot_shield.jpg\")",
+      "Bash(curl -s -o \"public/img/lekcje/23.04-podwozie-elementy-mechaniczne.jpg\" \"https://cdn.forbot.pl/blog/wp-content/uploads/2016/12/ForbotRobot_6.jpg\")",
+      "Bash(curl -s -o \"public/img/lekcje/23.05-robot-sterowanie-ir.jpg\" \"https://cdn.forbot.pl/blog/wp-content/uploads/2016/12/ForbotRobot_7.jpg\")",
+      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $output | Where-Object { $_ -match \"termometry|lm35|19-|Invalid|prerender\" } | Select-Object -First 15)",
+      "Bash(Start-Sleep -Seconds 8)",
+      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $output | Where-Object { $_ -match \"Error|error|Invalid|termometry|lm35|19|lekcje\" } | Select-Object -First 20)",
+      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $output | Where-Object { $_ -match \"termometry|19-Term|dzien-04/19|lm35-cyfrowe|Error\" } | Select-Object -First 20)",
+      "PowerShell(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\"; $output = npm run build 2>&1; $lines = $output -join \"`n\"; Write-Host \\($lines | Select-String \"termometr|lm35|ds18b20|19-|21-wiel|prerender|Error occurred\" -AllMatches\\).Matches.Value)"
     ]
   }
 }

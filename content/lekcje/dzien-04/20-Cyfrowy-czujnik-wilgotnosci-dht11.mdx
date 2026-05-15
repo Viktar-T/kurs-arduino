@@ -1,0 +1,369 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Cyfrowy czujnik wilgotności DHT11"
+slug: "cyfrowy-czujnik-wilgotnosci-dht11"
+summary: "Lekcja z kursu Forbot II #8: pojęcie wilgotności względnej (%RH), parametry czujnika DHT-11 (zakres, dokładność, interfejs jednoprzewodowy), podłączenie z rezystorem 4,7 kΩ, biblioteka Mark Ruysa — getHumidity(), getTemperature(), getStatusString(), getMinimumSamplingPeriod(), toFahrenheit()."
+
+day: 4
+weekend: 2
+order: 8
+duration: 60
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 8
+
+objectives:
+  - "Wyjaśnić pojęcie wilgotności względnej (%RH) i podać jej zakres oraz jednostkę"
+  - "Opisać parametry czujnika DHT-11: zakres temperaturowy, zakres wilgotności, dokładność pomiaru"
+  - "Odróżnić interfejs DHT od standardowego 1-wire i wyjaśnić, dlaczego są niekompatybilne"
+  - "Podłączyć czujnik DHT-11 do Arduino z rezystorem podciągającym 4,7 kΩ"
+  - "Zainstalować bibliotekę Mark Ruysa i skonfigurować obiekt DHT w programie"
+  - "Odczytać wilgotność i temperaturę za pomocą getHumidity() i getTemperature()"
+  - "Obsłużyć błędy odczytu funkcją getStatusString() i pobrać minimalny czas próbkowania"
+  - "Przeliczyć temperaturę na skalę Fahrenheita funkcją toFahrenheit()"
+
+prerequisites:
+  - "dzien-04/klawiatura-wlasny-system-alarmowy"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Czujnik DHT-11", qty: 1 }
+  - { name: "Rezystor 4,7 kΩ", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 3 }
+
+tags: [arduino, dht11, wilgotnosc, temperatura, czujnik, biblioteka, 1-wire, RH]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-cyfrowy-czujnik-wilgotnosci-dht11-id18417"
+  - "https://github.com/markruys/arduino-DHT"
+  - "https://forbot.pl/blog/wp-content/uploads/2017/02/DHT11.pdf"
+
+cover: "/img/lekcje/20.01-okladka-kurs-dht11.png"
+publish: true
+updated: "2026-05-15"
+---
+
+W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej obudowie termometr i czujnik wilgotności. Dowiesz się, czym jest wilgotność względna, jak podłączyć czujnik do Arduino i jak w kilku linijkach kodu odczytywać dane za pomocą gotowej biblioteki.
+
+<Photo
+  file="20.01-okladka-kurs-dht11.png"
+  day="dzien-04"
+  caption="Kurs Arduino II – #8 – cyfrowy czujnik wilgotności DHT-11."
+  alt="Grafika tytułowa lekcji o czujniku DHT-11"
+/>
+
+## 1. Czym jest wilgotność względna?
+
+<Photo
+  file="20.02-czym-jest-wilgotnosc.png"
+  day="dzien-04"
+  caption="Wilgotność względna opisuje ilość pary wodnej w powietrzu w stosunku do maksymalnej możliwej przy danej temperaturze."
+  alt="Schemat ilustrujący pojęcie wilgotności względnej"
+/>
+
+Czujnik DHT-11 mierzy **wilgotność względną**, oznaczaną skrótem **RH** (od ang. *Relative Humidity*). Wartość ta określa, ile wody znajduje się w powietrzu względem maksymalnej ilości, jaką powietrze może pomieścić w danej temperaturze.
+
+Wilgotność względną wyraża się w **%RH** — w zakresie od 0 do 100:
+- **0 %RH** — powietrze całkowicie suche,
+- **100 %RH** — powietrze nasycone parą wodną, powyżej tej wartości woda zaczyna się skraplać.
+
+<Callout type="note" title="Wilgotność a temperatura">
+Ilość wody, którą powietrze może pomieścić, zależy od jego temperatury — dlatego przy tej samej ilości pary wodnej w zimnym pomieszczeniu %RH będzie wyższe niż w ciepłym. Z tego powodu DHT-11 mierzy **jednocześnie** temperaturę i wilgotność.
+</Callout>
+
+## 2. Czujnik DHT-11 w praktyce
+
+<Photo
+  file="20.03-dht11-czujnik.png"
+  day="dzien-04"
+  caption="Czujnik DHT-11 w niebieskiej obudowie — łączy termometr i czujnik wilgotności w jednym module."
+  alt="Widok czujnika DHT-11 w niebieskiej obudowie"
+/>
+
+DHT-11 to popularny, tani czujnik cyfrowy dostępny w niebieskiej obudowie z czterema wyprowadzeniami. Trzy z nich są używane: **VCC**, **DATA** i **GND**. Czwarty pin oznaczony **NC** (*Not Connected*) można zignorować.
+
+Czujnik korzysta z **zmodyfikowanego interfejsu jednoprzewodowego**, który **nie jest zgodny** ze standardem 1-Wire (używanym np. przez DS18B20). Nie próbuj używać biblioteki 1-Wire z DHT-11 — będziesz potrzebować dedykowanej biblioteki.
+
+### Parametry techniczne
+
+<Table
+  caption="Parametry techniczne czujnika DHT-11"
+  headers={["Parametr", "Wartość"]}
+  rows={[
+    ["Napięcie zasilania", "3–5,5 V"],
+    ["Pobór prądu", "0,2 mA"],
+    ["Częstotliwość próbkowania", "1 Hz (nowy odczyt co 1 s)"],
+    ["Zakres temperaturowy", "0–50 °C"],
+    ["Dokładność temperatury", "±2 °C"],
+    ["Zakres wilgotności", "20–95 %RH"],
+    ["Dokładność wilgotności", "±5 %RH"],
+  ]}
+/>
+
+### Jak wygląda czujnik od środka?
+
+Na tylnej ściance obudowy DHT-11 producent często drukuje najważniejsze parametry. Poniżej widok czujnika z przodu, tyłu i od środka (zalecamy nie rozkładać własnego egzemplarza — to tylko ciekawostka).
+
+<Photo
+  file="20.04-dht11-przod.jpg"
+  day="dzien-04"
+  caption="DHT-11 — widok od przodu z czterema wyprowadzeniami (VCC, DATA, NC, GND)."
+  alt="Widok czujnika DHT-11 od przodu"
+/>
+
+<Photo
+  file="20.05-dht11-tyl.jpg"
+  day="dzien-04"
+  caption="Tył obudowy — producent często drukuje tu skrócone parametry czujnika."
+  alt="Widok czujnika DHT-11 od tyłu z nadrukiem parametrów"
+/>
+
+<Photo
+  file="20.06-dht11-wnetrze.jpg"
+  day="dzien-04"
+  caption="Wnętrze obudowy DHT-11 — element pojemnościowy mierzący wilgotność i termometr NTC."
+  alt="Wnętrze obudowy czujnika DHT-11"
+/>
+
+<Callout type="warning" title="Różne wersje DHT-11">
+W sprzedaży można trafić na różne warianty DHT-11 o nieznacznie różniących się zakresach. Zawsze sprawdź parametry na obudowie lub w nocie katalogowej konkretnego egzemplarza.
+</Callout>
+
+## 3. Podłączenie DHT-11 do Arduino
+
+Podłączenie jest bardzo proste — czujnik ma tylko jeden pin danych. Konieczny jest jednak **rezystor podciągający 4,7 kΩ** łączący linię DATA z szyną zasilania VCC.
+
+<Photo
+  file="20.07-dht11-podlaczenie.jpg"
+  day="dzien-04"
+  caption="Schemat montażowy: DHT-11 podłączony do pinu 2 Arduino z rezystorem podciągającym 4,7 kΩ."
+  alt="Schemat Fritzing pokazujący podłączenie DHT-11 do Arduino UNO"
+/>
+
+<Photo
+  file="20.08-dht11-zblizenie.jpg"
+  day="dzien-04"
+  caption="Zbliżenie na podłączenie czujnika DHT-11 — widoczny rezystor 4,7 kΩ między VCC a DATA."
+  alt="Zbliżenie na wyprowadzenia czujnika DHT-11 podłączonego do płytki stykowej"
+/>
+
+Połączenia:
+- **VCC** → **5 V** Arduino
+- **DATA** → **pin 2** Arduino (+ rezystor 4,7 kΩ do VCC)
+- **NC** → niepodłączony
+- **GND** → **GND** Arduino
+
+## 4. Komunikacja z DHT-11 — biblioteka Mark Ruysa
+
+Do obsługi DHT-11 użyjemy prostej biblioteki **arduino-DHT** autorstwa **Mark Ruysa**, dostępnej na GitHubie. Biblioteka automatycznie rozpoznaje typ czujnika (DHT-11, DHT-22, AM2302, RHT03) i obsługuje je identycznie.
+
+### Instalacja biblioteki
+
+1. Pobierz pliki z [github.com/markruys/arduino-DHT](https://github.com/markruys/arduino-DHT).
+2. Skopiuj `DHT.h` i `DHT.cpp` do folderu szkicu lub zainstaluj przez *Szkic → Dołącz bibliotekę → Dodaj bibliotekę .ZIP*.
+
+### Pierwszy szkic — szkielet z biblioteką
+
+Zacznij od pustego szkieletu z dołączoną biblioteką, definicją pinu i inicjalizacją UART:
+
+<Code lang="cpp" file="dht11-szkielet.ino">
+```cpp
+#include "DHT.h"
+#define DHT11_PIN 2
+
+void setup()
+{
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  // tu będą odczyty
+}
+```
+</Code>
+
+### Deklaracja obiektu DHT i konfiguracja pinu
+
+Dodaj obiekt `dht` (globalnie) i wywołaj `dht.setup()` w `setup()`, podając numer pinu:
+
+<Code lang="cpp" file="dht11-init.ino">
+```cpp
+#include "DHT.h"
+#define DHT11_PIN 2
+DHT dht;
+
+void setup()
+{
+  Serial.begin(9600);
+  dht.setup(DHT11_PIN); // Poinformuj bibliotekę o pinie danych
+}
+
+void loop()
+{
+
+}
+```
+</Code>
+
+## 5. Odczyt wilgotności i temperatury
+
+Do odczytu służą dwie funkcje:
+- `dht.getHumidity()` — zwraca wilgotność w **%RH** (typ `float`)
+- `dht.getTemperature()` — zwraca temperaturę w **°C** (typ `float`)
+
+Najprostszy program odczytujący i wyświetlający dane co sekundę:
+
+<Code lang="cpp" file="dht11-podstawowy.ino">
+```cpp
+#include "DHT.h"
+#define DHT11_PIN 2
+DHT dht;
+
+void setup()
+{
+  Serial.begin(9600);
+  dht.setup(DHT11_PIN);
+}
+
+void loop()
+{
+  // Pobranie wilgotności
+  int wilgotnosc = dht.getHumidity();
+  Serial.print(wilgotnosc);
+  Serial.print("%RH | ");
+
+  // Pobranie temperatury
+  int temperatura = dht.getTemperature();
+  Serial.print(temperatura);
+  Serial.println("*C");
+
+  delay(1000); // Odczekanie wymaganego czasu między próbkami
+}
+```
+</Code>
+
+Wynik w Monitorze portu szeregowego wygląda następująco (poniżej animacja po chuchnięciu na czujnik — wilgotność wyraźnie rośnie):
+
+<Photo
+  file="20.09-dht11-demo-chuchniecie.gif"
+  day="dzien-04"
+  caption="Animacja: chuchnięcie na DHT-11 powoduje widoczny wzrost wilgotności w Monitorze portu szeregowego."
+  alt="Animacja GIF monitora portu szeregowego — wzrost wilgotności po chuchnięciu na czujnik"
+/>
+
+<Callout type="note" title="DHT-11 reaguje wolno">
+Czujnik potrzebuje **6–15 sekund** (typowo ~10 s) na zarejestrowanie zmiany wilgotności i temperatury. To cecha układu, nie błąd programu — nie przyspieszysz tego, skracając `delay()`.
+</Callout>
+
+## 6. Obsługa błędów odczytu
+
+Czasem komunikacja z czujnikiem może się nie udać — w Monitorze pojawia się wtedy `0` dla obu wartości. Biblioteka udostępnia funkcje pomagające unikać takich problemów:
+
+<Photo
+  file="20.10-dht11-blad-odczytu.png"
+  day="dzien-04"
+  caption="Błąd odczytu wyświetla 0 dla wilgotności i temperatury — bez obsługi błędów trudno odróżnić go od prawidłowego wyniku."
+  alt="Zrzut ekranu Monitora portu szeregowego z błędnym odczytem 0%RH i 0°C"
+/>
+
+Dwie przydatne funkcje:
+- `dht.getStatusString()` — zwraca `"OK"` przy poprawnym odczycie lub np. `"TIMEOUT"` przy błędzie.
+- `dht.getMinimumSamplingPeriod()` — zwraca wymagane opóźnienie między odczytami (w ms), różne dla DHT-11 i DHT-22.
+
+Ulepszona wersja programu z obsługą błędów:
+
+<Code lang="cpp" file="dht11-z-obsluga-bledow.ino">
+```cpp
+#include "DHT.h"
+#define DHT11_PIN 2
+DHT dht;
+
+void setup()
+{
+  Serial.begin(9600);
+  dht.setup(DHT11_PIN);
+}
+
+void loop()
+{
+  // Pobranie wartości
+  int wilgotnosc = dht.getHumidity();
+  int temperatura = dht.getTemperature();
+
+  // Wyświetl tylko gdy odczyt jest poprawny
+  if (dht.getStatusString() == "OK") {
+    Serial.print(wilgotnosc);
+    Serial.print("%RH | ");
+    Serial.print(temperatura);
+    Serial.println("*C");
+  }
+
+  // Odczekaj wymagany czas dla tego czujnika (nie "na sztywno")
+  delay(dht.getMinimumSamplingPeriod());
+}
+```
+</Code>
+
+<Photo
+  file="20.11-dht11-obsluga-bledow.gif"
+  day="dzien-04"
+  caption="Animacja: po odłączeniu przewodu czujnika Monitor przestaje wyświetlać dane — błędy są ignorowane przez warunek getStatusString()."
+  alt="Animacja GIF monitora portu szeregowego — brak wyświetlania przy odłączonym czujniku"
+/>
+
+## 7. Przeliczanie na stopnie Fahrenheita
+
+Biblioteka zawiera funkcję `dht.toFahrenheit(wartoscCelsjusza)`, która przelicza temperaturę na skalę Fahrenheita. Wywołanie wygląda tak:
+
+<Code lang="cpp" file="dht11-fahrenheit.ino">
+```cpp
+// Dodaj do sekcji wyświetlania w loop():
+Serial.print(dht.toFahrenheit(temperatura));
+Serial.println("F");
+```
+</Code>
+
+<Photo
+  file="20.12-dht11-fahrenheit.gif"
+  day="dzien-04"
+  caption="Animacja: Monitor portu szeregowego wyświetla jednocześnie temperaturę w °C i °F."
+  alt="Animacja GIF monitora portu szeregowego z temperaturą w stopniach Celsjusza i Fahrenheita"
+/>
+
+<Expandable title="Wzór na przeliczenie Celsjusz → Fahrenheit" heading="###">
+Biblioteka wykonuje standardowe przeliczenie: **F = (C × 9/5) + 32**. Przykładowo: 25 °C = 77 °F.
+</Expandable>
+
+## 8. Ćwiczenia
+
+<Task title="Zadanie — pomiar wilgotności z alertem" estimate="15 min">
+Napisz program, który:
+1. Odczytuje wilgotność i temperaturę z DHT-11 co sekundę.
+2. Gdy wilgotność przekroczy **70 %RH**, włącza diodę LED (pin 13) jako sygnał ostrzeżenia.
+3. Poniżej 70 %RH dioda jest wyłączona.
+4. W Monitorze portu szeregowego wyświetla aktualny stan w formacie: `45%RH | 22*C | LED: OFF`.
+
+Wskazówka: użyj `dht.getStatusString() == "OK"`, żeby nie reagować na błędne odczyty.
+</Task>
+
+<Task title="Zadanie rozszerzone — prosta stacja pogodowa" estimate="20 min">
+Zbuduj prostą stację pogodową wyświetlającą w Monitorze portu co 2 sekundy:
+- wilgotność w %RH,
+- temperaturę w °C **i** °F,
+- słowny opis wilgotności: `"sucho"` (< 40 %RH), `"komfortowo"` (40–70 %RH), `"wilgotno"` (> 70 %RH).
+
+Pamiętaj o obsłudze błędów — wypisuj dane tylko gdy `getStatusString() == "OK"`.
+</Task>
+
+## Podsumowanie
+
+Czujnik **DHT-11** mierzy **wilgotność względną** (0–100 %RH) i **temperaturę** (0–50 °C) przez jeden pin danych z rezystorem podciągającym 4,7 kΩ. Jego interfejs jest **niekompatybilny** ze standardem 1-Wire — wymaga dedykowanej biblioteki, np. **arduino-DHT** Mark Ruysa. Kluczowe funkcje biblioteki: `dht.setup(pin)`, `dht.getHumidity()`, `dht.getTemperature()`, `dht.getStatusString()` (obsługa błędów), `dht.getMinimumSamplingPeriod()` (automatyczne opóźnienie), `dht.toFahrenheit()`. Czujnik reaguje wolno — zmiana wilgotności jest widoczna po **6–15 sekundach**. Łącząc DHT-11 z wiedzą z poprzednich lekcji (termometry, fotorezystor, diody programowalne), możesz zbudować kompletną **stację pogodową** na Arduino.

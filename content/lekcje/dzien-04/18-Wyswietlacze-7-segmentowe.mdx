@@ -1,0 +1,858 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Wyświetlacze 7-segmentowe"
+slug: "wyswietlacze-7-segmentowe"
+summary: "Lekcja z kursu Forbot II #6: budowa wyświetlacza 7-segmentowego, konfiguracje wspólnej katody i anody, podłączenie wyświetlacza LDD040AUE-101A do Arduino, wyświetlanie cyfr za pomocą switch/case, multipleksowanie dwóch wyświetlaczy przez tranzystory NPN BC547 oraz biblioteka SevSeg."
+
+day: 4
+weekend: 2
+order: 6
+duration: 90
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 6
+
+objectives:
+  - "Opisać budowę wyświetlacza 7-segmentowego i oznaczyć segmenty A–G"
+  - "Wyjaśnić różnicę między konfiguracją wspólnej katody a wspólnej anody"
+  - "Odczytać pinout dwucyfrowego wyświetlacza na podstawie datasheet"
+  - "Podłączyć wyświetlacz do Arduino z rezystorami ochronnymi"
+  - "Napisać funkcję wyświetlającą cyfry 0–9 przy użyciu switch/case"
+  - "Zrealizować multipleksowanie dwóch wyświetlaczy przez tranzystory NPN BC547"
+  - "Zainstalować i skonfigurować bibliotekę SevSeg"
+  - "Wyświetlić na wyświetlaczu wartość odczytaną z potencjometru"
+
+prerequisites:
+  - "dzien-04/klawiatura-wlasny-system-alarmowy"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Wyświetlacz 7-segmentowy dwucyfrowy LDD040AUE-101A (wspólna katoda)", qty: 1 }
+  - { name: "Rezystor 1 kΩ", qty: 7 }
+  - { name: "Rezystor 10 kΩ", qty: 2 }
+  - { name: "Tranzystor NPN BC547", qty: 2 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, wyswietlacz, 7-segmentowy, multipleksowanie, tranzystor, bc547, sevseg, biblioteka, switch-case]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-wyswietlacze-7-segmentowe-id18413"
+
+cover: "/img/lekcje/18.01-okladka-wyswietlacze-7seg.png"
+publish: true
+updated: "2026-05-15"
+---
+
+W projektach Arduino najczęściej spotykanym wyświetlaczem jest LCD z tekstem, rzadziej graficzny. Wiele osób zupełnie pomija jednak **wyświetlacze 7-segmentowe** — a szkoda, bo widzieliśmy je setki razy: na zegarkach cyfrowych, multimetrach czy kasach fiskalnych. W tej lekcji poznasz ich budowę, nauczysz się podłączać je do Arduino i sterować nimi — najpierw ręcznie, a potem za pomocą gotowej biblioteki.
+
+## 1. Czym jest wyświetlacz 7-segmentowy
+
+Wyświetlacz 7-segmentowy składa się z siedmiu podłużnych elementów świetlnych ułożonych w kształt cyfry osiem. Każdy segment to w praktyce **dioda LED**, a całość umieszczona jest w jednej obudowie. Segmenty oznaczamy literami **A–G** zgodnie z przyjętym standardem.
+
+<Photo
+  file="18.02-budowa-wyswietlacza-7seg.png"
+  caption="Standardowe oznaczenie segmentów A–G wyświetlacza 7-segmentowego."
+  alt="Schemat wyświetlacza 7-segmentowego z oznaczonymi segmentami A przez G"
+/>
+
+Wyświetlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentów. Na przykład:
+
+- **Cyfra 1** — segmenty B i C
+- **Cyfra 2** — segmenty A, B, D, E i G
+- **Cyfra 8** — wszystkie segmenty A–G
+
+<Photo
+  file="18.03-cyfry-segmenty-schemat.png"
+  caption="Mapowanie cyfr 0–9 na segmenty wyświetlacza — które segmenty trzeba zapalić dla każdej cyfry."
+  alt="Tabela pokazująca, które segmenty A–G należy zapalić dla cyfr 0 do 9"
+/>
+
+<Photo
+  file="18.04-cyfry-segmenty-zdjecie.jpg"
+  caption="Fizyczny wygląd cyfr na wyświetlaczu 7-segmentowym."
+  alt="Zdjęcie wyświetlacza 7-segmentowego prezentującego różne cyfry"
+/>
+
+Niektóre wyświetlacze mają dodatkowo **punkt dziesiętny (P)** — niezależną diodę LED, która może służyć jako przecinek lub pełnić inną rolę. Uwaga: czasem mimo fizycznej obecności kropki nie ma za nią LED-a i sterowanie nie jest możliwe.
+
+Dostępne są wyświetlacze w różnych rozmiarach, kolorach i konfiguracjach — jednoliczbowe i wieloliczbowe (2, 4 cyfry w jednej obudowie).
+
+## 2. Konfiguracje — wspólna katoda i wspólna anoda
+
+Wewnątrz wyświetlacza wszystkie diody LED mogą być połączone na dwa sposoby:
+
+**Wspólna katoda** — wszystkie minusy (katody) diod połączone są razem i wyprowadzone jako wspólny pin GND. Segment zapala się po podaniu stanu **HIGH** (napięcia) na jego pin.
+
+<Photo
+  file="18.05-wspolna-katoda.png"
+  caption="Konfiguracja wspólnej katody — wszystkie katody diod połączone razem."
+  alt="Schemat wewnętrzny wyświetlacza ze wspólną katodą"
+/>
+
+**Wspólna anoda** — wszystkie plusy (anody) diod połączone są razem i podłączone do zasilania. Segment zapala się po podaniu stanu **LOW** (masy) na jego pin.
+
+<Photo
+  file="18.06-wspolna-anoda.png"
+  caption="Konfiguracja wspólnej anody — wszystkie anody diod połączone razem."
+  alt="Schemat wewnętrzny wyświetlacza ze wspólną anodą"
+/>
+
+<Callout type="note">
+Przed podłączeniem wyświetlacza **zawsze sprawdzaj w datasheet**, czy masz do czynienia ze wspólną katodą, czy anodą. Pomyłka spowoduje, że wyświetlacz nie będzie działał lub zaświecą się odwrotne segmenty.
+</Callout>
+
+## 3. Testowany wyświetlacz — LDD040AUE-101A
+
+W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** oznaczony jako `LDD040AUE-101A` lub `LDD040AAG-101`. Obie wersje są identyczne — różnią się tylko kolorem podświetlenia.
+
+<Photo
+  file="18.07-wyswietlacz-LDD040-przod.png"
+  caption="Wyświetlacz LDD040AUE-101A — widok od przodu z oznaczeniem wyprowadzeń."
+  alt="Schemat wyświetlacza LDD040AUE-101A z numerowanymi pinami"
+/>
+
+<Photo
+  file="18.08-wyswietlacz-LDD040-tyl.png"
+  caption="Wyświetlacz LDD040AUE-101A — widok od tyłu. Numery 1 i 16 naniesione przez producenta ułatwiają orientację."
+  alt="Tył wyświetlacza LDD040AUE-101A z widocznymi oznaczeniami pinów 1 i 16"
+/>
+
+Z datasheetu wynika, że w jednej obudowie mieszczą się **dwa niezależne wyświetlacze** (7 wewnętrznych struktur dla każdego). Pin punktu dziesiętnego P nie ma podłączonego LED-a — w tej lekcji go nie używamy.
+
+Numery pinów łatwo odczytać, bo producent oznacza na spodzie wyświetlacza piny **1** i **16**.
+
+<Callout type="warning">
+Diody LED wewnątrz wyświetlacza palą się łatwiej niż zwykłe LED-y! **Nigdy nie podłączaj segmentów bezpośrednio do Arduino bez rezystorów ochronnych.** Zastosuj rezystory 1 kΩ na każdym pinie segmentu.
+</Callout>
+
+## 4. Podłączenie wyświetlacza do Arduino
+
+Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3, 13, 14, 15, 16 wyświetlacza — każdy przez rezystor 1 kΩ.
+
+<Table
+  caption="Mapowanie pinów wyświetlacza na piny Arduino"
+  headers={["Pin wyświetlacza", "Segment", "Pin Arduino"]}
+  rows={[
+    ["1", "C", "2"],
+    ["2", "E", "3"],
+    ["3", "D", "4"],
+    ["13", "B", "5"],
+    ["14", "G", "6"],
+    ["15", "A", "7"],
+    ["16", "F", "8"],
+    ["Wspólna katoda", "GND", "GND"]
+  ]}
+/>
+
+<Photo
+  file="18.09-podlaczenie-pierwszy-segment.jpg"
+  caption="Pierwszy etap montażu — umieszczanie wyświetlacza na płytce stykowej."
+  alt="Wyświetlacz 7-segmentowy umieszczony na płytce stykowej"
+/>
+
+<Photo
+  file="18.10-podlaczenie-rezystory.jpg"
+  caption="Montaż rezystorów 1 kΩ na każdym pinie segmentu — część rezystorów biegnie pod wyświetlaczem."
+  alt="Płytka stykowa z wyświetlaczem i rezystorami 1 kΩ"
+/>
+
+<Photo
+  file="18.11-podlaczenie-kompletny-uklad.jpg"
+  caption="Kompletny układ z pierwszym wyświetlaczem podłączonym do Arduino — wszystkie 7 segmentów przez rezystory 1 kΩ."
+  alt="Zdjęcie kompletnego układu: Arduino UNO, płytka stykowa, wyświetlacz 7-segmentowy"
+/>
+
+## 5. Test segmentów
+
+Zanim wyświetlimy cyfry, sprawdźmy, czy wszystkie segmenty działają poprawnie — program zaświeca je jeden po drugim:
+
+<Code lang="cpp" file="test_segmentow.ino">
+```cpp
+#define SEG_C 2
+#define SEG_E 3
+#define SEG_D 4
+#define SEG_B 5
+#define SEG_G 6
+#define SEG_A 7
+#define SEG_F 8
+
+void setup() {
+  // Konfiguracja pinow jako wyjscia
+  pinMode(SEG_A, OUTPUT);
+  pinMode(SEG_B, OUTPUT);
+  pinMode(SEG_C, OUTPUT);
+  pinMode(SEG_D, OUTPUT);
+  pinMode(SEG_E, OUTPUT);
+  pinMode(SEG_F, OUTPUT);
+  pinMode(SEG_G, OUTPUT);
+
+  // Test segmentow — zapalamy kolejno A do G
+  digitalWrite(SEG_A, HIGH);
+  delay(800);
+  digitalWrite(SEG_B, HIGH);
+  delay(800);
+  digitalWrite(SEG_C, HIGH);
+  delay(800);
+  digitalWrite(SEG_D, HIGH);
+  delay(800);
+  digitalWrite(SEG_E, HIGH);
+  delay(800);
+  digitalWrite(SEG_F, HIGH);
+  delay(800);
+  digitalWrite(SEG_G, HIGH);
+}
+
+void loop() {
+}
+```
+</Code>
+
+<Photo
+  file="18.12-test-segmentow-a.jpg"
+  caption="Wynik testu — zapalony segment A (górna pozioma kreska)."
+  alt="Wyświetlacz 7-segmentowy z zapalonym segmentem A"
+/>
+
+<Photo
+  file="18.13-test-segmentow-wszystkie.jpg"
+  caption="Wszystkie segmenty zapalone — wyświetlacz pokazuje cyfrę 8."
+  alt="Wyświetlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
+/>
+
+## 6. Wyświetlanie pojedynczych cyfr
+
+Kluczem do wyświetlania cyfr jest funkcja przyjmująca liczbę 0–9 i ustawiająca odpowiednie stany na wyjściach za pomocą instrukcji `switch/case`:
+
+<Code lang="cpp" file="wyswietlanie_cyfr.ino">
+```cpp
+#define SEG_C 2
+#define SEG_E 3
+#define SEG_D 4
+#define SEG_B 5
+#define SEG_G 6
+#define SEG_A 7
+#define SEG_F 8
+
+void setup() {
+  // Konfiguracja pinow jako wyjscia
+  pinMode(SEG_A, OUTPUT);
+  pinMode(SEG_B, OUTPUT);
+  pinMode(SEG_C, OUTPUT);
+  pinMode(SEG_D, OUTPUT);
+  pinMode(SEG_E, OUTPUT);
+  pinMode(SEG_F, OUTPUT);
+  pinMode(SEG_G, OUTPUT);
+
+  wyswietlacz(5); // Wyswietl cyfre 5
+}
+
+void loop() {
+}
+
+void wyswietlacz(int cyfra) {
+  // Instrukcja switch ustawia odpowiednie stany na wyjsciach
+  // w zaleznosci od podanej cyfry
+  switch (cyfra) {
+    case 0:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, HIGH);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, LOW);
+    break;
+
+    case 1:
+      digitalWrite(SEG_A, LOW);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+
+    case 2:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, LOW);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, HIGH);
+      digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 3:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 4:
+      digitalWrite(SEG_A, LOW);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 5:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, LOW);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 6:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, LOW);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, HIGH);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 7:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+
+    case 8:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, HIGH);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+
+    case 9:
+      digitalWrite(SEG_A, HIGH);
+      digitalWrite(SEG_B, HIGH);
+      digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH);
+      digitalWrite(SEG_E, LOW);
+      digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+  }
+}
+```
+</Code>
+
+<Photo
+  file="18.14-wyswietlanie-cyfry-5.jpg"
+  caption="Wyświetlacz pokazuje cyfrę 5 — segmenty A, C, D, F, G zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 5"
+/>
+
+<Photo
+  file="18.15-wyswietlanie-cyfry-8.jpg"
+  caption="Cyfra 8 na wyświetlaczu — wszystkie segmenty zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 8"
+/>
+
+<Expandable heading="##" title="Dlaczego switch/case, a nie if/else?">
+Instrukcja `switch/case` jest tu czytelniejsza niż seria `if/else if`, bo każda cyfra to odrębny, zamknięty przypadek. Kompilator może też wygenerować z niej efektywną tablicę skoków (jump table), co sprawia, że wykonuje się szybciej niż łańcuch warunków.
+</Expandable>
+
+<Task title="Zadanie 6.1 — symbol błędu">
+Rozszerz funkcję `wyswietlacz()` o obsługę wartości większych niż 9. Gdy podana cyfra przekracza 9, wyświetlacz powinien pokazać symbol błędu złożony z zapalonych segmentów **A, G i D** (poziome kreski — górna, środkowa i dolna). Prześlij kod oraz zdjęcie działającego układu.
+</Task>
+
+<Task title="Zadanie 6.2 — sterowanie przyciskami">
+Dodaj do układu trzy przyciski:
+- **S1** — zwiększa wyświetlaną cyfrę o 1
+- **S2** — zmniejsza wyświetlaną cyfrę o 1
+- **S3** — resetuje do zera
+
+Zadbaj o obsługę zakresów (po 9 wróć do 0, przed 0 zatrzymaj się lub przejdź do 9). Prześlij kod oraz wideo działającego układu.
+</Task>
+
+## 7. Licznik na wyświetlaczu 7-segmentowym
+
+Wywołując funkcję `wyswietlacz()` w pętli `for`, łatwo zbudujemy licznik od 0 do 9:
+
+<Code lang="cpp" file="licznik_0_9.ino">
+```cpp
+#define SEG_C 2
+#define SEG_E 3
+#define SEG_D 4
+#define SEG_B 5
+#define SEG_G 6
+#define SEG_A 7
+#define SEG_F 8
+
+void setup() {
+  // Konfiguracja pinow jako wyjscia
+  pinMode(SEG_A, OUTPUT);
+  pinMode(SEG_B, OUTPUT);
+  pinMode(SEG_C, OUTPUT);
+  pinMode(SEG_D, OUTPUT);
+  pinMode(SEG_E, OUTPUT);
+  pinMode(SEG_F, OUTPUT);
+  pinMode(SEG_G, OUTPUT);
+}
+
+void loop() {
+  int i = 0;
+  // Petla od 0 do 9
+  for (i = 0; i < 10; i++) {
+    wyswietlacz(i); // Wyswietl wartosc na wyswietlaczu
+    delay(500);     // Poczekaj 500 ms
+  }
+}
+
+void wyswietlacz(int cyfra) {
+  switch (cyfra) {
+    case 0:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 1:
+      digitalWrite(SEG_A, LOW);  digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 2:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, LOW);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 3:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 4:
+      digitalWrite(SEG_A, LOW);  digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 5:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, LOW);  digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 6:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, LOW);  digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 7:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 8:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 9:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+  }
+}
+```
+</Code>
+
+<Photo
+  file="18.16-licznik-animacja.gif"
+  caption="Animacja licznika — wyświetlacz cyklicznie pokazuje cyfry 0–9."
+  alt="Animacja GIF przedstawiająca licznik 0–9 na wyświetlaczu 7-segmentowym"
+/>
+
+<Photo
+  file="18.17-licznik-cyfry-gif.gif"
+  caption="Kolejne cyfry na wyświetlaczu 7-segmentowym w trakcie działania licznika."
+  alt="GIF z kolejnymi cyframi wyświetlanymi na wyświetlaczu 7-segmentowym"
+/>
+
+## 8. Drugi wyświetlacz — multipleksowanie
+
+Teraz robi się trudniej — przynajmniej po stronie połączeń.
+
+**Naiwne podejście** to podłączenie drugiego wyświetlacza do kolejnych 7 pinów Arduino. Problem: skończyłyby się wolne piny, a przy 3 lub 4 wyświetlaczach byłoby to zupełnie niemożliwe.
+
+**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami.
+
+### 8.1. Połączenie segmentów
+
+Odpowiadające sobie piny segmentów obu wyświetlaczy łączymy razem:
+
+<Table
+  caption="Połączenie pinów obu wyświetlaczy (piny segmentów)"
+  headers={["Pin wyświetlacza 1", "Pin wyświetlacza 2", "Segment"]}
+  rows={[
+    ["1 (C)", "8 (C)", "C"],
+    ["2 (E)", "7 (E)", "E"],
+    ["3 (D)", "6 (D)", "D"],
+    ["13 (B)", "12 (B)", "B"],
+    ["14 (G)", "11 (G)", "G"],
+    ["15 (A)", "10 (A)", "A"],
+    ["16 (F)", "9 (F)", "F"]
+  ]}
+/>
+
+<Photo
+  file="18.18-drugi-wyswietlacz-schemat.png"
+  caption="Schemat podłączenia dwóch wyświetlaczy ze wspólnymi pinami segmentów."
+  alt="Schemat połączeń dwóch wyświetlaczy 7-segmentowych ze wspólnymi segmentami"
+/>
+
+<Photo
+  file="18.19-drugi-wyswietlacz-polaczenia.jpg"
+  caption="Łączenie odpowiadających sobie pinów segmentów obu wyświetlaczy za pomocą zworek."
+  alt="Płytka stykowa z dwoma wyświetlaczami połączonymi zworkami"
+/>
+
+<Photo
+  file="18.20-drugi-wyswietlacz-uklad.jpg"
+  caption="Oba wyświetlacze podłączone wspólnymi segmentami — na razie wyświetlają identyczną cyfrę."
+  alt="Dwa wyświetlacze 7-segmentowe podłączone do Arduino pokazujące tę samą cyfrę"
+/>
+
+### 8.2. Sterowanie przez tranzystory NPN (BC547)
+
+Gdy zapalone są wszystkie segmenty, przez katodę wyświetlacza może płynąć ponad 20 mA — za dużo dla bezpośredniego podłączenia do pinu Arduino. Dlatego każdy wyświetlacz włączamy przez **tranzystor NPN BC547**:
+
+- **Kolektor** tranzystora → katoda wyświetlacza (pin 4 — wyświetlacz 1; pin 5 — wyświetlacz 2)
+- **Baza** przez rezystor 10 kΩ → pin Arduino (pin 10 — wyświetlacz 1; pin 9 — wyświetlacz 2)
+- **Emiter** → GND
+
+Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci.
+
+<Photo
+  file="18.21-tranzystor-BC547-uklad.jpg"
+  caption="Tranzystor BC547 jako klucz sterujący wyświetlaczem — kolektor do katody wyświetlacza."
+  alt="Schemat podłączenia tranzystora BC547 do wyświetlacza 7-segmentowego"
+/>
+
+<Photo
+  file="18.22-tranzystor-BC547-podlaczenie.jpg"
+  caption="Montaż tranzystora BC547 na płytce stykowej — baza przez rezystor 10 kΩ do Arduino."
+  alt="Tranzystor BC547 na płytce stykowej z rezystorem 10 kΩ na bazie"
+/>
+
+<Photo
+  file="18.23-tranzystor-kompletny-uklad.jpg"
+  caption="Kompletny układ z dwoma wyświetlaczami sterowanymi przez tranzystory NPN."
+  alt="Płytka stykowa z dwoma wyświetlaczami i dwoma tranzystorami BC547"
+/>
+
+### 8.3. Multipleksowanie w praktyce
+
+Idea multipleksowania: **bardzo szybko** na zmianę włączamy wyświetlacz 1 (z cyfrą dla niego), potem wyświetlacz 2 (z jego cyfrą), i tak w kółko. Ludzkie oko nie nadąża za przełączaniem przy częstotliwości ~100 Hz — wydaje się, że oba świecą jednocześnie!
+
+<Code lang="cpp" file="multipleksowanie.ino">
+```cpp
+#define SEG_C 2
+#define SEG_E 3
+#define SEG_D 4
+#define SEG_B 5
+#define SEG_G 6
+#define SEG_A 7
+#define SEG_F 8
+
+#define WYSW_1 10
+#define WYSW_2 9
+
+void setup() {
+  // Konfiguracja pinow jako wyjscia
+  pinMode(SEG_A, OUTPUT);
+  pinMode(SEG_B, OUTPUT);
+  pinMode(SEG_C, OUTPUT);
+  pinMode(SEG_D, OUTPUT);
+  pinMode(SEG_E, OUTPUT);
+  pinMode(SEG_F, OUTPUT);
+  pinMode(SEG_G, OUTPUT);
+
+  pinMode(WYSW_1, OUTPUT);
+  pinMode(WYSW_2, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(WYSW_1, HIGH); // Wlacz pierwszy wyswietlacz
+  digitalWrite(WYSW_2, LOW);  // Wylacz drugi
+  wyswietlacz(5);              // Wyswietl 5 na pierwszym
+  delay(10);
+
+  digitalWrite(WYSW_1, LOW);  // Wylacz pierwszy wyswietlacz
+  digitalWrite(WYSW_2, HIGH); // Wlacz drugi
+  wyswietlacz(3);              // Wyswietl 3 na drugim
+  delay(10);
+}
+
+void wyswietlacz(int cyfra) {
+  switch (cyfra) {
+    case 0:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 1:
+      digitalWrite(SEG_A, LOW);  digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 2:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, LOW);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 3:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 4:
+      digitalWrite(SEG_A, LOW);  digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 5:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, LOW);  digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 6:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, LOW);  digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 7:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, LOW);  digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, LOW);
+      digitalWrite(SEG_G, LOW);
+    break;
+    case 8:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, HIGH); digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+    case 9:
+      digitalWrite(SEG_A, HIGH); digitalWrite(SEG_B, HIGH); digitalWrite(SEG_C, HIGH);
+      digitalWrite(SEG_D, HIGH); digitalWrite(SEG_E, LOW);  digitalWrite(SEG_F, HIGH);
+      digitalWrite(SEG_G, HIGH);
+    break;
+  }
+}
+```
+</Code>
+
+<Photo
+  file="18.24-multipleksowanie-uklad.jpg"
+  caption="Kompletny układ multipleksowania — dwa wyświetlacze, dwa tranzystory, wspólne segmenty."
+  alt="Zdjęcie układu multipleksowania dwóch wyświetlaczy 7-segmentowych"
+/>
+
+<Photo
+  file="18.25-multipleksowanie-wynik-statyczny.jpg"
+  caption="Wyświetlacze pokazują różne cyfry dzięki multipleksowaniu."
+  alt="Dwa wyświetlacze 7-segmentowe pokazujące różne cyfry jednocześnie"
+/>
+
+**Wpływ opóźnienia na jakość obrazu:**
+
+<Photo
+  file="18.26-multipleksowanie-100ms.gif"
+  caption="delay(100) — wyraźne migotanie, oko zdąża zobaczyć każde przełączenie."
+  alt="Animacja GIF multipleksowania z opóźnieniem 100 ms — widoczne migotanie"
+/>
+
+<Photo
+  file="18.27-multipleksowanie-50ms.gif"
+  caption="delay(50) — migotanie mniej widoczne, ale nadal zauważalne."
+  alt="Animacja GIF multipleksowania z opóźnieniem 50 ms"
+/>
+
+<Photo
+  file="18.28-multipleksowanie-10ms.gif"
+  caption="delay(10) — ~50 Hz odświeżania, oko widzi stabilny obraz na obu wyświetlaczach."
+  alt="Animacja GIF multipleksowania z opóźnieniem 10 ms — stabilny obraz"
+/>
+
+<Callout type="warning">
+Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje cały procesor**. W praktycznych projektach nie możesz używać `delay()` razem z multipleksowaniem — zamiast tego używaj `millis()` (omówione w lekcji o wielozadaniowości) lub skorzystaj z gotowej biblioteki SevSeg.
+</Callout>
+
+<Task title="Zadanie 6.3 — licznik 0–99">
+Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Licznik może działać automatycznie (co sekundę) lub reagować na naciśnięcie przycisku. Prześlij kod, zdjęcia i wideo działającego układu.
+
+*Wskazówka:* Dziesiątki wyślij na wyświetlacz 1, jedności na wyświetlacz 2.
+</Task>
+
+## 9. Gotowa biblioteka SevSeg
+
+Programowanie multipleksowania ręcznie jest możliwe, ale skomplikowane. Na szczęście istnieje biblioteka **SevSeg**, która obsługuje całą złożoność za nas.
+
+### 9.1. Instalacja biblioteki
+
+1. Wejdź na GitHub i pobierz repozytorium SevSeg jako ZIP (*Clone or download → Download ZIP*).
+2. Wypakuj folder `SevSeg-master`.
+3. Skopiuj go do katalogu bibliotek Arduino: `C:\Users\<nazwa_uzytkownika>\Documents\Arduino\libraries\`.
+4. Uruchom ponownie Arduino IDE.
+5. Sprawdź instalację: *Plik → Przykłady* — powinien pojawić się dział **SevSeg**.
+
+### 9.2. Wyświetlanie liczby
+
+<Code lang="cpp" file="sevseg_liczba.ino">
+```cpp
+#include "SevSeg.h"
+SevSeg sevseg;
+
+void setup() {
+  byte numDigits = 2;
+  byte digitPins[] = {10, 9};
+  byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
+  bool resistorsOnSegments = true;
+  byte hardwareConfig = N_TRANSISTORS;
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+}
+
+void loop() {
+  sevseg.setNumber(34, 2); // Wyswietl 34 (2 cyfry)
+  sevseg.refreshDisplay(); // Odswiezanie — musi byc wywolywane regularnie!
+}
+```
+</Code>
+
+Pierwsza wartość `setNumber()` to wyświetlana liczba; druga to liczba cyfr. Metoda `refreshDisplay()` sama obsługuje multipleksowanie — ale **musi być wywoływana bardzo często**, najlepiej w każdym obrocie pętli `loop()`.
+
+### 9.3. Wyświetlanie znaków
+
+<Code lang="cpp" file="sevseg_znaki.ino">
+```cpp
+#include "SevSeg.h"
+SevSeg sevseg;
+
+void setup() {
+  byte numDigits = 2;
+  byte digitPins[] = {10, 9};
+  byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
+  bool resistorsOnSegments = true;
+  byte hardwareConfig = N_TRANSISTORS;
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+}
+
+void loop() {
+  sevseg.setChars("AC"); // Wyswietl litery A i C
+  sevseg.refreshDisplay();
+}
+```
+</Code>
+
+<Photo
+  file="18.29-sevseg-biblioteka-uklad.jpg"
+  caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
+  alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
+/>
+
+<Photo
+  file="18.30-sevseg-dostepne-znaki.png"
+  caption="Znaki obsługiwane przez bibliotekę SevSeg — cyfry 0–9 i litery A–Z (z różną czytelnością na 7 segmentach)."
+  alt="Tabela znaków obsługiwanych przez bibliotekę SevSeg w formacie binarnym"
+/>
+
+<Photo
+  file="18.31-sevseg-licznik-animacja.gif"
+  caption="Animacja licznika zrealizowanego z biblioteką SevSeg — oba wyświetlacze działają płynnie."
+  alt="Animacja GIF licznika z biblioteką SevSeg na dwóch wyświetlaczach 7-segmentowych"
+/>
+
+## 10. Ostatni przykład — potencjometr na wyświetlaczu
+
+Połączmy wyświetlacz z potencjometrem: odczytamy wartość z ADC, przeskalujemy ją do zakresu 0–99 i wyświetlimy na wyświetlaczu.
+
+**Podłączenie potencjometru:**
+- Zewnętrzne wyprowadzenia → 5V i GND
+- Środkowe wyprowadzenie (suwak) → pin A0
+
+<Code lang="cpp" file="sevseg_potencjometr.ino">
+```cpp
+#include "SevSeg.h"
+SevSeg sevseg;
+
+void setup() {
+  byte numDigits = 2;
+  byte digitPins[] = {10, 9};
+  byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
+  bool resistorsOnSegments = true;
+  byte hardwareConfig = N_TRANSISTORS;
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+}
+
+void loop() {
+  int potencjometr = analogRead(A0);              // Odczyt 0–1023
+  potencjometr = map(potencjometr, 0, 1023, 0, 99); // Przeskalowanie do 0–99
+
+  sevseg.setNumber(potencjometr, 2);
+  sevseg.refreshDisplay();
+}
+```
+</Code>
+
+<Photo
+  file="18.32-potencjometr-uklad.jpg"
+  caption="Układ z potencjometrem podłączonym do A0 — środkowe wyprowadzenie do A0, boczne do 5V i GND."
+  alt="Płytka stykowa z potencjometrem podłączonym do pinu A0 Arduino"
+/>
+
+<Photo
+  file="18.33-potencjometr-wynik.jpg"
+  caption="Wyświetlacz pokazuje wartość odczytaną z potencjometru — obracanie gałki zmienia liczbę."
+  alt="Wyświetlacze 7-segmentowe pokazujące wartość z potencjometru"
+/>
+
+<Callout type="warning">
+**Ważne ograniczenie biblioteki SevSeg:** biblioteka ułatwia konfigurację, ale **nie eliminuje potrzeby multipleksowania**. Cały proces wymaga ciągłego wywoływania `refreshDisplay()`. Z tego powodu programy korzystające z wyświetlaczy 7-segmentowych **nie mogą używać `delay()`** — wszystkie opóźnienia muszą być realizowane za pomocą `millis()`. Zajmiemy się tym szczegółowo w lekcji o wielozadaniowości.
+
+Jeśli chcesz zobaczyć działający przykład z `millis()`, zajrzyj do przykładów biblioteki: *Plik → Przykłady → SevSeg → SevSeg_Counter*.
+</Callout>
+
+<Photo
+  file="18.34-podsumowanie.jpg"
+  caption="Gotowy układ z biblioteką SevSeg i potencjometrem — wyświetlacze działają płynnie bez delay()."
+  alt="Kompletny układ z dwoma wyświetlaczami 7-segmentowymi i potencjometrem"
+/>
+
+## Podsumowanie
+
+W tej lekcji poznałeś wyświetlacze 7-segmentowe od podstaw:
+
+- Każdy wyświetlacz to 7 diod LED w jednej obudowie, oznaczonych literami **A–G**. Cyfrę wyświetlasz, zapalając odpowiednie segmenty.
+- Istnieją dwa typy: **wspólna katoda** (segmenty włącza HIGH) i **wspólna anoda** (segmenty włącza LOW).
+- Zawsze stosuj **rezystory ochronne 1 kΩ** na pinach segmentów — diody w wyświetlaczu palą się łatwiej niż zwykłe LED-y.
+- Przy wielu wyświetlaczach zamiast dedykowanych pinów dla każdego stosuj **multipleksowanie** — wspólne segmenty + tranzystory NPN sterujące każdym wyświetlaczem osobno.
+- Multipleksowanie z `delay()` blokuje procesor; w praktyce używaj **biblioteki SevSeg** i jej metody `refreshDisplay()` wywoływanej cyklicznie z `millis()`.
+- `setNumber(wartość, cyfry)` wyświetla liczby, `setChars("XY")` — znaki.
