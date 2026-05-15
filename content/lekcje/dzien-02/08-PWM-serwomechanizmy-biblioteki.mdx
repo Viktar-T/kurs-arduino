@@ -32,7 +32,7 @@ hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda LED", qty: 1 }
-  - { name: "Rezystor 1000 Ω", qty: 1 }
+  - { name: "Rezystor 1 kΩ", qty: 1 }
   - { name: "Serwomechanizm", qty: 1 }
   - { name: "Potencjometr 10 kΩ", qty: 1 }
   - { name: "Stabilizator LM7805", qty: 1 }
@@ -49,15 +49,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC (Analog-Digital Converter, przetwornik analogowo-cyfrowy). Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM (Pulse Width Modulation, modulacja szerokości impulsu). Na końcu wykorzystamy też bibliotekę `Servo`, aby sterować położeniem serwomechanizmu.
-
-<Photo
-  file="08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
-  caption="Tematy tej lekcji: PWM, serwomechanizmy i biblioteki Arduino."
-  alt="Grafika kursu Arduino o PWM, serwomechanizmach i bibliotekach"
-  width={700}
-  height={466}
-/>
+W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC (Analog-Digital Converter). Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM (Pulse Width Modulation, modulacja szerokości impulsu). Na końcu wykorzystamy też bibliotekę `Servo`, aby sterować położeniem serwomechanizmu.
 
 <Callout type="note" title="Kierunek działania">
 ADC zamieniał napięcie analogowe na liczbę. PWM działa odwrotnie z punktu widzenia efektu: program podaje liczbę, a pin Arduino bardzo szybko przełącza się między `HIGH` i `LOW`, tworząc wrażenie płynnej regulacji mocy.
@@ -156,7 +148,7 @@ PWM jest bardzo popularny, bo pozwala sterować elementami wykonawczymi z poziom
   caption="Typowe zastosowania PWM"
   headers={["Zastosowanie", "Co regulujemy", "Co obserwujemy"]}
   rows={[
-    ["Dioda LED (Light Emitting Diode, dioda elektroluminescencyjna)", "Jasność", "Dioda świeci słabiej lub mocniej"],
+    ["Dioda LED", "Jasność", "Dioda świeci słabiej lub mocniej"],
     ["Silnik DC", "Średnią moc", "Silnik obraca się wolniej lub szybciej"],
     ["Serwomechanizm", "Szerokość impulsu sterującego", "Wał ustawia się pod zadanym kątem"],
   ]}
@@ -239,12 +231,48 @@ void loop() {
 Program zwiększa wypełnienie co `50 ms`. Gdy dojdzie do wartości bliskiej pełnej jasności, wraca do zera i zaczyna rozjaśnianie od początku. To najprostszy sposób pokazania, że PWM może sterować „siłą” działania elementu.
 
 <Task title="Zadanie 1" estimate="10 min">
-Zmień wartość zmiennej `zmiana` na `1`, `10` i `25`. Porównaj, jak zmienia się szybkość rozjaśniania diody i zapisz, która wartość daje najbardziej płynny efekt.
+Spróbuj uprościć powyższy program, tak aby nie trzeba było korzystać z instrukcji warunkowej if. Podpowiedź: zastanów się jaki wpływ na działanie programu ma typ zmiennej wypełnienie.
 </Task>
 
 <Task title="Zadanie 2" estimate="15 min">
-Zmień program tak, aby po dojściu do `255` dioda nie gasła nagle, tylko stopniowo przyciemniała się do zera. Wykorzystaj dodatkową zmienną, która określa kierunek zmiany jasności.
+Napisz program, który po zwiększeniu wypełnienia do `255` zacznie je stopniowo zmniejszać do zera (i tak w koło). Sprawdź przy jakim opóźnieniu w każdym obiegu pętli można zaobserwowany efekt pulsowania będzie najciekawszy.
 </Task>
+
+<Task title="Zadanie 3 — regulator jasności LED przez UART" estimate="15 min">
+Podłącz LED do **pinu 9** (ten pin obsługuje PWM). Odbierz przez UART liczbę od 0 do 255 za pomocą `Serial.parseInt()`, a następnie ustaw jasność LED funkcją `analogWrite(pinLed, jasnosc)`. Wyślij potwierdzenie: `"Jasnosc ustawiona na: 128"`.
+
+Jeśli wpisana liczba przekracza zakres 0–255, zamiast ustawiać jasność wypisz komunikat o błędzie.
+
+Wskazówka: `analogWrite(pin, wartosc)` przyjmuje wartość 0–255.
+</Task>
+
+<Expandable title="Rozwiązanie Zadania 3" heading="####">
+```cpp
+const byte pinLed = 9;  // pin z obsługą PWM (tyldą ~ przy numerze)
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinLed, OUTPUT);
+  Serial.println("Wpisz jasnosc LED (0-255):");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int jasnosc = Serial.parseInt();
+
+    if (jasnosc < 0 || jasnosc > 255) {
+      Serial.println("Blad: wpisz liczbe od 0 do 255.");
+    } else {
+      analogWrite(pinLed, jasnosc);
+      Serial.print("Jasnosc ustawiona na: ");
+      Serial.println(jasnosc);
+    }
+
+    while (Serial.available()) Serial.read();
+  }
+}
+```
+</Expandable>
 
 ## 5. Serwomechanizm: czym jest i jak działa
 
@@ -265,6 +293,7 @@ W środku małego serwa są delikatne plastikowe koła zębate. Ręczne przekrę
 </Callout>
 
 Standardowy sygnał sterujący serwem ma okres około `20 ms`. Długość impulsu w tym okresie informuje elektronikę serwa, pod jakim kątem ma ustawić wał. W praktyce nie będziemy generować tych impulsów ręcznie, bo Arduino ma gotową bibliotekę `Servo`.
+Zbadaj biblioteke `Servo.h` i spróbuj zrozumieć jak działa [https://docs.arduino.cc/programming/](https://docs.arduino.cc/programming/).
 
 <Expandable title="Głębiej: jak elektronika serwa interpretuje sygnał sterujący" heading="####">
 Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz). Elektronika serwa nie patrzy na wypełnienie procentowe, lecz na bezwzględną długość impulsu w stanie wysokim:
@@ -326,11 +355,11 @@ void loop() {
 
 W programie `#include <Servo.h>` dołącza bibliotekę. Linia `Servo serwomechanizm;` tworzy obiekt, przez który będziemy sterować napędem. Funkcja `attach(9)` przypisuje serwo do pinu `9`, a `write(pozycja)` ustawia kąt z zakresu `0`-`180`.
 
-<Task title="Zadanie 3" estimate="10 min">
+<Task title="Zadanie 4" estimate="10 min">
 Zmień wartość zmiennej `zmiana` na `1`, `3`, `10` i `30`. Sprawdź, jak wpływa to na płynność oraz szybkość ruchu serwa.
 </Task>
 
-<Task title="Zadanie 4" estimate="20 min">
+<Task title="Zadanie 5" estimate="20 min">
 Napisz program, który ustawia serwo w pozycji przesłanej z Monitora portu szeregowego. Akceptuj tylko liczby od `0` do `180`. Dla innych wartości wyświetl komunikat o błędzie.
 </Task>
 
@@ -361,7 +390,7 @@ void loop() {
 ```
 </Code>
 
-<Task title="Zadanie 5" estimate="15 min">
+<Task title="Zadanie 6" estimate="15 min">
 Podłącz potencjometr jako dzielnik napięcia do wejścia `A5` i uruchom program `servo-potencjometr.ino`. Ustaw potencjometr w trzech pozycjach: minimum, środek i maksimum. Sprawdź, czy ramię serwa odpowiada tym ustawieniom.
 </Task>
 

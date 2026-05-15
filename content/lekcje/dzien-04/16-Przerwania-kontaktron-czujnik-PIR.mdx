@@ -1,0 +1,505 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Przerwania, kontaktron i czujnik PIR"
+slug: "przerwania-kontaktron-czujnik-pir"
+summary: "Lekcja z kursu Forbot II #4: czujnik kontaktronowy jako alarm okienny, czujnik PIR HC-SR501 (parametry, tryby pracy, potencjometry), koncepcja przerwań sprzętowych, funkcja attachInterrupt(), tryby wyzwalania RISING/FALLING/CHANGE/LOW oraz słowo kluczowe volatile."
+
+day: 4
+weekend: 2
+order: 4
+duration: 90
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 4
+
+objectives:
+  - "Wyjaśnić zasadę działania kontaktronu i podłączyć go jako czujnik alarmowy"
+  - "Opisać działanie czujnika PIR HC-SR501 i jego parametry (napięcie, prąd, kąt, zasięg)"
+  - "Rozróżnić tryby retrigger i non-retrigger oraz skonfigurować potencjometry Tx i Sx"
+  - "Podłączyć czujnik PIR do Arduino i napisać program reagujący na wykrycie ruchu"
+  - "Wyjaśnić, czym jest przerwanie sprzętowe i kiedy warto je stosować"
+  - "Użyć funkcji attachInterrupt() z trybami RISING, FALLING, CHANGE i LOW"
+  - "Stosować słowo kluczowe volatile dla zmiennych współdzielonych z obsługą przerwania"
+  - "Unikać funkcji delay() wewnątrz obsługi przerwania"
+
+prerequisites:
+  - "dzien-04/syrena-alarmowa-mosfet"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED RGB (wspólna katoda)", qty: 1 }
+  - { name: "Rezystor 1 kΩ", qty: 3 }
+  - { name: "Czujnik kontaktronowy (rurka + magnes)", qty: 1 }
+  - { name: "Czujnik PIR HC-SR501", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, przerwania, interrupt, kontaktron, pir, hc-sr501, attachInterrupt, volatile, alarm]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-przerwania-kontaktron-czujnik-pir-id16792"
+
+cover: "/img/lekcje/16.01-okladka-alarm.jpg"
+publish: true
+updated: "2026-05-15"
+---
+
+W tej lekcji poznasz dwa popularne czujniki alarmowe: **kontaktron** (czujnik drzwiowy/okienny) i **czujnik ruchu PIR HC-SR501**. Nauczysz się też korzystać z **przerwań sprzętowych** — mechanizmu pozwalającego Arduino natychmiast reagować na zdarzenia zewnętrzne bez nieustannego sprawdzania stanu wejść w pętli głównej.
+
+## 1. Kontaktron — czujnik alarmowy drzwi i okien
+
+Kontaktron to prosty czujnik alarmowy składający się z dwóch części: **rurki ze stalowym przełącznikiem trzcinowym** (montowanej na ościeżnicy) i **magnesu** (przyklejanego do skrzydła okna lub drzwi).
+
+<Photo
+  file="16.02-kontaktron-rurka.jpg"
+  caption="Rurka kontaktronowa — w szklanej obudowie kryje się sprężysty metalowy przełącznik trzcinowy."
+  alt="Zbliżenie na rurkę kontaktronową z metalowym przełącznikiem trzcinowym wewnątrz"
+/>
+
+Gdy magnes zbliży się do rurki, wewnętrzne styki zamykają się i prąd może przepływać. Z punktu widzenia Arduino kontaktron działa **dokładnie jak przycisk** — tyle że nie naciskamy go ręcznie. Nawet minimalne uchylenie okna odsuwa magnes i rozrywa obwód, wyzwalając alarm.
+
+<Photo
+  file="16.03-kontaktron-okno.png"
+  caption="Typowy montaż kontaktronu: rurka na ościeżnicy, magnes na skrzydle okna. Każde uchylenie okna przerywa obwód."
+  alt="Schemat montażu kontaktronu — magnes na skrzydle, rurka na ościeżnicy"
+/>
+
+### Schemat połączeń
+
+- **LED_R** → rezystor 1 kΩ → pin **10**
+- **LED_G** → rezystor 1 kΩ → pin **11**
+- **LED_B** → rezystor 1 kΩ → pin **12**
+- Wspólna katoda RGB → **GND**
+- Kontaktron (pin 1) → pin **0** Arduino
+- Kontaktron (pin 2) → **GND**
+
+<Photo
+  file="16.21-kontaktron-schemat-uklad.jpg"
+  caption="Schemat montażowy: kontaktron podłączony do pinu 0 Arduino, dioda RGB jako sygnalizator."
+  alt="Schemat Fritzing: kontaktron na pinie 0, dioda RGB na pinach 10–12, płytka stykowa"
+/>
+
+### Pierwszy program z kontaktronem
+
+Używamy trybu **INPUT_PULLUP** — wbudowany rezystor podciągający utrzymuje pin 0 w stanie HIGH, gdy kontaktron jest rozwarty (okno otwarte). Zbliżenie magnesu (okno zamknięte) ściąga pin do LOW.
+
+<Code lang="cpp" file="kontaktron-led.ino">
+```cpp
+#define LED_R 10
+#define LED_G 11
+#define LED_B 12
+#define KONTAKTRON 0
+
+void setup() {
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP); // Wbudowany rezystor podciągający
+
+  digitalWrite(LED_R, LOW);
+  digitalWrite(LED_G, LOW);
+  digitalWrite(LED_B, LOW);
+}
+
+void loop() {
+  if (digitalRead(KONTAKTRON) == LOW) {
+    // Magnes blisko — okno zamknięte — dioda zielona
+    digitalWrite(LED_R, LOW);
+    digitalWrite(LED_G, HIGH);
+  } else {
+    // Magnes daleko — okno otwarte — dioda czerwona ALARM
+    digitalWrite(LED_R, HIGH);
+    digitalWrite(LED_G, LOW);
+  }
+}
+```
+</Code>
+
+<Task title="Zadanie 4.1 — alarm, który się nie wyłącza" estimate="10 min">
+Podłącz buzzer do układu. Napisz program, który:
+- włącza alarm (buzzer + czerwona LED) natychmiast po otwarciu okna (rozwarciu kontaktronu),
+- alarm **nie wyłącza się** po ponownym zamknięciu okna — wymaga ręcznego resetu Arduino.
+
+Wskazówka: użyj zmiennej logicznej `bool alarmWyzwolony = false;`.
+</Task>
+
+## 2. Czujnik PIR HC-SR501
+
+PIR (Passive InfraRed — pasywna podczerwień) wykrywa ruch na podstawie zmian promieniowania podczerwonego (ciepła) w polu widzenia. „Pasywny" oznacza, że sam niczego nie emituje — jedynie mierzy różnice temperatury otoczenia. Nawet ciepłe powietrze z uchylonego okna może wyzwolić tańsze modele.
+
+<Photo
+  file="16.04-pir-czujniki-alarm.jpg"
+  caption="Alarmowe czujniki ruchu PIR stosowane w systemach bezpieczeństwa."
+  alt="Kilka białych czujników PIR używanych w systemach alarmowych"
+/>
+
+<Photo
+  file="16.05-pir-czujnik-opis.jpg"
+  caption="Czujnik PIR z soczewką Fresnela — pod białą kopułką kryje się właściwy sensor podczerwieni."
+  alt="Czujnik PIR — soczewka Fresnela i sensor IR"
+/>
+
+### Parametry modułu HC-SR501
+
+<Table
+  caption="Parametry techniczne modułu HC-SR501"
+  headers={["Parametr", "Wartość"]}
+  rows={[
+    ["Napięcie zasilania", "5–20 V"],
+    ["Pobór prądu", "40–150 µA"],
+    ["Sygnał wyjściowy", "0 / 3,3 V"],
+    ["Zasięg (regulowany)", "3–7 m"],
+    ["Kąt widzenia", "120°"],
+  ]}
+/>
+
+Moduł pracuje w zakresie 5–20 V — zasilanie wprost z Arduino jest idealne. Pobór prądu jest śladowy, czujnik nie obciąży układu.
+
+### Budowa modułu HC-SR501
+
+<Photo
+  file="16.06-pir-uklad-zdjecie.jpg"
+  caption="Moduł HC-SR501 — widok od góry z białą soczewką Fresnela."
+  alt="Widok górny modułu HC-SR501 z soczewką Fresnela"
+/>
+
+<Photo
+  file="16.07-pir-schemat-polaczen.jpg"
+  caption="Spód modułu HC-SR501 z wyprowadzeniami Vcc, GND, OUT oraz dwoma potencjometrami regulacyjnymi."
+  alt="Widok spodu modułu HC-SR501 — wyprowadzenia i potencjometry"
+/>
+
+Od spodu modułu widać dwa **potencjometry regulacyjne**:
+
+<Photo
+  file="16.08-pir-potencjometry.jpg"
+  caption="Potencjometry Tx (czas) i Sx (czułość) modułu HC-SR501."
+  alt="Zbliżenie na potencjometry Tx i Sx na spodzie modułu HC-SR501"
+/>
+
+<Table
+  caption="Potencjometry regulacyjne HC-SR501"
+  headers={["Symbol", "Funkcja", "Zakres regulacji"]}
+  rows={[
+    ["Tx", "Czas utrzymania sygnału HIGH po wykryciu ruchu", "5 s – 3 min"],
+    ["Sx", "Czułość (zasięg) czujnika", "3 – 7 m"],
+  ]}
+/>
+
+### Tryby pracy HC-SR501
+
+Jumper na płytce pozwala wybrać jeden z dwóch trybów:
+
+- **Retriggering (domyślny)** — wyjście pozostaje HIGH tak długo, jak ruch jest wykrywany + czas ustawiony przez Tx. Każde nowe wykrycie ruchu przedłuża sygnał HIGH.
+- **Non-retriggering** — wyjście idzie w HIGH jednorazowo i opada do LOW niezależnie od dalszego ruchu.
+
+### Podłączenie PIR do Arduino
+
+<Photo
+  file="16.09-przerwanie-analogia-zupa.jpg"
+  caption="Podłączanie kabli do modułu PIR — przewody z żeńskim złączem wygodnie pasują do wyprowadzeń modułu."
+  alt="Podłączanie przewodów z żeńskim złączem do wyprowadzeń modułu HC-SR501"
+/>
+
+<Photo
+  file="16.10-pir-tryb-retrigger.jpg"
+  caption="Kompletne podłączenie czujnika PIR HC-SR501 do Arduino z diodą RGB jako sygnalizatorem."
+  alt="Schemat montażowy: PIR HC-SR501 na pinie 2, dioda RGB na pinach 10–12"
+/>
+
+Wyprowadzenia czujnika:
+- **Vcc** → **5 V** Arduino
+- **OUT** → pin **2** Arduino
+- **GND** → **GND** Arduino
+
+<Callout type="note" title="Dostosuj potencjometry przed pierwszym testem">
+Przed uruchomieniem ustaw Tx w minimum (najkrótszy czas sygnału) i Sx w maksimum (największy zasięg). Ułatwi to testowanie i skróci czas oczekiwania między kolejnymi wykryciami.
+</Callout>
+
+<Photo
+  file="16.11-pir-wynik.jpg"
+  caption="Ustawienie potencjometrów do testów: Tx w minimum, Sx w maksimum."
+  alt="Zbliżenie na potencjometry HC-SR501 w pozycjach testowych"
+/>
+
+### Program z czujnikiem PIR
+
+<Code lang="cpp" file="pir-led.ino">
+```cpp
+#define LED_R 10
+#define LED_G 11
+#define LED_B 12
+#define KONTAKTRON 0
+#define PIR 2
+
+void setup() {
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP);
+  pinMode(PIR, INPUT);
+
+  digitalWrite(LED_R, LOW);
+  digitalWrite(LED_G, LOW);
+  digitalWrite(LED_B, LOW);
+}
+
+void loop() {
+  if (digitalRead(PIR) == LOW) {
+    // Brak ruchu — dioda zielona
+    digitalWrite(LED_R, LOW);
+    digitalWrite(LED_G, HIGH);
+  } else {
+    // Wykryto ruch — dioda czerwona
+    digitalWrite(LED_R, HIGH);
+    digitalWrite(LED_G, LOW);
+  }
+}
+```
+</Code>
+
+<Task title="Zadanie 4.2 — melodia na powitanie" estimate="15 min">
+Napisz program, który odgrywa krótką melodię (3–5 nut) za każdym razem, gdy czujnik PIR wykryje ruch. Melodia powinna zagrać **raz** przy każdym wykryciu — nie zapętlać się aż do zniknięcia ruchu.
+
+Wskazówka: użyj funkcji `tone()` z poprzedniej lekcji i flagi logicznej `bool zagrano`, aby uniknąć wielokrotnego odtwarzania podczas jednego wykrycia.
+</Task>
+
+## 3. Po co przerwania?
+
+Budując bardziej rozbudowane programy, szybko napotkasz problem: Arduino sprawdza stan czujnika dopiero wtedy, gdy dotrze do odpowiedniej linii w `loop()`. Jeśli wcześniej jest `delay(1000)` lub długie obliczenia, Arduino może przeoczyć krótkie zdarzenie.
+
+<Photo
+  file="16.12-analogia-gotowanie-zupy.jpg"
+  caption="Plan na dziś: gotujemy zupę! Wyobraź sobie, że co chwilę przerywasz gotowanie, żeby podejść do okna i sprawdzić, czy kurier już jedzie."
+  alt="Garnek z gotującą się zupą — ilustracja analogii do pollingu czujnika"
+/>
+
+Wyobraź sobie: gotujesz zupę i czekasz na kuriera. Bez przerwań co chwilę przerywasz gotowanie, żeby podejść do okna i sprawdzić — nieefektywne i łatwo coś przegapić.
+
+<Photo
+  file="16.13-analogia-sasiadka.jpg"
+  caption="Rozwiązanie: prosisz sąsiadkę, żeby obserwowała wejście i zapukała, gdy kurier przyjedzie. Ty gotujesz spokojnie."
+  alt="Starsza kobieta przy oknie z lornetką — ilustracja mechanizmu przerwania sprzętowego"
+/>
+
+Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, gdy kurier przyjedzie. Ty gotujesz spokojnie i reagujesz dopiero na sygnał. Dokładnie tak działa **przerwanie sprzętowe** — specjalny mechanizm w tle monitoruje pin i gdy nastąpi zdefiniowane zdarzenie, natychmiast przerywa główny program i wywołuje Twoją funkcję obsługi.
+
+<Photo
+  file="16.14-analogia-alarm-zlodziej.jpg"
+  caption="Czy alarm zdąży zauważyć szybkiego złodzieja? Tylko przerwanie gwarantuje natychmiastową reakcję — polling może nie zdążyć."
+  alt="Złodziej wchodzący przez okno — ilustracja konieczności natychmiastowej reakcji na zdarzenie"
+/>
+
+### Kiedy stosować przerwania
+
+- Gdy program ma `delay()` lub wiele zadań i nie może „czekać" na czujnik.
+- Gdy wymagana jest **natychmiastowa** reakcja (alarm, licznik impulsów, enkoder).
+
+### Kiedy przerwania nie są potrzebne
+
+- W prostych, krótkich programach bez opóźnień.
+- Gdy czas reakcji na zdarzenie nie jest krytyczny.
+
+## 4. Przerwania w Arduino — attachInterrupt()
+
+Arduino UNO obsługuje przerwania sprzętowe wyłącznie na pinach **2** (int.0) i **3** (int.1).
+
+<Photo
+  file="16.16-arduino-przerwania-piny.png"
+  caption="Numeracja przerwań w Arduino UNO — piny 2 i 3 obsługują przerwania sprzętowe int.0 i int.1."
+  alt="Schemat Arduino UNO z zaznaczonymi pinami przerwań 2 i 3"
+/>
+
+Do rejestracji funkcji obsługi przerwania służy:
+
+```cpp
+attachInterrupt(digitalPinToInterrupt(PIN), FUNKCJA, TRYB);
+```
+
+Funkcja `digitalPinToInterrupt()` automatycznie przelicza numer pinu na numer przerwania — kod działa poprawnie na różnych płytkach Arduino bez ręcznej zmiany numerów.
+
+### Tryby wyzwalania
+
+<Photo
+  file="16.15-przerwanie-tryby-zbocza.png"
+  caption="Zbocze rosnące (RISING) i opadające (FALLING) — momenty zmiany stanu pinu, w których wyzwalane jest przerwanie."
+  alt="Diagram sygnału cyfrowego z zaznaczonymi zboczami rosnącym i opadającym"
+/>
+
+<Table
+  caption="Dostępne tryby wyzwalania attachInterrupt()"
+  headers={["Tryb", "Kiedy wyzwala przerwanie"]}
+  rows={[
+    ["LOW", "Gdy pin pozostaje w stanie LOW (wyzwala wielokrotnie!)"],
+    ["CHANGE", "Przy każdej zmianie stanu: LOW→HIGH lub HIGH→LOW"],
+    ["RISING", "Zbocze rosnące — przejście LOW → HIGH"],
+    ["FALLING", "Zbocze opadające — przejście HIGH → LOW"],
+  ]}
+/>
+
+### Zasady pisania funkcji obsługi przerwania (ISR)
+
+<Callout type="warning" title="Nigdy nie używaj delay() wewnątrz obsługi przerwania!">
+ISR (Interrupt Service Routine — funkcja obsługi przerwania) musi wykonać się **błyskawicznie**. Umieszczenie `delay()` lub `delayMicroseconds()` w ISR **zatrzymuje cały program** na czas jej wykonania. Prowadzi to do nieprzewidywalnego zachowania układu i jest bardzo trudne do debugowania.
+</Callout>
+
+Reguły ISR:
+- Nie przyjmuje argumentów i niczego nie zwraca.
+- Wykonuje się jak najkrócej.
+- **Bezwzględny zakaz** `delay()` i `delayMicroseconds()`.
+- Unikaj długich obliczeń i pętli oczekujących.
+
+## 5. Przykład 1 — przerwanie na wykrycie ruchu
+
+Program świeci zieloną LED w spoczynku. Gdy PIR wykryje ruch, przerwanie natychmiast wywołuje funkcję `alarm()`, która zmienia kolor — bez czekania na kolejny obrót `loop()`.
+
+<Code lang="cpp" file="pir-przerwanie-alarm.ino">
+```cpp
+#define LED_R 10
+#define LED_G 11
+#define LED_B 12
+#define KONTAKTRON 0
+#define PIR 2
+
+void setup() {
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP);
+  pinMode(PIR, INPUT);
+
+  digitalWrite(LED_R, LOW);
+  digitalWrite(LED_G, HIGH); // Zielona — stan normalny
+  digitalWrite(LED_B, LOW);
+
+  // Rejestruj ISR na zboczu rosnącym pinu PIR
+  attachInterrupt(digitalPinToInterrupt(PIR), alarm, RISING);
+}
+
+void loop() {
+  // Pętla pusta — tylko przerwanie reaguje na ruch
+}
+
+void alarm() {
+  // ISR — musi być krótka!
+  digitalWrite(LED_R, HIGH);
+  digitalWrite(LED_G, LOW);
+}
+```
+</Code>
+
+<Photo
+  file="16.01-okladka-alarm.jpg"
+  caption="Wykrycie ruchu — dioda świeci na czerwono. Przerwanie zadziałało natychmiast, niezależnie od stanu pętli."
+  alt="Układ Arduino z diodą RGB świecącą na czerwono po wykryciu ruchu przez PIR"
+/>
+
+## 6. Przykład 2 — volatile i licznik wykryć
+
+Gdy ISR musi przekazać informację do `loop()`, używamy zmiennej **globalnej** oznaczonej słowem kluczowym `volatile`. Bez `volatile` kompilator może zoptymalizować zmienną do rejestru procesora — `loop()` nie zobaczyłaby aktualnej wartości zmienionej przez ISR.
+
+<Callout type="note" title="Słowo kluczowe volatile">
+`volatile` informuje kompilator: „ta zmienna może być zmieniona poza normalnym tokiem programu (np. przez ISR) — zawsze czytaj jej wartość bezpośrednio z pamięci, nie korzystaj z wartości zapisanej w rejestrze procesora."
+</Callout>
+
+<Code lang="cpp" file="pir-volatile-licznik.ino">
+```cpp
+#define LED_R 10
+#define LED_G 11
+#define LED_B 12
+#define KONTAKTRON 0
+#define PIR 2
+
+volatile int ileRazy = 0; // Współdzielona między loop() a ISR — musi być volatile
+
+void setup() {
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP);
+  pinMode(PIR, INPUT);
+
+  digitalWrite(LED_R, LOW);
+  digitalWrite(LED_G, HIGH);
+  digitalWrite(LED_B, LOW);
+
+  attachInterrupt(digitalPinToInterrupt(PIR), alarm, RISING);
+}
+
+void loop() {
+  if (ileRazy < 3) {
+    // Stan OK — zielona
+    digitalWrite(LED_R, LOW);
+    digitalWrite(LED_G, HIGH);
+    digitalWrite(LED_B, LOW);
+  } else if (ileRazy < 6) {
+    // Ostrzeżenie — niebieska
+    digitalWrite(LED_R, LOW);
+    digitalWrite(LED_G, LOW);
+    digitalWrite(LED_B, HIGH);
+  } else {
+    // ALARM — czerwona
+    digitalWrite(LED_R, HIGH);
+    digitalWrite(LED_G, LOW);
+    digitalWrite(LED_B, LOW);
+  }
+}
+
+void alarm() {
+  ileRazy++; // ISR tylko inkrementuje licznik — reszta logiki w loop()
+}
+```
+</Code>
+
+Kolory sygnalizują aktualny poziom zagrożenia:
+
+<Photo
+  file="16.18-dioda-ok.png"
+  caption="Stan OK (mniej niż 3 wykrycia ruchu) — dioda świeci na zielono."
+  alt="Dioda RGB świecąca na zielono — stan normalny"
+/>
+
+<Photo
+  file="16.19-dioda-ostrzezenie.png"
+  caption="Ostrzeżenie (3–5 wykryć) — dioda świeci na niebiesko."
+  alt="Dioda RGB świecąca na niebiesko — stan ostrzeżenia"
+/>
+
+<Photo
+  file="16.20-dioda-alarm.png"
+  caption="ALARM (6 lub więcej wykryć) — dioda świeci na czerwono."
+  alt="Dioda RGB świecąca na czerwono — stan alarmu"
+/>
+
+## 7. Przestroga — nie używaj delay() w ISR
+
+<Photo
+  file="16.17-timer-opoznienie-ostrzezenie.jpg"
+  caption="Długi czas wykonywania ISR zatrzymuje cały program — każde wywołanie przerwania blokuje mikrokontroler."
+  alt="Zegar — ilustracja problemu długotrwałego wykonywania ISR"
+/>
+
+Jeśli umieścisz `delay(5000)` wewnątrz ISR, **każde wykrycie ruchu zatrzymuje cały program na 5 sekund**. Jeśli w `loop()` masz `delay(1000)`, timing wszystkich operacji zacznie się kumulować i zachowanie układu stanie się nieprzewidywalne — bardzo trudne do debugowania.
+
+**Złota zasada:** ISR tylko ustawia flagę lub inkrementuje licznik. Całą logikę (długie obliczenia, wyświetlanie, dźwięki) przenoś do `loop()`.
+
+<Task title="Zadanie 4.3 — alarm po zakończeniu ruchu" estimate="15 min">
+Napisz program, który wyzwala alarm **dopiero gdy ruch przestanie być wykrywany** (nie w momencie wykrycia). Przerwanie powinno reagować na zbocze **opadające** (FALLING), nie rosnące.
+
+Pamiętaj, że HC-SR501 w trybie retriggering utrzymuje wyjście HIGH przez czas ustawiony przez Tx — ustaw go na minimum przed testowaniem.
+</Task>
+
+<Task title="Zadanie 4.4 — przełączanie LED" estimate="10 min">
+Napisz program, w którym każde wykrycie ruchu **przełącza** stan diody (jeśli była wyłączona — włącza; jeśli była włączona — wyłącza). Użyj `volatile bool swiatlo = false;` i operatora `!` (negacja logiczna).
+</Task>
+
+## Podsumowanie
+
+**Kontaktron** działa jak zwykły przycisk z `INPUT_PULLUP` — reaguje na zbliżenie lub odsunięcie magnesu. **Czujnik PIR HC-SR501** wykrywa zmiany temperatury podczerwieni w polu 120°; zasięg i czas sygnału HIGH regulujesz potencjometrami Sx i Tx. Gdy program ma `delay()` lub wiele zadań, sprawdzanie czujnika w `loop()` może przeoczyć krótkie zdarzenia — **przerwanie sprzętowe** (`attachInterrupt()`) gwarantuje natychmiastową reakcję niezależnie od aktywności pętli głównej. Arduino UNO obsługuje przerwania tylko na pinach **2** i **3**. Dobierz tryb wyzwalania do sytuacji: `RISING` dla zbocza rosnącego, `FALLING` dla opadającego, `CHANGE` dla obydwu. Zmienne dzielone między ISR a `loop()` zawsze oznaczaj jako `volatile`. **Nigdy nie używaj `delay()` wewnątrz ISR** — zatrzymuje cały mikrokontroler na czas wykonania funkcji.

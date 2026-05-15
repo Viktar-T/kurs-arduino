@@ -34,8 +34,8 @@ hardware:
   - { name: "Potencjometr 10 kΩ", qty: 1 }
   - { name: "Fotorezystor", qty: 1 }
   - { name: "Dioda LED", qty: 5 }
-  - { name: "Rezystor 1000 Ω", qty: 5 }
-  - { name: "Rezystor 1 kΩ", qty: 1 }
+  - { name: "Rezystor 1 kΩ", qty: 5 }
+  - { name: "Rezystor 10 kΩ", qty: 1 }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 20 }
 
@@ -153,6 +153,13 @@ void loop() {
 ```
 </Code>
 
+
+Tak zbudowany woltomierz jest dobrym ćwiczeniem, ale nie zastępuje prawdziwego miernika. Wejście analogowe zbiera zakłócenia, zasilanie USB nie zawsze ma idealnie `5 V`, a samo Arduino nie jest zabezpieczone przed zbyt wysokim napięciem.
+
+<Callout type="tip" title="Kiedy można mierzyć baterię AA?">
+Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie wejścia Arduino UNO. Jeśli wykonujesz taki test, połącz minus baterii z `GND` Arduino, a plus baterii przyłóż do przewodu idącego na `A5`. Nie rób tak z baterią 9 V.
+</Callout>
+
 <Schematic
   src="/img/lekcje/07.03-prosty-woltomierz-arduino.png"
   caption="Prosty woltomierz na Arduino mierzy tylko napięcia bezpieczne dla wejścia ADC."
@@ -161,21 +168,18 @@ void loop() {
   height={316}
 />
 
-Tak zbudowany woltomierz jest dobrym ćwiczeniem, ale nie zastępuje prawdziwego miernika. Wejście analogowe zbiera zakłócenia, zasilanie USB nie zawsze ma idealnie `5 V`, a samo Arduino nie jest zabezpieczone przed zbyt wysokim napięciem.
-
-<Callout type="tip" title="Kiedy można mierzyć baterię AA?">
-Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie wejścia Arduino UNO. Jeśli wykonujesz taki test, połącz minus baterii z `GND` Arduino, a plus baterii przyłóż do przewodu idącego na `A5`. Nie rób tak z baterią 9 V.
-</Callout>
-
 <Expandable title="Głębiej: napięcie referencyjne i pin AREF" heading="####">
 Domyślnie ADC porównuje mierzone napięcie z napięciem zasilania Arduino, czyli `5 V`. Dlatego wynik `1023` odpowiada blisko `5 V`. Mikrokontroler ATmega328P udostępnia jednak pin `AREF` (Analog Reference, napięcie odniesienia przetwornika), do którego można podłączyć zewnętrzne napięcie referencyjne. Po wywołaniu `analogReference(EXTERNAL)` wynik `1023` będzie odpowiadał temu zewnętrznemu napięciu, a rozdzielczość jednego kroku wzrośnie proporcjonalnie — przy `2,5 V` referencji mierzysz napięcia do `2,5 V` z krokiem około `2,4 mV` zamiast `4,9 mV`.
 
-Ważne: nigdy nie podłączaj napięcia na pin `AREF` bez uprzedniego wywołania `analogReference(EXTERNAL)`. Bez tej komendy wewnętrzne napięcie referencyjne jest aktywne i zewnętrzne napięcie na pinie `AREF` może uszkodzić układ.
+Ważne: nigdy nie podłączaj napięcia na pin `AREF` bez uprzedniego wywołania `analogReference(EXTERNAL)`. 
+Bez tej komendy wewnętrzne napięcie referencyjne jest aktywne, czyli łączy główną linię zasilania Arduino (5 V) bezpośrednio z pinem AREF. 
+Bez tej komendy zewnętrzne napięcie na pinie `AREF` może uszkodzić układ.
+
 </Expandable>
 
 ## 4. Regulacja pracy programu potencjometrem
 
-Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED (Light Emitting Diode, dioda elektroluminescencyjna) z rezystorem. Dioda jest podłączona do pinu `2`.
+Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED (Light Emitting Diode) z rezystorem (1 kΩ). Dioda jest podłączona do pinu `2`.
 
 <Schematic
   src="/img/lekcje/07.04-potencjometr-regulacja-migania-led.png"

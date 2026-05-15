@@ -58,42 +58,24 @@ W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART (Universal As
 Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zmiennych. Masz już za sobą: `Serial.begin/print/println`, ramkę UART, odbieranie znaków przez `Serial.read()` i obsługę komend tekstowych przez `readStringUntil()`. Nie będziemy tego powtarzać — budujemy dalej.
 </Callout>
 
-<Objectives
-  items={[
-    "dobrać właściwy typ danych do konkretnego zastosowania",
-    "wyjaśnić i unikać pułapki dzielenia całkowitoliczbowego",
-    "rozróżniać zmienne globalne i lokalne i stosować zasadę minimalnego zasięgu",
-    "używać operatorów skróconych ++ -- += -= zamiast rozbudowanych przypisań",
-    "odbierać liczby z Monitora portu szeregowego przez Serial.parseInt()",
-  ]}
-/>
-
-<Prerequisites
-  items={[
-    "wysyłasz dane przez Serial.println() i Serial.print()",
-    "odbierasz znaki przez Serial.available() i Serial.read()",
-    "wiesz, że Arduino UNO ma tylko 2 KB RAM (Random-Access Memory, pamięć o dostępie swobodnym)",
-    "rozumiesz, że const byte to lepsza alternatywa dla #define przy numerach pinów",
-  ]}
-/>
-
-<Hardware
-  items={[
-    { name: "Arduino UNO R3", qty: 1 },
-    { name: "Kabel USB-A — USB-B", qty: 1 },
-    { name: "Dioda LED czerwona", qty: 1 },
-    { name: "Dioda LED zielona", qty: 1 },
-    { name: "Rezystor 220 Ω", qty: 2 },
-    { name: "Płytka stykowa", qty: 1 },
-    { name: "Przewody połączeniowe", qty: 6 },
-  ]}
-/>
-
----
-
 ## 1. Szufladki różnych rozmiarów — typy danych od środka
 
-Wyobraź sobie pamięć Arduino jako biurko z dokładnie **2048 szufladkami**, każda na jeden bajt. To jedyne zasoby robocze, jakie masz. Zmienna o rozmiarze 4 bajtów zajmuje 4 szufladki naraz, `byte` — jedną. Dobieranie zbyt dużego typu marnuje miejsce. Wkładanie za dużej liczby w za małą szufladkę kończy się przepełnieniem.
+Mikrokontroler Arduino UNO ATmega328P posiada dokładnie 2 Kilobajty (2 KB) pamięci operacyjnej SRAM. 
+Wyobraź sobie pamięć Arduino jako biurko z dokładnie **2048 szufladkami**, każda na jeden bajt. 
+To jedyne zasoby robocze, jakie masz. Zmienna o rozmiarze 4 bajtów zajmuje 4 szufladki naraz, `byte` — jedną. Dobieranie zbyt dużego typu marnuje miejsce. Wkładanie za dużej liczby w za małą szufladkę kończy się przepełnieniem.
+
+<Expandable title="Dlaczego pamięć wydaje bajty, a nie pojedyncze bity?" heading="####">
+Skoro `bool` potrzebuje tylko jednego bitu (0 lub 1), czemu zajmuje cały bajt i dlaczego mikrokontroler nie może po prostu sięgnąć do pamięci po jeden bit?
+
+**Powodem jest fizyczna budowa szyny danych.** Procesor łączy się z pamięcią SRAM przez zestaw przewodów zwany szyną danych (ang. *data bus*). Na Arduino UNO (ATmega328P) ta szyna ma dokładnie **8 linii** — osiem równoległych drutów, którymi w jednej chwili przesyłanych jest 8 bitów naraz. Tak jak tramwaj ma z góry ustaloną liczbę drzwi i otwiera je wszystkie równocześnie, szyna zawsze transportuje 8 bitów — ani mniej, ani więcej.
+
+Drugim powodem jest **schemat adresowania**. Każdy adres w pamięci wskazuje grupę ośmiu przerzutników (elementarnych komórek pamiętających jeden bit każda). Gdybyśmy chcieli adresować pojedyncze bity, trzeba by było mieć osiem razy więcej adresów i o wiele bardziej skomplikowany sterownik pamięci.
+
+Efekt praktyczny jest taki, że **bajt = 8 bitów to najmniejszy atom**, jakim posługuje się sprzęt. Jeśli potrzebujesz tylko jednego bitu (np. stan alarmu), i tak dostajesz cały bajt — i zostawiasz 7 bitów pustych. Można co prawda upchać kilka flag bitowych w jednym bajcie ręcznie (operatory bitowe `&`, `|`, `<<`), ale to zaawansowana technika. Na co dzień po prostu godzimy się na tę „marnotrawność" i deklarujemy `bool` zamiast skomplikować kod.
+
+Dlatego właśnie **rozmiary wszystkich typów są wielokrotnością 1 bajtu**: `bool`/`char`/`byte` = 1 B, `int` = 2 B, `long`/`float` = 4 B. Procesory nie mają pojęcia, co to ułamek bajtu.
+ **1 bajt** (czyli 8 bitów) daje nam $2^8$, czyli 256 unikalnych kombinacji (od 0 do 255).
+</Expandable>
 
 <Table
   caption="Typy danych na Arduino UNO — rozmiar, zakres i typowe zastosowanie"
@@ -176,6 +158,73 @@ char cyfra   = '5';  // wartość 53, a NIE liczba 5!
 ```
 
 Pamiętasz z poprzedniej lekcji, że `Serial.read()` zwraca `char` i że znaki mają kody ASCII? `char` to właśnie ten typ. Jednobajtowe komendy z terminala (np. `'A'` = włącz, `'B'` = wyłącz) to klasyczny przypadek użycia.
+
+<Code lang="cpp" file="char-uart.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Wpisz dowolny znak i nacisnij Enter:");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char znak = Serial.read();   // odbierz jeden bajt jako char
+
+    Serial.print("Znak: ");
+    Serial.print(znak);          // wypisze sam znak, np. A
+
+    while (Serial.available()) Serial.read();  // opróżnij resztę bufora
+  }
+}
+```
+</Code>
+
+Wgraj i wpisz kolejno `A`, `5`, `a`, spację. 
+
+Przeprowadź eksperyment: zamień `char` na `int` i zobacz co się stanie. Wgraj i wpisz kolejno A, 5, a, spację.
+
+<Expandable title="Dlaczego int wypisuje liczby, a nie litery?">
+Każdy znak ma przypisany numer według tabeli **ASCII** (American Standard Code for Information Interchange). Kiedy typ zmiennej to `char`, `Serial.print()` wie, że bajt ma być zinterpretowany jako znak i wypisuje literę lub symbol. Kiedy typ zmiennej to `int`, ta sama funkcja traktuje wartość jako **liczbę całkowitą** i wypisuje jej dziesiętną reprezentację.
+
+<Table>
+  <thead>
+    <tr>
+      <th>Wpisany znak</th>
+      <th>Kod ASCII</th>
+      <th><code>char</code> → wynik</th>
+      <th><code>int</code> → wynik</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>A</code></td>
+      <td>65</td>
+      <td><code>A</code></td>
+      <td><code>65</code></td>
+    </tr>
+    <tr>
+      <td><code>5</code></td>
+      <td>53</td>
+      <td><code>5</code></td>
+      <td><code>53</code></td>
+    </tr>
+    <tr>
+      <td><code>a</code></td>
+      <td>97</td>
+      <td><code>a</code></td>
+      <td><code>97</code></td>
+    </tr>
+    <tr>
+      <td>spacja</td>
+      <td>32</td>
+      <td> </td>
+      <td><code>32</code></td>
+    </tr>
+  </tbody>
+</Table>
+
+Litera i jej kod to ta sama wartość w pamięci — różni się tylko **typ**, który mówi Arduino, jak ją wyświetlić. To dlatego dobór właściwego typu ma znaczenie nie tylko dla obliczeń, ale też dla wyświetlania danych.
+</Expandable>
 
 ### String — wygodna, ale chciwa na RAM
 
@@ -408,7 +457,7 @@ Przy każdym obiegu `loop()` program wchodzi do `{`, deklaruje `int licznik = 0`
   headers={["Sytuacja", "Gdzie deklarować?"]}
   rows={[
     ["Musi pamiętać wartość między kolejnymi obiegami loop()", "Globalnie — przed setup()"],
-    ["Konfiguracja jednorazowa, używana tylko w setup()", "Lokalnie wewnątrz setup()"],
+    ["Należy wyłącznie do funkcji setup(). Inna część programu (zwłaszcza loop()) nie widzi zmiennej.", "Lokalnie wewnątrz setup()"],
     ["Zmienna robocza na czas jednego przebiegu loop()", "Lokalnie wewnątrz loop()"],
     ["Wynik pośredni obliczeń w bloku if/else", "Lokalnie wewnątrz bloku"],
   ]}
@@ -539,7 +588,7 @@ Teraz wpisz `7` i sprawdź, czy kolumna `Polowa` faktycznie daje `3.50` (a nie `
 
 ### Sterowanie LED na podstawie liczby z UART
 
-Połącz wszystko: odbierz liczbę i zamigaj LED tyle razy. Podłącz LED z rezystorem 220 Ω do pinu 9.
+Połącz wszystko: odbierz liczbę i zamigaj LED tyle razy. Podłącz LED z rezystorem 1 kΩ do pinu 9.
 
 <Code lang="cpp" file="parseint-blink.ino">
 ```cpp
@@ -580,42 +629,6 @@ void loop() {
 <Callout type="tip" title="Zawsze waliduj dane wejściowe">
 `Serial.parseInt()` zwraca `0` jeśli w buforze nie było cyfr (np. gdy wpisałeś/aś pusty Enter). Zawsze sprawdzaj odebraną wartość przed użyciem — `if (ile < 1 || ile > 20)` chroni logikę programu przed przypadkami brzegowymi.
 </Callout>
-
-<Task title="Zadanie 4 — regulator jasności LED" estimate="15 min">
-Podłącz LED do **pinu 9** (ten pin obsługuje PWM). Odbierz przez UART liczbę od 0 do 255, a następnie ustaw jasność LED funkcją `analogWrite(pinLed, jasnosc)`. Wyślij potwierdzenie: `"Jasnosc ustawiona na: 128"`.
-
-Jeśli wpisana liczba przekracza zakres 0–255, zamiast ustawiać jasność wypisz komunikat o błędzie.
-
-Wskazówka: `analogWrite(pin, wartosc)` przyjmuje wartość 0–255. Jest to zapowiedź PWM, które omawiamy szczegółowo w kolejnej lekcji.
-</Task>
-
-<Expandable title="Rozwiązanie Zadania 4" heading="####">
-```cpp
-const byte pinLed = 9;  // pin z obsługą PWM (tyldą ~ przy numerze)
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(pinLed, OUTPUT);
-  Serial.println("Wpisz jasnosc LED (0-255):");
-}
-
-void loop() {
-  if (Serial.available() > 0) {
-    int jasnosc = Serial.parseInt();
-
-    if (jasnosc < 0 || jasnosc > 255) {
-      Serial.println("Blad: wpisz liczbe od 0 do 255.");
-    } else {
-      analogWrite(pinLed, jasnosc);
-      Serial.print("Jasnosc ustawiona na: ");
-      Serial.println(jasnosc);
-    }
-
-    while (Serial.available()) Serial.read();
-  }
-}
-```
-</Expandable>
 
 <Expandable title="Głębiej: co zostaje w buforze po parseInt()?" heading="####">
 Po wysłaniu `128\n` bufor UART zawiera cztery bajty: `'1'`, `'2'`, `'8'`, `'\n'`. `parseInt()` odczytuje cyfry 1, 2, 8 i zatrzymuje się na `'\n'` — ten znak **pozostaje** w buforze.
@@ -658,6 +671,7 @@ Połącz wszystko z tej lekcji: `float`, konwersję typów, zasięg globalny, `p
    - powyżej 25°C → `Za goraco!` + obie LED
 4. Zlicza pomiary w zmiennej globalnej i wypisuje: `Pomiar nr: 5`.
 
+<Expandable title="Rozwiązanie">
 <Code lang="cpp" file="termometr-uart.ino">
 ```cpp
 const byte pinZielona  = 8;
@@ -707,6 +721,7 @@ void loop() {
 }
 ```
 </Code>
+</Expandable>
 
 **Rozszerzenie:** Dodaj zmienną `float minTemp` i `float maxTemp` (globalne, zainicjuj je pierwszym odczytem lub wartościami 100.0 i -100.0). Przy każdym pomiarze aktualizuj minimum i maksimum i wypisuj je na końcu wiadomości.
 </MiniProject>

@@ -1,0 +1,654 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Klawiatura matrycowa i własny system alarmowy"
+slug: "klawiatura-wlasny-system-alarmowy"
+summary: "Lekcja z kursu Forbot II #5: klawiatura matrycowa 4×4, biblioteka Keypad, odczyt wciśniętych klawiszy, budowa własnej centralki alarmowej — automat stanów (czuwanie, monitorowanie, rozbrajanie, alarm) z linijką WS2812, czujnikiem PIR, kontaktronem i buzzerem."
+
+day: 4
+weekend: 2
+order: 5
+duration: 90
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 5
+
+objectives:
+  - "Wyjaśnić, jak działa klawiatura matrycowa i dlaczego 16 przycisków wymaga tylko 8 wyprowadzeń"
+  - "Podłączyć klawiaturę 4×4 do Arduino i skonfigurować bibliotekę Keypad"
+  - "Odczytać naciśnięty klawisz i wydrukować go przez UART"
+  - "Zaprojektować program oparty na automacie stanów (switch-case)"
+  - "Zaimplementować cztery stany centralki alarmowej: czuwanie, monitorowanie, rozbrajanie i sygnalizacja alarmu"
+  - "Dodać odliczanie czasu na wpisanie kodu PIN i blokadę po błędnym wprowadzeniu"
+
+prerequisites:
+  - "dzien-04/przerwania-pir-kontaktron-wlasny-alarm"
+  - "dzien-04/syrena-alarmowa-mosfet"
+  - "dzien-04/diody-rgb-tradycyjne-oraz-ws2812"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Klawiatura matrycowa 4×4", qty: 1 }
+  - { name: "Linijka diod WS2812 (8 diod)", qty: 1 }
+  - { name: "Czujnik PIR HC-SR501", qty: 1 }
+  - { name: "Kontaktron (czujnik magnetyczny)", qty: 1 }
+  - { name: "Buzzer bez generatora", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, klawiatura, keypad, alarm, automat-stanow, ws2812, pir, kontaktron, buzzer, switch-case]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-klawiatura-wlasny-system-alarmowy-id18341"
+
+cover: "/img/lekcje/17.01-klawiatura-numeryczna-przyklad.jpg"
+publish: true
+updated: "2026-05-15"
+---
+
+W tej lekcji nauczysz się obsługiwać **klawiaturę matrycową 4×4** za pomocą biblioteki `Keypad`, a następnie wykorzystasz ją do zbudowania własnej **centralki alarmowej**. System będzie składał się z czterech stanów: czuwanie, monitorowanie, rozbrajanie i aktywny alarm. Do jego realizacji połączymy razem elementy poznane w poprzednich lekcjach — linijkę WS2812, czujnik PIR, kontaktron i buzzer.
+
+## 1. Jak działa klawiatura matrycowa
+
+Klawiatura numeryczna to wygodny sposób na wprowadzanie danych do Arduino. Popularny model 4×4 ma **16 klawiszy**, ale wymaga tylko **8 wyprowadzeń** — dzięki matrycowej organizacji styków.
+
+<Photo
+  file="17.01-klawiatura-numeryczna-przyklad.jpg"
+  caption="Przykład klawiatury numerycznej — 16 przycisków podłączonych do Arduino zaledwie 8 przewodami."
+  alt="Zdjęcie klawiatury numerycznej 4x4"
+/>
+
+Wewnątrz klawiatura jest zorganizowana w **wiersze i kolumny**. Każdy klawisz łączy jeden wiersz z jedną kolumną. Arduino wysyła sygnał kolejno przez każdy wiersz i sprawdza, który klawisz jest wciśnięty, odczytując stan kolumn — to technika zwana **skanowaniem matrycy**.
+
+<Photo
+  file="17.02-klawiatura-numeryczna-wnetrze.jpg"
+  caption="Wewnętrzne połączenie sygnałów w klawiaturze — 4 wiersze × 4 kolumny = 16 przycisków, 8 wyprowadzeń."
+  alt="Schemat wewnętrznych połączeń klawiatury matrycowej 4x4"
+/>
+
+## 2. Klawiatura z zestawu
+
+W zestawie Arduino znajduje się foliowa klawiatura matrycowa 4×4. Na froncie widać oznaczenia klawiszy `1`–`9`, `0`, `*`, `#` oraz `A`–`D`. Z tyłu wyprowadzone jest **8 elastycznych pinów** — cztery dla wierszy i cztery dla kolumn.
+
+<Photo
+  file="17.03-klawiatura-matrycowa-przod.jpg"
+  caption="Klawiatura matrycowa z zestawu — 16 przycisków, 8 wyprowadzeń."
+  alt="Zdjęcie klawiatury matrycowej 4x4 od frontu"
+/>
+
+<Photo
+  file="17.04-klawiatura-matrycowa-tyl.jpg"
+  caption="Tył klawiatury matrycowej — widoczne 8 elastycznych pinów wychodzących z taśmy."
+  alt="Zdjęcie tyłu klawiatury matrycowej z widocznymi pinami"
+/>
+
+## 3. Podłączenie klawiatury do Arduino
+
+Piny klawiatury podłączamy do pinów cyfrowych Arduino od **2 do 9**:
+
+- Wiersze (R1–R4): piny **5, 4, 3, 2**
+- Kolumny (C1–C4): piny **6, 7, 8, 9**
+
+<Photo
+  file="17.05-klawiatura-podlaczenie-arduino.jpg"
+  caption="Połączenie klawiatury matrycowej z Arduino — piny 2–9."
+  alt="Zdjęcie klawiatury podłączonej do Arduino przewodami"
+/>
+
+<Callout type="note" title="Przejściówka do płytki stykowej">
+Elastyczne piny klawiatury nie pasują bezpośrednio do płytki stykowej. Należy przymocować je do przewodów zakończonych goldpinem (żeńskim) — tworząc przejściówkę.
+</Callout>
+
+<Photo
+  file="17.06-przejsciowka-przewody.jpg"
+  caption="Przejściówka: przewody połączeniowe umożliwiające wpięcie klawiatury do płytki stykowej."
+  alt="Zdjęcie przewodów połączeniowych jako przejściówki do płytki stykowej"
+/>
+
+<Photo
+  file="17.07-uklad-testowy-klawiatura.jpg"
+  caption="Pierwszy układ testowy z klawiaturą matrycową podłączoną do Arduino."
+  alt="Zdjęcie kompletnego układu testowego na płytce stykowej"
+/>
+
+## 4. Biblioteka Keypad — konfiguracja
+
+Do obsługi klawiatury używamy biblioteki `Keypad.h`. Trzeba ją najpierw zainstalować w Arduino IDE: **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami** → wyszukaj `Keypad` autora Mark Stanley.
+
+Konfiguracja biblioteki wymaga trzech kroków: deklaracji pinów, mapy klawiszy i inicjalizacji obiektu.
+
+**Krok 1 — deklaracja pinów:**
+
+```cpp
+#include <Keypad.h> // Biblioteka obsługi klawiatury
+
+const byte ROWS = 4; // Liczba wierszy
+const byte COLS = 4; // Liczba kolumn
+
+byte rowPins[ROWS] = {5, 4, 3, 2}; // Piny wierszy
+byte colPins[COLS] = {6, 7, 8, 9}; // Piny kolumn
+```
+
+**Krok 2 — mapa klawiszy:**
+
+```cpp
+char keys[ROWS][COLS] = { // Mapowanie klawiszy na znaki
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+```
+
+<Photo
+  file="17.08-mapowanie-klawiszy.png"
+  caption="Przyjęte mapowanie klawiszy — standardowy układ 4×4 z cyframi i literami A–D."
+  alt="Diagram pokazujący mapowanie klawiszy klawiatury matrycowej 4x4"
+/>
+
+**Krok 3 — inicjalizacja obiektu:**
+
+```cpp
+Keypad klawiatura = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+```
+
+## 5. Pierwszy program — odczyt klawiatury przez UART
+
+Funkcja `klawiatura.getKey()` zwraca znak wciśniętego klawisza lub `0`, jeśli żaden klawisz nie jest naciśnięty. Poniższy program drukuje wciśnięty klawisz w Monitorze portu szeregowego:
+
+<Code lang="cpp" file="klawiatura-test.ino">
+```cpp
+#include <Keypad.h> // Biblioteka obsługi klawiatury
+
+const byte ROWS = 4; // Liczba wierszy
+const byte COLS = 4; // Liczba kolumn
+
+byte rowPins[ROWS] = {5, 4, 3, 2}; // Piny wierszy
+byte colPins[COLS] = {6, 7, 8, 9}; // Piny kolumn
+
+char keys[ROWS][COLS] = { // Mapowanie klawiszy
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+Keypad klawiatura = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  char klawisz = klawiatura.getKey(); // Odczytaj wciśnięty klawisz
+
+  if (klawisz) { // Jeśli klawisz został wciśnięty (wartość != 0)
+    Serial.println(klawisz);
+  }
+}
+```
+</Code>
+
+<Photo
+  file="17.09-efekt-pierwszego-programu.jpg"
+  caption="Efekt działania pierwszego programu — Monitor portu szeregowego wyświetla naciskane klawisze."
+  alt="Zrzut ekranu Monitora portu szeregowego z wypisanymi znakami klawiszy"
+/>
+
+<Task title="Zadanie 1 — test klawiatury" estimate="5 min">
+Wgraj program testowy i sprawdź, czy wszystkie klawisze działają poprawnie. Czy każdy klawisz wyświetla właściwy znak? Spróbuj nacisnąć dwa klawisze jednocześnie — co się dzieje?
+</Task>
+
+## 6. Projekt — własna centralka alarmowa
+
+Teraz zastosujemy klawiaturę w praktycznym projekcie: **centralce alarmowej**. Wyobraź sobie alarm zamontowany przy oknie — gdy złodziej otworzy okno, uruchamia się sygnalizacja. Właściciel wracając do domu ma chwilę, żeby wpisać PIN i rozbroić alarm.
+
+<Photo
+  file="17.10-alarm-scenariusz.jpg"
+  caption="Scenariusz alarmu — okno z czujnikiem i czas na rozbrojenie."
+  alt="Ilustracja scenariusza systemu alarmowego przy oknie"
+/>
+
+### Automat stanów
+
+Program centralki działa jak **automat stanów** (ang. *state machine*) — w danej chwili system jest zawsze w dokładnie jednym stanie i wykonuje tylko operacje przypisane do tego stanu.
+
+<Photo
+  file="17.11-automat-stanow-alarmu.png"
+  caption="Diagram automatu stanów centralki alarmowej — cztery stany i przejścia między nimi."
+  alt="Diagram automatu stanów z czterema stanami: czuwanie, monitorowanie, rozbrajanie, alarm"
+/>
+
+Cztery stany systemu:
+
+<Table
+  caption="Stany centralki alarmowej"
+  headers={["Stan", "Numer", "Opis", "Sygnalizacja"]}
+  rows={[
+    ["Czuwanie", "1", "Alarm wyłączony, czekamy na uzbrojenie (klawisz A)", "Zielona dioda LED"],
+    ["Monitorowanie", "2", "Alarm uzbrojony, czujniki aktywne", "Czerwona dioda miga"],
+    ["Rozbrajanie", "3", "Otwarto drzwi/okno — 5 sekund na wpisanie PIN", "Czerwone miganie + odliczanie"],
+    ["Sygnalizacja alarmu", "4", "Alarm aktywny — błysk czerwony/niebieski i syrena", "Naprzemienne LED + buzzer"],
+  ]}
+/>
+
+### Komponenty systemu
+
+Do budowy centralki potrzebujemy czterech elementów poza klawiaturą:
+
+<Photo
+  file="17.12-linijka-diod-podlaczenie.jpg"
+  caption="Linijka diod WS2812 podłączona do pinu A0 — sygnalizacja wizualna stanu alarmu."
+  alt="Zdjęcie linijki diod WS2812 podłączonej do Arduino"
+/>
+
+<Photo
+  file="17.13-czujnik-pir.jpg"
+  caption="Czujnik PIR HC-SR501 — wykrywa ruch i natychmiast uruchamia alarm."
+  alt="Zdjęcie czujnika PIR zamontowanego w układzie"
+/>
+
+<Photo
+  file="17.14-kontaktron.jpg"
+  caption="Kontaktron (czujnik magnetyczny) — montowany przy drzwiach lub oknie, daje czas na rozbrojenie."
+  alt="Zdjęcie kontaktronu zamontowanego przy oknie lub drzwiach"
+/>
+
+<Photo
+  file="17.15-buzzer-podlaczenie.jpg"
+  caption="Buzzer podłączony do pinu 11 — sygnał dźwiękowy podczas alarmu."
+  alt="Zdjęcie buzzera podłączonego do centralki alarmowej"
+/>
+
+## 7. Szkielet kodu — automat stanów
+
+Zaczynamy od zbudowania szkieletu programu z pustymi blokami `case`. Zmienna `stanAlarmu` przechowuje bieżący stan i decyduje, który blok wykonuje się w pętli `loop()`:
+
+<Code lang="cpp" file="centralka-szkielet.ino">
+```cpp
+#define BUZZER 11
+#define KONTAKTRON 10
+#define PIR 1
+
+#include <Keypad.h>            // Biblioteka obsługi klawiatury
+#include <Adafruit_NeoPixel.h> // Biblioteka linijki LED
+
+const byte ROWS = 4;
+const byte COLS = 4;
+
+byte rowPins[ROWS] = {5, 4, 3, 2};
+byte colPins[COLS] = {6, 7, 8, 9};
+
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+Keypad klawiatura = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+volatile int stanAlarmu = 1; // Stan początkowy: czuwanie
+
+void setup() {
+  pinMode(BUZZER, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP);
+  pinMode(PIR, INPUT_PULLUP);
+  linijka.begin();
+  linijka.show();
+}
+
+void loop() {
+  switch (stanAlarmu) { // Wykonaj akcje odpowiednie dla bieżącego stanu
+    case 1:
+      // Czuwanie
+    break;
+
+    case 2:
+      // Monitorowanie
+    break;
+
+    case 3:
+      // Rozbrajanie
+    break;
+
+    case 4:
+      // Sygnalizacja alarmu
+    break;
+  }
+}
+```
+</Code>
+
+<Callout type="note" title="Dlaczego switch-case, a nie if-else?">
+Automat stanów z `switch-case` jest czytelniejszy i łatwiejszy w rozbudowie niż zagnieżdżone bloki `if-else`. Każdy stan jest wyraźnie oddzielony. Zmiana stanu polega tylko na przypisaniu nowej wartości do `stanAlarmu`.
+</Callout>
+
+## 8. Stan 1 — czuwanie
+
+W stanie czuwania pierwsza dioda linijki świeci na **zielono**. Alarm uzbraja się po naciśnięciu klawisza `A` — przez ~10 sekund diody zapalają się kolejno na niebiesko, potem na czerwono (odliczanie), a następnie system przechodzi do monitorowania:
+
+<Code lang="cpp" file="centralka-stan1.ino">
+```cpp
+void loop() {
+  char klawisz = 0; // Zmienna na wciśnięty klawisz
+  int i = 0;        // Zmienna pomocnicza do pętli
+
+  switch (stanAlarmu) {
+    case 1:
+      // Czuwanie — zielona dioda
+      linijka.setPixelColor(0, linijka.Color(0, 15, 0)); // Dioda 1 zielona
+      linijka.show();
+
+      klawisz = klawiatura.getKey();
+      if (klawisz == 'A') { // Uzbrajamy alarm klawiszem A
+        for (i = 1; i < 8; i++) {
+          linijka.setPixelColor(i, linijka.Color(0, 0, 15)); // Kolejne diody na niebiesko
+          linijka.show();
+          delay(710); // ~5 sekund łącznie
+        }
+        for (i = 1; i < 8; i++) {
+          linijka.setPixelColor(i, linijka.Color(15, 0, 0)); // Kolejne diody na czerwono
+          linijka.show();
+          delay(710); // ~5 sekund łącznie
+        }
+        wylaczDiody();
+        stanAlarmu = 2; // Przejście do monitorowania
+      }
+    break;
+
+    case 2:
+      // Monitorowanie — dioda 8 miga na czerwono
+      linijka.setPixelColor(7, linijka.Color(15, 0, 0));
+      linijka.show();
+      delay(50);
+      linijka.setPixelColor(7, linijka.Color(0, 0, 0));
+      linijka.show();
+      delay(50);
+    break;
+
+    // ... pozostałe stany
+  }
+}
+
+void wylaczDiody() {
+  for (int i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(0, 0, 0)); // Wyłącz diodę i
+  }
+  linijka.show();
+}
+```
+</Code>
+
+## 9. Stan 2 — monitorowanie
+
+System sprawdza czujniki w każdej iteracji pętli. Wykrycie ruchu przez PIR uruchamia alarm **natychmiast** (stan 4). Otwarcie okna/drzwi przez kontaktron daje użytkownikowi chwilę na wpisanie PIN (stan 3):
+
+<Code lang="cpp" file="centralka-stan2.ino">
+```cpp
+case 2:
+  // Monitorowanie — dioda 8 miga na czerwono
+  linijka.setPixelColor(7, linijka.Color(15, 0, 0));
+  linijka.show();
+  delay(50);
+  linijka.setPixelColor(7, linijka.Color(0, 0, 0));
+  linijka.show();
+  delay(50);
+
+  if (digitalRead(PIR) == HIGH) {
+    stanAlarmu = 4; // Ruch wykryty — alarm natychmiast
+  } else if (digitalRead(KONTAKTRON) == HIGH) {
+    stanAlarmu = 3; // Kontaktron — szansa na rozbrojenie
+  }
+break;
+```
+</Code>
+
+<Callout type="warning" title="PIR a kontaktron — różny priorytet">
+Czujnik PIR wykrywa ruch wewnątrz pomieszczenia — zakładamy, że to już intruz, więc alarm uruchamia się bez szansy na rozbrojenie. Kontaktron reaguje na otwarcie okna/drzwi — to może być właściciel wracający do domu, dlatego dostaje czas na wpisanie PIN.
+</Callout>
+
+## 10. Stan 3 — rozbrajanie (wpisywanie PIN)
+
+Stan rozbrajania sprawdza kolejne cyfry kodu PIN. Jeśli wszystkie cztery cyfry są poprawne, system wraca do czuwania. Błędna cyfra lub przekroczenie czasu (50 iteracji × 100 ms = 5 sekund) uruchamia alarm:
+
+<Code lang="cpp" file="centralka-stan3.ino">
+```cpp
+case 3:
+  // Rozbrajanie — oczekiwanie na poprawny PIN
+  klawisz = klawiatura.getKey();
+  if (klawisz) {
+    if (pinAlarmuPozycja == 1 && klawisz == pinCyfra1) {
+      pinAlarmuPozycja++;
+    } else if (pinAlarmuPozycja == 2 && klawisz == pinCyfra2) {
+      pinAlarmuPozycja++;
+    } else if (pinAlarmuPozycja == 3 && klawisz == pinCyfra3) {
+      pinAlarmuPozycja++;
+    } else if (pinAlarmuPozycja == 4 && klawisz == pinCyfra4) {
+      stanAlarmu = 1;        // Poprawny PIN — powrót do czuwania
+      pinAlarmuPozycja = 1;  // Reset pozycji PIN
+    } else {
+      stanAlarmu = 4;        // Błędna cyfra — alarm
+      pinAlarmuPozycja = 1;
+    }
+  }
+
+  delay(100);
+  ileCzasuMinelo++;          // Odliczanie czasu (1 iteracja = 100 ms)
+  if (ileCzasuMinelo >= 50) {
+    stanAlarmu = 4;          // Czas minął — alarm
+  }
+break;
+```
+</Code>
+
+## 11. Stan 4 — sygnalizacja alarmu
+
+Alarm sygnalizuje zagrożenie naprzemiennym miganiem **czerwonym i niebieskim** na całej linijce oraz syreną dźwiękową na buzzerze:
+
+<Code lang="cpp" file="centralka-stan4.ino">
+```cpp
+case 4:
+  // Sygnalizacja — czerwone i niebieskie miganie z syreną
+  for (i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Wszystkie czerwone
+  }
+  linijka.show();
+  tone(BUZZER, 4300); // Wysoki ton syreny
+  delay(100);
+
+  for (i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Wszystkie niebieskie
+  }
+  linijka.show();
+  tone(BUZZER, 3500); // Niski ton syreny
+  delay(100);
+break;
+```
+</Code>
+
+## 12. Kompletny kod centralki alarmowej
+
+Poniżej pełny, działający program łączący wszystkie cztery stany:
+
+<Code lang="cpp" file="centralka-alarmowa.ino">
+```cpp
+#define BUZZER 11
+#define KONTAKTRON 10
+#define PIR 1
+
+#include <Keypad.h>
+#include <Adafruit_NeoPixel.h>
+
+const byte ROWS = 4;
+const byte COLS = 4;
+
+byte rowPins[ROWS] = {5, 4, 3, 2};
+byte colPins[COLS] = {6, 7, 8, 9};
+
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+Keypad klawiatura = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+volatile int stanAlarmu = 1; // Stan początkowy: czuwanie
+int pinAlarmuPozycja = 1;    // Aktualnie sprawdzana pozycja PIN
+char pinCyfra1 = '1';        // Pierwsza cyfra PIN
+char pinCyfra2 = '2';        // Druga cyfra PIN
+char pinCyfra3 = '3';        // Trzecia cyfra PIN
+char pinCyfra4 = '4';        // Czwarta cyfra PIN
+int ileCzasuMinelo = 0;      // Licznik czasu w stanie rozbrajania
+
+void setup() {
+  pinMode(BUZZER, OUTPUT);
+  pinMode(KONTAKTRON, INPUT_PULLUP);
+  pinMode(PIR, INPUT_PULLUP);
+  linijka.begin();
+  linijka.show();
+}
+
+void loop() {
+  char klawisz = 0;
+  int i = 0;
+
+  switch (stanAlarmu) {
+    case 1:
+      // Czuwanie — zielona dioda, klawisz A uzbraja alarm
+      linijka.setPixelColor(0, linijka.Color(0, 15, 0));
+      linijka.show();
+
+      klawisz = klawiatura.getKey();
+      if (klawisz == 'A') {
+        for (i = 1; i < 8; i++) {
+          linijka.setPixelColor(i, linijka.Color(0, 0, 15)); // Niebieskie odliczanie
+          linijka.show();
+          delay(710);
+        }
+        for (i = 1; i < 8; i++) {
+          linijka.setPixelColor(i, linijka.Color(15, 0, 0)); // Czerwone odliczanie
+          linijka.show();
+          delay(710);
+        }
+        wylaczDiody();
+        stanAlarmu = 2;
+      }
+    break;
+
+    case 2:
+      // Monitorowanie — dioda 8 miga na czerwono, czujniki aktywne
+      linijka.setPixelColor(7, linijka.Color(15, 0, 0));
+      linijka.show();
+      delay(50);
+      linijka.setPixelColor(7, linijka.Color(0, 0, 0));
+      linijka.show();
+      delay(50);
+
+      if (digitalRead(PIR) == HIGH) {
+        stanAlarmu = 4;          // Ruch — alarm natychmiast
+      } else if (digitalRead(KONTAKTRON) == HIGH) {
+        ileCzasuMinelo = 0;      // Reset odliczania
+        stanAlarmu = 3;          // Kontaktron — szansa na rozbrojenie
+      }
+    break;
+
+    case 3:
+      // Rozbrajanie — 5 sekund na wpisanie poprawnego PIN
+      klawisz = klawiatura.getKey();
+      if (klawisz) {
+        if (pinAlarmuPozycja == 1 && klawisz == pinCyfra1) {
+          pinAlarmuPozycja++;
+        } else if (pinAlarmuPozycja == 2 && klawisz == pinCyfra2) {
+          pinAlarmuPozycja++;
+        } else if (pinAlarmuPozycja == 3 && klawisz == pinCyfra3) {
+          pinAlarmuPozycja++;
+        } else if (pinAlarmuPozycja == 4 && klawisz == pinCyfra4) {
+          stanAlarmu = 1;
+          pinAlarmuPozycja = 1;
+        } else {
+          stanAlarmu = 4;        // Błędna cyfra — alarm
+          pinAlarmuPozycja = 1;
+        }
+      }
+
+      delay(100);
+      ileCzasuMinelo++;
+      if (ileCzasuMinelo >= 50) { // 50 × 100 ms = 5 sekund
+        stanAlarmu = 4;
+      }
+    break;
+
+    case 4:
+      // Sygnalizacja alarmu — syrena + naprzemienne LED
+      for (i = 0; i < 8; i++) {
+        linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Wszystkie czerwone
+      }
+      linijka.show();
+      tone(BUZZER, 4300);
+      delay(100);
+
+      for (i = 0; i < 8; i++) {
+        linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Wszystkie niebieskie
+      }
+      linijka.show();
+      tone(BUZZER, 3500);
+      delay(100);
+    break;
+  }
+}
+
+void wylaczDiody() {
+  for (int i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(0, 0, 0));
+  }
+  linijka.show();
+}
+```
+</Code>
+
+<Callout type="note" title="Domyślny PIN to 1234">
+W kodzie PIN ustawiony jest na `1234` (zmienne `pinCyfra1`–`pinCyfra4`). Aby zmienić kod, wystarczy przypisać inne znaki tym zmiennym. Pamiętaj, że `'1'` to znak (typ `char`), nie liczba całkowita `1`.
+</Callout>
+
+<Task title="Zadanie 2 — test centralki" estimate="15 min">
+Wgraj kompletny program i przetestuj wszystkie stany:
+
+1. Naciśnij `A` — obserwuj animację uzbrajania i przejście do stanu 2.
+2. Zasymuluj ruch przed czujnikiem PIR — alarm powinien uruchomić się natychmiast.
+3. Zresetuj Arduino, uzbrój alarm, zasymuluj otwarcie okna (kontaktron) i wpisz poprawny PIN `1234` — alarm powinien zostać rozbrojony.
+4. Wpisz błędny PIN podczas rozbrajania — co się dzieje?
+</Task>
+
+<Task title="Zadanie 3 — zmiana PIN" estimate="5 min">
+Zmień PIN alarmu na dowolny czterocyfrowy kod. Zaktualizuj zmienne `pinCyfra1`–`pinCyfra4` i sprawdź, czy nowy kod działa poprawnie. Pamiętaj o cudzysłowach apostrofowych: `'5'`, nie `5`.
+</Task>
+
+<MiniProject title="Rozbudowa centralki" estimate="20 min">
+
+Wybierz jedno z poniższych ulepszeń i zaimplementuj je:
+
+**Opcja A — wyświetlanie pozycji PIN na linijce:**
+Podczas wpisywania kodu PIN (stan 3) zapraw kolejne diody na żółto (`linijka.Color(10, 10, 0)`) w miarę wpisywania kolejnych cyfr. Cztery żółte diody = PIN kompletny.
+
+**Opcja B — dźwiękowe potwierdzenie naciśnięcia klawisza:**
+Dodaj krótki sygnał (np. `tone(BUZZER, 1000)` przez 50 ms) po każdym naciśnięciu klawisza w stanie rozbrajania — tak jak w prawdziwych klawiaturach alarmowych.
+
+**Opcja C — odliczanie czasu na linijce:**
+W stanie 3 (rozbrajanie) wyświetlaj na linijce ile czasu pozostało: 5 sekund = 8 diód czerwonych, 4 sekundy = 6 diód, … Użyj zmiennej `ileCzasuMinelo` do wyliczenia liczby diód.
+
+</MiniProject>
+
+## Podsumowanie
+
+Klawiatura matrycowa 4×4 komunikuje się z Arduino przez **8 wyprowadzeń** — cztery wiersze i cztery kolumny — dzięki czemu 16 klawiszy nie zajmuje 16 pinów. Biblioteka `Keypad` automatycznie obsługuje skanowanie matrycy; wystarczy zadeklarować piny, mapę znaków i wywołać `getKey()` w pętli. Centralka alarmowa bazuje na **automacie stanów** zbudowanym ze `switch-case` i zmiennej `stanAlarmu` — każdy stan wykonuje tylko swoje operacje i w odpowiednim momencie zmienia wartość tej zmiennej, przenosząc program do kolejnego stanu. Taka architektura jest czytelna, łatwa w rozbudowie i eliminuje potrzebę stosowania przerwań do większości zadań czasu rzeczywistego.
