@@ -51,7 +51,7 @@ updated: "2026-05-13"
 W poprzednich lekcjach pracowaliśmy głównie z sygnałami cyfrowymi: pin był w stanie `HIGH` albo `LOW`, przycisk był wciśnięty albo puszczony, a dioda świeciła albo nie. W praktycznych układach często chcemy jednak mierzyć coś płynnego: napięcie, położenie pokrętła, jasność albo odległość. Do takiego zadania Arduino wykorzystuje wejścia analogowe oraz przetwornik ADC.
 
 <Callout type="hazard" title="Najważniejsza granica bezpieczeństwa">
-Wejścia analogowe Arduino UNO mierzą napięcia z zakresu od `0 V` do około `5 V`. Nie podłączaj do pinów analogowych baterii 9 V, zasilaczy 12 V ani żadnych nieznanych źródeł napięcia. Przekroczenie dopuszczalnego zakresu może uszkodzić płytkę i komputer podłączony przez USB.
+Wejścia analogowe Arduino UNO mierzą napięcia z zakresu od `0 V` do około `5 V`. Nie podłączaj do pinów analogowych baterii 9 V, zasilaczy 12 V ani żadnych nieznanych źródeł napięcia. Przekroczenie dopuszczalnego zakresu może uszkodzić płytkę i komputer podłączony przez USB (Universal Serial Bus, magistrala szeregowa).
 </Callout>
 
 ## 1. Po co są wejścia analogowe
@@ -87,7 +87,7 @@ Jeden bit ma dwa stany. Dziesięć bitów daje `2^10`, czyli `1024` kombinacje. 
 
 ## 2. ADC w praktyce: potencjometr jako źródło napięcia
 
-Najprostszy test wejścia analogowego wykonamy z potencjometrem. Dwie skrajne nóżki potencjometru podłączamy do `5V` i `GND`, a środkową nóżkę do wejścia analogowego `A5`. W takim układzie potencjometr działa jak regulowany dzielnik napięcia: na środkowej nóżce pojawia się napięcie zależne od położenia pokrętła.
+Najprostszy test wejścia analogowego wykonamy z potencjometrem. Dwie skrajne nóżki potencjometru podłączamy do `5V` i `GND` (Ground, masa), a środkową nóżkę do wejścia analogowego `A5`. W takim układzie potencjometr działa jak regulowany dzielnik napięcia: na środkowej nóżce pojawia się napięcie zależne od położenia pokrętła.
 
 <Schematic
   src="/img/lekcje/07.02-potencjometr-pomiar-adc.png"
@@ -168,14 +168,14 @@ Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie we
 </Callout>
 
 <Expandable title="Głębiej: napięcie referencyjne i pin AREF" heading="####">
-Domyślnie ADC porównuje mierzone napięcie z napięciem zasilania Arduino, czyli `5 V`. Dlatego wynik `1023` odpowiada blisko `5 V`. Mikrokontroler ATmega328P udostępnia jednak pin `AREF`, do którego można podłączyć zewnętrzne napięcie referencyjne. Po wywołaniu `analogReference(EXTERNAL)` wynik `1023` będzie odpowiadał temu zewnętrznemu napięciu, a rozdzielczość jednego kroku wzrośnie proporcjonalnie — przy `2,5 V` referencji mierzysz napięcia do `2,5 V` z krokiem około `2,4 mV` zamiast `4,9 mV`.
+Domyślnie ADC porównuje mierzone napięcie z napięciem zasilania Arduino, czyli `5 V`. Dlatego wynik `1023` odpowiada blisko `5 V`. Mikrokontroler ATmega328P udostępnia jednak pin `AREF` (Analog Reference, napięcie odniesienia przetwornika), do którego można podłączyć zewnętrzne napięcie referencyjne. Po wywołaniu `analogReference(EXTERNAL)` wynik `1023` będzie odpowiadał temu zewnętrznemu napięciu, a rozdzielczość jednego kroku wzrośnie proporcjonalnie — przy `2,5 V` referencji mierzysz napięcia do `2,5 V` z krokiem około `2,4 mV` zamiast `4,9 mV`.
 
 Ważne: nigdy nie podłączaj napięcia na pin `AREF` bez uprzedniego wywołania `analogReference(EXTERNAL)`. Bez tej komendy wewnętrzne napięcie referencyjne jest aktywne i zewnętrzne napięcie na pinie `AREF` może uszkodzić układ.
 </Expandable>
 
 ## 4. Regulacja pracy programu potencjometrem
 
-Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED z rezystorem. Dioda jest podłączona do pinu `2`.
+Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED (Light Emitting Diode, dioda elektroluminescencyjna) z rezystorem. Dioda jest podłączona do pinu `2`.
 
 <Schematic
   src="/img/lekcje/07.04-potencjometr-regulacja-migania-led.png"

@@ -50,7 +50,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-W tej lekcji wracamy na chwilę do UART, żeby uporządkować formatowanie danych w Monitorze portu szeregowego. Potem poznajemy instrukcję `switch`, a na końcu łączymy ADC, serwomechanizm i UART w praktyczny projekt: analogowy wskaźnik światła.
+W tej lekcji wracamy na chwilę do UART (Universal Asynchronous Receiver-Transmitter, uniwersalny asynchroniczny nadajnik-odbiornik), żeby uporządkować formatowanie danych w Monitorze portu szeregowego. Potem poznajemy instrukcję `switch`, a na końcu łączymy ADC (Analog-to-Digital Converter, przetwornik analogowo-cyfrowy), serwomechanizm i UART w praktyczny projekt: analogowy wskaźnik światła.
 
 <Photo
   file="09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
@@ -139,7 +139,7 @@ Możesz wypisać wiele cyfr po przecinku, ale część z nich będzie wynikiem p
 
 <Expandable title="Jak float przechowuje liczby — standard IEEE 754" heading="####">
 
-Typ `float` w Arduino to 32-bitowa liczba zmiennoprzecinkowa zapisana zgodnie ze standardem **IEEE 754**. Te 32 bity dzielą się na trzy pola: 1 bit znaku, 8 bitów wykładnika i 23 bity mantysy.
+Typ `float` w Arduino to 32-bitowa liczba zmiennoprzecinkowa zapisana zgodnie ze standardem **IEEE (Institute of Electrical and Electronics Engineers) 754**. Te 32 bity dzielą się na trzy pola: 1 bit znaku, 8 bitów wykładnika i 23 bity mantysy.
 
 Mantysa przechowuje znaczące cyfry liczby. 23 bity odpowiadają mniej więcej **7 cyfrom dziesiętnym** dokładności — to nieprzekraczalny sufit dla `float`. Liczba `3.14159265` jest przechowywana tylko jako przybliżenie.
 

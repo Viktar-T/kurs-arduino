@@ -50,7 +50,7 @@ W tej lekcji nauczysz się pisać własne funkcje w C++ — zarówno proste, jak
 <Photo
   file="12.01-led-miganie-animacja.gif"
   caption="Miganie diodą — klasyczny przykład do nauki własnych funkcji."
-  alt="Animacja migającej diody LED na płytce Arduino"
+  alt="Animacja migającej diody LED (Light Emitting Diode, dioda elektroluminescencyjna) na płytce Arduino"
   width={341}
   height={341}
 />
@@ -216,7 +216,7 @@ Serial.println(kwadratPole(4));
 
 Funkcja zwracająca wartość sprawdza się wszędzie tam, gdzie potrzebujemy obliczyć coś i użyć wyniku w dalszej logice — na przykład przy pomiarze odległości.
 
-<Expandable title="Interaktywny przykład — pole kwadratu z UART" heading="####">
+<Expandable title="Interaktywny przykład — pole kwadratu z UART (Universal Asynchronous Receiver-Transmitter)" heading="####">
 
 Program czyta liczbę wpisaną w Monitorze portu szeregowego, oblicza pole kwadratu i odpowiada wynikiem:
 
@@ -273,7 +273,7 @@ Czujnik ma cztery piny:
     ["Vcc", "Zasilanie", "5 V z Arduino"],
     ["Trig", "Wyzwolenie pomiaru (wejście)", "Dowolny pin cyfrowy"],
     ["Echo", "Sygnał echa (wyjście)", "Dowolny pin cyfrowy"],
-    ["GND", "Masa", "GND Arduino"],
+    ["GND (Ground, masa)", "Masa", "GND Arduino"],
   ]}
 />
 
@@ -287,7 +287,7 @@ Czujnik ma cztery piny:
 
 ### Zasada działania
 
-1. Na pin `Trig` podajemy impuls wysoki trwający **10 µs** — czujnik wysyła 8 impulsów ultradźwiękowych.
+1. Na pin `Trig` podajemy impuls wysoki trwający **10 µs (mikrosekundy)** — czujnik wysyła 8 impulsów ultradźwiękowych.
 2. Pin `Echo` przechodzi w stan wysoki i pozostaje tam przez czas proporcjonalny do zmierzonej odległości.
 3. Mierzymy czas trwania stanu wysokiego na `Echo` — to czas podróży dźwięku (tam i z powrotem).
 4. Dzielimy przez `58`, żeby otrzymać odległość w centymetrach.

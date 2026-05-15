@@ -57,7 +57,7 @@ komputerem. Użyjemy Monitora portu szeregowego, aby Arduino mogło wysyłać
 komunikaty diagnostyczne, liczniki i odpowiedzi na komendy wpisane z klawiatury.
 
 <Callout type="note" title="Materiał źródłowy">
-Lekcja bazuje na rozdziale Forbot #3 o UART i zmiennych. Dodatkowe wyjaśnienia
+Lekcja bazuje na rozdziale Forbot #3 o UART (Universal Asynchronous Receiver-Transmitter, asynchroniczny nadajnik-odbiornik) i zmiennych. Dodatkowe wyjaśnienia
 pochodzą z lokalnych notatek o UART, pamięci Arduino UNO, znakach ASCII oraz
 różnicy między `#define`, `const byte` i zmiennymi.
 </Callout>
@@ -68,7 +68,7 @@ różnicy między `#define`, `const byte` i zmiennymi.
     "wysyłać dane z Arduino do komputera przez Serial.print() i Serial.println()",
     "wyjaśnić, co oznacza prędkość 9600 baud i dlaczego obie strony muszą mieć tę samą wartość",
     "użyć zmiennych do zapamiętywania liczników, tekstu i stanu programu",
-    "odebrać komendę z Monitora portu szeregowego i sterować diodami LED",
+    "odebrać komendę z Monitora portu szeregowego i sterować diodami LED (Light Emitting Diode, dioda elektroluminescencyjna)",
   ]}
 />
 
@@ -105,19 +105,19 @@ Komunikacja przez `Serial` pozwala wypisywać na komputerze informacje typu:
 - komunikat alarmowy,
 - tekst odebrany z Monitora portu szeregowego.
 
-Na Arduino UNO komunikacja z komputerem odbywa się przez kabel USB, ale wewnątrz
+Na Arduino UNO komunikacja z komputerem odbywa się przez kabel USB (Universal Serial Bus, magistrala szeregowa), ale wewnątrz
 płytki sygnał jest zamieniany na UART. Dlatego w kodzie używamy obiektu
-`Serial`, a na płytce mogą migać diody `TX` i `RX`.
+`Serial`, a na płytce mogą migać diody `TX` (Transmit, nadajnik) i `RX` (Receive, odbiornik).
 
 <Schematic
   src="/img/lekcje/06.01-komunikacja-usb-uart.png"
-  caption="Arduino UNO komunikuje się z PC przez USB, a na płytce sygnał trafia do interfejsu UART mikrokontrolera."
+  caption="Arduino UNO komunikuje się z PC (Personal Computer, komputer osobisty) przez USB, a na płytce sygnał trafia do interfejsu UART mikrokontrolera."
   alt="Schemat pokazujący komputer PC połączony przez USB z Arduino i mikrokontrolerem"
 />
 
 <Callout type="warning" title="Piny 0 i 1">
 Na Arduino UNO piny cyfrowe `0` (`RX`) i `1` (`TX`) są używane przez UART.
-Gdy korzystasz z `Serial`, nie traktuj ich jak zwykłych pinów I/O do LED,
+Gdy korzystasz z `Serial`, nie traktuj ich jak zwykłych pinów I/O (Input/Output, wejście/wyjście) do LED,
 przycisków albo czujników.
 </Callout>
 
@@ -444,7 +444,7 @@ błędów będą wskazywać nazwę stałej, nie gołą liczbę.
 
 Zmienna to nazwana „szufladka” w pamięci, w której program może zapisać wartość,
 odczytać ją później i zmienić w trakcie działania. Na Arduino UNO trzeba o nich
-myśleć praktycznie: płytka ma tylko `2 KB` pamięci SRAM, więc każda większa
+myśleć praktycznie: płytka ma tylko `2 KB` pamięci SRAM (Static Random-Access Memory), więc każda większa
 zmienna i każdy tekst typu `String` mają znaczenie.
 
 <Table
@@ -453,14 +453,14 @@ zmienna i każdy tekst typu `String` mają znaczenie.
   rows={[
     ["bool / boolean", "1", "false lub true (0 lub 1)", "flagi zdarzeń, stany logiczne"],
     ["char", "1", "−128 … +127", "znaki ASCII — np. 65 = 'A'; zwykle tylko wartości dodatnie"],
-    ["byte", "1", "0 … 255", "numer pinu, wartość PWM, bajt odebrany z Serial"],
+    ["byte", "1", "0 … 255", "numer pinu, wartość PWM (Pulse Width Modulation, modulacja szerokości impulsu), bajt odebrany z Serial"],
     ["int", "2", "−32 768 … +32 767", "liczniki, wyniki analogRead(), obliczenia ogólne"],
     ["unsigned int", "2", "0 … 65 535", "gdy liczby ujemne nie są potrzebne; nie mieszać z int w arytmetyce"],
     ["long", "4", "−2 147 483 648 … +2 147 483 647", "millis(), duże liczniki, czas w ms"],
     ["unsigned long", "4", "0 … 4 294 967 295", "zwracany przez millis() i micros()"],
     ["float", "4", "±3,4 × 10³⁸ (~6–7 cyfr znaczących)", "temperatura, napięcie — obliczenia z ułamkami"],
     ["double", "4", "identyczny z float na Arduino UNO", "na AVR taki sam zakres co float"],
-    ["String", "zmienna", "tekst do ~1 KB", "komendy przez Serial w ćwiczeniach; ostrożnie — fragmentuje RAM"],
+    ["String", "zmienna", "tekst do ~1 KB", "komendy przez Serial w ćwiczeniach; ostrożnie — fragmentuje RAM (Random-Access Memory, pamięć o dostępie swobodnym)"],
   ]}
 />
 
@@ -475,11 +475,14 @@ pierwszy kontakt z komendami tekstowymi.
 
 Arduino UNO (ATmega328P) ma trzy oddzielne obszary pamięci:
 
-| Pamięć | Rozmiar | Co tu mieszka | Czy zanika po wyłączeniu? |
-|---|---|---|---|
-| **Flash** | 32 KB | skompilowany kod szkicu | nie — trwała |
-| **SRAM** | 2 KB | zmienne, stos wywołań, bufor Serial | tak — ulotna |
-| **EEPROM** | 1 KB | dane konfiguracyjne do zachowania po restarcie | nie — trwała |
+<Table
+  headers={["Pamięć", "Rozmiar", "Co tu mieszka", "Czy zanika po wyłączeniu?"]}
+  rows={[
+    ["Flash", "32 KB", "skompilowany kod szkicu", "nie — trwała"],
+    ["SRAM", "2 KB", "zmienne, stos wywołań, bufor Serial", "tak — ulotna"],
+    ["EEPROM (Electrically Erasable Programmable Read-Only Memory)", "1 KB", "dane konfiguracyjne do zachowania po restarcie", "nie — trwała"],
+  ]}
+/>
 
 **Flash** jest zapisywany przy każdym wgraniu szkicu. Zmienne globalne, stałe i literały tekstowe zaczynają życie we Flash, ale przy starcie programu są kopiowane do SRAM.
 
@@ -540,12 +543,15 @@ portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
 
 W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — wartość po prostu zawija się na drugi koniec zakresu. Jest to zachowanie zdefiniowane dla typów bez znaku i powszechnie spotykane dla typów ze znakiem na AVR.
 
-| Typ | Zakres | Po przekroczeniu max |
-|---|---|---|
-| `byte` (= `uint8_t`) | 0 … 255 | 255 + 1 = **0** |
-| `int` (= `int16_t`) | -32 768 … 32 767 | 32 767 + 1 = **-32 768** |
-| `unsigned int` | 0 … 65 535 | 65 535 + 1 = **0** |
-| `unsigned long` | 0 … 4 294 967 295 | zawija się do **0** |
+<Table
+  headers={["Typ", "Zakres", "Po przekroczeniu max"]}
+  rows={[
+    [<><code>byte</code> (= <code>uint8_t</code>)</>, "0 … 255", <>255 + 1 = <strong>0</strong></>],
+    [<><code>int</code> (= <code>int16_t</code>)</>, "-32 768 … 32 767", <>32 767 + 1 = <strong>-32 768</strong></>],
+    [<><code>unsigned int</code></>, "0 … 65 535", <>65 535 + 1 = <strong>0</strong></>],
+    [<><code>unsigned long</code></>, "0 … 4 294 967 295", <>zawija się do <strong>0</strong></>],
+  ]}
+/>
 
 To zjawisko ma praktyczne skutki: funkcja `millis()` zwraca `unsigned long` i po ~49 dniach zawija się do zera. Kod, który poprawnie obsługuje zawijaniew `millis()`, musi używać odejmowania, a nie porównywania `>=`. Ten wzorzec poznasz w lekcji o wielozadaniowości.
 
@@ -579,7 +585,7 @@ bajt. Dopiero wtedy wywołujemy `Serial.read()`. Bez tego `Serial.read()` może
 zwrócić `-1`, czyli informację „nic nie przyszło”.
 
 <Callout type="note" title="ASCII: znak to też liczba">
-Monitor portu szeregowego wysyła znaki ASCII. Gdy wpisujesz `0`, Arduino odbiera
+Monitor portu szeregowego wysyła znaki ASCII (American Standard Code for Information Interchange). Gdy wpisujesz `0`, Arduino odbiera
 znak `'0'`, którego kod liczbowy to `48`, a nie wartość liczbową `0`. Dlatego w
 prostych komendach porównujemy `znak == '0'`, a nie `znak == 0`.
 </Callout>
@@ -588,14 +594,17 @@ prostych komendach porównujemy `znak == '0'`, a nie `znak == 0`.
 
 ASCII (American Standard Code for Information Interchange) przypisuje każdemu znakowi unikalny kod od 0 do 127. Wybrane wartości:
 
-| Kod | Znak | Uwaga |
-|---|---|---|
-| 10 | `\n` | nowa linia (LF) |
-| 13 | `\r` | powrót karetki (CR) |
-| 32 | ` ` | spacja |
-| 48–57 | `0`–`9` | cyfry |
-| 65–90 | `A`–`Z` | wielkie litery |
-| 97–122 | `a`–`z` | małe litery |
+<Table
+  headers={["Kod", "Znak", "Uwaga"]}
+  rows={[
+    ["10", <><code>\n</code></>, "nowa linia (LF — Line Feed)"],
+    ["13", <><code>\r</code></>, "powrót karetki (CR — Carriage Return)"],
+    ["32", <><code> </code></>, "spacja"],
+    ["48–57", <><code>0</code>–<code>9</code></>, "cyfry"],
+    ["65–90", <><code>A</code>–<code>Z</code></>, "wielkie litery"],
+    ["97–122", <><code>a</code>–<code>z</code></>, "małe litery"],
+  ]}
+/>
 
 Kilka praktycznych wzorców, które zobaczysz w kodzie Arduino:
 
@@ -606,6 +615,28 @@ Kilka praktycznych wzorców, które zobaczysz w kodzie Arduino:
 Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porównuje z kodem SOH (Start of Heading) — kontrolnym znakiem, który nigdy nie przyjedzie z klawiatury.
 
 </Expandable>
+
+Zadaniem następnego programu będzie "nasłuchiwanie" naszego imienia. Gdy je prześlemy, Arduino powinno nas przywitać komunikatem "Witaj Imie!", gdzie oczywiście wstawione zostanie przesłane wcześniej imię.
+
+<Code lang="cpp" file="blink.ino">
+   ```cpp
+String odebraneDane = ""; //Pusty ciąg odebranych danych
+
+void setup() {
+  Serial.begin(9600); //Uruchomienie komunikacji
+}
+
+void loop() {
+  if(Serial.available() > 0) { //Czy Arduino odebrało dane
+    odebraneDane = Serial.readStringUntil('\n'); //Jeśli tak, to odczytaj je do znaku końca linii i zapisz w zmiennej odebraneDane
+    Serial.println("Witaj " + odebraneDane + "!"); //Wyświetl komunikat
+  }
+}
+   ```
+</Code>
+Na początku deklarujemy zmienną *odebraneDane*, do których kopiowany będzie ciąg odebranych znaków. Poznajemy nową funkcję: *Serial.available()*. Funkcja ta zwraca ilość bajtów, które zostały odebrane i czekają na obsługę przez Arduino.
+
+W wypadku kiedy dane będą dostępne (będzie ich więcej niż 0) - rozpoczyna się ich zapisywanie do zmiennej odebraneDane. Dzieje się to za pomocą funkcji *Serial.readStringUntil(terminator)*, która kopiuje dane z bufora do momentu napotkania znaku terminatora (w tym przypadku "\n" - czyli znak nowej linii).
 
 <Photo
   file="06.06-uart-wysylanie-imienia.png"
@@ -688,13 +719,21 @@ jest odporniejszy na różne ustawienia terminala.
 
 <Task title="Zadanie 4" estimate="15 min">
 Rozbuduj program tak, aby komenda `obie` zapalała obie diody na sekundę, a
-komenda `wylacz` natychmiast gasiła obie diody.
+komenda `wylacz` natychmiast gasiła obie diody. Czyli kiedy wpiszesz w Monitorze słowo `obie`, program ma zapalić obie diody naraz, odczekać sekundę, a potem je zgasić.
 </Task>
 
 <Task title="Zadanie 5" estimate="20 min">
 Zamiast zapalać diodę tylko na sekundę, zapamiętaj jej stan w zmiennej `bool`.
 Po wpisaniu `zielona` zielona dioda ma zmienić stan na przeciwny: jeśli świeci,
 ma zgasnąć; jeśli jest zgaszona, ma się zapalić.
+</Task>
+
+<Task title="Zadanie 6" estimate="10 min">
+Przerób powyższy program w taki sposób, aby w przypadku błędnego koloru wysyłał odpowiedni komunikat przez terminal. Swoim rozwiązaniem podziel się w komentarzu!
+</Task>
+
+<Task title="Zadanie 7 ★" estimate="20 min">
+Zadanie trudniejsze, z gwiazdką. Napisz program, który po wysłaniu koloru diody zmieni jej stan na przeciwny. Jeśli dioda jest włączona, to zostanie wyłączona i na odwrót. Podpowiedź: koniecznie użyj dodatkowych zmiennych typu `bool`, które będą pamiętały aktualny stan diod.
 </Task>
 
 <Troubleshooting>

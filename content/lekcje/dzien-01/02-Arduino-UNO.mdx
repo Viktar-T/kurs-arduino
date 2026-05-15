@@ -66,7 +66,7 @@ znajduje się mikrokontroler, gdzie podłączamy zasilanie, którymi pinami
     "Wyjaśnić rolę mikrokontrolera ATmega328P (Flash, SRAM, EEPROM, 16 MHz)",
     "Rozróżnić piny cyfrowe, piny PWM i piny analogowe oraz piny zasilania",
     "Wymienić trzy sposoby zasilania UNO i powiedzieć, kiedy stosować który",
-    "Zinterpretować, co sygnalizują diody ON, L oraz TX/RX",
+    "Zinterpretować, co sygnalizują diody ON, L oraz TX (Transmit, nadajnik)/RX (Receive, odbiornik)",
   ]}
 />
 
@@ -118,12 +118,12 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
     <tr>
       <td>Wejścia analogowe (A0-A5) + zasilanie</td>
       <td>Dolna listwa goldpin</td>
-      <td>A0-A5: czujniki analogowe; obok piny 5 V, 3,3 V, GND, Vin</td>
+      <td>A0-A5: czujniki analogowe; obok piny 5 V, 3,3 V, GND (Ground, masa), Vin</td>
     </tr>
     <tr>
       <td>Komunikacja i programowanie</td>
-      <td>Lewy bok: USB-B + złącze DC</td>
-      <td>USB do PC (programowanie i zasilanie) oraz gniazdo DC 7-12 V</td>
+      <td>Lewy bok: USB-B (USB — Universal Serial Bus, magistrala szeregowa) + złącze DC (Direct Current, prąd stały)</td>
+      <td>USB do PC (PC — Personal Computer, komputer osobisty; programowanie i zasilanie) oraz gniazdo DC 7-12 V</td>
     </tr>
     <tr>
       <td>Logika i sygnalizacja</td>
@@ -144,7 +144,7 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
 6. **Złącze programowania** do mikrokontrolera z punktu 5.
 7. Złącze sygnałowe*
 8. Złącze sygnałowe*
-9. Dioda LED sygnalizująca podłączenie napięcia do Arduino
+9. Dioda LED (Light Emitting Diode, dioda elektroluminescencyjna) sygnalizująca podłączenie napięcia do Arduino
 10. Wyjście programatora dla mikrokontrolera z punktu 13.
 11. Złącze sygnałowe*
 12. Złącze zasilania*
@@ -158,7 +158,7 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
 ## 2. Mikrokontroler ATmega328P — mózg płytki
 
 Najważniejszy element znajduje się dokładnie pośrodku płytki — to **prostokątny
-układ scalony z napisem `ATMEGA328P`** w obudowie DIP (28 nóżek wpiętych w
+układ scalony z napisem `ATMEGA328P`** w obudowie DIP (Dual Inline Package — 28 nóżek wpiętych w
 podstawkę). To właśnie *on* wykonuje Twój program. Pozostała elektronika płytki
 istnieje tylko po to, żeby tego mikrokontrolera nakarmić zasilaniem,
 podłączyć do USB i wyprowadzić jego nóżki na wygodne złącza goldpin.
@@ -167,11 +167,11 @@ podłączyć do USB i wyprowadzić jego nóżki na wygodne złącza goldpin.
   caption="Najważniejsze parametry ATmega328P — warto je znać na pamięć."
   headers={["Parametr", "Wartość", "Co to znaczy w praktyce"]}
   rows={[
-    ["Architektura", "8-bitowa, AVR (RISC)", "Operuje na liczbach 8-bitowych natywnie; większe (int, long) sklejane są przez kompilator"],
+    ["Architektura", "8-bitowa, AVR, RISC (Reduced Instruction Set Computing, architektura z uproszczonymi instrukcjami)", "Operuje na liczbach 8-bitowych natywnie; większe (int, long) sklejane są przez kompilator"],
     ["Taktowanie", "16 MHz", "16 milionów taktów zegara na sekundę — wystarczy na sterowanie czujnikami, silnikami, wyświetlaczami"],
     ["Pamięć Flash", "32 kB (0,5 kB zajmuje bootloader)", "Tu trafia Twój skompilowany szkic — przeżywa wyłączenie zasilania"],
-    ["Pamięć SRAM", "2 kB", "Tu żyją zmienne podczas pracy programu — znika po wyłączeniu zasilania"],
-    ["Pamięć EEPROM", "1 kB", "Pamięć trwała na ustawienia, statystyki — przeżywa wyłączenie zasilania"],
+    ["Pamięć SRAM (Static Random-Access Memory)", "2 kB", "Tu żyją zmienne podczas pracy programu — znika po wyłączeniu zasilania"],
+    ["Pamięć EEPROM (Electrically Erasable Programmable Read-Only Memory)", "1 kB", "Pamięć trwała na ustawienia, statystyki — przeżywa wyłączenie zasilania"],
     ["Napięcie pracy", "5 V", "Wszystkie piny mówią językiem 0 V / 5 V — to bardzo ważne przy podłączaniu czujników"],
     ["Maksymalny prąd z pinu", "20 mA (zalecane), 40 mA (absolutne maksimum)", "Diodę LED zasilisz bezpośrednio, ale silnika DC już nie — potrzebny tranzystor / mostek H"],
   ]}
@@ -192,7 +192,7 @@ mikrokontrolerowi „takt”. Jeden takt zegara to **jedna prosta operacja proce
 
 - migać diodą setki tysięcy razy na sekundę (tylko po co?),
 - generować sygnał PWM o częstotliwości ok. 500 Hz lub 1 kHz,
-- obsługiwać UART, I2C i SPI równocześnie,
+- obsługiwać UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit) i SPI (Serial Peripheral Interface) równocześnie,
 - mierzyć czas z dokładnością do mikrosekund (`micros()`).
 
 Dla porównania: nowoczesny laptop ma zegar około **2-4 GHz** — czyli ~150-250
@@ -228,11 +228,11 @@ diodę, przycisk, czujnik, silnik, wyświetlacz.
     ["D7", "Cyfrowy I/O", "—", ""],
     ["D8", "Cyfrowy I/O", "—", ""],
     ["D9", "Cyfrowy I/O", "PWM ~", "Wyjście PWM (często do serwa)"],
-    ["D10", "Cyfrowy I/O", "PWM ~, SPI (SS)", "Wyjście PWM + Slave Select dla SPI"],
-    ["D11", "Cyfrowy I/O", "PWM ~, SPI (MOSI)", "Wyjście PWM + linia danych SPI"],
-    ["D12", "Cyfrowy I/O", "SPI (MISO)", ""],
-    ["D13", "Cyfrowy I/O", "SPI (SCK), LED_BUILTIN", "Tu jest wbudowana dioda L — sygnalizuje stan pinu"],
-    ["A0-A5", "Wejście analogowe (ADC 10-bit)", "Też mogą działać jako cyfrowe D14-D19", "A4 = SDA (I2C), A5 = SCL (I2C)"],
+    ["D10", "Cyfrowy I/O", "PWM ~, SPI (SS — Slave Select)", "Wyjście PWM + Slave Select dla SPI"],
+    ["D11", "Cyfrowy I/O", "PWM ~, SPI (MOSI — Master Out Slave In)", "Wyjście PWM + linia danych SPI"],
+    ["D12", "Cyfrowy I/O", "SPI (MISO — Master In Slave Out)", ""],
+    ["D13", "Cyfrowy I/O", "SPI (SCK — Serial Clock), LED_BUILTIN", "Tu jest wbudowana dioda L — sygnalizuje stan pinu"],
+    ["A0-A5", "Wejście analogowe (ADC 10-bit)", "Też mogą działać jako cyfrowe D14-D19", "A4 = SDA (Serial Data, linia danych I²C), A5 = SCL (Serial Clock, linia zegara I²C)"],
   ]}
 />
 
@@ -371,7 +371,7 @@ nic nie miga — sprawdź kabel, sterowniki USB i wybrany port w IDE.
 
 ### 6.3 Złącze ICSP
 
-W rogu płytki widzisz **rząd 2×3 pinów** opisanych `ICSP`. To „awaryjne”
+W rogu płytki widzisz **rząd 2×3 pinów** opisanych `ICSP` (In-Circuit Serial Programming). To „awaryjne”
 złącze do programowania mikrokontrolera *bezpośrednio*, z pominięciem
 bootloadera i USB. Na naszym kursie tego **nie używamy** — programujemy
 wyłącznie przez USB. ICSP przyda Ci się dopiero, jeśli kiedyś będziesz
@@ -386,7 +386,7 @@ ATmega328P.
 - **Polifuza F1** — element zabezpieczający port USB komputera przed zwarciem.
   Jeśli omyłkowo zewrzesz 5 V z GND, polifuza tymczasowo odetnie prąd, a po
   ostudzeniu wróci do działania.
-- **AREF** — pin obok pinów cyfrowych. Umożliwia podanie własnego napięcia
+- **AREF** (Analog Reference, napięcie odniesienia przetwornika) — pin obok pinów cyfrowych. Umożliwia podanie własnego napięcia
   odniesienia dla ADC (np. 3,3 V zamiast domyślnych 5 V). Zaawansowane —
   używamy rzadko.
 
@@ -394,7 +394,7 @@ ATmega328P.
 W 2023 r. Arduino wypuściło nową wersję — **UNO R4** (warianty *Minima* i
 *WiFi*). Różni się znacząco:
 
-- **Inny mikrokontroler** — Renesas RA4M1 (32-bitowy ARM Cortex-M4, 48 MHz)
+- **Inny mikrokontroler** — Renesas RA4M1 (32-bitowy ARM — Advanced RISC Machine — Cortex-M4, 48 MHz)
   zamiast 8-bitowego ATmega328P @ 16 MHz.
 - **Więcej pamięci** — 256 kB Flash i 32 kB SRAM (czyli 8× / 16× więcej niż R3).
 - **Złącze USB-C** zamiast USB-B.

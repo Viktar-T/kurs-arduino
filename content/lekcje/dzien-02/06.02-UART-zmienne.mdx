@@ -52,7 +52,7 @@ updated: "2026-05-14"
 
 ## Czego się dziś nauczymy
 
-W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART i zobaczyłeś/aś tabelę typów danych. Teraz czas na głębsze nurkowanie: każdy typ z osobna, analogie z życia, pułapka która potrafi zaskoczyć nawet doświadczonych programistów, oraz nowa supermoc — wpisanie liczby z klawiatury i odebranie jej jako wartości numerycznej, nie tylko jako znaku.
+W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART (Universal Asynchronous Receiver-Transmitter, asynchroniczny nadajnik-odbiornik) i zobaczyłeś/aś tabelę typów danych. Teraz czas na głębsze nurkowanie: każdy typ z osobna, analogie z życia, pułapka która potrafi zaskoczyć nawet doświadczonych programistów, oraz nowa supermoc — wpisanie liczby z klawiatury i odebranie jej jako wartości numerycznej, nie tylko jako znaku.
 
 <Callout type="note" title="Lekcja bazuje na">
 Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zmiennych. Masz już za sobą: `Serial.begin/print/println`, ramkę UART, odbieranie znaków przez `Serial.read()` i obsługę komend tekstowych przez `readStringUntil()`. Nie będziemy tego powtarzać — budujemy dalej.
@@ -72,7 +72,7 @@ Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zm
   items={[
     "wysyłasz dane przez Serial.println() i Serial.print()",
     "odbierasz znaki przez Serial.available() i Serial.read()",
-    "wiesz, że Arduino UNO ma tylko 2 KB RAM",
+    "wiesz, że Arduino UNO ma tylko 2 KB RAM (Random-Access Memory, pamięć o dostępie swobodnym)",
     "rozumiesz, że const byte to lepsza alternatywa dla #define przy numerach pinów",
   ]}
 />
@@ -99,11 +99,11 @@ Wyobraź sobie pamięć Arduino jako biurko z dokładnie **2048 szufladkami**, k
   caption="Typy danych na Arduino UNO — rozmiar, zakres i typowe zastosowanie"
   headers={["Typ", "Rozmiar [B]", "Zakres", "Kiedy używać?"]}
   rows={[
-    ["bool", "1", "true / false", "flagi, stany: czy alarm jest aktywny, czy LED świeci"],
-    ["byte", "1", "0 … 255", "numery pinów, wartości PWM, adresy I2C"],
+    ["bool", "1", "true / false", "flagi, stany: czy alarm jest aktywny, czy LED (Light Emitting Diode, dioda elektroluminescencyjna) świeci"],
+    ["byte", "1", "0 … 255", "numery pinów, wartości PWM (Pulse Width Modulation, modulacja szerokości impulsu), adresy I²C (Inter-Integrated Circuit)"],
     ["int", "2", "−32 768 … 32 767", "odczyty analogowe, temperatury, liczniki ogólnego przeznaczenia"],
     ["long", "4", "±2 147 483 647", "wynik millis(), duże liczniki impulsów"],
-    ["char", "1", "−128 … 127", "pojedynczy znak ASCII, jednobajtowa komenda"],
+    ["char", "1", "−128 … 127", "pojedynczy znak ASCII (American Standard Code for Information Interchange), jednobajtowa komenda"],
     ["String", "zmienny", "dynamiczny (heap)", "proste komendy tekstowe — ostrożnie z RAM!"],
     ["float", "4", "±3.4 × 10³⁸ (~6 cyfr)", "temperatura, napięcie, ułamki"],
   ]}
@@ -741,4 +741,4 @@ void loop() {
 - **Zasięg:** zmienne globalne (przed `setup()`) pamiętają wartość przez cały czas działania programu; lokalne (w bloku `{}`) są niszczone przy wychodzeniu z klamry. Deklaruj zmienne tak nisko jak to możliwe.
 - **`Serial.parseInt()`** odbiera wielocyfrową liczbę całkowitą z UART i zwraca ją jako `long` — to o wiele więcej niż `Serial.read()`, który daje pojedynczy bajt ASCII.
 
-W kolejnej lekcji użyjemy przetwornika ADC do odczytu prawdziwych wartości analogowych — napięcia, czujnika temperatury, potencjometru. Znasz już wszystkie narzędzia, żeby wysyłać te dane przez UART i przeliczać je na sensowne jednostki.
+W kolejnej lekcji użyjemy przetwornika ADC (Analog-Digital Converter, przetwornik analogowo-cyfrowy) do odczytu prawdziwych wartości analogowych — napięcia, czujnika temperatury, potencjometru. Znasz już wszystkie narzędzia, żeby wysyłać te dane przez UART i przeliczać je na sensowne jednostki.

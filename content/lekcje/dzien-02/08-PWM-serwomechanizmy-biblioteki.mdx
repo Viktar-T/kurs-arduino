@@ -49,7 +49,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC. Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM, czyli modulacja szerokości impulsu. Na końcu wykorzystamy też bibliotekę `Servo`, aby sterować położeniem serwomechanizmu.
+W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC (Analog-Digital Converter, przetwornik analogowo-cyfrowy). Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM (Pulse Width Modulation, modulacja szerokości impulsu). Na końcu wykorzystamy też bibliotekę `Servo`, aby sterować położeniem serwomechanizmu.
 
 <Photo
   file="08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
@@ -99,7 +99,7 @@ Najważniejsze pojęcia są trzy: czas stanu wysokiego, okres oraz wypełnienie.
   rows={[
     ["Amplituda", "około 5 V", "Napięcie stanu wysokiego na Arduino UNO"],
     ["Okres", "2 s", "1 s świecenia + 1 s przerwy"],
-    ["Częstotliwość", "0,5 Hz", "Jeden cykl trwa dwie sekundy"],
+    ["Częstotliwość", "0,5 Hz (herc — cykli na sekundę)", "Jeden cykl trwa dwie sekundy"],
     ["Wypełnienie", "50%", "Przez połowę czasu pin jest w stanie `HIGH`"],
   ]}
 />
@@ -145,7 +145,7 @@ PWM polega właśnie na szybkim przełączaniu sygnału prostokątnego i regulac
 <Expandable title="Głębiej: częstotliwość sprzętowego PWM w Arduino UNO" heading="####">
 W powyższych przykładach używamy opóźnień jednej sekundy i dioda widocznie miga. Sprzętowy PWM na pinach oznaczonych `~` działa domyślnie znacznie szybciej: piny `3`, `9`, `10`, `11` generują sygnał z częstotliwością **490 Hz**, a piny `5` i `6` — **980 Hz**. Jeden cykl trwa odpowiednio około `2 ms` i `1 ms` — zbyt szybko, żeby ludzkie oko mogło śledzić miganie.
 
-Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy `20 ms` niezależnie od sprzętowego PWM.
+Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC (Direct Current, prąd stały) pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy `20 ms` niezależnie od sprzętowego PWM.
 </Expandable>
 
 ## 2. Do czego używamy PWM
@@ -156,7 +156,7 @@ PWM jest bardzo popularny, bo pozwala sterować elementami wykonawczymi z poziom
   caption="Typowe zastosowania PWM"
   headers={["Zastosowanie", "Co regulujemy", "Co obserwujemy"]}
   rows={[
-    ["Dioda LED", "Jasność", "Dioda świeci słabiej lub mocniej"],
+    ["Dioda LED (Light Emitting Diode, dioda elektroluminescencyjna)", "Jasność", "Dioda świeci słabiej lub mocniej"],
     ["Silnik DC", "Średnią moc", "Silnik obraca się wolniej lub szybciej"],
     ["Serwomechanizm", "Szerokość impulsu sterującego", "Wał ustawia się pod zadanym kątem"],
   ]}
@@ -273,7 +273,7 @@ Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz
 - **1,5 ms** → pozycja środkowa `90°`
 - **2 ms** → pozycja `180°`
 
-Biblioteka `Servo.h` domyślnie używa impulsów `544 µs` dla `0°` i `2400 µs` dla `180°`. Jeśli serwo nie dochodzi do skrajnych pozycji albo drży na krańcach, podaj własne granice w mikrosekudach przez `attach(pin, minUs, maxUs)` — wartości zależą od konkretnego modelu serwa.
+Biblioteka `Servo.h` domyślnie używa impulsów `544 µs` (mikrosekund) dla `0°` i `2400 µs` dla `180°`. Jeśli serwo nie dochodzi do skrajnych pozycji albo drży na krańcach, podaj własne granice w mikrosekudach przez `attach(pin, minUs, maxUs)` — wartości zależą od konkretnego modelu serwa.
 </Expandable>
 
 ## 6. Zasilanie serwomechanizmu
@@ -374,7 +374,7 @@ Lekkie drżenie może wynikać z zakłóceń zasilania, słabych styków na pły
 W tej lekcji sterujemy serwem, ale sygnał z pinu Arduino trafia tylko do wewnętrznego sterownika serwomechanizmu. Pin nie zasila silnika bezpośrednio. To bardzo ważna różnica.
 
 <Callout type="hazard" title="Silnik DC wymaga sterownika">
-Zwykły silnik DC potrafi pobrać wielokrotnie więcej prądu niż pin Arduino może bezpiecznie dostarczyć. Nie podłączaj silnika bezpośrednio do pinu mikrokontrolera. Do sterowania silnikami używa się elementów pośredniczących, na przykład tranzystorów, modułów MOSFET albo mostków H.
+Zwykły silnik DC potrafi pobrać wielokrotnie więcej prądu niż pin Arduino może bezpiecznie dostarczyć. Nie podłączaj silnika bezpośrednio do pinu mikrokontrolera. Do sterowania silnikami używa się elementów pośredniczących, na przykład tranzystorów, modułów MOSFET (Metal-Oxide-Semiconductor Field-Effect Transistor, tranzystor polowy) albo mostków H.
 </Callout>
 
 W kolejnych lekcjach wrócimy do silników DC i pokażemy, jak sterować nimi poprawnie. Na tym etapie zapamiętaj zasadę: pin Arduino steruje, ale nie zasila dużych obciążeń.

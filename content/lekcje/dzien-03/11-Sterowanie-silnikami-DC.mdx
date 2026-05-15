@@ -50,7 +50,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-W tej lekcji zajmiemy się małymi silnikami DC. Nauczysz się, dlaczego nie wolno podłączać ich bezpośrednio do pinów Arduino, do czego służy mostek H, jak zmieniać kierunek obrotów i jak regulować prędkość przez PWM. Przy okazji poznamy pętlę `for`, która bardzo ułatwia płynne zmiany wartości.
+W tej lekcji zajmiemy się małymi silnikami DC (Direct Current, prąd stały). Nauczysz się, dlaczego nie wolno podłączać ich bezpośrednio do pinów Arduino, do czego służy mostek H, jak zmieniać kierunek obrotów i jak regulować prędkość przez PWM (Pulse Width Modulation, modulacja szerokości impulsu). Przy okazji poznamy pętlę `for`, która bardzo ułatwia płynne zmiany wartości.
 
 <Photo
   file="11.01-sterowanie-silnikami-dc-okladka.png"
@@ -98,7 +98,7 @@ Silnik jest też źródłem zakłóceń i przepięć. Bez elementu pośredniczą
 
 <Expandable title="Back-EMF — skąd biorą się przepięcia od silnika?" heading="####">
 
-Gdy wirnik silnika obraca się w polu magnetycznym, sam zachowuje się jak generator i wytwarza napięcie skierowane przeciwnie do źródła zasilania. Nazywamy to **siłą przeciwelektromotoryczną** (ang. *back-EMF*).
+Gdy wirnik silnika obraca się w polu magnetycznym, sam zachowuje się jak generator i wytwarza napięcie skierowane przeciwnie do źródła zasilania. Nazywamy to **siłą przeciwelektromotoryczną** (ang. *back-EMF*, Back Electromotive Force — wsteczna siła elektromotoryczna).
 
 Poważniejszy problem pojawia się w chwili nagłego odcięcia zasilania. Energia zgromadzona w uzwojeniach nie znika natychmiast — silnik „wyrzuca" wtedy skok napięcia z powrotem do układu. Bez ochrony takie przepięcie może zniszczyć tranzystory sterownika lub mikrokontroler.
 
@@ -160,7 +160,7 @@ Dwie różne kombinacje zatrzymują silnik. W zależności od sterownika może t
 
 ## 5. Zasilanie i pierwsze podłączenie L293D
 
-Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB, a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
+Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB (Universal Serial Bus, uniwersalna magistrala szeregowa), a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
 
 <Schematic
   src="/img/lekcje/11.06-l293d-zasilanie-i-wyjscie-silnika.png"
@@ -220,7 +220,7 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 
 ## 6. Symulacja silnika diodami LED
 
-W zestawie kursowym nie musi być silnika DC, dlatego działanie mostka H można zasymulować dwiema diodami LED połączonymi przeciwnie. Gdy prąd popłynie w jedną stronę, zaświeci jedna dioda. Gdy kierunek prądu się odwróci, zaświeci druga.
+W zestawie kursowym nie musi być silnika DC, dlatego działanie mostka H można zasymulować dwiema diodami LED (Light Emitting Diode, dioda elektroluminescencyjna) połączonymi przeciwnie. Gdy prąd popłynie w jedną stronę, zaświeci jedna dioda. Gdy kierunek prądu się odwróci, zaświeci druga.
 
 <Schematic
   src="/img/lekcje/11.12-symulacja-silnika-dwie-diody.png"
@@ -385,7 +385,7 @@ Napisz program, który za pomocą pętli `for` miga diodą 5 razy. Następnie sp
 </Task>
 
 <Task title="Zadanie 3" estimate="15 min">
-Napisz program, który odczytuje z UART liczbę z zakresu `0`-`9`, a następnie wypisuje w terminalu tyle znaków `*`, ile wynosi odebrana liczba.
+Napisz program, który odczytuje z UART (Universal Asynchronous Receiver-Transmitter, uniwersalny asynchroniczny nadajnik-odbiornik) liczbę z zakresu `0`-`9`, a następnie wypisuje w terminalu tyle znaków `*`, ile wynosi odebrana liczba.
 </Task>
 
 ## 10. Płynne rozpędzanie silnika

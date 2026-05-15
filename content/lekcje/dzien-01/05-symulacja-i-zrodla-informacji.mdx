@@ -91,7 +91,7 @@ zresetujesz symulację i spróbujesz ponownie.
    (można użyć konta Google lub szkolnego).
 2. Wybierz **Circuits** → **Create new Circuit**.
 3. Przeciągnij z panelu po prawej płytkę **Arduino UNO** na obszar roboczy.
-4. Dodaj komponenty (LED, rezystor, przewody) i kliknij **Start Simulation**.
+4. Dodaj komponenty (LED — Light Emitting Diode, dioda elektroluminescencyjna; rezystor, przewody) i kliknij **Start Simulation**.
 
 Będziemy korzystać z Tinkercad regularnie.
 
@@ -104,8 +104,8 @@ Najczęściej otwierane sekcje:
 
 - **[Language Reference](https://docs.arduino.cc/language-reference/)** — każda funkcja języka Arduino (`digitalWrite`, `analogRead`,
   `Serial.print`, `millis`…) z opisem parametrów, wartości zwracanej i przykładem.
-- **[Built-in Libraries](https://docs.arduino.cc/libraries/)** — dokumentacja bibliotek dołączonych do IDE (Servo, Wire,
-  SPI, EEPROM…).
+- **[Built-in Libraries](https://docs.arduino.cc/libraries/)** — dokumentacja bibliotek dołączonych do IDE (Integrated Development Environment, zintegrowane środowisko programistyczne): Servo, Wire,
+  SPI (Serial Peripheral Interface), EEPROM (Electrically Erasable Programmable Read-Only Memory)…
 - **[Hardware](https://docs.arduino.cc/hardware/)** — schematy, dane techniczne płytek (w tym UNO R3 i R4).
 
 <Callout type="tip" title="Szybki sposób na docs.arduino.cc">
@@ -118,11 +118,14 @@ do właściwej strony, bez przebijania się przez wyniki sponsorowane.
 **forbot.pl** to największy polskojęzyczny serwis o Arduino i robotyce. Trzy kursy,
 których używamy na tym szkoleniu jako szkielet materiału:
 
-| Kurs | Adres | Co obejmuje |
-|---|---|---|
-| Kurs podstaw Arduino | [forbot.pl → Kurs Arduino poziom I](https://forbot.pl/blog/kurs-arduino-podstawy-programowania-spis-tresci-kursu-id5290) | Środowisko, C++, I/O, czujniki — Dni 1–6 |
-| Kurs Arduino poziom II | [forbot.pl → Kurs Arduino poziom II](https://forbot.pl/blog/kurs-arduino-ii-wstep-spis-tresci-id15494) | UART, I2C, SPI, LCD, silniki — Dni 3–8 |
-| Kurs budowy robotów | [forbot.pl → Kurs budowy robotów](https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935) | Line follower, czujniki IR — Dni 9–10 |
+<Table
+  headers={["Kurs", "Adres", "Co obejmuje"]}
+  rows={[
+    ["Kurs podstaw Arduino", <><a href="https://forbot.pl/blog/kurs-arduino-podstawy-programowania-spis-tresci-kursu-id5290">forbot.pl → Kurs Arduino poziom I</a></>, "Środowisko, C++, I/O (Input/Output, wejścia/wyjścia), czujniki — Dni 1–6"],
+    ["Kurs Arduino poziom II", <><a href="https://forbot.pl/blog/kurs-arduino-ii-wstep-spis-tresci-id15494">forbot.pl → Kurs Arduino poziom II</a></>, "UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit), SPI, LCD (Liquid Crystal Display), silniki — Dni 3–8"],
+    ["Kurs budowy robotów", <><a href="https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935">forbot.pl → Kurs budowy robotów</a></>, "Line follower, czujniki IR — Dni 9–10"],
+  ]}
+/>
 
 Każdy kurs jest podzielony na rozdziały z kodem i schematami. Jeśli na zajęciach
 coś umknęło — wróć do Forbot i przeczytaj jeszcze raz ze zdjęciami i animacjami.
@@ -136,7 +139,7 @@ Na kursie korzystamy z dwóch ebooków polskiego Helionu autorstwa Simona Monka:
 - **[„Arduino dla początkujących: kolejny krok"](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-kolejny-krok-2-239s..pdf)** — rozszerza wiedzę o biblioteki,
   silniki, wyświetlacze, komunikację I2C — Dni 4–8.
 
-Pliki PDF masz na serwerze kursu lub na pendrivie od prowadzącego.
+Pliki PDF (Portable Document Format) masz na serwerze kursu lub na pendrivie od prowadzącego.
 
 <Callout type="note" title="Kindle / aplikacja Kindle">
 Ebooki są dostępne też w formacie Kindle (Amazon). Jeśli masz czytnik lub
@@ -170,7 +173,7 @@ schemat połączeń lub opis układu oraz treść komunikatu błędu. Bez tych c
 elementów odpowiedź będzie odgadywaniem.
 </Callout>
 
-## 7. AI — pomocnik, nie wyrocznia
+## 7. AI (Artificial Intelligence, sztuczna inteligencja) — pomocnik, nie wyrocznia
 
 [Dedykowany AI pomocnik do naszego kursu](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing)
 
@@ -201,15 +204,18 @@ zawsze weryfikuj w [docs.arduino.cc](https://docs.arduino.cc/).
 
 ## Podsumowanie
 
-| Zasób | Kiedy sięgać |
-|---|---|
-| [Tinkercad](https://www.tinkercad.com/) | Zawsze — przed przejściem na fizyczną płytkę |
-| [docs.arduino.cc](https://docs.arduino.cc/) | Zawsze — składnia funkcji, parametry, przykłady |
-| [Forbot.pl](https://forbot.pl/blog/kursy) | Pełne lekcje po polsku z kodem i schematami |
-| Ebooki Monka | Głębsze wyjaśnienia teorii i ćwiczenia |
-| [YouTube](https://www.youtube.com/@Arduino) | Gdy potrzebujesz zobaczyć, jak coś wygląda na żywo |
-| [Forum](https://forum.arduino.cc/) / [Stack Overflow](https://stackoverflow.com/questions/tagged/arduino) | Konkretny błąd lub problem, którego nie ma w docs |
-| [ChatGPT](https://chatgpt.com/) / [Claude](https://claude.ai/) | Szybka odpowiedź — zawsze weryfikuj w dokumentacji |
+<Table
+  headers={["Zasób", "Kiedy sięgać"]}
+  rows={[
+    [<><a href="https://www.tinkercad.com/">Tinkercad</a></>, "Zawsze — przed przejściem na fizyczną płytkę"],
+    [<><a href="https://docs.arduino.cc/">docs.arduino.cc</a></>, "Zawsze — składnia funkcji, parametry, przykłady"],
+    [<><a href="https://forbot.pl/blog/kursy">Forbot.pl</a></>, "Pełne lekcje po polsku z kodem i schematami"],
+    ["Ebooki Monka", "Głębsze wyjaśnienia teorii i ćwiczenia"],
+    [<><a href="https://www.youtube.com/@Arduino">YouTube</a></>, "Gdy potrzebujesz zobaczyć, jak coś wygląda na żywo"],
+    [<><a href="https://forum.arduino.cc/">Forum</a> / <a href="https://stackoverflow.com/questions/tagged/arduino">Stack Overflow</a></>, "Konkretny błąd lub problem, którego nie ma w docs"],
+    [<><a href="https://chatgpt.com/">ChatGPT</a> / <a href="https://claude.ai/">Claude</a></>, "Szybka odpowiedź — zawsze weryfikuj w dokumentacji"],
+  ]}
+/>
 
 Teraz, gdy wiesz, gdzie szukać pomocy, jesteś gotowy na samodzielną pracę.
 W kolejnych lekcjach będziemy regularnie zaglądać do `docs.arduino.cc` — każda

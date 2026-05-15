@@ -49,7 +49,7 @@ updated: "2026-05-14"
 
 W tej lekcji piszemy pierwsze działające programy na Arduino. Zaczniemy od struktury szkicu — funkcji `setup()` i `loop()` — a skończymy na symulacji świateł drogowych sterowanych przyciskiem. Po drodze poznasz wszystkie podstawowe funkcje wejścia/wyjścia: `pinMode()`, `digitalWrite()`, `digitalRead()` i `delay()`.
 
-<Photo file="04.10-kurs-arduino-porty-io-okladka.jpg" day="dzien-01" caption="Kurs Arduino — część 2: programowanie i porty I/O" alt="Okładka drugiej części kursu Arduino na portalu Forbot — programowanie i porty I/O" />
+<Photo file="04.10-kurs-arduino-porty-io-okladka.jpg" day="dzien-01" caption="Kurs Arduino — część 2: programowanie i porty I/O (Input/Output, wejścia/wyjścia)" alt="Okładka drugiej części kursu Arduino na portalu Forbot — programowanie i porty I/O" />
 
 ## 1. Szkielet programu Arduino
 
@@ -105,10 +105,10 @@ Zanim zaczniesz pisać program sterujący pinami, warto poznać mapę wyprowadze
   caption="Grupy pinów Arduino UNO"
   headers={["Kolor (schemat)", "Grupa", "Piny", "Opis"]}
   rows={[
-    ["Ciemnozielony", "Cyfrowe wejścia/wyjścia", "D0–D13 (0–13)", "Stan LOW (0 V) lub HIGH (5 V); pin 13 ma wbudowaną diodę LED"],
-    ["Jasnozielony", "Analogowe wejścia", "A0–A5", "Pomiar napięcia 0–5 V (10-bitowy ADC); mogą też pracować jako cyfrowe I/O"],
-    ["Niebieski", "Funkcje specjalne", "0 (RX), 1 (TX), A4 (SDA), A5 (SCL), 3/5/6/9/10/11 (PWM)", "UART, I²C, sygnał PWM, wbudowana dioda (pin 13)"],
-    ["Pomarańczowy", "Zasilanie", "5 V, 3,3 V, GND, Vin", "Piny nieprogrAmowalne — zasilanie i masa układu"],
+    ["Ciemnozielony", "Cyfrowe wejścia/wyjścia", "D0–D13 (0–13)", "Stan LOW (0 V) lub HIGH (5 V); pin 13 ma wbudowaną diodę LED (Light Emitting Diode, dioda elektroluminescencyjna)"],
+    ["Jasnozielony", "Analogowe wejścia", "A0–A5", "Pomiar napięcia 0–5 V (10-bitowy ADC — Analog-Digital Converter, przetwornik analogowo-cyfrowy); mogą też pracować jako cyfrowe I/O"],
+    ["Niebieski", "Funkcje specjalne", "0 (RX — Receive, odbiornik), 1 (TX — Transmit, nadajnik), A4 (SDA — Serial Data), A5 (SCL — Serial Clock), 3/5/6/9/10/11 (PWM — Pulse Width Modulation, modulacja szerokości impulsu)", "UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit), sygnał PWM, wbudowana dioda (pin 13)"],
+    ["Pomarańczowy", "Zasilanie", "5 V, 3,3 V, GND (Ground, masa), Vin", "Piny nieprogrAmowalne — zasilanie i masa układu"],
   ]}
 />
 

@@ -47,7 +47,7 @@ publish: true
 updated: "2026-05-15"
 ---
 
-Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB: klasyczne (trzy osobne kanały, PWM) oraz nowoczesne (diody programowalne WS2812 ze zintegrowanym sterownikiem i biblioteką NeoPixel).
+Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB (Red, Green, Blue — czerwony, zielony, niebieski): klasyczne (trzy osobne kanały, PWM (Pulse Width Modulation, modulacja szerokości impulsu)) oraz nowoczesne (diody programowalne WS2812 ze zintegrowanym sterownikiem i biblioteką NeoPixel).
 
 ## 1. Czym są diody programowalne?
 
@@ -101,7 +101,7 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
 
 <Photo
   file="14.09-diody-led.jpg"
-  caption="Zestaw diod LED — wśród nich diody RGB z czterema wyprowadzeniami."
+  caption="Zestaw diod LED (Light Emitting Diode, dioda elektroluminescencyjna) — wśród nich diody RGB z czterema wyprowadzeniami."
   alt="Różnokolorowe diody LED, w tym diody RGB"
   width={500}
   height={350}
@@ -115,7 +115,7 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
   height={300}
 />
 
-Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwienemu, zielonemu i niebieskiemu kanałowi.
+Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwienemu, zielonemu i niebieskiemu kanałowi.
 
 <Table
   caption="Wyprowadzenia diody RGB (wspólna katoda)"
@@ -495,12 +495,12 @@ Moduł linijki WS2812 (8 diod) mocujemy w płytce stykowej. Masę łączymy z GN
 />
 
 <Callout type="warning" title="Pobór prądu WS2812">
-Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to aż **480 mA** — znacznie więcej niż może dostarczyć pin USB Arduino (500 mA dla całej płytki). Przy intensywnych efektach świetlnych stosuj zewnętrzne zasilanie 5 V.
+Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to aż **480 mA** — znacznie więcej niż może dostarczyć pin USB (Universal Serial Bus, uniwersalna magistrala szeregowa) Arduino (500 mA dla całej płytki). Przy intensywnych efektach świetlnych stosuj zewnętrzne zasilanie 5 V.
 </Callout>
 
 ### 4.2 Instalacja biblioteki Adafruit NeoPixel
 
-Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy ją przez menedżer bibliotek Arduino IDE.
+Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy ją przez menedżer bibliotek Arduino IDE (Integrated Development Environment, zintegrowane środowisko programistyczne).
 
 <Photo
   file="14.24-instalacja-biblioteki-neopixel.png"
@@ -574,7 +574,7 @@ void loop() {
 />
 
 <Callout type="warning" title="Zawsze wywołuj linijka.show()">
-`setPixelColor()` tylko zapisuje kolor w pamięci RAM. Dopiero `show()` fizycznie wysyła dane do diod. Bez `show()` diody się nie zmienią.
+`setPixelColor()` tylko zapisuje kolor w pamięci RAM (Random Access Memory, pamięć o dostępie swobodnym). Dopiero `show()` fizycznie wysyła dane do diod. Bez `show()` diody się nie zmienią.
 </Callout>
 
 ### 4.4 Pierwszy test diody programowalnej

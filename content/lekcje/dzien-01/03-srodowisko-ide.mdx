@@ -42,13 +42,13 @@ updated: "2026-05-11"
 
 ## Czego się dziś nauczymy
 
-W tej lekcji uruchamiamy środowisko Arduino IDE, podłączamy płytkę i wgrywamy
+W tej lekcji uruchamiamy środowisko Arduino IDE (Integrated Development Environment, zintegrowane środowisko programistyczne), podłączamy płytkę i wgrywamy
 pierwszy szkic. Po jej ukończeniu każda kolejna lekcja sprowadza się do
 „napisz kod → wgraj → obserwuj”.
 
 <Callout type="note" title="Wymagania wstępne">
 Komputer z systemem Windows, macOS lub Linux i prawami do instalowania
-sterowników USB. Dostęp do internetu na czas instalacji.
+sterowników USB (Universal Serial Bus, magistrala szeregowa). Dostęp do internetu na czas instalacji.
 </Callout>
 
 ## 1. Instalacja Arduino IDE
@@ -93,10 +93,10 @@ Jak wgrać program krok po kroku:
 <Photo file="03.03-Arduino_IDE_instalacja_blink4.png" day="dzien-01" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
 
 <Callout type="note" title="Diody TX i RX">
-W trakcie wgrywania mrugają diody **TX** i **RX** na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Komunikacja odbywa poprzez protokół (interface) komunikacji szeregowej **UART**. Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
+W trakcie wgrywania mrugają diody **TX** (Transmit, nadajnik) i **RX** (Receive, odbiornik) na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Komunikacja odbywa poprzez protokół komunikacji szeregowej **UART** (Universal Asynchronous Receiver-Transmitter). Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
 </Callout>
 
-Po wgraniu programu dioda LED na pinie 13 powinna zacząć migać:
+Po wgraniu programu dioda LED (Light Emitting Diode, dioda elektroluminescencyjna) na pinie 13 powinna zacząć migać:
 
 <Photo file="03.04-Arduino-UNO-pin13-miga.png" day="dzien-01" caption="Dioda LED na pinie 13 miga — program działa!" alt="Arduino UNO z migającą diodą LED na pinie 13" />
 

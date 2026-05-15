@@ -48,7 +48,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-Do tej pory Arduino komunikowało się z nami głównie przez diody LED i Monitor portu szeregowego. Diody są proste, ale pokazują niewiele. UART daje dużo informacji, ale wymaga komputera. Wyświetlacz tekstowy LCD pozwala zbudować urządzenie, które pokazuje dane samodzielnie, bez podłączonego terminala.
+Do tej pory Arduino komunikowało się z nami głównie przez diody LED (Light Emitting Diode, dioda elektroluminescencyjna) i Monitor portu szeregowego. Diody są proste, ale pokazują niewiele. UART (Universal Asynchronous Receiver-Transmitter, uniwersalny asynchroniczny nadajnik-odbiornik) daje dużo informacji, ale wymaga komputera. Wyświetlacz tekstowy LCD (Liquid Crystal Display, wyświetlacz ciekłokrystaliczny) pozwala zbudować urządzenie, które pokazuje dane samodzielnie, bez podłączonego terminala.
 
 <Photo
   file="10.01-lcd-tekstowy-przykladowy-napis.jpg"
@@ -97,12 +97,12 @@ LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 
   caption="Najważniejsze piny LCD w naszym układzie"
   headers={["Pin LCD", "Nazwa", "Rola"]}
   rows={[
-    ["1", "GND", "Masa"],
-    ["2", "VCC", "Zasilanie 5 V"],
+    ["1", "GND (Ground, masa)", "Masa"],
+    ["2", "VCC (Voltage Common Collector, napięcie zasilania)", "Zasilanie 5 V"],
     ["3", "V0", "Regulacja kontrastu"],
-    ["4", "RS", "Wybór komendy albo danych"],
-    ["5", "RW", "Tryb odczytu/zapisu, zwykle podłączony do GND"],
-    ["6", "E", "Sygnał zatwierdzający przesłanie danych"],
+    ["4", "RS (Register Select, wybór rejestru)", "Wybór komendy albo danych"],
+    ["5", "RW (Read/Write, odczyt/zapis)", "Tryb odczytu/zapisu, zwykle podłączony do GND"],
+    ["6", "E (Enable, zezwolenie)", "Sygnał zatwierdzający przesłanie danych"],
     ["11-14", "D4-D7", "Cztery linie danych w trybie 4-bitowym"],
     ["15-16", "LED+/LED-", "Podświetlenie wyświetlacza"],
   ]}
@@ -295,7 +295,7 @@ Sprawdź różnicę między `lcd.noDisplay()` i `lcd.clear()`. Najpierw ukryj te
 
 ## 7. Wynik ADC na wyświetlaczu
 
-LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC na napięcie i pokazuje go w drugiej linii LCD.
+LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC (Analog-to-Digital Converter, przetwornik analogowo-cyfrowy) na napięcie i pokazuje go w drugiej linii LCD.
 
 <Schematic
   src="/img/lekcje/10.09-lcd-czujnik-swiatla-schemat.png"
@@ -369,7 +369,7 @@ Podświetlenie LCD to dioda LED wbudowana w moduł. W wielu wyświetlaczach jest
 Pin Arduino nie jest zasilaczem dużej mocy. Jeśli nie wiesz, ile prądu pobiera podświetlenie LCD, użyj rezystora ograniczającego prąd albo tranzystora sterującego.
 </Callout>
 
-Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM, możemy płynnie zmieniać jasność przez `analogWrite()`.
+Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Modulation, modulacja szerokości impulsu), możemy płynnie zmieniać jasność przez `analogWrite()`.
 
 <Code lang="cpp" file="lcd-pwm-podswietlenie.ino">
 ```cpp
@@ -406,7 +406,7 @@ void loop() {
 
 <Expandable title="Moduł I2C do LCD — ten sam wyświetlacz, dużo mniej przewodów" heading="####">
 
-Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C do LCD** — małej płytki z ekspanderem portów PCF8574, którą przykręca się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA i SCL** (plus zasilanie i masę).
+Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa) do LCD** — małej płytki z ekspanderem portów PCF8574, którą przykręca się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA (Serial Data, linia danych) i SCL (Serial Clock, linia zegara)** (plus zasilanie i masę).
 
 Biblioteka `LiquidCrystal_I2C` (dostępna w Menedżerze bibliotek Arduino IDE) działa niemal identycznie jak `LiquidCrystal`. Zamiast `LiquidCrystal lcd(2,3,4,5,6,7)` piszesz `LiquidCrystal_I2C lcd(0x27, 16, 2)`, gdzie `0x27` to domyślny adres I2C modułu (może być też `0x3F` — sprawdzasz skanerem I2C).
 

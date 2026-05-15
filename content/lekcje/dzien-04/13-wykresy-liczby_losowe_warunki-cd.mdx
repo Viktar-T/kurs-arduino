@@ -49,7 +49,7 @@ W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywist
 
 ## 1. Rysowanie wykresów z Arduino
 
-Arduino IDE ma wbudowane narzędzie — **Serial Plotter** — które rysuje wykres z danych przesyłanych przez port szeregowy. Wystarczy, że program wysyła liczby przez `Serial.println()`, a wykres aktualizuje się na bieżąco.
+Arduino IDE (Integrated Development Environment, zintegrowane środowisko programistyczne) ma wbudowane narzędzie — **Serial Plotter** — które rysuje wykres z danych przesyłanych przez port szeregowy. Wystarczy, że program wysyła liczby przez `Serial.println()`, a wykres aktualizuje się na bieżąco.
 
 <Photo
   file="13.01-arduino-ide-opcje-plotter.png"
@@ -61,7 +61,7 @@ Arduino IDE ma wbudowane narzędzie — **Serial Plotter** — które rysuje wyk
 
 ### Prosty wykres z potencjometru
 
-Podłącz potencjometr do pinu `A5` (środkowy nóżka do A5, skrajne do 5 V i GND):
+Podłącz potencjometr do pinu `A5` (środkowy nóżka do A5, skrajne do 5 V i GND (Ground, masa)):
 
 <Schematic
   src="/img/lekcje/13.02-potencjometr-schemat.png"
@@ -89,7 +89,7 @@ void loop() {
 
 <Photo
   file="13.03-potencjometr-terminal.gif"
-  caption="Zmiany wartości ADC w Monitorze portu szeregowego podczas kręcenia potencjometrem."
+  caption="Zmiany wartości ADC (Analog-to-Digital Converter, przetwornik analogowo-cyfrowy) w Monitorze portu szeregowego podczas kręcenia potencjometrem."
   alt="Animacja: Monitor portu szeregowego pokazuje zmieniające się wartości ADC"
   width={400}
   height={200}
@@ -387,7 +387,7 @@ Obie formy można mieszać: `random(50)` i `random(10, 50)` to różne zakresy.
 
 ## 5. Losowe miganie diodą
 
-Łączymy liczby losowe z PWM i pętlą główną, żeby dioda migała w nieprzewidywalny sposób:
+Łączymy liczby losowe z PWM (Pulse Width Modulation, modulacja szerokości impulsu) i pętlą główną, żeby dioda migała w nieprzewidywalny sposób:
 
 <Code lang="cpp" file="losowe-miganie.ino">
 ```cpp
@@ -418,7 +418,7 @@ Operator `||` to **lub** — warunek jest spełniony, gdy przynajmniej jedna cz�
 
 <Schematic
   src="/img/lekcje/13.16-schemat-przyciski-diody.png"
-  caption="Schemat układu: dwa przyciski (piny 9 i 10) i dwie diody LED (piny 7 i 8)."
+  caption="Schemat układu: dwa przyciski (piny 9 i 10) i dwie diody LED (Light Emitting Diode, dioda elektroluminescencyjna) (piny 7 i 8)."
   alt="Schemat elektryczny z dwoma przyciskami i dwiema diodami LED podłączonymi do Arduino"
   width={600}
   height={400}

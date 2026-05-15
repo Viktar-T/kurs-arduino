@@ -49,7 +49,7 @@ publish: true
 updated: "2026-05-15"
 ---
 
-W tej lekcji nauczysz się generować dźwięki za pomocą buzzera **bez wbudowanego generatora**. Poznasz funkcję `tone()`, która pozwala precyzyjnie sterować częstotliwością dźwięku — a to otworzy drogę do budowy prawdziwej **syreny alarmowej**. W drugiej części zajmiemy się tranzystorem **MOSFET**, dzięki któremu Arduino może sterować podzespołami wymagającymi wyższego napięcia niż 5 V.
+W tej lekcji nauczysz się generować dźwięki za pomocą buzzera **bez wbudowanego generatora**. Poznasz funkcję `tone()`, która pozwala precyzyjnie sterować częstotliwością dźwięku — a to otworzy drogę do budowy prawdziwej **syreny alarmowej**. W drugiej części zajmiemy się tranzystorem **MOSFET** (Metal-Oxide-Semiconductor Field-Effect Transistor, tranzystor polowy z bramką izolowaną), dzięki któremu Arduino może sterować podzespołami wymagającymi wyższego napięcia niż 5 V.
 
 ## 1. Buzzer bez generatora
 
@@ -72,7 +72,7 @@ Dużą zaletą buzzera bez generatora jest szeroki zakres napięcia roboczego. O
 Buzzer bez generatora pobiera bardzo mały prąd i można go bezpiecznie podłączyć bezpośrednio do pinu cyfrowego Arduino.
 
 Podłączenie:
-- pierwsze wyprowadzenie buzzera → **GND**,
+- pierwsze wyprowadzenie buzzera → **GND (Ground, masa)**,
 - drugie wyprowadzenie → pin **A5** Arduino.
 
 Buzzer jest elementem **niebiegunowym** — możesz go podłączyć w dowolnej orientacji. Dla porządku czarny przewód idzie do GND.
@@ -149,7 +149,7 @@ noTone(pin); // Wyłącz generowanie sygnału na pinie
 ```
 
 <Callout type="warning" title="Konflikt z PWM">
-Funkcja `tone()` używa tego samego timera co PWM na pinach **3** i **11**. Gdy `tone()` jest aktywne, nie można jednocześnie generować PWM na tych pinach.
+Funkcja `tone()` używa tego samego timera co PWM (Pulse Width Modulation, modulacja szerokości impulsu) na pinach **3** i **11**. Gdy `tone()` jest aktywne, nie można jednocześnie generować PWM na tych pinach.
 </Callout>
 
 Ważna uwaga: wywołanie `tone()` **uruchamia sygnał i pozostawia go aktywnym** aż do wywołania `noTone()` lub kolejnego `tone()`. Dlatego program poniżej gra dźwięk cały czas, mimo że `tone()` jest wywołane tylko raz w `setup()`:
@@ -205,7 +205,7 @@ void loop() {
 
 Po uruchomieniu słyszysz świst, a potem różne dźwięki — cykl powtarza się co kilka sekund. Zmieniając zakres pętli można precyzyjniej wyznaczyć rezonans.
 
-Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **4000 Hz ± 500 Hz**, czyli zakres 3500–4500 Hz. Sprawdzamy:
+Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **4000 Hz (hertz, jednostka częstotliwości) ± 500 Hz**, czyli zakres 3500–4500 Hz. Sprawdzamy:
 
 <Code lang="cpp" file="buzzer-rezonans.ino">
 ```cpp
@@ -293,7 +293,7 @@ Zalety użycia MOSFET:
 - sterowanie napięciami powyżej 5 V,
 - obsługa dużych prądów (kilka amperów).
 
-**Przykład praktyczny:** taśmy LED 12 V wymagają kilku amperów — bezpośrednie sterowanie z Arduino jest niemożliwe. MOSFET pełni rolę „elektronicznego przełącznika" sterowanego małym sygnałem z Arduino.
+**Przykład praktyczny:** taśmy LED (Light Emitting Diode, dioda elektroluminescencyjna) 12 V wymagają kilku amperów — bezpośrednie sterowanie z Arduino jest niemożliwe. MOSFET pełni rolę „elektronicznego przełącznika" sterowanego małym sygnałem z Arduino.
 
 ### Tranzystor IRL540N
 
@@ -405,7 +405,7 @@ void loop() {
 </Code>
 
 <Callout type="note" title="MOSFET nie jest tu bezwzględnie konieczny">
-Buzzer bez generatora działa też bezpośrednio z 5 V Arduino. MOSFET użyliśmy jako przykład — żeby pokazać, że Arduino może sterować podzespołami wymagającymi wyższego napięcia. Przy taśmach LED 12 V czy silnikach DC już nie ma wyjścia — MOSFET lub mostek H są niezbędne.
+Buzzer bez generatora działa też bezpośrednio z 5 V Arduino. MOSFET użyliśmy jako przykład — żeby pokazać, że Arduino może sterować podzespołami wymagającymi wyższego napięcia. Przy taśmach LED 12 V czy silnikach DC (Direct Current, prąd stały) już nie ma wyjścia — MOSFET lub mostek H są niezbędne.
 </Callout>
 
 <Task title="Zadanie 3 — MOSFET z syreną" estimate="15 min">

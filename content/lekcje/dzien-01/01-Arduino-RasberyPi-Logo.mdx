@@ -82,9 +82,9 @@ trzy rzeczy naraz:
 1. **Płytka** — fizyczny, niewielki komputer wielkości karty kredytowej (np.
    model [*Arduino UNO*](https://store.arduino.cc/products/arduino-uno-rev3)),
    do którego można podłączać diody, przyciski, czujniki, silniki i wyświetlacze.
-2. **Środowisko programistyczne ([Arduino IDE](https://www.arduino.cc/en/software))** — bezpłatny program na PC,
+2. **Środowisko programistyczne ([Arduino IDE](https://www.arduino.cc/en/software))** (IDE — Integrated Development Environment, zintegrowane środowisko programistyczne) — bezpłatny program na PC (Personal Computer, komputer osobisty),
    w którym piszemy *szkice* (programy) i wgrywamy je do płytki przez kabel
-   USB.
+   USB (Universal Serial Bus, magistrala szeregowa).
 3. **Społeczność i biblioteki** — ogromna baza gotowych przykładów, kursów
    (m.in. [forbot.pl](https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936),
    którego materiały współtworzą szkielet tego kursu) oraz
@@ -97,19 +97,19 @@ artystów, projektantów. Dlatego nadaje się idealnie na początek nauki budowy
 
 <Expandable title="Co dokładnie znaczy 'mikrokontroler'? Czym różni się od mikroprocesora?" heading="####">
 **Mikroprocesor** (np. w Twoim laptopie) to „mózg”, który do działania
-potrzebuje całej dodatkowej infrastruktury: pamięci RAM w osobnych kościach,
-pamięci masowej (SSD/HDD), karty graficznej, zasilacza, systemu operacyjnego.
+potrzebuje całej dodatkowej infrastruktury: pamięci RAM (Random-Access Memory, pamięć o dostępie swobodnym) w osobnych kościach,
+pamięci masowej (SSD — Solid State Drive / HDD — Hard Disk Drive), karty graficznej, zasilacza, systemu operacyjnego.
 Sam w sobie nic nie robi.
 
 [**Mikrokontroler**](https://forbot.pl/blog/mikrokontroler-wszystko-co-powinniscie-wiedziec-o-jego-dzialaniu-id1314) to *cały mały komputer w jednym układzie scalonym*. W jednej
 kostce ma:
 
-- procesor (CPU),
+- procesor (CPU — Central Processing Unit, jednostka centralna),
 - pamięć programu (Flash) — tu trafia Twój szkic,
-- pamięć operacyjną (SRAM) — tu trzymane są zmienne w trakcie pracy,
-- pamięć stałą (EEPROM) — przeżywa wyłączenie zasilania,
+- pamięć operacyjną (SRAM — Static Random-Access Memory) — tu trzymane są zmienne w trakcie pracy,
+- pamięć stałą (EEPROM — Electrically Erasable Programmable Read-Only Memory) — przeżywa wyłączenie zasilania,
 - porty wejścia/wyjścia (piny) — żeby rozmawiać ze światem zewnętrznym,
-- przetworniki (ADC), liczniki czasu, kontrolery komunikacji (UART, SPI, I2C).
+- przetworniki (ADC — Analog-Digital Converter, przetwornik analogowo-cyfrowy), liczniki czasu, kontrolery komunikacji (UART — Universal Asynchronous Receiver-Transmitter, SPI — Serial Peripheral Interface, I²C — Inter-Integrated Circuit).
 
 Mikrokontroler na płytce Arduino UNO to [**ATmega328P**](https://www.microchip.com/en-us/product/ATmega328P). Działa z zegarem
 16 MHz, ma 32 kB pamięci programu i 2 kB SRAM. To miliony razy mniej niż
@@ -184,7 +184,7 @@ zupełnie różne problemy:
       <td>Typ urządzenia</td>
       <td>Mikrokontroler (jeden układ)</td>
       <td>Mikrokomputer (pełen komputer)</td>
-      <td>Przemysłowy sterownik PLC</td>
+      <td>Przemysłowy sterownik PLC (Programmable Logic Controller)</td>
     </tr>
     <tr>
       <td>Procesor</td>
@@ -208,19 +208,19 @@ zupełnie różne problemy:
       <td>Język programowania</td>
       <td>C/C++ (Arduino, uproszczony)</td>
       <td>Praktycznie dowolny: Python, C++, JavaScript, Java...</td>
-      <td>Język drabinkowy (LD) / funkcjonalny (FBD)</td>
+      <td>Język drabinkowy (LD — Ladder Diagram) / funkcjonalny (FBD — Function Block Diagram)</td>
     </tr>
     <tr>
-      <td>Liczba pinów I/O</td>
+      <td>Liczba pinów I/O (Input/Output, wejście/wyjście)</td>
       <td>14 cyfrowych + 6 analogowych</td>
-      <td>40 pinów GPIO</td>
+      <td>40 pinów GPIO (General Purpose Input/Output, wejścia/wyjścia ogólnego przeznaczenia)</td>
       <td>8-24 wejść/wyjść (przemysłowe, 24 V / 230 V)</td>
     </tr>
     <tr>
       <td>Zasilanie</td>
       <td>5 V z USB, ok. 50 mA</td>
       <td>5 V / 5 A (zasilacz dedykowany)</td>
-      <td>24 V DC lub 230 V AC (sieć przemysłowa)</td>
+      <td>24 V DC (Direct Current, prąd stały) lub 230 V AC (Alternating Current, prąd przemienny) (sieć przemysłowa)</td>
     </tr>
     <tr>
       <td>Czas startu</td>
@@ -237,7 +237,7 @@ zupełnie różne problemy:
     <tr>
       <td>Typowe zastosowania</td>
       <td>Sterowanie sprzętem, czujniki, roboty, prototypy</td>
-      <td>Komputer ogólnego przeznaczenia, serwer domowy, kiosk, AI</td>
+      <td>Komputer ogólnego przeznaczenia, serwer domowy, kiosk, AI (Artificial Intelligence, sztuczna inteligencja)</td>
       <td>Automatyka przemysłowa, sterowanie maszynami, bram, wind</td>
     </tr>
     <tr>
@@ -291,8 +291,8 @@ Wybór nie jest przypadkowy:
 - Mikrokontroler to *„cały komputer w jednym układzie”*, ale bardzo mały —
   jego siła nie leży w mocy obliczeniowej, tylko w błyskawicznej reakcji na
   sygnały elektryczne.
-- Z Arduino budujemy: alarmy, stacje pogodowe, roboty, sygnalizację, MIDI,
-  IoT, sterowanie oświetleniem, drukarki 3D, drony i wiele innych projektów.
+- Z Arduino budujemy: alarmy, stacje pogodowe, roboty, sygnalizację, MIDI (Musical Instrument Digital Interface),
+  IoT (Internet of Things, Internet Rzeczy), sterowanie oświetleniem, drukarki 3D, drony i wiele innych projektów.
 - **Raspberry Pi** to pełnoprawny komputer z Linuksem — sięgaj po niego, gdy
   potrzebujesz ekranu, kamery, AI, sieci.
 - **Siemens LOGO!** to przemysłowy sterownik PLC — sięgaj po niego, gdy
