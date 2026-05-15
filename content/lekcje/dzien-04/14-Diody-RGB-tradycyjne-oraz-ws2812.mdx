@@ -1,0 +1,752 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Diody RGB — tradycyjne oraz WS2812"
+slug: "diody-rgb-tradycyjne-oraz-ws2812"
+summary: "Sterowanie diodami RGB metodą tradycyjną (3 piny + PWM) oraz programowalnymi diodami WS2812 z biblioteką Adafruit NeoPixel — mieszanie kolorów, animacje świetlne i sygnalizator alarmowy."
+
+day: 4
+weekend: 2
+order: 2
+duration: 90
+block: 6
+blockTitle: "PWM, serwomechanizmy, biblioteki"
+forbotCourse: 2
+forbotChapter: 2
+
+objectives:
+  - "Podłączyć diodę RGB (tradycyjną) do Arduino i sterować każdym kanałem koloru"
+  - "Używać PWM (analogWrite) do mieszania kolorów w diodzie RGB"
+  - "Wyjaśnić zasadę działania diody programowalnej WS2812 i różnicę wobec tradycyjnej"
+  - "Zainstalować i używać biblioteki Adafruit NeoPixel do sterowania linijką WS2812"
+  - "Zbudować animację sygnalizatora alarmowego z diodami WS2812"
+
+prerequisites:
+  - "dzien-02/pwm-serwomechanizmy-biblioteki"
+  - "dzien-02/uart-zmienne"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda RGB (wspólna katoda)", qty: 2 }
+  - { name: "Rezystor 1000 Ω", qty: 6 }
+  - { name: "Moduł WS2812 — linijka 8 LED", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [rgb, ws2812, pwm, neopixel, biblioteki, diody-led, animacja]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-diody-rgb-tradycyjne-oraz-ws2812-id15495"
+
+publish: true
+updated: "2026-05-15"
+---
+
+Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB: klasyczne (trzy osobne kanały, PWM) oraz nowoczesne (diody programowalne WS2812 ze zintegrowanym sterownikiem i biblioteką NeoPixel).
+
+## 1. Czym są diody programowalne?
+
+Diody programowalne, nazywane czasem inteligentnymi, mogą być elementami zagadkowymi dla wielu początkujących. Jak objawia się ich „inteligencja"? W każdej diodzie WS2812 producent zamieścił miniaturowy układ sterujący, który potrafi odebrać dane z Arduino przez **jeden przewód sygnałowy** i na ich podstawie ustawić jasność trzech barw (R, G, B). Dzięki temu możemy kontrolować setki diod, używając tylko jednego pinu Arduino.
+
+<Photo
+  file="14.04-ws2812-animacja.gif"
+  caption="Linijka diod WS2812 — każda dioda adresowana niezależnie przez jeden przewód danych."
+  alt="Animacja linijki 8 diod WS2812 wyświetlającej efekty świetlne"
+  width={600}
+  height={400}
+/>
+
+<Callout type="note" title="WS2812 vs tradycyjna dioda RGB">
+Tradycyjna dioda RGB wymaga **3 pinów Arduino** (po jednym na kolor) i 3 rezystorów. Dioda WS2812 wymaga tylko **1 pinu danych** — niezależnie od tego, ile diod podłączysz w szereg.
+</Callout>
+
+## 2. Przygotowanie stanowiska do kursu Arduino
+
+Zanim przejdziemy do diod, warto zadbać o porządek na stanowisku pracy. Na tym etapie kursu używamy zestawu Arduino z podstawką — płytką, do której przymocowana jest zarówno płytka Arduino, jak i płytka stykowa.
+
+<Photo
+  file="14.06-podstawka-arduino.jpg"
+  caption="Podstawka do kursu — płytka Arduino i płytka stykowa mocowane razem."
+  alt="Drewniana podstawka do montażu Arduino UNO i płytki stykowej"
+  width={600}
+  height={450}
+/>
+
+<Photo
+  file="14.07-podstawka-arduino-przyklejona.jpg"
+  caption="Arduino przymocowane do podstawki."
+  alt="Arduino UNO przyklejone do drewnianej podstawki"
+  width={600}
+  height={450}
+/>
+
+<Photo
+  file="14.08-podstawka-stykowa.jpg"
+  caption="Gotowe stanowisko: Arduino + płytka stykowa na jednej podstawce."
+  alt="Kompletne stanowisko z Arduino UNO i płytką stykową na podstawce"
+  width={600}
+  height={450}
+/>
+
+Takie stanowisko jest wygodniejsze podczas ćwiczeń — elementy nie rozsuwają się po stole, a kable nie ciągną za płytkę Arduino.
+
+## 3. Diody RGB — podejście tradycyjne
+
+Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świecące — czerwoną, zieloną i niebieską. Sterując niezależnie każdą z nich, możemy uzyskać dowolny kolor.
+
+<Photo
+  file="14.09-diody-led.jpg"
+  caption="Zestaw diod LED — wśród nich diody RGB z czterema wyprowadzeniami."
+  alt="Różnokolorowe diody LED, w tym diody RGB"
+  width={500}
+  height={350}
+/>
+
+<Photo
+  file="14.10-dioda-rgb.jpg"
+  caption="Dioda RGB z bliska — cztery nóżki: masa (wspólna) i po jednej dla każdego koloru."
+  alt="Zbliżenie na diodę RGB z czterema wyprowadzeniami"
+  width={400}
+  height={300}
+/>
+
+Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwienemu, zielonemu i niebieskiemu kanałowi.
+
+<Table
+  caption="Wyprowadzenia diody RGB (wspólna katoda)"
+  headers={["Nóżka", "Funkcja", "Pin Arduino"]}
+  rows={[
+    ["Najdłuższa (2.)", "GND — masa wspólna", "GND"],
+    ["1.", "Czerwony (R)", "3 (PWM)"],
+    ["3.", "Zielony (G)", "5 (PWM)"],
+    ["4.", "Niebieski (B)", "6 (PWM)"],
+  ]}
+/>
+
+<Callout type="warning" title="Rezystory są obowiązkowe">
+Każdy z trzech kanałów koloru łącz z Arduino przez rezystor **1 kΩ** (lub 220–470 Ω). Bez rezystora prąd ogranicza jedynie samo złącze Arduino i możesz je uszkodzić.
+</Callout>
+
+### 3.1 Pierwsze użycie diody RGB
+
+Podłącz diodę RGB do pinów 3, 5 i 6 (wszystkie obsługują PWM), każdy przez rezystor 1 kΩ. Masę podłącz do GND.
+
+<Schematic
+  src="/img/lekcje/14.11-schemat-dioda-rgb.jpg"
+  caption="Schemat podłączenia diody RGB do Arduino — piny 3, 5 i 6 przez rezystory 1 kΩ."
+  alt="Schemat Fritzing: Arduino UNO, dioda RGB, trzy rezystory 1 kΩ"
+  width={700}
+  height={500}
+/>
+
+Pierwszy szkic zaświeci każdy kolor po kolei, potem połączy je razem, a na końcu wyłączy wszystkie:
+
+<Code lang="cpp" file="rgb-pierwsze-kolory.ino">
+```cpp
+#define czerwona 3
+#define zielona 5
+#define niebieska 6
+
+void setup() {
+  pinMode(czerwona, OUTPUT); // Piny podłączone do diody jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(czerwona, HIGH);  // Świecimy tylko na czerwono
+  delay(2000);
+  digitalWrite(czerwona, LOW);   // Świecimy tylko na zielono
+  digitalWrite(zielona, HIGH);
+  delay(2000);
+  digitalWrite(zielona, LOW);    // Świecimy tylko na niebiesko
+  digitalWrite(niebieska, HIGH);
+  delay(2000);
+  digitalWrite(niebieska, LOW);
+
+  digitalWrite(czerwona, HIGH);  // Świecimy każdą po kolei, bez gaszenia poprzednich
+  delay(2000);
+  digitalWrite(zielona, HIGH);
+  delay(2000);
+  digitalWrite(niebieska, HIGH);
+  delay(2000);
+
+  digitalWrite(czerwona, LOW);   // Wyłączamy wszystkie diody
+  digitalWrite(niebieska, LOW);
+  digitalWrite(zielona, LOW);
+  delay(2000);
+}
+```
+</Code>
+
+Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, żółty (czerwony + zielony), turkusowy (zielony + niebieski) i biały (wszystkie trzy):
+
+<Photo
+  file="14.12-dioda-rgb-czerwona.jpg"
+  caption="Dioda RGB świeci na czerwono — tylko kanał R włączony."
+  alt="Dioda RGB emitująca czerwone światło"
+  width={400}
+  height={300}
+/>
+
+<Photo
+  file="14.13-dioda-rgb-zielona.jpg"
+  caption="Dioda RGB świeci na zielono — tylko kanał G włączony."
+  alt="Dioda RGB emitująca zielone światło"
+  width={400}
+  height={300}
+/>
+
+<Photo
+  file="14.14-dioda-rgb-niebieska.jpg"
+  caption="Dioda RGB świeci na niebiesko — tylko kanał B włączony."
+  alt="Dioda RGB emitująca niebieskie światło"
+  width={400}
+  height={300}
+/>
+
+<Photo
+  file="14.15-dioda-rgb-mix.jpg"
+  caption="Wszystkie trzy kanały włączone jednocześnie — dioda świeci na biało."
+  alt="Dioda RGB emitująca białe światło (wszystkie kanały włączone)"
+  width={400}
+  height={300}
+/>
+
+<Task title="Zadanie 1" estimate="5 min">
+Zmodyfikuj szkic, aby uzyskać kolor żółty (czerwony + zielony) i fioletowy (czerwony + niebieski). Jaki kolor daje połączenie wszystkich trzech kanałów?
+</Task>
+
+### 3.2 Podłączanie wielu diod RGB
+
+Do jednego Arduino możemy podłączyć wiele tradycyjnych diod RGB — każda potrzebuje swoich pinów. Poniżej przykład z dwiema diodami na pinach 3, 5, 6 oraz 9, 10, 11:
+
+<Schematic
+  src="/img/lekcje/14.16-schemat-dwie-diody-rgb.jpg"
+  caption="Dwie diody RGB podłączone do Arduino — każda na osobnych pinach PWM."
+  alt="Schemat Fritzing: dwie diody RGB podłączone do pinów 3,5,6 i 9,10,11"
+  width={700}
+  height={500}
+/>
+
+<Code lang="cpp" file="rgb-dwie-diody.ino">
+```cpp
+// Definicja wyprowadzeń pierwszej diody
+#define czerwona  3
+#define zielona   5
+#define niebieska 6
+
+// Definicja wyprowadzeń drugiej diody
+#define czerwona2  9
+#define zielona2  10
+#define niebieska2 11
+
+void setup() {
+  pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(czerwona, HIGH);   // Miganie diodami z użyciem różnych kolorów
+  digitalWrite(zielona2, HIGH);
+  delay(1000);
+  digitalWrite(czerwona, LOW);
+  digitalWrite(zielona2, LOW);
+  digitalWrite(niebieska, HIGH);
+  digitalWrite(czerwona2, HIGH);
+  delay(1000);
+  digitalWrite(niebieska, LOW);
+  digitalWrite(czerwona2, LOW);
+}
+```
+</Code>
+
+<Callout type="note" title="Limity pinów PWM w Arduino UNO">
+Arduino UNO posiada tylko **6 pinów PWM**: 3, 5, 6, 9, 10, 11. Dwie diody RGB zajmują wszystkie sześć — przy trzech tradycyjnych diodach RGB brakowałoby pinów. To jeden z powodów, dla których diody WS2812 są praktyczniejsze przy większych projektach.
+</Callout>
+
+### 3.3 Mieszanie kolorów za pomocą PWM
+
+Funkcja `analogWrite(pin, wartość)` ustawia wypełnienie PWM w zakresie 0–255. Możemy dzięki temu płynnie regulować jasność każdego kanału i mieszać kolory. Poniższy szkic płynnie zmienia kolory obu diod w pętli:
+
+<Schematic
+  src="/img/lekcje/14.17-schemat-diody-rgb-pwm.jpg"
+  caption="Układ z dwiema diodami RGB gotowy do mieszania kolorów przez PWM."
+  alt="Schemat Fritzing dla płynnej zmiany kolorów dwóch diod RGB"
+  width={700}
+  height={500}
+/>
+
+<Code lang="cpp" file="rgb-mieszanie-kolorow.ino">
+```cpp
+// Definicja wyprowadzeń pierwszej diody
+#define czerwona  3
+#define zielona   5
+#define niebieska 6
+
+// Definicja wyprowadzeń drugiej diody
+#define czerwona2  9
+#define zielona2  10
+#define niebieska2 11
+
+void setup() {
+  pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+}
+
+void loop() {
+  int zmiana = 0;
+
+  for (zmiana = 0; zmiana < 255; zmiana++) { // Płynna zmiana kolorów
+    analogWrite(czerwona, 0);
+    analogWrite(zielona, zmiana);
+    analogWrite(niebieska, 255 - zmiana);
+
+    analogWrite(czerwona2, zmiana);
+    analogWrite(zielona2, 255 - zmiana);
+    analogWrite(niebieska2, 0);
+
+    delay(10); // Krótkie opóźnienie, aby efekt był widoczny dla ludzkiego oka
+  }
+}
+```
+</Code>
+
+Możemy wzbogacić efekt o **losową składową** koloru, używając `random()` i `randomSeed()`:
+
+<Schematic
+  src="/img/lekcje/14.18-schemat-diody-rgb-losowe.jpg"
+  caption="Ten sam układ — zmodyfikowany szkic doda losowy odcień do animacji."
+  alt="Schemat Fritzing dla losowych kolorów RGB"
+  width={700}
+  height={500}
+/>
+
+<Code lang="cpp" file="rgb-losowe-kolory.ino">
+```cpp
+// Definicja wyprowadzeń pierwszej diody
+#define czerwona  3
+#define zielona   5
+#define niebieska 6
+
+// Definicja wyprowadzeń drugiej diody
+#define czerwona2  9
+#define zielona2  10
+#define niebieska2 11
+
+void setup() {
+  pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+
+  randomSeed(analogRead(A5)); // Ziarno dla generatora liczb losowych
+}
+
+void loop() {
+  int zmiana = 0;
+  int zmianaLosowa = random(255);
+
+  for (zmiana = 0; zmiana < 255; zmiana++) { // Płynna zmiana kolorów
+    analogWrite(czerwona, zmianaLosowa);
+    analogWrite(zielona, zmiana);
+    analogWrite(niebieska, 255 - zmiana);
+
+    analogWrite(czerwona2, zmiana);
+    analogWrite(zielona2, 255 - zmiana);
+    analogWrite(niebieska2, zmianaLosowa);
+
+    delay(10);
+  }
+}
+```
+</Code>
+
+<Expandable title="Wersja z animacją w obu kierunkach" heading="####">
+
+Dodanie drugiej pętli `for` ze zmniejszającą się zmienną `zmiana` sprawia, że kolory zmieniają się płynnie tam i z powrotem:
+
+<Code lang="cpp" file="rgb-animacja-obu-kierunkach.ino">
+```cpp
+// Definicja wyprowadzeń (identyczne jak poprzednio)
+#define czerwona  3
+#define zielona   5
+#define niebieska 6
+#define czerwona2  9
+#define zielona2  10
+#define niebieska2 11
+
+void setup() {
+  pinMode(czerwona, OUTPUT);
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+
+  randomSeed(analogRead(A5)); // Ziarno dla generatora liczb losowych
+}
+
+void loop() {
+  int zmiana = 0;
+  int zmianaLosowa = random(255);
+
+  for (zmiana = 0; zmiana < 255; zmiana++) {  // Płynna zmiana kolorów "w przód"
+    analogWrite(czerwona, zmianaLosowa);
+    analogWrite(zielona, zmiana);
+    analogWrite(niebieska, 255 - zmiana);
+
+    analogWrite(czerwona2, zmiana);
+    analogWrite(zielona2, 255 - zmiana);
+    analogWrite(niebieska2, zmianaLosowa);
+
+    delay(10);
+  }
+
+  for (zmiana = 255; zmiana > 0; zmiana--) { // Płynna zmiana kolorów "wstecz"
+    analogWrite(czerwona, zmianaLosowa);
+    analogWrite(zielona, zmiana);
+    analogWrite(niebieska, 255 - zmiana);
+
+    analogWrite(czerwona2, zmiana);
+    analogWrite(zielona2, 255 - zmiana);
+    analogWrite(niebieska2, zmianaLosowa);
+
+    delay(10);
+  }
+}
+```
+</Code>
+
+</Expandable>
+
+<Photo
+  file="14.19-diody-rgb-animacja.gif"
+  caption="Efekt płynnej zmiany kolorów PWM na dwóch diodach RGB."
+  alt="Animacja GIF: dwie diody RGB płynnie zmieniające kolory przez PWM"
+  width={500}
+  height={350}
+/>
+
+<Task title="Zadanie 2" estimate="10 min">
+Zmodyfikuj szkic z losowymi kolorami tak, aby każda z dwóch diod losowała **niezależnie** swoją składową. Używaj `random(255)` dwukrotnie w `setup()` — raz dla każdej diody.
+</Task>
+
+## 4. Diody programowalne WS2812
+
+Skoro tradycyjna dioda RGB wymaga 3 pinów, obsłużenie 8 diod wymagałoby 24 pinów — Arduino UNO ma ich tylko 14 cyfrowych! Tutaj z pomocą przychodzą diody WS2812.
+
+<Photo
+  file="14.20-pasek-ws2812.jpg"
+  caption="Pasek diod WS2812 — dziesiątki lub setki diod na jednej taśmie."
+  alt="Pasek taśmy LED z diodami WS2812"
+  width={600}
+  height={300}
+/>
+
+<Photo
+  file="14.21-dioda-ws2812.jpg"
+  caption="Pojedyncza dioda WS2812 — wbudowany sterownik i złącze danych."
+  alt="Zbliżenie na pojedynczą diodę WS2812 z widocznym układem scalonym"
+  width={400}
+  height={300}
+/>
+
+Każda dioda WS2812 zawiera miniaturowy sterownik, który:
+1. Odbiera dane z Arduino przez **jeden przewód danych**.
+2. Odczytuje własny kolor (24 bity: 8 bitów R, 8 G, 8 B).
+3. **Przekazuje dalej** pozostałe dane do następnej diody w szeregu.
+
+Dzięki temu do sterowania 8 (lub 800) diod wystarczy **jeden pin Arduino**.
+
+### 4.1 Podłączenie diod WS2812
+
+Moduł linijki WS2812 (8 diod) mocujemy w płytce stykowej. Masę łączymy z GND, zasilanie +5V z magistralą +5V, a przewód danych (DIN) z pinem A0 Arduino.
+
+<Schematic
+  src="/img/lekcje/14.22-schemat-ws2812-podlaczenie.jpg"
+  caption="Podstawowe podłączenie linijki WS2812 do Arduino — zasilanie i pin danych A0."
+  alt="Schemat Fritzing: linijka WS2812 podłączona do Arduino UNO, pin A0"
+  width={700}
+  height={500}
+/>
+
+<Schematic
+  src="/img/lekcje/14.23-schemat-ws2812-zasilanie.jpg"
+  caption="Podłączenie z zewnętrznym zasilaczem — przy wielu diodach polecane ze względu na duże zapotrzebowanie na prąd."
+  alt="Schemat Fritzing: linijka WS2812 z zewnętrznym zasilaczem 5V"
+  width={700}
+  height={500}
+/>
+
+<Callout type="warning" title="Pobór prądu WS2812">
+Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to aż **480 mA** — znacznie więcej niż może dostarczyć pin USB Arduino (500 mA dla całej płytki). Przy intensywnych efektach świetlnych stosuj zewnętrzne zasilanie 5 V.
+</Callout>
+
+### 4.2 Instalacja biblioteki Adafruit NeoPixel
+
+Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy ją przez menedżer bibliotek Arduino IDE.
+
+<Photo
+  file="14.24-instalacja-biblioteki-neopixel.png"
+  caption="Menedżer bibliotek Arduino IDE — wyszukaj 'NeoPixel' i zainstaluj bibliotekę Adafruit."
+  alt="Zrzut ekranu menedżera bibliotek Arduino IDE z wynikami wyszukiwania NeoPixel"
+  width={700}
+  height={450}
+/>
+
+**W przypadku Arduino IDE pobranego z Arduino.cc (zalecane):**
+
+1. Otwórz **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami…**
+2. Wyszukaj `NeoPixel`.
+3. Zainstaluj **Adafruit NeoPixel** (autor: Adafruit).
+
+**W przypadku Arduino IDE pobranego z Arduino.org:**
+
+Pobierz bibliotekę ręcznie z repozytorium GitHub Adafruit NeoPixel:
+
+<Photo
+  file="14.25-neopixel-github.png"
+  caption="Repozytorium Adafruit NeoPixel na GitHub — pobierz archiwum ZIP."
+  alt="Zrzut ekranu repozytorium Adafruit NeoPixel na GitHub z przyciskiem Download ZIP"
+  width={700}
+  height={400}
+/>
+
+Następnie w Arduino IDE: **Szkic → Dołącz bibliotekę → Dodaj bibliotekę .ZIP…** i wskaż pobrany plik.
+
+<Photo
+  file="14.26-neopixel-demo.png"
+  caption="Przykładowe szkice NeoPixel dostępne po instalacji w menu Plik → Przykłady."
+  alt="Zrzut ekranu menu Przykłady w Arduino IDE z biblioteką NeoPixel"
+  width={600}
+  height={400}
+/>
+
+### 4.3 Podstawowe funkcje biblioteki NeoPixel
+
+Konfiguracja obiektu linijki odbywa się w jednej linii. Argumenty to: liczba diod, numer pinu i typ sygnału:
+
+<Code lang="cpp" file="neopixel-konfiguracja.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+// Konfiguracja linijki: 8 diod, pin A0, format GRB + 800 kHz
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja — wymagana przed użyciem
+  linijka.show();  // Zgasza wszystkie diody (czysty stan startowy)
+}
+
+void loop() {
+
+}
+```
+</Code>
+
+<Table
+  caption="Podstawowe funkcje biblioteki Adafruit NeoPixel"
+  headers={["Funkcja", "Opis"]}
+  rows={[
+    ["linijka.begin()", "Inicjalizuje pin danych — musi być wywołana w setup()"],
+    ["linijka.show()", "Wysyła dane do diod — bez tego setPixelColor() nie zadziała!"],
+    ["linijka.setPixelColor(i, kolor)", "Ustawia kolor diody o indeksie i (od 0)"],
+    ["linijka.Color(r, g, b)", "Tworzy kolor z wartości R, G, B (0–255 każda)"],
+    ["linijka.clear()", "Ustawia wszystkie diody na czarny (wyłączone)"],
+    ["linijka.setBrightness(n)", "Ustawia globalną jasność 0–255 (wywołuj tylko w setup)"],
+  ]}
+/>
+
+<Callout type="warning" title="Zawsze wywołuj linijka.show()">
+`setPixelColor()` tylko zapisuje kolor w pamięci RAM. Dopiero `show()` fizycznie wysyła dane do diod. Bez `show()` diody się nie zmienią.
+</Callout>
+
+### 4.4 Pierwszy test diody programowalnej
+
+Podłącz linijkę WS2812 jak na schemacie poniżej i wgraj szkic:
+
+<Schematic
+  src="/img/lekcje/14.27-schemat-linijka-ws2812.jpg"
+  caption="Kompletne podłączenie linijki 8 diod WS2812 do Arduino UNO, pin A0."
+  alt="Schemat Fritzing: linijka WS2812 8 LED podłączona do Arduino UNO"
+  width={700}
+  height={500}
+/>
+
+Poniższy szkic próbuje zaświecić pierwszą diodę na zielono — ale uwaga, zawiera **celowy błąd**:
+
+<Code lang="cpp" file="ws2812-pierwszy-test-bledny.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja
+  linijka.show();
+
+  linijka.setPixelColor(0, linijka.Color(0, 255, 0)); // Dioda nr 1 świeci na zielono
+  // BŁĄD: brak linijka.show() — dioda nie zaświeci się!
+}
+
+void loop() {
+
+}
+```
+</Code>
+
+Aby dioda faktycznie zaświeciła, musimy wywołać `show()` **po** ustawieniu koloru:
+
+<Code lang="cpp" file="ws2812-pierwszy-test.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja
+  linijka.show();  // Zgasza wszystkie diody
+
+  linijka.setPixelColor(0, linijka.Color(0, 255, 0)); // Dioda nr 1 świeci na zielono
+  linijka.show(); // Teraz dane są wysłane i dioda zaświeci
+}
+
+void loop() {
+
+}
+```
+</Code>
+
+<Expandable title="Dlaczego indeksowanie od zera?" heading="####">
+
+W bibliotece NeoPixel (i w C++ ogólnie) tablice i kolekcje numerowane są od **zera**. Pierwsza dioda to indeks `0`, ósma to indeks `7`. Próba ustawienia `setPixelColor(8, ...)` przy 8-diodowej linijce **nie spowoduje błędu** — ale nic nie zaświeci (dioda o indeksie 8 nie istnieje). Zawsze sprawdzaj, czy indeks mieści się w zakresie `0..n-1`.
+
+</Expandable>
+
+## 5. Sygnalizator alarmowy
+
+Mając linijkę WS2812, możemy w kilku linijkach kodu zbudować efektowny sygnalizator. Poniższy szkic zmienia kolor wszystkich 8 diod jednocześnie między czerwonym a niebieskim, naśladując sygnał policyjny:
+
+<Code lang="cpp" file="sygnalizator-wszystkie.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja
+  linijka.show();
+}
+
+void loop() {
+  int i = 0;
+  for (i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Wszystkie diody czerwone
+  }
+  linijka.show();
+  delay(250);
+
+  for (i = 0; i < 8; i++) {
+    linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Wszystkie diody niebieskie
+  }
+  linijka.show();
+  delay(250);
+}
+```
+</Code>
+
+### Sygnalizator — wersja sekwencyjna
+
+Bardziej realistyczny efekt uzyskamy, zapalając diody kolejno zamiast wszystkich naraz:
+
+<Code lang="cpp" file="sygnalizator-sekwencja.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja
+  linijka.show();
+}
+
+void loop() {
+  int i = 0;
+  for (i = 0; i < 8; i++) {
+    if (i < 4) {
+      linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Diody 0–3 czerwone
+    } else {
+      linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Diody 4–7 niebieskie
+    }
+    linijka.show();
+    delay(100); // Krótkie opóźnienie po każdej diodzie
+  }
+  linijka.clear(); // Zgaś wszystkie przed następnym obiegiem
+}
+```
+</Code>
+
+<Photo
+  file="14.28-ws2812-animacja-alarm.gif"
+  caption="Sygnalizator alarmowy na linijce WS2812 — efekt sekwencyjny czerwono-niebieski."
+  alt="Animacja GIF: linijka WS2812 wyświetlająca animację czerwono-niebieską sygnalizatora"
+  width={600}
+  height={400}
+/>
+
+<Task title="Zadanie 3" estimate="15 min">
+Zmodyfikuj sygnalizator sekwencyjny tak, aby:
+1. Pierwsza połowa diod (0–3) zapalała się na czerwono od lewej do prawej.
+2. Druga połowa (4–7) zapalała się na niebiesko od prawej do lewej.
+3. Po jednym przebiegu wszystkie diody gasły na 500 ms.
+
+**Wskazówka:** Użyj dwóch oddzielnych pętli `for` — jedna z `i++`, druga z `i--`.
+</Task>
+
+<MiniProject title="Tęczowa animacja" estimate="20 min">
+
+Stwórz animację tęczy na linijce WS2812:
+- Każda z 8 diod powinna mieć inny kolor — użyj zestawu: czerwony, pomarańczowy, żółty, zielony, niebieski, granatowy, fioletowy i biały.
+- W każdym obiegu pętli przesuń kolory o jedną pozycję w lewo (dioda 0 dostaje kolor diody 1, dioda 1 kolor diody 2 itd., a dioda 7 — kolor diody 0).
+- Dodaj `delay(100)` na końcu pętli.
+
+Efekt: "jadąca tęcza" na linijce.
+
+</MiniProject>
+
+## 6. Kiedy diody tradycyjne, a kiedy programowalne?
+
+<Table
+  caption="Porównanie tradycyjnych diod RGB i diod WS2812"
+  headers={["Cecha", "Tradycyjna RGB", "WS2812 (programowalna)"]}
+  rows={[
+    ["Liczba pinów Arduino", "3 piny na diodę", "1 pin na całą linijkę"],
+    ["Rezystory", "Konieczne (3 szt. na diodę)", "Nie są wymagane"],
+    ["Adresowanie diod", "Nie — wszystkie reagują tak samo", "Tak — każda niezależnie"],
+    ["Biblioteka", "Nie potrzeba", "Wymagana (NeoPixel)"],
+    ["Koszt", "Niski", "Wyższy"],
+    ["Kiedy używać", "1–2 diody, prosta sygnalizacja", "Wiele diod, animacje, efekty wizualne"],
+  ]}
+/>
+
+Jeśli projekt wymaga tylko jednej lub dwóch diod do sygnalizacji stanu — tradycyjna RGB jest prostsza i tańsza. Jeśli jednak zależy nam na wielu diodach RGB lub efektach świetlnych, WS2812 jest zdecydowanie wygodniejszym wyborem.
+
+## Podsumowanie
+
+Tradycyjna dioda RGB wymaga trzech pinów PWM i trzech rezystorów — za to jest prosta i nie wymaga żadnej biblioteki. Przez `analogWrite()` w zakresie 0–255 na każdym kanale R, G, B możemy uzyskać dowolny kolor świetlny. Dioda programowalna WS2812 idzie o krok dalej: wbudowany sterownik pozwala adresować każdą diodę z osobna przez jeden przewód danych i bibliotekę NeoPixel. Kluczowe do zapamiętania: zawsze po `setPixelColor()` wywołuj `show()`, inaczej zmiany nie trafią do diod. Przy intensywnych efektach świetlnych na wielu diodach WS2812 korzystaj z zewnętrznego zasilania 5 V — każda dioda przy pełnej bieli pobiera nawet 60 mA.

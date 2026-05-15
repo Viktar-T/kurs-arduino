@@ -43,7 +43,7 @@ tags: [arduino, lcd, wyswietlacz-tekstowy, liquidcrystal, adc]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-wyswietlacz-tekstowy-lcd-id4263"
 
-cover: "/img/lekcje/dzien-01/10.01-lcd-tekstowy-przykladowy-napis.jpg"
+cover: "/img/lekcje/10.01-lcd-tekstowy-przykladowy-napis.jpg"
 publish: true
 updated: "2026-05-13"
 ---
@@ -52,7 +52,6 @@ Do tej pory Arduino komunikowało się z nami głównie przez diody LED i Monito
 
 <Photo
   file="10.01-lcd-tekstowy-przykladowy-napis.jpg"
-  day="dzien-01"
   caption="Przykładowy tekst pokazany na wyświetlaczu LCD 2×16."
   alt="Wyświetlacz tekstowy LCD z napisem sterowanym przez Arduino"
   width={650}
@@ -85,7 +84,7 @@ W tej lekcji używamy monochromatycznego wyświetlacza tekstowego zgodnego ze st
 Typowy moduł LCD ma 16-pinowe złącze. Część pinów odpowiada za zasilanie, część za sterowanie, część za dane, a dwa ostatnie za podświetlenie ekranu.
 
 <Schematic
-  src="/img/lekcje/dzien-01/10.02-lcd-2x16-piny.png"
+  src="/img/lekcje/10.02-lcd-2x16-piny.png"
   caption="Wyświetlacz LCD 2×16 ma zwykle 16 wyprowadzeń."
   alt="Wyświetlacz tekstowy LCD 2x16 z opisem pinów"
   width={936}
@@ -124,7 +123,7 @@ Tryb 4-bitowy jest popularniejszy, bo oszczędza 4 piny Arduino. Te piny można 
 Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjometru do regulacji kontrastu i przewodów. Potencjometr działa jako dzielnik napięcia, którego środkowy pin podłączamy do wejścia kontrastu `V0`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/10.03-podlaczenie-lcd-do-arduino.png"
+  src="/img/lekcje/10.03-podlaczenie-lcd-do-arduino.png"
   caption="Podłączenie LCD do Arduino w trybie 4-bitowym."
   alt="Schemat połączenia wyświetlacza LCD 2x16 z Arduino UNO"
   width={450}
@@ -135,7 +134,6 @@ Po podłączeniu zasilania ekran powinien się podświetlić. Jeżeli program ni
 
 <Photo
   file="10.04-lcd-zle-ustawiony-kontrast.jpg"
-  day="dzien-01"
   caption="Źle ustawiony kontrast może pokazać prostokąty albo pusty ekran."
   alt="Wyświetlacz LCD z widocznymi prostokątami przy złym kontraście"
   width={800}
@@ -175,7 +173,6 @@ void loop() {
 
 <Photo
   file="10.05-lcd-pierwszy-tekst-arduino.jpg"
-  day="dzien-01"
   caption="Pierwszy tekst wyświetlony na LCD z Arduino."
   alt="Wyświetlacz LCD pokazujący tekst Kurs Arduino i Na Forbocie"
   width={800}
@@ -226,7 +223,6 @@ void loop() {
 
 <Photo
   file="10.06-lcd-wlaczony-kursor.jpg"
-  day="dzien-01"
   caption="LCD z włączonym kursorem podkreślającym aktualną pozycję."
   alt="Wyświetlacz LCD z włączonym kursorem"
   width={800}
@@ -237,7 +233,6 @@ Drugi wariant to migający blok kursora. Włączamy go funkcją `lcd.blink()`, a
 
 <Photo
   file="10.07-lcd-migajacy-kursor.gif"
-  day="dzien-01"
   caption="Migający kursor LCD można włączyć funkcją lcd.blink()."
   alt="Animacja migającego kursora na wyświetlaczu LCD"
   width={550}
@@ -286,7 +281,6 @@ void loop() {
 
 <Photo
   file="10.08-lcd-wlaczanie-wylaczanie-wyswietlacza.gif"
-  day="dzien-01"
   caption="lcd.noDisplay() ukrywa tekst, a lcd.display() pokazuje go ponownie."
   alt="Animacja chwilowego wyłączania tekstu na LCD"
   width={550}
@@ -304,7 +298,7 @@ Sprawdź różnicę między `lcd.noDisplay()` i `lcd.clear()`. Najpierw ukryj te
 LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC na napięcie i pokazuje go w drugiej linii LCD.
 
 <Schematic
-  src="/img/lekcje/dzien-01/10.09-lcd-czujnik-swiatla-schemat.png"
+  src="/img/lekcje/10.09-lcd-czujnik-swiatla-schemat.png"
   caption="Fotorezystor z rezystorem tworzy dzielnik napięcia podłączony do A0."
   alt="Schemat podłączenia czujnika światła do Arduino i LCD"
   width={444}
@@ -343,7 +337,6 @@ void loop() {
 
 <Photo
   file="10.10-lcd-pomiar-napiecia-fotorezystor.jpg"
-  day="dzien-01"
   caption="Przenośny miernik światła pokazujący wynik bez Monitora portu szeregowego."
   alt="Arduino z LCD pokazującym napięcie z fotorezystora"
   width={800}
@@ -365,7 +358,7 @@ Napisz prosty stoper na LCD. Jeden przycisk uruchamia pomiar czasu, drugi zatrzy
 Podświetlenie LCD to dioda LED wbudowana w moduł. W wielu wyświetlaczach jest już rezystor ograniczający prąd, ale nie należy zakładać tego bez sprawdzenia dokumentacji lub pomiaru prądu. Dla bezpieczeństwa można użyć rezystora albo tranzystora.
 
 <Schematic
-  src="/img/lekcje/dzien-01/10.11-lcd-sterowanie-podswietleniem-pwm.png"
+  src="/img/lekcje/10.11-lcd-sterowanie-podswietleniem-pwm.png"
   caption="Podświetlenie LCD można sterować z pinu PWM, ale trzeba pilnować prądu."
   alt="Schemat sterowania podświetleniem LCD z Arduino przez pin PWM"
   width={492}

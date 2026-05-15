@@ -44,7 +44,7 @@ tags: [arduino, pwm, analogwrite, servo, biblioteki, serwomechanizm]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-silniki-pwm-serwomechanizm-zewnetrzne-biblioteki-id3913"
 
-cover: "/img/lekcje/dzien-01/08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
+cover: "/img/lekcje/08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
 publish: true
 updated: "2026-05-13"
 ---
@@ -53,7 +53,6 @@ W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC. Teraz pójd
 
 <Photo
   file="08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
-  day="dzien-01"
   caption="Tematy tej lekcji: PWM, serwomechanizmy i biblioteki Arduino."
   alt="Grafika kursu Arduino o PWM, serwomechanizmach i bibliotekach"
   width={700}
@@ -85,7 +84,7 @@ void loop() {
 </Code>
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.02-pwm-wypelnienie-50-procent.png"
+  src="/img/lekcje/08.02-pwm-wypelnienie-50-procent.png"
   caption="Przebieg prostokątny: sygnał jest w stanie wysokim przez połowę okresu."
   alt="Wykres przebiegu prostokątnego o wypełnieniu 50 procent"
   width={390}
@@ -124,7 +123,7 @@ void loop() {
 </Code>
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.03-pwm-duze-wypelnienie.png"
+  src="/img/lekcje/08.03-pwm-duze-wypelnienie.png"
   caption="Duże wypełnienie: stan wysoki trwa przez większość okresu."
   alt="Wykres przebiegu PWM o dużym wypełnieniu"
   width={390}
@@ -134,7 +133,7 @@ void loop() {
 Gdy zamienimy czasy miejscami, otrzymamy małe wypełnienie. Pin jest w stanie wysokim tylko przez krótki fragment okresu.
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.04-pwm-male-wypelnienie.png"
+  src="/img/lekcje/08.04-pwm-male-wypelnienie.png"
   caption="Małe wypełnienie: stan wysoki trwa krótko, a przerwa jest długa."
   alt="Wykres przebiegu PWM o małym wypełnieniu"
   width={390}
@@ -172,7 +171,7 @@ Na pinie nadal pojawia się tylko `0 V` albo około `5 V`. Zmienia się czas trw
 Arduino UNO ma kilka pinów sprzętowego PWM. Na płytce są one oznaczone tyldą `~`. Sprzętowy PWM oznacza, że mikrokontroler potrafi generować taki sygnał samodzielnie, bez ręcznego wpisywania bardzo krótkich `delay()` w programie.
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.05-arduino-uno-pinout-pwm.png"
+  src="/img/lekcje/08.05-arduino-uno-pinout-pwm.png"
   caption="Piny PWM Arduino UNO są oznaczone symbolem tyldy przy numerze pinu."
   alt="Pinout Arduino UNO z pinami obsługującymi PWM"
   width={650}
@@ -205,7 +204,7 @@ Gdy chcesz sterować serwem lub silnikiem wartością odczytaną przez `analogRe
 Pierwszy praktyczny układ jest prosty: dioda LED z rezystorem podłączona do pinu `3`, czyli jednego z pinów PWM. Będziemy stopniowo zwiększać wypełnienie sygnału, aby dioda płynnie się rozjaśniała.
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.06-dioda-led-sterowanie-pwm.png"
+  src="/img/lekcje/08.06-dioda-led-sterowanie-pwm.png"
   caption="Dioda LED podłączona do pinu 3 pozwala sprawdzić działanie PWM w praktyce."
   alt="Schemat Arduino z diodą LED sterowaną sygnałem PWM na pinie 3"
   width={464}
@@ -253,7 +252,6 @@ Serwomechanizm to mały napęd, w którym w jednej obudowie znajdują się silni
 
 <Photo
   file="08.07-serwomechanizm-micro-sg90.png"
-  day="dzien-01"
   caption="Serwomechanizm typu micro, podobny do popularnego SG90."
   alt="Mały serwomechanizm modelarski typu micro"
   width={546}
@@ -289,7 +287,7 @@ Jeżeli serwo ma osobne zasilanie, masa tego zasilania musi być połączona z m
 W ćwiczeniu wykorzystujemy układ ze stabilizatorem `LM7805`, który zasila serwomechanizm napięciem około `5 V`. Sygnał sterujący podłączamy do pinu `9` Arduino.
 
 <Schematic
-  src="/img/lekcje/dzien-01/08.08-podlaczenie-serwomechanizmu-arduino.png"
+  src="/img/lekcje/08.08-podlaczenie-serwomechanizmu-arduino.png"
   caption="Podłączenie serwomechanizmu: osobne zasilanie 5 V, wspólna masa i sygnał z pinu 9."
   alt="Schemat podłączenia serwomechanizmu do Arduino ze stabilizatorem zasilania"
   width={676}

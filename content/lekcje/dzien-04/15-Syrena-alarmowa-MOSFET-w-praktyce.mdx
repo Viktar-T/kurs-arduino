@@ -1,0 +1,434 @@
+﻿---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Syrena alarmowa i MOSFET w praktyce"
+slug: "syrena-alarmowa-mosfet"
+summary: "Lekcja z kursu Forbot II #3: buzzer bez wbudowanego generatora, funkcje tone() i noTone(), szukanie częstotliwości rezonansowej, budowa syreny alarmowej, sterowanie wyższym napięciem przez tranzystor MOSFET IRL540N."
+
+day: 4
+weekend: 2
+order: 3
+duration: 90
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
+forbotCourse: 2
+forbotChapter: 3
+
+objectives:
+  - "Wyjaśnić różnicę między buzzerem z generatorem a buzzerem bez generatora"
+  - "Podłączyć buzzer bez generatora bezpośrednio do Arduino i wygenerować dźwięk za pomocą digitalWrite"
+  - "Używać funkcji tone() i noTone() do generowania sygnałów dźwiękowych o zadanej częstotliwości"
+  - "Znaleźć doświadczalnie częstotliwość rezonansową buzzera"
+  - "Zbudować prostą syrenę alarmową zmieniającą częstotliwość"
+  - "Podłączyć tranzystor MOSFET IRL540N i sterować buzzerem zasilanym z napięcia 12 V"
+
+prerequisites:
+  - "dzien-04/wykresy-liczby-losowe-warunki-cd"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Buzzer bez generatora", qty: 1 }
+  - { name: "Tranzystor MOSFET IRL540N", qty: 1 }
+  - { name: "Rezystor 10 kΩ", qty: 2 }
+  - { name: "Zasilacz zewnętrzny 12 V", qty: 1, optional: true }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, buzzer, tone, mosfet, syrena, irl540n, dzwiek, piezo]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-ii-syrena-alarmowa-mosfet-w-praktyce-id15497"
+
+cover: "/img/lekcje/15.01-kurs-arduino-ii-okladka.png"
+publish: true
+updated: "2026-05-15"
+---
+
+W tej lekcji nauczysz się generować dźwięki za pomocą buzzera **bez wbudowanego generatora**. Poznasz funkcję `tone()`, która pozwala precyzyjnie sterować częstotliwością dźwięku — a to otworzy drogę do budowy prawdziwej **syreny alarmowej**. W drugiej części zajmiemy się tranzystorem **MOSFET**, dzięki któremu Arduino może sterować podzespołami wymagającymi wyższego napięcia niż 5 V.
+
+## 1. Buzzer bez generatora
+
+Podczas pierwszego poziomu kursu Arduino generowaliśmy dźwięki za pomocą buzzera z **wbudowanym generatorem** — wystarczyło dostarczyć zasilanie, a element sam wydawał ciągły pisk. Teraz zajmiemy się buzzerem **bez generatora**. Tym razem to my musimy dostarczać odpowiedni sygnał — bez niego element pozostaje cichy.
+
+<Photo
+  file="15.02-buzzer-bez-generatora.jpg"
+  caption="Buzzer bez generatora z zestawu. Wygląda identycznie jak ten z generatorem."
+  alt="Zdjęcie buzzera bez generatora z zestawu Arduino"
+/>
+
+<Callout type="warning" title="Jak odróżnić buzzer z generatorem od buzzera bez generatora?">
+Oba elementy wyglądają identycznie. Najłatwiej zajrzeć do noty katalogowej. Jeśli jej nie masz — podłącz buzzer do napięcia 3–5 V. Buzzer **z generatorem** wyda od razu ciągły pisk. Buzzer **bez generatora** pozostanie cichy.
+</Callout>
+
+Dużą zaletą buzzera bez generatora jest szeroki zakres napięcia roboczego. Omawiany model działa od **1 do 40 V** — może pracować zarówno z logiką 5 V Arduino, jak i z wyższym zasilaniem zewnętrznym.
+
+## 2. Podłączenie buzzera do Arduino
+
+Buzzer bez generatora pobiera bardzo mały prąd i można go bezpiecznie podłączyć bezpośrednio do pinu cyfrowego Arduino.
+
+Podłączenie:
+- pierwsze wyprowadzenie buzzera → **GND**,
+- drugie wyprowadzenie → pin **A5** Arduino.
+
+Buzzer jest elementem **niebiegunowym** — możesz go podłączyć w dowolnej orientacji. Dla porządku czarny przewód idzie do GND.
+
+<Schematic
+  src="/img/lekcje/15.04-buzzer-podlaczenie-bezposrednie.jpg"
+  caption="Bezpośrednie podłączenie buzzera bez generatora do Arduino."
+  alt="Schemat montażowy: buzzer podłączony do pinu A5 i GND na płytce stykowej"
+/>
+
+## 3. Pierwszy test — dźwięk przez digitalWrite
+
+Zacznijmy od sprawdzenia, jak buzzer reaguje na sygnał generowany przez `digitalWrite()`.
+
+<Code lang="cpp" file="buzzer-test-sekundy.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT); // Konfiguracja A5 jako wyjście
+}
+
+void loop() {
+  digitalWrite(A5, LOW); // Cykliczna zmiana stanu wyjścia
+  delay(1000);
+  digitalWrite(A5, HIGH);
+  delay(1000);
+}
+```
+</Code>
+
+Zamiast długich pisków słyszysz krótkie **„pyknięcia"** — i to wyłącznie przy zmianie stanu, nie przez całą sekundę. Dzieje się tak, bo wewnątrz buzzera jest elastyczna blaszka piezoelektryczna: zmiana napięcia odkształca ją mechanicznie i właśnie to odkształcenie generuje dźwięk.
+
+<Photo
+  file="15.03-buzzer-piezo-odksztalcenie.gif"
+  caption="Generowanie dźwięku przez odkształcenie blaszki piezoelektrycznej przy zmianie napięcia."
+  alt="Animacja pokazująca odkształcanie blaszki piezo przy zmianie napięcia"
+/>
+
+Jeśli zmniejszysz opóźnienie (np. do 100 ms, a potem do 10 ms), dźwięki będą następować coraz szybciej i zaczną tworzyć rozpoznawalny ton:
+
+<Code lang="cpp" file="buzzer-test-10ms.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(A5, LOW);
+  delay(10);
+  digitalWrite(A5, HIGH);
+  delay(10);
+}
+```
+</Code>
+
+<Callout type="note" title="Wada metody z delay()">
+`delay()` wstrzymuje **cały program** — Arduino nie może w tym czasie robić niczego innego. Dlatego do generowania dźwięku używamy dedykowanej funkcji `tone()`, która korzysta z wbudowanego timera i nie blokuje pętli głównej.
+</Callout>
+
+## 4. Funkcja tone()
+
+Funkcja `tone()` generuje sygnał prostokątny o zadanej częstotliwości na wybranym pinie, korzystając z timera wbudowanego w mikrokontroler.
+
+Składnia:
+
+```cpp
+tone(pin, czestotliwosc);           // generuje sygnał bez limitu czasu
+tone(pin, czestotliwosc, czas_ms);  // zatrzymuje się po upływie czas_ms
+```
+
+Aby zatrzymać generowanie:
+
+```cpp
+noTone(pin); // Wyłącz generowanie sygnału na pinie
+```
+
+<Callout type="warning" title="Konflikt z PWM">
+Funkcja `tone()` używa tego samego timera co PWM na pinach **3** i **11**. Gdy `tone()` jest aktywne, nie można jednocześnie generować PWM na tych pinach.
+</Callout>
+
+Ważna uwaga: wywołanie `tone()` **uruchamia sygnał i pozostawia go aktywnym** aż do wywołania `noTone()` lub kolejnego `tone()`. Dlatego program poniżej gra dźwięk cały czas, mimo że `tone()` jest wywołane tylko raz w `setup()`:
+
+<Code lang="cpp" file="buzzer-tone-ciagly.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+  tone(A5, 1000); // Wygeneruj sygnał 1000 Hz — zostanie aktywny do noTone()
+}
+
+void loop() {
+  // nic tu nie robimy, a dźwięk wciąż gra
+}
+```
+</Code>
+
+Proste pikanie z `tone()` i `noTone()`:
+
+<Code lang="cpp" file="buzzer-tone-pikanie.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  tone(A5, 1000); // Wygeneruj sygnał 1000 Hz na pinie A5
+  delay(1000);
+  noTone(A5);     // Wyłącz generowanie sygnału
+  delay(1000);
+}
+```
+</Code>
+
+## 5. Szukanie częstotliwości rezonansowej
+
+Każdy buzzer ma **częstotliwość rezonansową** — przy niej gra najgłośniej. Znajdziemy ją doświadczalnie, skanując cały zakres pętlą `for`:
+
+<Code lang="cpp" file="buzzer-skan-czestotliwosci.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  // tone() na Arduino UNO obsługuje zakres 31–65535 Hz
+  for (int czestotliwosc = 31; czestotliwosc < 65535; czestotliwosc++) {
+    tone(A5, czestotliwosc);
+  }
+}
+```
+</Code>
+
+Po uruchomieniu słyszysz świst, a potem różne dźwięki — cykl powtarza się co kilka sekund. Zmieniając zakres pętli można precyzyjniej wyznaczyć rezonans.
+
+Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **4000 Hz ± 500 Hz**, czyli zakres 3500–4500 Hz. Sprawdzamy:
+
+<Code lang="cpp" file="buzzer-rezonans.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  tone(A5, 4000); // Generuj sygnał 4000 Hz — okolice rezonansu
+  delay(100);
+  noTone(A5);
+  delay(100);
+}
+```
+</Code>
+
+Dźwięk jest teraz wyraźnie głośniejszy.
+
+<Task title="Zadanie 1 — wyznaczanie rezonansu" estimate="10 min">
+Wgraj program skanujący zakres i wsłuchaj się, przy której częstotliwości buzzer gra najgłośniej. Następnie wpisz tę wartość bezpośrednio do `tone()` i potwierdź, że dźwięk jest faktycznie najgłośniejszy. Co się dzieje przy opóźnieniu 1 ms zamiast 10 ms?
+</Task>
+
+## 6. Głośna syrena alarmowa
+
+Zmiana częstotliwości w pętli tworzy efekt syreny. Wartości 4300 Hz i 3500 Hz leżą w okolicach rezonansu i dają wyraźny głośny efekt:
+
+<Code lang="cpp" file="syrena-alarmowa.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  tone(A5, 4300); // Ton wysoki
+  delay(150);
+  tone(A5, 3500); // Ton niski
+  delay(150);
+}
+```
+</Code>
+
+Czasy i częstotliwości są dobierane eksperymentalnie — zmień je i sprawdź efekty!
+
+<Task title="Zadanie 2 — własna syrena" estimate="5 min">
+Zmodyfikuj program syreny tak, aby:
+- używała **3 różnych** częstotliwości zamiast 2,
+- każdy ton trwał inny czas (np. 100, 200 i 300 ms).
+</Task>
+
+## 7. Dla zaawansowanych — melodyjki
+
+Arduino IDE zawiera gotowy przykład grania melodii: **Plik → Przykłady → Digital → toneMelody**.
+
+Przykład korzysta z pliku `pitches.h`, który definiuje stałe dla nut muzycznych:
+
+<Expandable title="Stałe nut z pliku pitches.h" heading="####">
+
+```cpp
+#define NOTE_B0  31
+#define NOTE_C1  33
+#define NOTE_D1  37
+// ...
+#define NOTE_C4  262   // środkowe C
+#define NOTE_D4  294
+#define NOTE_E4  330
+#define NOTE_F4  349
+#define NOTE_G4  392
+#define NOTE_A4  440
+#define NOTE_B4  494
+#define NOTE_C5  523
+// ...
+#define NOTE_C8  4186
+#define NOTE_DS8 4978
+```
+
+Wklej te definicje do swojego programu i komponuj melodie: `tone(A5, NOTE_C4, 500)` zagra środkowe C przez 500 ms. Pełna lista obejmuje nuty od B0 (31 Hz) do DS8 (4978 Hz).
+
+</Expandable>
+
+## 8. MOSFET — sterowanie wyższym napięciem
+
+Niektóre podzespoły wymagają zasilania **9 V lub 12 V** — więcej niż Arduino może dostarczyć ze swojego pinu (max ~20 mA przy 5 V). Tutaj z pomocą przychodzą tranzystory **MOSFET** (ang. Metal-Oxide-Semiconductor Field-Effect Transistor).
+
+Zalety użycia MOSFET:
+- sterowanie napięciami powyżej 5 V,
+- obsługa dużych prądów (kilka amperów).
+
+**Przykład praktyczny:** taśmy LED 12 V wymagają kilku amperów — bezpośrednie sterowanie z Arduino jest niemożliwe. MOSFET pełni rolę „elektronicznego przełącznika" sterowanego małym sygnałem z Arduino.
+
+### Tranzystor IRL540N
+
+W zestawie znajduje się popularny MOSFET **IRL540N**. Najważniejsze parametry:
+
+<Table
+  caption="Parametry tranzystora IRL540N"
+  headers={["Parametr", "Wartość"]}
+  rows={[
+    ["Maks. prąd drenu Id", "36 A"],
+    ["Maks. napięcie VDSS", "100 V"],
+    ["Rezystancja kanału Rdson", "0,044 Ω"],
+  ]}
+/>
+
+Wyprowadzenia IRL540N (patrząc od frontu, od lewej):
+- **Gate (G)** — bramka: sygnał sterujący z Arduino,
+- **Drain (D)** — dren: podłączamy do obciążenia (strona „+"),
+- **Source (S)** — źródło: masa GND.
+
+## 9. MOSFET w praktyce — buzzer zasilany 12 V
+
+### Podłączenie i test napięcia
+
+Schemat połączeń:
+- pin A5 Arduino → rezystor 10 kΩ → **Gate** (lewy pin) MOSFETa,
+- **Source** (prawy pin) → GND Arduino,
+- **Drain** (środkowy pin) → przewód do obciążenia — na razie luźny,
+- **VIN** Arduino → drugi luźny przewód — podłączamy zasilacz zewnętrzny (12 V).
+
+<Schematic
+  src="/img/lekcje/15.05-mosfet-podlaczenie-schemat.png"
+  caption="Schemat montażowy: podłączenie tranzystora MOSFET IRL540N do Arduino z rezystorem 10 kΩ na bramce."
+  alt="Schemat Fritzing: Arduino UNO, MOSFET IRL540N, rezystor 10 kΩ, przewody zasilające"
+/>
+
+<Callout type="warning" title="Sprawdź połączenia PRZED podłączeniem zasilacza">
+Pomyłka w połączeniach MOSFETa może uszkodzić całe Arduino. Dokładnie zweryfikuj schemat przed każdym włączeniem zasilania zewnętrznego.
+</Callout>
+
+Po podłączeniu zasilacza wgraj program testowy. Między luźnymi przewodami (dren i VIN) powinno naprzemiennie pojawiać się napięcie ~12 V co sekundę:
+
+<Code lang="cpp" file="mosfet-test.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT); // Konfiguracja A5 jako wyjście
+}
+
+void loop() {
+  digitalWrite(A5, LOW);  // MOSFET wyłączony — brak napięcia na drenie
+  delay(1000);
+  digitalWrite(A5, HIGH); // MOSFET włączony — ~12 V na drenie
+  delay(1000);
+}
+```
+</Code>
+
+<Photo
+  file="15.06-mosfet-sterowanie-wyzszym-napieciem.jpg"
+  caption="Test sterowania wyższym napięciem z poziomu Arduino przez MOSFET IRL540N."
+  alt="Zdjęcie układu testowego: Arduino z MOSFETem, między luźnymi przewodami mierzone napięcie 12 V"
+/>
+
+### Podłączenie buzzera
+
+Gdy test napięcia przebiega poprawnie, podłącz buzzer zgodnie ze schematem:
+
+<Schematic
+  src="/img/lekcje/15.07-buzzer-z-mosfet-podlaczenie.png"
+  caption="Podłączenie buzzera do układu z MOSFETem."
+  alt="Schemat Fritzing: buzzer podłączony między drenem MOSFETa a napięciem 12 V z zasilacza"
+/>
+
+Wgraj program syreny alarmowej — dźwięk będzie zaskakująco **cichy**. Dlaczego?
+
+Element piezoelektryczny podczas szybkiego przełączania zachowuje się jak **kondensator** — gromadzi ładunek, który nie ma gdzie odpłynąć. Tłumi to amplitudę drgań blaszki.
+
+**Rozwiązanie:** rezystor 10 kΩ podłączony **równolegle z buzzerem** umożliwia szybkie rozładowywanie:
+
+<Schematic
+  src="/img/lekcje/15.08-buzzer-z-rezystorem-rownolegle.png"
+  caption="Układ z rezystorem 10 kΩ dodanym równolegle z buzzerem."
+  alt="Schemat Fritzing: rezystor 10 kΩ równolegle z buzzerem w układzie z MOSFETem"
+/>
+
+Finalny, działający układ:
+
+<Photo
+  file="15.09-buzzer-uklad-koncowy-rezystor-10k.jpg"
+  caption="Finalny układ: buzzer zasilany 12 V przez MOSFET IRL540N, rezystor 10 kΩ równolegle z buzzerem."
+  alt="Zdjęcie gotowego układu na płytce stykowej: Arduino, MOSFET IRL540N, buzzer, dwa rezystory 10 kΩ"
+/>
+
+Teraz syrena brzmi wyraźnie głośniej.
+
+<Code lang="cpp" file="syrena-przez-mosfet.ino">
+```cpp
+void setup() {
+  pinMode(A5, OUTPUT);
+}
+
+void loop() {
+  tone(A5, 4300); // Ton wysoki — MOSFET przełącza 12 V
+  delay(150);
+  tone(A5, 3500); // Ton niski
+  delay(150);
+}
+```
+</Code>
+
+<Callout type="note" title="MOSFET nie jest tu bezwzględnie konieczny">
+Buzzer bez generatora działa też bezpośrednio z 5 V Arduino. MOSFET użyliśmy jako przykład — żeby pokazać, że Arduino może sterować podzespołami wymagającymi wyższego napięcia. Przy taśmach LED 12 V czy silnikach DC już nie ma wyjścia — MOSFET lub mostek H są niezbędne.
+</Callout>
+
+<Task title="Zadanie 3 — MOSFET z syreną" estimate="15 min">
+Podłącz pełny układ (buzzer + MOSFET + rezystor 10 kΩ na bramce + rezystor 10 kΩ równolegle z buzzerem) i wgraj program syreny. Porównaj głośność:
+
+1. Bez rezystora równoległego z buzzerem.
+2. Z rezystorem 10 kΩ.
+
+Co zmieniło się w dźwięku?
+</Task>
+
+<MiniProject title="Sygnalizator parkowania" estimate="20 min">
+
+Połącz buzzer z MOSFETem i czujnikiem HC-SR04 (z lekcji 12). Zbuduj uproszczony system cofania:
+
+- Odległość > 50 cm → cisza.
+- Odległość 20–50 cm → buzzer pika wolno (co 500 ms).
+- Odległość < 20 cm → buzzer pika szybko (co 100 ms).
+
+Skorzystaj z funkcji `zmierzOdleglosc()` z lekcji 12. Możesz też zastąpić HC-SR04 ręczną zmianą wartości w `tone()` i przetestować samo pikanie.
+
+</MiniProject>
+
+## Podsumowanie
+
+Buzzer bez generatora reaguje na **zmiany napięcia** — im szybsze przełączanie, tym wyższy słyszalny ton. Funkcja `tone()` upraszcza to zadanie: generuje sygnał o zadanej częstotliwości korzystając z wbudowanego timera, bez blokowania pętli głównej. Każdy buzzer ma **częstotliwość rezonansową** — dla naszego modelu to ok. 4000 Hz. Szybka zmiana między dwoma częstotliwościami tworzy efekt syreny alarmowej. Tranzystor **MOSFET IRL540N** pełni rolę elektronicznego przełącznika — Arduino steruje jego bramką sygnałem 5 V, a przez dren może płynąć prąd z układu 12 V. Rezystor 10 kΩ na bramce chroni Arduino, a rezystor równoległy z buzzerem rozładowuje kondensator piezoelektryczny i poprawia jakość dźwięku.

@@ -110,7 +110,7 @@ płytki sygnał jest zamieniany na UART. Dlatego w kodzie używamy obiektu
 `Serial`, a na płytce mogą migać diody `TX` i `RX`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/06.01-komunikacja-usb-uart.png"
+  src="/img/lekcje/06.01-komunikacja-usb-uart.png"
   caption="Arduino UNO komunikuje się z PC przez USB, a na płytce sygnał trafia do interfejsu UART mikrokontrolera."
   alt="Schemat pokazujący komputer PC połączony przez USB z Arduino i mikrokontrolerem"
 />
@@ -154,17 +154,16 @@ ramka zawiera:
 
 <Photo
   file="06.02-ramka-uart.png"
-  day="dzien-01"
   caption="Uproszczona ramka UART: bit startu, bity danych i bit stopu."
   alt="Rysunek ramki UART z bitem startu, ośmioma bitami danych i bitem stopu"
   width={560}
   height={220}
 />
 
-Ponieważ UART jest asynchroniczny, nie ma osobnej linii zegarowej. Komputer i
-Arduino muszą więc wcześniej umówić się na prędkość transmisji. Gdy w programie
-piszemy `Serial.begin(9600)`, wybieramy prędkość 9600 baud, czyli w uproszczeniu
-9600 bitów na sekundę.
+Ponieważ UART jest **asynchroniczny**, nie ma osobnej linii zegarowej. Dla tego
+Komputer i Arduino muszą więc wcześniej umówić się na prędkość transmisji. Gdy w
+programie piszemy `Serial.begin(9600)`, wybieramy prędkość 9600 baud, czyli w
+uproszczeniu 9600 bitów na sekundę.
 
 <Table
   caption="Najważniejsze pojęcia UART"
@@ -186,18 +185,6 @@ wartość, komputer próbuje próbkować sygnał w złych momentach. W efekcie s
 bity w niepoprawne znaki i na ekranie pojawiają się losowe symbole.
 </Expandable>
 
-<Expandable title="Głębiej: format ramki 8N1 i inne opcje UART" heading="####">
-
-`Serial.begin(9600)` używa domyślnego formatu **8N1**, co oznacza:
-- **8** bitów danych,
-- **N** — brak bitu parzystości (No parity),
-- **1** bit stopu.
-
-Możesz przekazać format jawnie: `Serial.begin(9600, SERIAL_8N1)`. Arduino obsługuje też warianty z parzystością, np. `SERIAL_8E1` (parzystość parzysta) lub `SERIAL_8O1` (nieparzysta). Bit parzystości to jeden dodatkowy bit na końcu danych, który pozwala wykryć pojedynczy błąd transmisji — ale nie naprawić go.
-
-Do komunikacji z Monitorem portu szeregowego zawsze używaj `8N1` — to domyślny format PC i niemal wszystkich urządzeń. Inne formaty przydają się, gdy integrujesz Arduino z modułami przemysłowymi o ściśle określonej specyfikacji.
-
-</Expandable>
 
 ## 3. Pierwszy program z Serial Monitor
 
@@ -209,11 +196,11 @@ końca i może cyklicznie wysyłać dane.
 ```cpp
 void setup() {
   Serial.begin(9600);
-  Serial.println("Arduino gotowe do pracy");
+  Serial.println("Witaj na Forbocie!");
 }
 
 void loop() {
-  Serial.println("Minelo 5 sekund");
+  Serial.println("Minelo 5 sekund!");
   delay(5000);
 }
 ```
@@ -225,7 +212,6 @@ sekund.
 
 <Photo
   file="06.03-monitor-portu-szeregowego.png"
-  day="dzien-01"
   caption="Monitor portu szeregowego pozwala obserwować tekst wysyłany przez Arduino."
   alt="Zrzut okna Monitora portu szeregowego Arduino IDE"
   width={620}
@@ -234,7 +220,7 @@ sekund.
 
 `Serial.print()` wypisuje tekst bez przechodzenia do nowej linii, a
 `Serial.println()` dodaje koniec linii. W diagnostyce najczęściej zaczynamy od
-`println()`, bo kolejne pomiary są wtedy czytelniejsze.
+`println()`, bo kolejne pomiary są wtedy czytelniejsze. Zbadaj funkcje Serial na [https://docs.arduino.cc/language-reference/](https://docs.arduino.cc/language-reference/).
 
 <Task title="Zadanie 1" estimate="8 min">
 Zmień prędkość w Monitorze portu szeregowego na inną niż `9600`, nie zmieniając
@@ -250,10 +236,10 @@ dwiema diodami. Przycisk udaje czujnik w ramie okna:
 - przycisk wciśnięty oznacza okno zamknięte,
 - przycisk puszczony oznacza okno otwarte,
 - zielona LED sygnalizuje stan bezpieczny,
-- czerwona LED i komunikat w terminalu sygnalizują alarm.
+- czerwona LED i komunikat w terminalu sygnalizują alarm "Uwaga! Alarm! Okno nie jest zamknięte!".
 
 <Schematic
-  src="/img/lekcje/dzien-01/06.04-alarm-okna-led-przycisk.png"
+  src="/img/lekcje/06.04-alarm-okna-led-przycisk.png"
   caption="Układ alarmu okna: przycisk jako czujnik oraz dwie diody LED."
   alt="Schemat połączenia Arduino z przyciskiem i dwiema diodami LED"
   width={820}
@@ -261,9 +247,114 @@ dwiema diodami. Przycisk udaje czujnik w ramie okna:
 />
 
 Pierwsza wersja programu może wypisywać alarm bez przerwy, bo `loop()` wykonuje
-się bardzo szybko. Wersja poniżej po wykryciu otwartego okna zatrzymuje się w
+się bardzo szybko. 
+
+<Code lang="cpp" file="alarm-okna-pierwsza-wersja.ino">
+```cpp
+void setup(){
+  Serial.begin(9600); //Uruchamiamy transmisję
+  
+  pinMode(8, OUTPUT); //Wyjście diody czerwonej
+  pinMode(9, OUTPUT); //Wyjście diody zielonej
+  pinMode(10, INPUT_PULLUP); //Przycisk
+  
+  digitalWrite(8, LOW); //Wyłączenie obu diod
+  digitalWrite(9, LOW);
+}
+
+void loop() {
+  if (digitalRead(10) == LOW) { //Jeśli przycisk jest wciśnięty
+    digitalWrite(9, HIGH); //Włączenie diody zielonej
+    digitalWrite(8, LOW); //Wyłączenie diody czerwonej
+  } else { //Jeśli przycisk nie jest wciśnięty
+    digitalWrite(9, LOW); //Wyłączenie diody zielonej
+    digitalWrite(8, HIGH); //Włączenie diody czerwonej
+    Serial.println("Uwaga! Alarm! Okno nie jest zamkniete!");
+  }
+}
+```
+</Code>
+
+Sprawdźmy jak działa program! Niestety nie najlepiej, gdy okno nie jest zamknięte informacja o alarmie nadawana jest cały czas. Wolelibyśmy jednak, aby wysyłana była tylko raz.
+
+
+Wersja poniżej po wykryciu otwartego okna zatrzymuje się w
 pętli `while()` do czasu ponownego zamknięcia czujnika.
 
+<Code lang="cpp" file="alarm-okna.ino">
+```cpp
+void setup(){
+  Serial.begin(9600); //Uruchamiamy transmisję
+  
+  pinMode(8, OUTPUT); //Wyjście diody czerwonej
+  pinMode(9, OUTPUT); //Wyjście diody zielonej
+  pinMode(10, INPUT_PULLUP); //Przycisk
+  
+  digitalWrite(8, LOW); //Wyłączenie obu diod
+  digitalWrite(9, LOW);
+}
+
+void loop() {
+  
+  if (digitalRead(10) == LOW) { //Jeśli przycisk jest wciśnięty
+    digitalWrite(9, HIGH); //Włączenie diody zielonej
+    digitalWrite(8, LOW); //Wyłączenie diody czerwonej
+  } else { //Jeśli przycisk nie jest wciśnięty
+    digitalWrite(9, LOW); //Wyłączenie diody zielonej
+    digitalWrite(8, HIGH); //Włączenie diody czerwonej
+    Serial.println("Uwaga! Alarm! Okno nie jest zamkniete!");
+    
+    while (digitalRead(10) == HIGH) {
+      //Zatrzymujemy się w pustej pętli do ponownego zamknięcia okna
+      delay(25); //W pętli wprowadzamy małe opóźnienie 25ms, aby niwelować zakłócenia
+    }
+ 
+  }
+}
+```
+</Code>
+
+Z czasem nasze programy będą się znacznie rozrastały. Co w przypadku, gdy konieczna będzie zmiana fizycznego podłączenia np.: diody lub przycisku?  Zmiana numeru pinu w każdym miejscu programu byłaby uciążliwa?
+
+Z pomocą przychodzi nam dyrektywa #define oraz zmienne. Pozwalają one na zdefiniowanie symboli, które będą podmieniane przed kompilacją w każdym miejscu programu.  Przykładowo:
+
+<Expandable title="Instrukcja #define">
+<Code lang="cpp" file="alarm-okna.ino">
+```cpp
+#define pinCzerwona 8;
+#define pinZielona 9;
+#define pinCzujnikOkna 10;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(pinCzerwona, OUTPUT);
+  pinMode(pinZielona, OUTPUT);
+  pinMode(pinCzujnikOkna, INPUT_PULLUP);
+
+  digitalWrite(pinCzerwona, LOW);
+  digitalWrite(pinZielona, LOW);
+}
+
+void loop() {
+  if (digitalRead(pinCzujnikOkna) == LOW) {
+    digitalWrite(pinZielona, HIGH);
+    digitalWrite(pinCzerwona, LOW);
+  } else {
+    digitalWrite(pinZielona, LOW);
+    digitalWrite(pinCzerwona, HIGH);
+    Serial.println("Uwaga! Alarm! Okno nie jest zamkniete!");
+
+    while (digitalRead(pinCzujnikOkna) == HIGH) {
+      delay(25);
+    }
+  }
+}
+```
+</Code>
+</Expandable>
+
+<Expandable title="Zmiena 'byte'">
 <Code lang="cpp" file="alarm-okna.ino">
 ```cpp
 const byte pinCzerwona = 8;
@@ -297,10 +388,10 @@ void loop() {
 }
 ```
 </Code>
+</Expandable>
 
 <Callout type="tip" title="Dlaczego const byte zamiast #define?">
-Forbot pokazuje w tym miejscu `#define`, bo to szybki sposób nadawania nazw
-pinom. Na zajęciach preferujemy `const byte` dla numerów pinów: ma typ, daje
+Na zajęciach preferujemy `const byte` dla numerów pinów: ma typ, daje
 lepsze komunikaty błędów i dobrze pasuje do małych wartości `0-19` na Arduino
 UNO.
 </Callout>
@@ -344,7 +435,9 @@ void loop() {
 `#define pinLed 8` działa jak automatyczne „znajdź i zamień” wykonane przed
 kompilacją. Preprocesor znajduje każde wystąpienie `pinLed` i wstawia tam `8`.
 To nie jest zmienna i nie ma typu. Dlatego `#define` bywa użyteczne, ale w
-codziennych szkicach dla numerów pinów bezpieczniej używać `const byte`.
+codziennych szkicach dla numerów pinów bezpieczniej używać `const byte` —
+kompilator zna typ, więc wykryje błąd (np. `pinLed = 5`), a komunikaty
+błędów będą wskazywać nazwę stałej, nie gołą liczbę.
 </Expandable>
 
 ## 6. Zmienne jako pamięć programu
@@ -355,15 +448,19 @@ myśleć praktycznie: płytka ma tylko `2 KB` pamięci SRAM, więc każda więks
 zmienna i każdy tekst typu `String` mają znaczenie.
 
 <Table
-  caption="Podstawowe typy danych na Arduino UNO"
-  headers={["Typ", "Co przechowuje", "Typowe użycie"]}
+  caption="Tabela 4.1 — Typy danych w języku C (Książka B, r. 4, s. 67)"
+  headers={["Typ", "Pamięć (B)", "Przedział wartości", "Typowe użycie na Arduino"]}
   rows={[
-    ["bool", "true albo false", "stan alarmu, flaga zdarzenia"],
-    ["byte", "liczby 0-255", "numery pinów, małe liczniki, wartości PWM"],
-    ["int", "liczby całkowite od -32768 do 32767", "liczniki, odczyty analogowe, obliczenia"],
-    ["long", "duże liczby całkowite", "czas, większe liczniki"],
-    ["char", "jeden znak ASCII", "pojedyncza komenda, np. '0' albo '1'"],
-    ["String", "tekst", "proste komendy tekstowe w ćwiczeniach"],
+    ["bool / boolean", "1", "false lub true (0 lub 1)", "flagi zdarzeń, stany logiczne"],
+    ["char", "1", "−128 … +127", "znaki ASCII — np. 65 = 'A'; zwykle tylko wartości dodatnie"],
+    ["byte", "1", "0 … 255", "numer pinu, wartość PWM, bajt odebrany z Serial"],
+    ["int", "2", "−32 768 … +32 767", "liczniki, wyniki analogRead(), obliczenia ogólne"],
+    ["unsigned int", "2", "0 … 65 535", "gdy liczby ujemne nie są potrzebne; nie mieszać z int w arytmetyce"],
+    ["long", "4", "−2 147 483 648 … +2 147 483 647", "millis(), duże liczniki, czas w ms"],
+    ["unsigned long", "4", "0 … 4 294 967 295", "zwracany przez millis() i micros()"],
+    ["float", "4", "±3,4 × 10³⁸ (~6–7 cyfr znaczących)", "temperatura, napięcie — obliczenia z ułamkami"],
+    ["double", "4", "identyczny z float na Arduino UNO", "na AVR taki sam zakres co float"],
+    ["String", "zmienna", "tekst do ~1 KB", "komendy przez Serial w ćwiczeniach; ostrożnie — fragmentuje RAM"],
   ]}
 />
 
@@ -423,7 +520,6 @@ programowaniu znak `=` oznacza przypisanie:
 
 <Photo
   file="06.05-licznik-zmienna-terminal.png"
-  day="dzien-01"
   caption="Wynik działania licznika wypisywanego przez UART."
   alt="Monitor portu szeregowego pokazujący kolejne wartości licznika"
   width={520}
@@ -513,7 +609,6 @@ Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porów
 
 <Photo
   file="06.06-uart-wysylanie-imienia.png"
-  day="dzien-01"
   caption="Monitor portu szeregowego może wysyłać tekst z komputera do Arduino."
   alt="Monitor portu szeregowego z wpisanym tekstem wysyłanym do Arduino"
   width={520}
@@ -522,7 +617,6 @@ Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porów
 
 <Photo
   file="06.07-uart-odpowiedz-arduino.png"
-  day="dzien-01"
   caption="Arduino może odpowiedzieć na odebrany tekst własnym komunikatem."
   alt="Monitor portu szeregowego pokazujący odpowiedź Arduino na wpisany tekst"
   width={520}
@@ -535,7 +629,7 @@ Na końcu połączymy wszystko: nazwy pinów, zmienne tekstowe, odbiór danych i
 sterowanie diodami. Układ ma dwie diody podłączone do pinów `8` i `9`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/06.08-sterowanie-diodami-przez-uart.png"
+  src="/img/lekcje/06.08-sterowanie-diodami-przez-uart.png"
   caption="Dwie diody LED sterowane komendami wpisywanymi w Monitorze portu szeregowego."
   alt="Schemat Arduino z dwiema diodami LED podłączonymi do pinów 8 i 9"
   width={860}

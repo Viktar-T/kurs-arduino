@@ -43,7 +43,7 @@ tags: [arduino, adc, analogread, potencjometr, fotorezystor, pomiar-napiecia]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-pomiar-napiecia-przetwornik-adc-id3819"
 
-cover: "/img/lekcje/dzien-01/07.01-arduino-uno-pinout-adc.png"
+cover: "/img/lekcje/07.01-arduino-uno-pinout-adc.png"
 publish: true
 updated: "2026-05-13"
 ---
@@ -61,7 +61,7 @@ Elektronika cyfrowa opisuje sygnały dwoma stanami. To wystarcza do przycisków,
 Jeśli czujnik podaje napięcie proporcjonalne do mierzonej wielkości, mikrokontroler musi zamienić to napięcie na liczbę. Tym zajmuje się ADC, czyli **Analog-Digital Converter** — przetwornik analogowo-cyfrowy.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.01-arduino-uno-pinout-adc.png"
+  src="/img/lekcje/07.01-arduino-uno-pinout-adc.png"
   caption="Wejścia analogowe Arduino UNO znajdują się przy pinach A0-A5."
   alt="Pinout Arduino UNO z zaznaczonymi wejściami analogowymi A0-A5"
   width={650}
@@ -90,7 +90,7 @@ Jeden bit ma dwa stany. Dziesięć bitów daje `2^10`, czyli `1024` kombinacje. 
 Najprostszy test wejścia analogowego wykonamy z potencjometrem. Dwie skrajne nóżki potencjometru podłączamy do `5V` i `GND`, a środkową nóżkę do wejścia analogowego `A5`. W takim układzie potencjometr działa jak regulowany dzielnik napięcia: na środkowej nóżce pojawia się napięcie zależne od położenia pokrętła.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.02-potencjometr-pomiar-adc.png"
+  src="/img/lekcje/07.02-potencjometr-pomiar-adc.png"
   caption="Potencjometr podłączony do A5 pozwala płynnie zmieniać napięcie mierzone przez ADC."
   alt="Schemat połączenia Arduino UNO z potencjometrem podłączonym do wejścia A5"
   width={783}
@@ -154,7 +154,7 @@ void loop() {
 </Code>
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.03-prosty-woltomierz-arduino.png"
+  src="/img/lekcje/07.03-prosty-woltomierz-arduino.png"
   caption="Prosty woltomierz na Arduino mierzy tylko napięcia bezpieczne dla wejścia ADC."
   alt="Prosty woltomierz zbudowany na Arduino"
   width={503}
@@ -178,7 +178,7 @@ Ważne: nigdy nie podłączaj napięcia na pin `AREF` bez uprzedniego wywołania
 Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wynik, użyjemy odczytanej wartości jako czasu opóźnienia. Do układu z potencjometrem dokładamy diodę LED z rezystorem. Dioda jest podłączona do pinu `2`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.04-potencjometr-regulacja-migania-led.png"
+  src="/img/lekcje/07.04-potencjometr-regulacja-migania-led.png"
   caption="Potencjometr mierzymy na A5, a dioda LED podłączona do pinu 2 pokazuje efekt regulacji."
   alt="Schemat Arduino z potencjometrem na A5 i diodą LED na pinie 2"
   width={765}
@@ -224,7 +224,7 @@ int poziom = map(odczytanaWartosc, 0, 1023, 1, 5);
 Pierwszy argument to wartość wejściowa, drugi i trzeci określają jej pierwotny zakres, a czwarty i piąty podają nowy zakres. Teraz zbudujemy układ, w którym kolejne położenia potencjometru zapalają jedną z pięciu diod.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.05-wskaznik-na-diodach-adc.png"
+  src="/img/lekcje/07.05-wskaznik-na-diodach-adc.png"
   caption="Wskaźnik ADC: potencjometr wybiera, która z pięciu diod ma świecić."
   alt="Schemat Arduino z potencjometrem i pięcioma diodami LED"
   width={798}
@@ -305,7 +305,7 @@ Wartość `analogRead()` z pływającego wejścia może skakać po całym zakres
 Fotorezystor zmienia rezystancję pod wpływem światła. Im mocniej jest oświetlony, tym mniejszą ma rezystancję. Łącząc fotorezystor z rezystorem tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.06-fotorezystor-lampka-zmierzchowa.png"
+  src="/img/lekcje/07.06-fotorezystor-lampka-zmierzchowa.png"
   caption="Fotorezystor i rezystor tworzą dzielnik napięcia podłączony do wejścia A5."
   alt="Schemat lampki zmierzchowej z Arduino, fotorezystorem i diodą LED"
   width={764}
@@ -353,7 +353,7 @@ Rozwiązaniem jest **histereza**: próg włączenia jest niższy od progu wyłą
 Stała wpisana w kodzie działa tylko dla konkretnych warunków oświetlenia. Jeśli przeniesiesz układ w inne miejsce, próg może wymagać poprawki. Wygodniejsze rozwiązanie to drugi odczyt analogowy: fotorezystor mierzy jasność, a potencjometr ustawia próg włączenia.
 
 <Schematic
-  src="/img/lekcje/dzien-01/07.07-fotorezystor-lampka-regulowany-prog.png"
+  src="/img/lekcje/07.07-fotorezystor-lampka-regulowany-prog.png"
   caption="Potencjometr na A4 ustawia próg, a fotorezystor na A5 mierzy jasność."
   alt="Schemat lampki zmierzchowej z regulowanym progiem na potencjometrze"
   width={788}

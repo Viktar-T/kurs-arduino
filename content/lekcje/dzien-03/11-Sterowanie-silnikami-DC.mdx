@@ -45,7 +45,7 @@ sources:
   - "https://forbot.pl/blog/kurs-arduino-sterowanie-silnikami-dc-petla-for-id8311"
   - "https://forbot.pl/blog/wp-content/uploads/2015/08/Mostek-H-L293.pdf"
 
-cover: "/img/lekcje/dzien-01/11.01-sterowanie-silnikami-dc-okladka.png"
+cover: "/img/lekcje/11.01-sterowanie-silnikami-dc-okladka.png"
 publish: true
 updated: "2026-05-13"
 ---
@@ -54,7 +54,6 @@ W tej lekcji zajmiemy się małymi silnikami DC. Nauczysz się, dlaczego nie wol
 
 <Photo
   file="11.01-sterowanie-silnikami-dc-okladka.png"
-  day="dzien-01"
   caption="Sterowanie silnikami DC wymaga elementu pośredniczącego między Arduino a napędem."
   alt="Grafika kursu Arduino o sterowaniu silnikami DC i pętli for"
   width={700}
@@ -73,7 +72,6 @@ W tej lekcji mówimy o szczotkowych silnikach DC, czyli popularnych małych nap�
 
 <Photo
   file="11.02-przykladowy-silnik-dc.jpg"
-  day="dzien-01"
   caption="Przykładowy mały silnik DC z przekładnią."
   alt="Mały silnik DC firmy Pololu"
   width={650}
@@ -116,7 +114,6 @@ W kursie użyjemy układu `L293D`. To starszy, ale popularny scalony mostek H w 
 
 <Photo
   file="11.03-uklad-l293d-mostek-h.jpg"
-  day="dzien-01"
   caption="Układ L293D zawiera dwa mostki H w jednej obudowie."
   alt="Scalony mostek H L293D"
   width={300}
@@ -124,7 +121,7 @@ W kursie użyjemy układu `L293D`. To starszy, ale popularny scalony mostek H w 
 />
 
 <Schematic
-  src="/img/lekcje/dzien-01/11.04-l293d-pinout-mostek-h.jpg"
+  src="/img/lekcje/11.04-l293d-pinout-mostek-h.jpg"
   caption="Najważniejsze wyprowadzenia układu L293D według noty katalogowej."
   alt="Pinout układu L293D jako mostka H"
   width={566}
@@ -152,7 +149,7 @@ W układzie `L293D` rolę tranzystorów pełnią struktury Darlingtona sterowane
 Do sterowania jednym silnikiem używamy dwóch wejść kierunku oraz wejścia `ENABLE`. Dwa wejścia kierunku decydują, w którą stronę popłynie prąd przez silnik. `ENABLE` włącza dany kanał i później może otrzymać sygnał PWM do regulacji prędkości.
 
 <Schematic
-  src="/img/lekcje/dzien-01/11.05-tabela-prawdy-mostka-h.png"
+  src="/img/lekcje/11.05-tabela-prawdy-mostka-h.png"
   caption="Tabela prawdy pokazuje, jak stany wejść wpływają na kierunek pracy silnika."
   alt="Tabela prawdy mostka H dla sterowania silnikiem"
   width={290}
@@ -166,7 +163,7 @@ Dwie różne kombinacje zatrzymują silnik. W zależności od sterownika może t
 Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB, a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
 
 <Schematic
-  src="/img/lekcje/dzien-01/11.06-l293d-zasilanie-i-wyjscie-silnika.png"
+  src="/img/lekcje/11.06-l293d-zasilanie-i-wyjscie-silnika.png"
   caption="Podstawowe połączenia L293D: masa, zasilanie logiki, zasilanie silników i wyjście na silnik."
   alt="Schemat podłączenia L293D z Arduino i zasilaniem silnika"
   width={1042}
@@ -181,7 +178,6 @@ Na płytce stykowej warto zacząć od połączenia pinów masy układu `L293D`. 
 
 <Photo
   file="11.07-polaczenie-mas-l293d.jpg"
-  day="dzien-01"
   caption="Połączenie pinów masy mostka H na płytce stykowej."
   alt="Połączenie mas układu L293D na płytce stykowej"
   width={650}
@@ -192,7 +188,6 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 
 <Photo
   file="11.08-l293d-podlaczenie-masy.jpg"
-  day="dzien-01"
   caption="Podłączenie masy do układu L293D."
   alt="Płytka stykowa z podłączoną masą do L293D"
   width={600}
@@ -201,7 +196,6 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 
 <Photo
   file="11.09-l293d-podlaczenie-9v-silniki.jpg"
-  day="dzien-01"
   caption="Podłączenie zasilania silników do mostka H."
   alt="Płytka stykowa z podłączonym zasilaniem 9 V dla silników"
   width={600}
@@ -210,7 +204,6 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 
 <Photo
   file="11.10-l293d-podlaczenie-5v-logika.jpg"
-  day="dzien-01"
   caption="Podłączenie zasilania części logicznej mostka H."
   alt="Płytka stykowa z podłączonym zasilaniem 5 V dla logiki L293D"
   width={600}
@@ -219,7 +212,6 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 
 <Photo
   file="11.11-l293d-podlaczenie-sygnalow-sterujacych.jpg"
-  day="dzien-01"
   caption="Podłączenie sygnałów sterujących z Arduino do L293D."
   alt="Płytka stykowa z przewodami sterującymi mostkiem H"
   width={600}
@@ -231,7 +223,7 @@ Kolejne kroki to podłączenie masy, zasilania silników, zasilania logiki oraz 
 W zestawie kursowym nie musi być silnika DC, dlatego działanie mostka H można zasymulować dwiema diodami LED połączonymi przeciwnie. Gdy prąd popłynie w jedną stronę, zaświeci jedna dioda. Gdy kierunek prądu się odwróci, zaświeci druga.
 
 <Schematic
-  src="/img/lekcje/dzien-01/11.12-symulacja-silnika-dwie-diody.png"
+  src="/img/lekcje/11.12-symulacja-silnika-dwie-diody.png"
   caption="Dwie przeciwnie połączone diody LED mogą zastąpić silnik w ćwiczeniu."
   alt="Schemat symulacji silnika za pomocą dwóch przeciwnie połączonych diod LED"
   width={346}
@@ -239,7 +231,7 @@ W zestawie kursowym nie musi być silnika DC, dlatego działanie mostka H można
 />
 
 <Schematic
-  src="/img/lekcje/dzien-01/11.13-kompletny-schemat-mostek-h-diody.png"
+  src="/img/lekcje/11.13-kompletny-schemat-mostek-h-diody.png"
   caption="Kompletny układ do ćwiczeń z mostkiem H i symulacją silnika."
   alt="Kompletny schemat Arduino, L293D i diod symulujących silnik"
   width={1094}
@@ -280,7 +272,6 @@ Po wgraniu programu diody powinny świecić naprzemiennie. Nie jest to zwykłe m
 
 <Photo
   file="11.14-silnik-lewo-pomiar-napiecia.png"
-  day="dzien-01"
   caption="Symulowany silnik w jednym kierunku: napięcie ma określoną polaryzację."
   alt="Pomiar napięcia na wyjściu mostka H dla obrotów w lewo"
   width={559}
@@ -289,7 +280,6 @@ Po wgraniu programu diody powinny świecić naprzemiennie. Nie jest to zwykłe m
 
 <Photo
   file="11.15-silnik-prawo-pomiar-napiecia.png"
-  day="dzien-01"
   caption="Po zmianie kierunku polaryzacja napięcia jest odwrotna."
   alt="Pomiar napięcia na wyjściu mostka H dla obrotów w prawo"
   width={562}
@@ -368,7 +358,6 @@ void loop() {
 
 <Photo
   file="11.16-petla-for-wynik-terminal.png"
-  day="dzien-01"
   caption="Efekt działania pętli for widoczny w Monitorze portu szeregowego."
   alt="Monitor portu szeregowego z wielokrotnie wypisanym tekstem"
   width={720}

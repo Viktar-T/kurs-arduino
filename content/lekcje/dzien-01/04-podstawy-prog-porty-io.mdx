@@ -1,4 +1,4 @@
----
+﻿---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -94,7 +94,7 @@ Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości —
 Zanim zaczniesz pisać program sterujący pinami, warto poznać mapę wyprowadzeń płytki:
 
 <Schematic
-  src="/img/lekcje/dzien-01/04.11-arduino-uno-pinout.png"
+  src="/img/lekcje/04.11-arduino-uno-pinout.png"
   caption="Mapa wyprowadzeń Arduino UNO — piny cyfrowe, analogowe i specjalne."
   alt="Schemat pinout Arduino UNO z opisanymi grupami wyprowadzeń: cyfrowe I/O, PWM, analogowe, zasilanie, komunikacja"
   width={800}
@@ -133,7 +133,7 @@ Piny analogowe A0–A5 mają te same limity prądowe co cyfrowe — mogą pracow
 2. Ustawić na nim stan wysoki — funkcja `digitalWrite(numer, stan)`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/04.12-dioda-led-schemat.png"
+  src="/img/lekcje/04.12-dioda-led-schemat.png"
   caption="Podłączenie diody LED do pinu 8 przez rezystor 1000 Ω."
   alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 1000 om"
   width={600}
@@ -209,7 +209,7 @@ W dalszej części kursu poznasz funkcję `millis()`, która zwraca czas w milis
 Do odczytu stanu przycisku lub innego sygnału wejściowego używamy `digitalRead()`. Wcześniej musimy skonfigurować pin jako wejście za pomocą `pinMode`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/04.13-przycisk-schemat.png"
+  src="/img/lekcje/04.13-przycisk-schemat.png"
   caption="Podłączenie przycisku chwilowego do pinu 7 z wykorzystaniem INPUT_PULLUP."
   alt="Schemat Fritzing: przycisk tact-switch połączony z pinem 7 Arduino bez zewnętrznego rezystora"
   width={600}
@@ -331,7 +331,7 @@ Przez 10 sekund, gdy trwa `delay()`, Arduino nie reaguje na nic innego — przyc
 Trzy diody LED (czerwona → pin 10, żółta → pin 9, zielona → pin 8) i przycisk → pin 7.
 
 <Schematic
-  src="/img/lekcje/dzien-01/04.14-swiatla-drogowe-schemat.png"
+  src="/img/lekcje/04.14-swiatla-drogowe-schemat.png"
   caption="Schemat układu: trzy diody LED (czerwona, żółta, zielona) i przycisk podłączone do Arduino UNO."
   alt="Schemat Fritzing: trzy diody LED na pinach 8, 9, 10 i przycisk na pinie 7 Arduino UNO"
   width={700}

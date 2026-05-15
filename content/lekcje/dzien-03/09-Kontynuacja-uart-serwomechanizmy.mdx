@@ -45,7 +45,7 @@ tags: [arduino, uart, serial, switch, servo, fotorezystor]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-kontynuacja-uart-serwomechanizmy-id7520"
 
-cover: "/img/lekcje/dzien-01/09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
+cover: "/img/lekcje/09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
 publish: true
 updated: "2026-05-13"
 ---
@@ -54,7 +54,6 @@ W tej lekcji wracamy na chwilę do UART, żeby uporządkować formatowanie danyc
 
 <Photo
   file="09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
-  day="dzien-01"
   caption="Kontynuacja UART, instrukcja switch i praktyczne użycie serwomechanizmu."
   alt="Grafika kursu Arduino o kontynuacji UART i serwomechanizmach"
   width={700}
@@ -126,7 +125,6 @@ void loop() {
 
 <Photo
   file="09.02-precyzja-liczb-float-terminal.png"
-  day="dzien-01"
   caption="Przykład wpływu drugiego argumentu Serial.println() na liczbę miejsc po przecinku."
   alt="Monitor portu szeregowego z przykładami precyzji liczb float"
   width={503}
@@ -168,7 +166,6 @@ void loop() {
 
 <Photo
   file="09.03-serial-print-bez-nowej-linii.png"
-  day="dzien-01"
   caption="Serial.print() nie przechodzi automatycznie do nowej linii."
   alt="Monitor portu szeregowego pokazujący powtarzany tekst w jednej linii"
   width={503}
@@ -198,7 +195,7 @@ void loop() {
 Teraz połączymy `analogRead()` z formatowaniem UART. Układ jest taki sam jak w lekcji o ADC: potencjometr działa jako dzielnik napięcia, a jego środkowa nóżka jest podłączona do wejścia `A5`.
 
 <Schematic
-  src="/img/lekcje/dzien-01/09.04-potencjometr-a5-uart-reprezentacje.png"
+  src="/img/lekcje/09.04-potencjometr-a5-uart-reprezentacje.png"
   caption="Potencjometr podłączony do A5 pozwala zmieniać odczyt ADC obserwowany w terminalu."
   alt="Schemat Arduino z potencjometrem podłączonym do wejścia A5"
   width={783}
@@ -233,7 +230,6 @@ void loop() {
 
 <Photo
   file="09.05-adc-w-roznych-systemach-liczbowych.png"
-  day="dzien-01"
   caption="Ten sam odczyt ADC pokazany jako DEC, HEX, OCT i BIN."
   alt="Monitor portu szeregowego z odczytem ADC w różnych systemach liczbowych"
   width={720}
@@ -347,7 +343,6 @@ Nie każdą wartość trzeba pokazywać na ekranie. Czasem czytelniejszy jest kl
 
 <Photo
   file="09.06-wskazniki-analogowe-przyklady.jpg"
-  day="dzien-01"
   caption="Tradycyjne wskaźniki analogowe dobrze pokazują wartości zmieniające się płynnie."
   alt="Przykłady analogowych wskaźników i mierników ze wskazówkami"
   width={400}
@@ -357,7 +352,7 @@ Nie każdą wartość trzeba pokazywać na ekranie. Czasem czytelniejszy jest kl
 Układ składa się z dwóch znanych części: serwomechanizmu z osobnym zasilaniem oraz dzielnika napięcia z fotorezystorem podłączonego do `A5`. Wartość światła przeliczamy na pozycję serwa.
 
 <Schematic
-  src="/img/lekcje/dzien-01/09.07-wskaznik-swiatla-serwo-schemat.png"
+  src="/img/lekcje/09.07-wskaznik-swiatla-serwo-schemat.png"
   caption="Schemat wskaźnika światła: fotorezystor mierzy jasność, a serwo porusza wskazówką."
   alt="Schemat Arduino z fotorezystorem i serwomechanizmem jako wskaźnikiem światła"
   width={1244}
@@ -378,7 +373,6 @@ Kleje typu „kropelka” łatwo wpływają w szczeliny i mogą zablokować mech
 
 <Photo
   file="09.08-tarcza-wskaznika-analogowego.png"
-  day="dzien-01"
   caption="Przykładowa tarcza wskaźnika przygotowana z prostych materiałów."
   alt="Tarcza analogowego wskaźnika bez wskazówki"
   width={650}
@@ -387,7 +381,6 @@ Kleje typu „kropelka” łatwo wpływają w szczeliny i mogą zablokować mech
 
 <Photo
   file="09.09-wskaznik-analogowy-widok-tyl.png"
-  day="dzien-01"
   caption="Widok od tyłu pokazuje sposób mocowania serwomechanizmu."
   alt="Widok od tyłu analogowego wskaźnika z serwomechanizmem"
   width={650}
@@ -396,7 +389,6 @@ Kleje typu „kropelka” łatwo wpływają w szczeliny i mogą zablokować mech
 
 <Photo
   file="09.10-gotowy-wskaznik-analogowy.png"
-  day="dzien-01"
   caption="Gotowy wskaźnik analogowy z tarczą i wskazówką."
   alt="Gotowy wskaźnik analogowy wykonany z Arduino i serwomechanizmu"
   width={650}
@@ -450,7 +442,6 @@ To samo podejście stosuje się wszędzie tam, gdzie sterujemy urządzeniem mech
 
 <Photo
   file="09.11-serwo-wskaznik-swiatla.gif"
-  day="dzien-01"
   caption="Przykładowe działanie wskaźnika: fotorezystor jest zasłaniany i oświetlany."
   alt="Animacja działania analogowego wskaźnika światła z serwomechanizmem"
   width={650}
