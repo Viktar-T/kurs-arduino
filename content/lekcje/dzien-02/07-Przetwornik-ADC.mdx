@@ -327,7 +327,9 @@ Wartość `analogRead()` z pływającego wejścia może skakać po całym zakres
 
 ## 6. Lampka uruchamiana w ciemności
 
-Fotorezystor zmienia rezystancję pod wpływem światła. Im mocniej jest oświetlony, tym mniejszą ma rezystancję. Łącząc fotorezystor z rezystorem tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
+Fotorezystor zmienia rezystancję pod wpływem światła. 
+Im mocniej jest oświetlony, tym mniejszą ma rezystancję. 
+Łącząc fotorezystor z rezystorem (10 kΩ) tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
 
 <Schematic
   src="/img/lekcje/07.06-fotorezystor-lampka-zmierzchowa.png"
@@ -337,7 +339,8 @@ Fotorezystor zmienia rezystancję pod wpływem światła. Im mocniej jest oświe
   height={492}
 />
 
-W tym ćwiczeniu dioda na pinie `8` zapala się, gdy odczyt z dzielnika spadnie poniżej ustalonego progu. Próg trzeba dobrać do warunków w sali, dlatego warto najpierw sprawdzić wartości w Monitorze portu szeregowego, a dopiero potem wpisać granicę do programu.
+W tym ćwiczeniu dioda na pinie `8` zapala się, gdy odczyt z dzielnika spadnie poniżej ustalonego progu. 
+Próg trzeba dobrać do warunków w sali, dlatego warto najpierw sprawdzić wartości w Monitorze portu szeregowego, a dopiero potem wpisać granicę do programu.
 
 <Code lang="cpp" file="lampka-zmierzchowa.ino">
 ```cpp
@@ -350,7 +353,7 @@ void setup() {
 void loop() {
   odczytanaWartosc = analogRead(A5);
 
-  if (odczytanaWartosc < 100) {
+  if (odczytanaWartosc < 500) {
     digitalWrite(8, HIGH);
   } else {
     digitalWrite(8, LOW);
@@ -415,13 +418,12 @@ Regulacja jest prosta: ustaw układ w świetle, przy którym dioda ma być jeszc
 Rozbuduj lampkę tak, aby po włączeniu diody wysłała do Monitora portu szeregowego jedną informację: aktualny odczyt z fotorezystora oraz aktualny próg z potencjometru. Komunikat nie powinien powtarzać się bez końca, gdy dioda pozostaje włączona.
 </Task>
 
-<Expandable title="Pomysły na rozszerzenia" heading="####">
+<Task title="Zadanie 7" estimate="20 min">
+Zamień jedną diodę na pięciostopniowy wskaźnik jasności, podobny do wskaźnika z potencjometrem. 
+Zamiast prostego „świeci / nie świeci", fotorezystor powinien sterować liczbą zapalonych diod: przy dużym oświetleniu świeci tylko jedna dioda, przy całkowitej ciemności — wszystkie pięć. 
 
-1. Zbuduj prostą grę: ustaw potencjometr w losowej pozycji, a gracz próbuje wpisać przez Monitor portu szeregowego wartość zbliżoną do odczytu ADC.
-2. Użyj dwóch fotorezystorów po przeciwnych stronach płytki i porównuj ich wskazania, aby określić, z której strony pada mocniejsze światło.
-3. Zamień jedną diodę na pięciostopniowy wskaźnik jasności, podobny do wskaźnika z potencjometrem.
-
-</Expandable>
+Wskazówka: użyj funkcji `map()` do przeliczenia odczytu ADC na zakres `1`–`5`, tak jak w ćwiczeniu z potencjometrem w sekcji 5.
+</Task>
 
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Przetwornik ADC i praca z czujnikami analogowymi to świetny temat do eksperymentowania z pomocą AI:
