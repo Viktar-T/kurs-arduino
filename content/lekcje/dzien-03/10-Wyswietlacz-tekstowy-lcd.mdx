@@ -414,6 +414,14 @@ Moduł I2C jest szczególnie przydatny, gdy brakuje Ci wolnych pinów cyfrowych.
 
 </Expandable>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Wyświetlacz LCD to jeden z tych modułów, przy których AI potrafi zaoszczędzić godziny szukania błędów:
+
+- **Układ współrzędnych LCD** — jeśli nie jesteś pewien, skąd zaczynają się kolumny i wiersze, zapytaj AI: „Wytłumacz mi układ współrzędnych `lcd.setCursor(kolumna, wiersz)` dla wyświetlacza 2×16. Którego indeksu używa — od 0 czy od 1?". AI da jasną odpowiedź z przykładem.
+- **Diagnostyka kontrastu i braku obrazu** — gdy wyświetlacz nie pokazuje nic (lub same kwadraty), wklej schemat połączeń do AI i napisz: „Sprawdź, czy kontrast jest poprawnie podłączony i dlaczego wyświetlacz może nie wyświetlać znaków". Często chodzi o potencjometr V0.
+- **Własne znaki lcd.createChar()** — poproś AI: „Zaprojektuj bitmapę 5×8 dla znaku stopnia Celsjusza (°C) do użycia z `lcd.createChar()` w Arduino". AI wygeneruje tablicę bajtów gotową do wklejenia w kod.
+</Callout>
+
 ## Podsumowanie
 
 Wyświetlacz LCD 2×16 pozwala Arduino prezentować informacje bez komputera. Wiesz już, czym jest sterownik HD44780, jak podłączyć LCD w trybie 4-bitowym, jak użyć biblioteki `LiquidCrystal`, ustawiać kursor, czyścić ekran i aktualizować tylko wybrane fragmenty tekstu. Potrafisz też pokazać wynik ADC na LCD oraz rozumiesz, że podświetlenie trzeba traktować jak zwykłą diodę LED z ograniczeniem prądu.

@@ -408,6 +408,14 @@ Zwykły silnik DC potrafi pobrać wielokrotnie więcej prądu niż pin Arduino m
 
 W kolejnych lekcjach wrócimy do silników DC i pokażemy, jak sterować nimi poprawnie. Na tym etapie zapamiętaj zasadę: pin Arduino steruje, ale nie zasila dużych obciążeń.
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+PWM i serwomechanizmy otwierają wiele ciekawych pytań — AI pomoże je zgłębić:
+
+- **Wypełnienie PWM własnymi słowami** — zapytaj AI: „Wytłumacz mi wypełnienie sygnału PWM (duty cycle) jak dla 12-latka, bez wzorów — tylko analogią z żarówką przyciemnianą włącznikiem". Przełożenie technicznego pojęcia na prostą analogię pomaga zapamiętać.
+- **Serwo bez biblioteki** — gdy już rozumiesz `Servo.write()`, spróbuj: „Jak sterować serwomechanizmem w Arduino za pomocą bezpośredniej modulacji pinu, bez biblioteki Servo?". AI pokaże niskopoziomową mechanikę, która kryje się za biblioteką.
+- **Drgający serwo** — jeśli serwo drga lub nie trafia dokładnie w pozycję, wklej swój kod i napisz: „Moje serwo drga na pozycji 90°. Jakie mogą być przyczyny i jak to naprawić?". AI sprawdzi zasilanie, uziemienie i timing w kodzie.
+</Callout>
+
 ## Podsumowanie
 
 PWM pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji przez szybkie przełączanie pinu między stanami `HIGH` i `LOW`. Wypełnienie sygnału decyduje o średnim efekcie: jasności diody, prędkości silnika albo pozycji interpretowanej przez serwo. Wiesz już, jak użyć `analogWrite()` na pinach PWM, jak dołączyć bibliotekę `Servo`, jak ustawić pozycję serwomechanizmu oraz dlaczego elementy wykonawcze wymagają ostrożności przy zasilaniu.

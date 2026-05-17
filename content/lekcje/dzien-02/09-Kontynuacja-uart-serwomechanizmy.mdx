@@ -12,7 +12,7 @@ summary: "Rozwinięcie UART: formatowanie liczb, precyzja float, print kontra pr
 
 day: 2
 weekend: 1
-order: 1
+order: 5
 duration: 90
 block: 1
 blockTitle: "Podstawy Arduino oraz środowisko programowania"
@@ -481,6 +481,14 @@ Rozbuduj projekt o tryb diagnostyczny uruchamiany z UART. Po wysłaniu znaku `d`
 3. Zrób większą tarczę i zaznacz na niej zakresy: ciemno, normalnie, bardzo jasno.
 
 </Expandable>
+
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+`switch`/`case`, precyzja `float` i wskaźnik świetlny to tematy, przy których AI przyspieszy naukę:
+
+- **Przepisanie if-else na switch-case** — masz długi łańcuch `if / else if`? Wklej go do AI i napisz: „Przepisz ten kod używając `switch`/`case` i wyjaśnij, kiedy `switch` jest lepszy od `if-else`". To ćwiczenie refaktoryzacji uczy doboru właściwej struktury sterowania.
+- **Precyzja float** — zapytaj AI: „Dlaczego `Serial.println(3.14159265358979, 10)` w Arduino nie wypisuje dokładnie tej liczby? Ile cyfr po przecinku jest wiarygodnych dla `float`?". AI wyjaśni IEEE 754 w przystępny sposób.
+- **Kalibracja wskaźnika serwomechanizmu** — jeśli serwo nie pokrywa całego zakresu 0–5 V proporcjonalnie, poproś AI: „Mój analogowy wskaźnik serwomechanizmowy działa od pozycji 10° do 170°, ale napięcie mierzę w zakresie 0–5 V. Jak użyć funkcji `map()`, żeby serwo poruszało się proporcjonalnie?".
+</Callout>
 
 ## Podsumowanie
 

@@ -712,6 +712,14 @@ Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Li
 *Wskazówka:* Dziesiątki wyślij na wyświetlacz 1, jedności na wyświetlacz 2.
 </Task>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Wyświetlacze 7-segmentowe i multipleksowanie to temat, gdzie AI pomoże zrozumieć zarówno fizykę, jak i kod:
+
+- **Zasada multipleksowania** — zapytaj AI: „Wyjaśnij, dlaczego szybkie przełączanie między dwoma wyświetlaczami 7-segmentowymi (multipleksowanie) sprawia, że oko widzi oba jednocześnie. Co to jest persistence of vision?". Zrozumiesz, dlaczego `delay()` niszczy multipleksowanie.
+- **Wzorce segmentów dla liter** — poproś AI: „Wygeneruj tablicę bajtów dla wyświetlacza 7-segmentowego przedstawiającą litery A, b, C, d, E, F. Użyj kolejności segmentów A, B, C, D, E, F, G". AI wygeneruje wartości gotowe do `switch-case`.
+- **Dlaczego delay() blokuje multipleksowanie?** — wklej kod z `delay()` wewnątrz pętli multipleksowania i zapytaj: „Wyjaśnij, co się stanie z obrazem na wyświetlaczu, gdy `delay(500)` jest wywołane wewnątrz pętli multipleksowania. Jak to naprawić używając `millis()`?". To naturalne wprowadzenie do wielozadaniowości.
+</Callout>
+
 ## 9. Gotowa biblioteka SevSeg
 
 Programowanie multipleksowania ręcznie jest możliwe, ale skomplikowane. Na szczęście istnieje biblioteka **SevSeg**, która obsługuje całą złożoność za nas.

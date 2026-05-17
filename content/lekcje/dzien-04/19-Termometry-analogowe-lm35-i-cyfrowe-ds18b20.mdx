@@ -735,6 +735,14 @@ Podłącz dwa czujniki DS18B20. Pierwszym czterema diodami linijki wyświetlaj t
 
 ---
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Czujniki temperatury — analogowe i cyfrowe — to doskonały przykład, żeby zrozumieć kompromisy przy wyborze komponentów:
+
+- **LM35 kontra DS18B20** — zapytaj AI: „Porównaj czujniki temperatury LM35 i DS18B20 pod kątem dokładności, zasięgu kabla, łatwości podłączenia i ceny. Kiedy wybrałbyś jeden, a kiedy drugi?". AI pomoże Ci myśleć jak inżynier dobierający komponenty do projektu.
+- **Adresowanie 1-Wire** — poproś AI: „Wyjaśnij, jak działa adresowanie wielu czujników DS18B20 na jednym przewodzie 1-Wire. Dlaczego każdy czujnik ma unikalny 64-bitowy adres i jak go odczytać?". To demistyfikuje protokół, który na początku wydaje się magią.
+- **Pasek temperaturowy z WS2812** — opisz AI swój projekt: „Mam pasek 8 diod WS2812 i DS18B20. Chcę, żeby diody pokazywały temperaturę 0–40°C — im więcej zapalionych, tym wyżej. Jak użyć `map()` do przeliczenia temperatury na liczbę zapalonych diod?". To konkretne zastosowanie funkcji, którą już znasz.
+</Callout>
+
 ## Podsumowanie
 
 Czujnik analogowy **LM35** jest tani i prosty w podłączeniu — wymaga tylko trzech przewodów i odczytu ADC. Jego wady to ograniczony zakres (0–100 °C w podstawowej wersji), wrażliwość na zakłócenia przy długich przewodach i konieczność osobnego pinu ADC dla każdego sensora.

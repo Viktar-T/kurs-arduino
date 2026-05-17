@@ -474,6 +474,14 @@ break;
 ```
 </Code>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Maszyna stanów i klawiatury to obszar, gdzie AI może pomóc w projektowaniu i rozszerzaniu logiki:
+
+- **Zrozumienie maszyny stanów** — zapytaj AI: „Wytłumacz koncepcję maszyny stanów (state machine) na przykładzie systemu alarmowego z czterema stanami: czuwanie, monitorowanie, rozbrajanie, alarm". AI narysuje diagram przejść i wytłumaczy, dlaczego `switch-case` jest naturalnym narzędziem do implementacji.
+- **Dodawanie nowych stanów** — poproś AI: „Do mojej centralki alarmowej chcę dodać 5. stan: 'testowanie' — w tym stanie wszystkie czujniki są aktywne, ale alarm nie włącza się. Jak rozszerzyć kod o ten stan?". To ćwiczenie pokazuje skalowalność maszyny stanów.
+- **Rozszerzenie logiki PIN** — opisz AI: „Moja centrala sprawdza tylko 4-cyfrowy PIN. Jak dodać blokadę po 3 błędnych próbach i odblokowanie specjalnym kodem?". Takie rozszerzenia uczą programowania defensywnego i obsługi stanów błędu.
+</Callout>
+
 ## 12. Kompletny kod centralki alarmowej
 
 Poniżej pełny, działający program łączący wszystkie cztery stany:

@@ -541,7 +541,42 @@ Gdy wpisujesz `128` w Monitorze portu szeregowego, Arduino odbiera **trzy oddzie
 - bajt `'2'` — kod ASCII 50
 - bajt `'8'` — kod ASCII 56
 
-`Serial.read()` dałby ci kolejno `49`, `50`, `56` — nie liczbę 128. Ręczne składanie cyfr w wartość to żmudna praca. Na szczęście jest gotowa funkcja.
+`Serial.read()` dałby ci kolejno `49`, `50`, `56` — nie liczbę 128. Sprawdź to sam/sama:
+
+<Code lang="cpp" file="problem-ascii-zamiast-liczby.ino">
+```cpp
+// ❌ PROBLEM: Serial.read() zwraca kody ASCII, nie wartość liczbową
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Wpisz liczbe 128 i nacisnij Enter:");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char bajt = Serial.read();
+
+    if (bajt == '\n') {
+      Serial.println("--- koniec ---");
+    } else {
+      Serial.print("Bajt: '");
+      Serial.print(bajt);
+      Serial.print("'   kod ASCII: ");
+      Serial.println((int)bajt);
+    }
+  }
+}
+```
+</Code>
+
+Wgraj, wpisz `128` i naciśnij Enter. Zobaczysz:
+```
+Bajt: '1'   kod ASCII: 49
+Bajt: '2'   kod ASCII: 50
+Bajt: '8'   kod ASCII: 56
+--- koniec ---
+```
+
+Masz trzy niezależne bajty — nie liczbę 128. Żeby ją ręcznie odtworzyć, musiałbyś/musiałabyś odjąć od każdego bajtu `48` (kod ASCII cyfry `'0'`), a potem złożyć pozycje: `1×100 + 2×10 + 8×1`. I to tylko dla liczby trzycyfrowej. Ręczne składanie cyfr w wartość to żmudna praca. Na szczęście jest gotowa funkcja.
 
 ### Serial.parseInt() — parser liczb dla ciebie
 
@@ -648,14 +683,21 @@ Ta wersja jest bardziej odporna na różne ustawienia końca linii w terminalach
 
 ---
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Typy danych i zasięg zmiennych to obszar, gdzie AI może być wyjątkowo pomocny. Kilka konkretnych podpowiedzi:
+
+- **Pułapka dzielenia całkowitoliczbowego** — wklej do AI kod `float wynik = 7/2;` i zapytaj: „dlaczego wynik to 3.0, a nie 3.5, i jak to poprawić?". AI wyjaśni rzutowanie typów (`(float)7/2`) lepiej niż niejeden podręcznik.
+- **Błąd zasięgu zmiennej** — gdy kompilator zgłasza `'x' was not declared in this scope`, wklej cały szkic do AI i napisz: „Wyjaśnij, dlaczego ta zmienna nie jest widoczna w tym miejscu i popraw kod". AI wskaże dokładnie, gdzie przenieść deklarację.
+- **Ćwiczenie z Serial.parseInt()** — poproś AI: „Napisz szkic Arduino, który odbiera przez Serial liczbę od użytkownika i wyświetla jej kwadrat oraz sześcian. Użyj Serial.parseInt()". Następnie przeanalizuj odpowiedź i wgraj kod na płytkę — to najszybszy sposób na utrwalenie materiału przez praktykę.
+</Callout>
+
 ## Mini-projekt: symulowany termometr z klasyfikacją
 
 Połącz wszystko z tej lekcji: `float`, konwersję typów, zasięg globalny, `parseInt()` i odpowiedź przez UART z wizualnym sygnałem LED.
 
 <MiniProject
   title="Termometr symulowany z klasyfikacją przez UART"
-  estimate="25 min"
-  objective="Wysyłasz przez UART wartości temperatur, Arduino klasyfikuje je i odpowiada komunikatem oraz sygnałem LED."
+  goal="Wysyłasz przez UART wartości temperatur, Arduino klasyfikuje je i odpowiada komunikatem oraz sygnałem LED."
 >
 
 **Układ:**

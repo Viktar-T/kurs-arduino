@@ -418,6 +418,14 @@ Rozruch prawdziwego silnika jest trudniejszy niż świecenie diody. Silnik musi 
 Napisz program, który używa dwóch pętli `for`: pierwsza płynnie rozpędza silnik od `0` do `255`, a druga płynnie hamuje od `255` do `0`.
 </Task>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Sterowanie silnikami i mostek H to elektryka i programowanie — idealna okazja, żeby AI pomogło połączyć te dwa światy:
+
+- **Prąd wsteczny i diody zabezpieczające** — zapytaj AI: „Dlaczego silnik DC generuje prąd wsteczny (back-EMF) przy wyłączeniu i jak diody flyback chronią Arduino?". Zrozumienie tego mechanizmu zapobiega przypadkowemu uszkodzeniu płytki.
+- **Pętla for do płynnego rozruchu** — wklej kod z `analogWrite` i `for` i zapytaj: „Wyjaśnij, dlaczego płynne zwiększanie PWM za pomocą pętli `for` jest lepsze dla silnika niż natychmiastowe ustawienie pełnej prędkości". AI wyjaśni pojęcie prądu rozruchowego.
+- **Rozszerzenie projektu** — poproś AI: „Dodaj do mojego kodu obsługę dwóch silników niezależnie, z możliwością sterowania kierunkiem i prędkością przez Serial". To ćwiczenie pokazuje, jak skalować kod z jednego silnika na dwa.
+</Callout>
+
 ## Podsumowanie
 
 Silniki DC dają Arduino dużo nowych możliwości, ale wymagają poprawnego sterowania. Pin mikrokontrolera nie zasila silnika bezpośrednio — wysyła tylko sygnały do mostka H. Układ `L293D` pozwala zmieniać kierunek przepływu prądu przez silnik, a wejście `ENABLE` można sterować PWM, aby regulować prędkość. Poznałeś też pętlę `for`, która pozwala wykonywać kod wiele razy i płynnie zmieniać wartości, np. przy rozpędzaniu oraz hamowaniu napędu.

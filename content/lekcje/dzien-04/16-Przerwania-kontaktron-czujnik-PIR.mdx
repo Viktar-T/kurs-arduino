@@ -307,6 +307,14 @@ Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, 
 - W prostych, krótkich programach bez opóźnień.
 - Gdy czas reakcji na zdarzenie nie jest krytyczny.
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Przerwania to jeden z trudniejszych konceptów w programowaniu mikrokontrolerów — AI może pomóc zbudować właściwy model mentalny:
+
+- **Polling kontra przerwania** — zapytaj AI: „Wytłumacz różnicę między pollowaniem (sprawdzaniem w pętli) a przerwaniami sprzętowymi na przykładzie przycisku. Kiedy które podejście jest lepsze?". Zrozumiesz, dlaczego przerwania są niezbędne w systemach czasu rzeczywistego.
+- **Dlaczego volatile jest obowiązkowe?** — wklej kod z ISR i zapytaj: „Dlaczego zmienna współdzielona między ISR a główną pętlą musi być zadeklarowana jako `volatile`? Co się dzieje bez tego słowa kluczowego?". AI wyjaśni, jak kompilator optymalizuje kod i dlaczego to jest niebezpieczne.
+- **Pułapki delay() w ISR** — poproś AI: „Co się stanie, jeśli wywołam `delay(1000)` wewnątrz funkcji obsługi przerwania w Arduino? Dlaczego jest to błąd i jak to naprawić?". To klasyczna pułapka, o której warto wiedzieć zanim natrafi się na nią w praktyce.
+</Callout>
+
 ## 4. Przerwania w Arduino — attachInterrupt()
 
 Arduino UNO obsługuje przerwania sprzętowe wyłącznie na pinach **2** (int.0) i **3** (int.1).

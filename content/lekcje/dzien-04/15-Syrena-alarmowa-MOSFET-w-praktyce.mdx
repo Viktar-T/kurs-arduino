@@ -285,6 +285,14 @@ Wklej te definicje do swojego programu i komponuj melodie: `tone(A5, NOTE_C4, 50
 
 </Expandable>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Buzzer, `tone()` i MOSFET to temat łączący akustykę z elektroniką mocy — AI jest tu cennym pomocnikiem:
+
+- **Melodia z tone()** — poproś AI: „Napisz szkic Arduino, który gra melodię Beethovena (Für Elise) używając `tone()` i tablicy częstotliwości. Podaj częstotliwości nut w Hz". Wgraj kod i usłysz efekt — to motywujące ćwiczenie na tablice i pętle.
+- **Jak działa MOSFET?** — zapytaj AI: „Wytłumacz mi działanie tranzystora MOSFET IRL540N — co to jest Gate, Drain, Source i jak napięcie na Gate steruje prądem Drain-Source?". AI wyjaśni zasadę pola elektrycznego lepiej niż suchy rysunek z datasheet.
+- **Rezystor równoległy z buzzerem** — zapytaj AI: „Dlaczego dodanie rezystora równolegle do brzęczyka bez generatora poprawia jakość dźwięku i chroni wyjście Arduino?". Zrozumiesz impedancję i obciążenie wyjścia cyfrowego.
+</Callout>
+
 ## 8. MOSFET — sterowanie wyższym napięciem
 
 Niektóre podzespoły wymagają zasilania **9 V lub 12 V** — więcej niż Arduino może dostarczyć ze swojego pinu (max ~20 mA przy 5 V). Tutaj z pomocą przychodzą tranzystory **MOSFET** (ang. Metal-Oxide-Semiconductor Field-Effect Transistor).

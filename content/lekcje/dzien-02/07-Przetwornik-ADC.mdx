@@ -54,38 +54,7 @@ W poprzednich lekcjach pracowaliśmy głównie z sygnałami cyfrowymi: pin był 
 Wejścia analogowe Arduino UNO mierzą napięcia z zakresu od `0 V` do około `5 V`. Nie podłączaj do pinów analogowych baterii 9 V, zasilaczy 12 V ani żadnych nieznanych źródeł napięcia. Przekroczenie dopuszczalnego zakresu może uszkodzić płytkę i komputer podłączony przez USB (Universal Serial Bus, magistrala szeregowa).
 </Callout>
 
-## 1. Po co są wejścia analogowe
-
-Elektronika cyfrowa opisuje sygnały dwoma stanami. To wystarcza do przycisków, krańcówek i prostych czujników typu „jest / nie ma”. Świat zewnętrzny jest jednak w dużej części analogowy: jasność zmienia się płynnie, temperatura nie skacze tylko między dwoma wartościami, a potencjometr może być ustawiony w dowolnym położeniu.
-
-Jeśli czujnik podaje napięcie proporcjonalne do mierzonej wielkości, mikrokontroler musi zamienić to napięcie na liczbę. Tym zajmuje się ADC, czyli **Analog-Digital Converter** — przetwornik analogowo-cyfrowy.
-
-<Schematic
-  src="/img/lekcje/07.01-arduino-uno-pinout-adc.png"
-  caption="Wejścia analogowe Arduino UNO znajdują się przy pinach A0-A5."
-  alt="Pinout Arduino UNO z zaznaczonymi wejściami analogowymi A0-A5"
-  width={650}
-  height={533}
-/>
-
-Arduino UNO udostępnia wejścia `A0`-`A5`. W środku mikrokontrolera nie ma osobnego przetwornika dla każdego pinu. Jest jeden ADC, a kolejne kanały są do niego przełączane wewnętrznym multiplekserem. Dla nas oznacza to prosty interfejs programowy: wybieramy pin i wywołujemy `analogRead()`.
-
-<Table
-  caption="ADC w Arduino UNO — wartości, które trzeba zapamiętać"
-  headers={["Cecha", "Wartość", "Znaczenie praktyczne"]}
-  rows={[
-    ["Zakres napięcia", "0-5 V", "Tylko taki zakres można bezpośrednio mierzyć na standardowym UNO"],
-    ["Rozdzielczość", "10 bitów", "Wynik ma 1024 możliwe wartości"],
-    ["Wynik `analogRead()`", "0-1023", "0 oznacza około 0 V, 1023 oznacza napięcie bliskie 5 V"],
-    ["Wejścia", "A0-A5", "Sześć kanałów analogowych dostępnych na złączu płytki"],
-  ]}
-/>
-
-<Expandable title="Dlaczego 10 bitów daje 1024 wartości?" heading="####">
-Jeden bit ma dwa stany. Dziesięć bitów daje `2^10`, czyli `1024` kombinacje. Liczenie zaczyna się od zera, dlatego w programie widzimy wartości od `0` do `1023`.
-</Expandable>
-
-## 2. ADC w praktyce: potencjometr jako źródło napięcia
+## 1. ADC w praktyce: potencjometr jako źródło napięcia
 
 Najprostszy test wejścia analogowego wykonamy z potencjometrem. Dwie skrajne nóżki potencjometru podłączamy do `5V` i `GND` (Ground, masa), a środkową nóżkę do wejścia analogowego `A5`. W takim układzie potencjometr działa jak regulowany dzielnik napięcia: na środkowej nóżce pojawia się napięcie zależne od położenia pokrętła.
 
@@ -120,6 +89,37 @@ Po wgraniu programu otwórz Monitor portu szeregowego i ustaw prędkość `9600`
 <Task title="Zadanie 1" estimate="8 min">
 Odczytaj trzy wartości z Monitora portu szeregowego: przy potencjometrze ustawionym skrajnie w lewo, mniej więcej w połowie i skrajnie w prawo. Zapisz wyniki i sprawdź, czy środkowe położenie daje wartość bliską połowie zakresu.
 </Task>
+
+## 2. Po co są wejścia analogowe
+
+Elektronika cyfrowa opisuje sygnały dwoma stanami. To wystarcza do przycisków, krańcówek i prostych czujników typu „jest / nie ma”. Świat zewnętrzny jest jednak w dużej części analogowy: jasność zmienia się płynnie, temperatura nie skacze tylko między dwoma wartościami, a potencjometr może być ustawiony w dowolnym położeniu.
+
+Jeśli czujnik podaje napięcie proporcjonalne do mierzonej wielkości, mikrokontroler musi zamienić to napięcie na liczbę. Tym zajmuje się ADC, czyli **Analog-Digital Converter** — przetwornik analogowo-cyfrowy.
+
+<Schematic
+  src="/img/lekcje/07.01-arduino-uno-pinout-adc.png"
+  caption="Wejścia analogowe Arduino UNO znajdują się przy pinach A0-A5."
+  alt="Pinout Arduino UNO z zaznaczonymi wejściami analogowymi A0-A5"
+  width={650}
+  height={533}
+/>
+
+Arduino UNO udostępnia wejścia `A0`-`A5`. W środku mikrokontrolera nie ma osobnego przetwornika dla każdego pinu. Jest jeden ADC, a kolejne kanały są do niego przełączane wewnętrznym multiplekserem. Dla nas oznacza to prosty interfejs programowy: wybieramy pin i wywołujemy `analogRead()`.
+
+<Table
+  caption="ADC w Arduino UNO — wartości, które trzeba zapamiętać"
+  headers={["Cecha", "Wartość", "Znaczenie praktyczne"]}
+  rows={[
+    ["Zakres napięcia", "0-5 V", "Tylko taki zakres można bezpośrednio mierzyć na standardowym UNO"],
+    ["Rozdzielczość", "10 bitów", "Wynik ma 1024 możliwe wartości"],
+    ["Wynik `analogRead()`", "0-1023", "0 oznacza około 0 V, 1023 oznacza napięcie bliskie 5 V"],
+    ["Wejścia", "A0-A5", "Sześć kanałów analogowych dostępnych na złączu płytki"],
+  ]}
+/>
+
+<Expandable title="Dlaczego 10 bitów daje 1024 wartości?" heading="####">
+Jeden bit ma dwa stany. Dziesięć bitów daje `2^10`, czyli `1024` kombinacje. Liczenie zaczyna się od zera, dlatego w programie widzimy wartości od `0` do `1023`.
+</Expandable>
 
 ## 3. Prosty woltomierz
 
@@ -191,28 +191,49 @@ Pomiar ADC może sterować zachowaniem programu. Zamiast tylko wyświetlać wyni
 
 <Code lang="cpp" file="potencjometr-reguluje-miganie.ino">
 ```cpp
-int odczytanaWartosc = 0;
+// Definiujemy czytelne stałe dla naszych pinów
+const int pinCzujnika = A5;
+const int pinDiody = 2; // Zastępujemy "magiczną liczbę 2" stałą
 
-void setup() {
-  pinMode(2, OUTPUT);
-}
+// Zmienna przechowująca wynik pomiaru
+int odczytanaWartosc = 0; 
 
-void loop() {
-  odczytanaWartosc = analogRead(A5);
+void setup() {  
+  // Konfigurujemy pin numer 2 jako wyjście
+  pinMode(pinDiody, OUTPUT);
+} 
 
-  digitalWrite(2, HIGH);
-  delay(odczytanaWartosc);
-
-  digitalWrite(2, LOW);
+void loop() {  
+  // Odczytujemy napięcie z pinu A5 (wartości od 0 do 1023)
+  odczytanaWartosc = analogRead(pinCzujnika);   
+  
+  // Podajemy wysoki stan napięcia (5V) - dioda się zapala
+  digitalWrite(pinDiody, HIGH);  
+  
+  // Oczekujemy tyle milisekund, ile wynosi odczyt z czujnika
+  delay(odczytanaWartosc);   
+  
+  // Podajemy niski stan napięcia (0V) - dioda gaśnie
+  digitalWrite(pinDiody, LOW);  
+  
+  // Czekamy ponownie przed kolejnym zapaleniem diody
   delay(odczytanaWartosc);
 }
 ```
 </Code>
 
+<Callout type="note" title="Piny A0–A5 działają też jako cyfrowe">
+Wejścia analogowe to nie są zupełnie osobne piny — to te same wyprowadzenia mikrokontrolera, które mogą pracować w dwóch trybach. Gdy wywołujesz `analogRead()`, pin staje się wejściem analogowym. Możesz go jednak użyć jak zwykłego pinu cyfrowego: wywołaj `pinMode(A5, OUTPUT)` i `digitalWrite(A5, HIGH)`, a zadziała dokładnie tak samo jak pin `13`.
+
+Każde z wejść analogowych ma też swój numer cyfrowy — kolejne liczby następujące po ostatnim pinie cyfrowym płytki: `A0` to numer `14`, `A1` to `15` i tak dalej aż do `A5`, który pod maską jest po prostu liczbą `19`. Dla programu `digitalWrite(A5, HIGH)` i `digitalWrite(19, HIGH)` to identyczne polecenie.
+</Callout>
+
 Gdy odczyt ADC jest mały, opóźnienie jest krótkie i dioda miga szybko. Gdy odczyt jest duży, opóźnienie rośnie nawet do około jednej sekundy. W jednej ze skrajnych pozycji potencjometru dioda może wyglądać, jakby świeciła prawie stale, bo program wykonuje bardzo krótkie opóźnienia.
 
 <Task title="Zadanie 2" estimate="10 min">
-Zmień program tak, aby dioda nigdy nie migała z opóźnieniem mniejszym niż `50 ms`. Wskazówka: możesz dodać stałą wartość do wyniku `analogRead()` albo użyć funkcji `map()` z innym zakresem wyjściowym.
+Zmień program tak, aby dioda nigdy nie migała z opóźnieniem mniejszym niż `50 ms`. 
+Wskazówka: możesz dodać stałą wartość do wyniku `analogRead()` albo użyć funkcji `map()` z innym zakresem wyjściowym.
+Zbadaj funkcje `map()` na stronie [docs.arduino.cc](https://docs.arduino.cc/).
 </Task>
 
 ## 5. Funkcja `map()` i wskaźnik na pięciu diodach
@@ -401,6 +422,14 @@ Rozbuduj lampkę tak, aby po włączeniu diody wysłała do Monitora portu szere
 3. Zamień jedną diodę na pięciostopniowy wskaźnik jasności, podobny do wskaźnika z potencjometrem.
 
 </Expandable>
+
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Przetwornik ADC i praca z czujnikami analogowymi to świetny temat do eksperymentowania z pomocą AI:
+
+- **Wzór na napięcie** — jeśli nie rozumiesz, skąd bierze się `(odczyt / 1023.0) * 5.0`, zapytaj AI: „Wytłumacz krok po kroku, jak zamienić odczyt ADC 0–1023 na napięcie 0–5 V w Arduino". AI rozpisze każdy czynnik wzoru.
+- **Kalibracja progu czujnika** — gdy próg lampki zmierzchowej jest zbyt wysoki lub zbyt niski, poproś AI: „Mój czujnik fotorezystora daje wartości 200–800 w zależności od oświetlenia. Jaki próg `if` ustawić, żeby lampka zapalała się przy półmroku?". Opisz swoje obserwacje — AI zaproponuje wartość i wyjaśni metodykę.
+- **Dlaczego wejście pływające daje losowe wartości** — podłącz pin analogowy do niczego, odczytaj wartości i zapytaj AI: „Dlaczego niepodłączony pin analogowy Arduina daje przypadkowe odczyty? Jak temu zapobiec?". To ważna lekcja o właściwościach elektrycznych wejść.
+</Callout>
 
 ## Podsumowanie
 

@@ -607,6 +607,14 @@ Skorzystaj z funkcji `zmierzOdleglosc()` z poprzedniej lekcji i warunków `if-el
 
 </MiniProject>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Operatory logiczne, liczby losowe i Serial Plotter — AI pomoże zrozumieć te tematy głębiej:
+
+- **Upraszczanie warunków logicznych** — masz skomplikowany warunek `if`? Wklej go do AI i napisz: „Uprość ten warunek logiczny i wyjaśnij, czy można zastosować prawa De Morgana". Nauka algebry Boole'a na własnym kodzie jest skuteczniejsza niż teoria z podręcznika.
+- **Serial Plotter — interpretacja wykresu** — wgraj kod z wieloma seriami danych, uruchom Plotter i zrób zrzut ekranu. Opisz AI, co widzisz: „Na wykresie mam dwie linie — jedna gwałtownie rośnie, druga jest stała. Co to może oznaczać w kontekście pomiaru HC-SR04?". AI pomoże zinterpretować zachowanie układu.
+- **Dlaczego randomSeed z analogRead(0)?** — zapytaj AI: „Dlaczego `randomSeed(analogRead(0))` daje za każdym razem inną sekwencję liczb losowych, podczas gdy `randomSeed(42)` daje zawsze tę samą?". Zrozumiesz pojęcie entropii i ziarna generatora.
+</Callout>
+
 ## Podsumowanie
 
 Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Liczby losowe (`random()`) ożywiają efekty świetlne i gry, a `randomSeed(analogRead(0))` sprawia, że każde uruchomienie daje inną sekwencję. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.

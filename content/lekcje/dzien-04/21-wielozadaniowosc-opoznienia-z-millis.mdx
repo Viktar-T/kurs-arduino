@@ -476,6 +476,14 @@ else if (digitalRead(PIR) == HIGH || digitalRead(PIR2) == HIGH)
 Każdy czujnik może zapalić światło, a czas 3 minut liczy się od ostatniego wykrytego ruchu.
 </Expandable>
 
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+`millis()` i wielozadaniowość to jeden z ważniejszych przełomów w nauce Arduino — AI pomoże utrwalić ten wzorzec:
+
+- **Refaktoryzacja kodu z delay()** — masz działający kod z `delay()`? Wklej go do AI i napisz: „Przepisz ten kod tak, żeby nie używał `delay()` — zamiast tego użyj `millis()` i zmiennej `previousMillis`. Wytłumacz każdą zmianę". Porównanie obu wersji to najlepsza lekcja wzorca.
+- **Dlaczego unsigned long?** — zapytaj AI: „Dlaczego zmienna przechowująca wartość `millis()` musi być typu `unsigned long`, a nie `int` lub `long`? Co się stanie po przepełnieniu i jak kod z `millis()` automatycznie to obsługuje?". To precyzyjna lekcja arytmetyki modularnej w praktycznym kontekście.
+- **Projektowanie wielozadaniowości** — opisz AI swój projekt: „Chcę, żeby LED migało co 500 ms, serwo kręciło się co 2 sekundy, a przycisk był sprawdzany co 50 ms — wszystko równocześnie bez `delay()`. Jak zorganizować taki kod z wieloma niezależnymi timerami?". AI zaprojektuje strukturę, którą możesz rozbudowywać do własnych projektów.
+</Callout>
+
 ## 8. Ćwiczenia
 
 <Task title="Zadanie — trzy niezależne diody LED" estimate="15 min">
