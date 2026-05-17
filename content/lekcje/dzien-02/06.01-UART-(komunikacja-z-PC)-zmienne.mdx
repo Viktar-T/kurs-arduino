@@ -160,8 +160,8 @@ ramka zawiera:
   height={220}
 />
 
-Ponieważ UART jest **asynchroniczny**, nie ma osobnej linii zegarowej. Dla tego
-Komputer i Arduino muszą więc wcześniej umówić się na prędkość transmisji. Gdy w
+Ponieważ UART jest **asynchroniczny**, nie ma osobnej linii zegarowej. Dlatego
+komputer i Arduino muszą wcześniej umówić się na prędkość transmisji. Gdy w
 programie piszemy `Serial.begin(9600)`, wybieramy prędkość 9600 baud, czyli w
 uproszczeniu 9600 bitów na sekundę.
 
@@ -321,9 +321,9 @@ Z pomocą przychodzi nam dyrektywa #define oraz zmienne. Pozwalają one na zdefi
 <Expandable title="Instrukcja #define">
 <Code lang="cpp" file="alarm-okna.ino">
 ```cpp
-#define pinCzerwona 8;
-#define pinZielona 9;
-#define pinCzujnikOkna 10;
+#define pinCzerwona 8
+#define pinZielona 9
+#define pinCzujnikOkna 10
 
 void setup() {
   Serial.begin(9600);
@@ -354,7 +354,7 @@ void loop() {
 </Code>
 </Expandable>
 
-<Expandable title="Zmiena 'byte'">
+<Expandable title="Zmienna 'byte'">
 <Code lang="cpp" file="alarm-okna.ino">
 ```cpp
 const byte pinCzerwona = 8;
@@ -509,7 +509,7 @@ void setup() {
 void loop() {
   Serial.println(licznik);
   licznik = licznik + 1;
-  delay(100);
+  delay(1000);
 }
 ```
 </Code>
@@ -530,13 +530,18 @@ programowaniu znak `=` oznacza przypisanie:
 />
 
 <Task title="Zadanie 2" estimate="10 min">
-Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji
-`loop()`. Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
+1. Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji `loop()`. Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
+2. Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji `setup()`. 
+Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
 </Task>
 
 <Task title="Zadanie 3" estimate="10 min">
-Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
+1. Zmień `int licznik = 0;` na `int licznik = 250;`. Obserwuj wartości w Monitorze
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
+2. Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
+portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
+3. Zmień `int licznik = 32760;`. Obserwuj wartości w Monitorze
+portu szeregowego i sprawdź, co stanie się po przekroczeniu `32767`.
 </Task>
 
 <Expandable title="Głębiej: przepełnienie liczby całkowitej (integer overflow)" heading="####">
@@ -554,6 +559,69 @@ W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — warto�
 />
 
 To zjawisko ma praktyczne skutki: funkcja `millis()` zwraca `unsigned long` i po ~49 dniach zawija się do zera. Kod, który poprawnie obsługuje zawijaniew `millis()`, musi używać odejmowania, a nie porównywania `>=`. Ten wzorzec poznasz w lekcji o wielozadaniowości.
+
+</Expandable>
+
+<Task title="Zadanie 4" estimate="10 min">
+1. Zmień typ zmiennej na `char` i ustaw wartość początkową: `char licznik = 125;`. Obserwuj w Monitorze portu szeregowego, co stanie się po dodaniu 1 do wartości `127`.
+Następnie ustaw wartość początkową: `char licznik = 25;`. Obserwuj w Monitorze portu szeregowego.
+Zbadaj razem z naszym [Pomocnikiem-AI](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing) dlaczego na początku Monitor nie wyświetla symbolów.
+
+*Wskazówka:* Zmienna `char` domyślnie wyświetli się jako znak tekstu (np. litera). Aby Monitor portu szeregowego wyświetlił wartość liczbową, użyj rzutowania: `Serial.println((int)licznik);`.
+
+Wyjaśnij, dlaczego tak się dzieje. Sprawdź inne typy zmiennych całkowitych i ich zakresy.
+</Task>
+
+<Expandable title="Głębiej: dlaczego char wyświetla litery, a nie liczby?" heading="####">
+
+Typ `char` przechowuje **jedną liczbę całkowitą** z zakresu −128 … 127 (lub 0 … 255 dla `unsigned char`). Arduino AVR traktuje go jednak jednocześnie jako **kod znaku ASCII** — i właśnie ten kod widzi `Serial.println()`.
+
+Gdy napiszesz:
+
+```cpp
+char licznik = 65;
+Serial.println(licznik);   // wyświetli: A
+```
+
+Monitor portu szeregowego pokaże literę `A`, bo kod ASCII 65 to właśnie wielka litera A. Dzieje się tak, ponieważ `Serial.println(char)` wywołuje przeciążoną wersję funkcji, która wysyła znak (bajt kodu), a nie jego wartość dziesiętną.
+
+**Jak wymusić wyświetlenie liczby?** Rzutuj na `int`:
+
+```cpp
+Serial.println((int)licznik);   // wyświetli: 65
+```
+
+**Dlaczego dla małych wartości Monitor milczy lub pokazuje dziwne znaki?**  
+Kody 0–31 to tzw. znaki sterujące ASCII (np. 7 = BEL, 10 = nowa linia, 13 = powrót karetki). Większość terminali nie wyświetla ich jako widoczny symbol — stąd "puste" linie w Monitorze na początku zliczania.
+
+<Table
+  headers={["Kod ASCII", "Znak / opis"]}
+  rows={[
+    ["0–31", "znaki sterujące — specjalne kody bez widocznego symbolu; terminal ich nie wyświetla"],
+    ["32", "spacja"],
+    ["48–57", "cyfry 0–9"],
+    ["65–90", "litery A–Z"],
+    ["97–122", "litery a–z"],
+    ["127", "DEL (kasowanie)"],
+  ]}
+/>
+
+Przekroczenie zakresu `char` (127 → 128) powoduje przepełnienie dokładnie tak samo jak dla innych typów — wartość zawija się do −128. Możesz to sprawdzić rzutując wynik na `int`.
+
+</Expandable>
+
+<Expandable title="Głębiej: char 0-31" heading="####">
+
+Typ char w pamięci mikrokontrolera to wciąż liczba z zakresu od -128 do 127, która według standardu ASCII reprezentuje konkretny znak. 
+Tym znakiem może być litera alfabetu, cyfra, znak interpunkcyjny, ale też tak zwany znak specjalny, jak znak tabulacji lub znak przesuwu o wiersz.  
+Kody ASCII od 0 do 31 to właśnie znaki sterujące (ang. control characters). 
+Nie posiadają one swojej reprezentacji wizualnej (jak np. litera 'A' czy cyfra '5'), ponieważ zostały wymyślone wiele dekad temu z myślą o dawnych, mechanicznych teleksach i wczesnych drukarkach. Ich zadaniem nie było "wyglądać", ale sterować zachowaniem maszyny. 
+Oto kilka najciekawszych przykładów znaków sterujących:
+- ASCII 7 (BELL - Dzwonek): Kiedyś sprawiał, że w dalekopisie uderzał fizyczny dzwonek, alarmując operatora. Dziś systemy operacyjne często odtwarzają w tym momencie dźwięk systemowy.
+- ASCII 9 (TAB - Tabulacja pozioma): Przesuwa kursor o z góry ustaloną liczbę spacji (bardzo przydatne do formatowania tekstu).
+- ASCII 10 (LF - Line Feed - Nowa linia): Każe urządzeniu (lub naszemu Monitorowi portu szeregowego) przenieść kursor do nowej linijki. W języku C/C++ często zapisujemy ten znak jako \n.
+- ASCII 13 (CR - Carriage Return - Powrót karetki): Pochodzi z czasów maszyn do pisania – nakazywał powrót wałka drukującego na sam początek linii. W C/C++ oznaczany jako \r.
+Kiedy kazałeś mikrokontrolerowi ATmega328P wysłać do komputera wartości np. 25, 26 czy 27, Monitor portu szeregowego odebrał je poprawnie, ale uznał, że to komendy sterujące, z którymi nie musi nic wizualnie robić (lub których nie obsługuje). Dlatego do momentu osiągnięcia kodu 32 (czyli pierwszej widocznej przerwy – spacji), w okienku nic się nie "rysowało".
 
 </Expandable>
 
@@ -582,7 +650,7 @@ void loop() {
 
 `Serial.available()` sprawdza, czy w buforze odbiorczym czeka przynajmniej jeden
 bajt. Dopiero wtedy wywołujemy `Serial.read()`. Bez tego `Serial.read()` może
-zwrócić `-1`, czyli informację „nic nie przyszło”.
+zwrócić `-1`, czyli informację „nic nie przyszło”. Proszę zbadać takie zachowanie.
 
 <Callout type="note" title="ASCII: znak to też liczba">
 Monitor portu szeregowego wysyła znaki ASCII (American Standard Code for Information Interchange). Gdy wpisujesz `0`, Arduino odbiera
@@ -618,8 +686,8 @@ Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porów
 
 Zadaniem następnego programu będzie "nasłuchiwanie" naszego imienia. Gdy je prześlemy, Arduino powinno nas przywitać komunikatem "Witaj Imie!", gdzie oczywiście wstawione zostanie przesłane wcześniej imię.
 
-<Code lang="cpp" file="blink.ino">
-   ```cpp
+<Code lang="cpp" file="uart-witaj.ino">
+```cpp
 String odebraneDane = ""; //Pusty ciąg odebranych danych
 
 void setup() {
@@ -632,7 +700,7 @@ void loop() {
     Serial.println("Witaj " + odebraneDane + "!"); //Wyświetl komunikat
   }
 }
-   ```
+```
 </Code>
 Na początku deklarujemy zmienną *odebraneDane*, do których kopiowany będzie ciąg odebranych znaków. Poznajemy nową funkcję: *Serial.available()*. Funkcja ta zwraca ilość bajtów, które zostały odebrane i czekają na obsługę przez Arduino.
 
@@ -657,7 +725,22 @@ W wypadku kiedy dane będą dostępne (będzie ich więcej niż 0) - rozpoczyna 
 ## 9. Sterowanie diodami przez UART
 
 Na końcu połączymy wszystko: nazwy pinów, zmienne tekstowe, odbiór danych i
-sterowanie diodami. Układ ma dwie diody podłączone do pinów `8` i `9`.
+sterowanie diodami.
+
+<Task title="Wyzwanie — spróbuj przed przeczytaniem rozwiązania" estimate="15 min">
+Zbuduj układ z dwiema diodami LED podłączonymi przez rezystory do pinów `8`
+(zielona) i `9` (czerwona). Program ma działać w następujący sposób:
+
+- Po uruchomieniu wysyła przez `Serial` komunikat powitalny, np. `"Wpisz: zielona albo czerwona"`.
+- W każdym obiegu `loop()` sprawdza, czy komputer przysłał nowe dane.
+- Jeśli przyszła komenda `zielona` — zapala zieloną diodę na 1 sekundę, potem ją gasi.
+- Jeśli przyszła komenda `czerwona` — zapala czerwoną diodę na 1 sekundę, potem ją gasi.
+- Jeśli przyszło coś innego — wysyła przez `Serial` komunikat, że dana komenda jest nieznana.
+
+Zanim spojrzysz na gotowy kod poniżej, zastanów się:
+1. Które funkcje `Serial` są potrzebne do odebrania tekstu z komputera?
+2. Jak sprawdzisz, czy odebrany napis to `"zielona"` albo `"czerwona"`?
+</Task>
 
 <Schematic
   src="/img/lekcje/06.08-sterowanie-diodami-przez-uart.png"
@@ -717,24 +800,37 @@ wysyłanie znaku końca linii. `trim()` usuwa dodatkowe białe znaki, więc prog
 jest odporniejszy na różne ustawienia terminala.
 </Callout>
 
-<Task title="Zadanie 4" estimate="15 min">
+<Task title="Zadanie 5" estimate="15 min">
 Rozbuduj program tak, aby komenda `obie` zapalała obie diody na sekundę, a
 komenda `wylacz` natychmiast gasiła obie diody. Czyli kiedy wpiszesz w Monitorze słowo `obie`, program ma zapalić obie diody naraz, odczekać sekundę, a potem je zgasić.
 </Task>
 
-<Task title="Zadanie 5" estimate="20 min">
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Sztuczna inteligencja szybko się rozwija i musimy nauczyć się wykorzystywać ją w nauczaniu. 
+Przy kolejnych zadaniach masz do dyspozycji naszego [Pomocnika AI](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing).
+Żeby naprawdę się nauczyć, używaj go jak nauczyciela, a nie jak kogoś, kto odrobi zadanie za Ciebie.
+
+**Zanim napiszesz do Pomocnika — spróbuj samodzielnie:**
+1. Przeczytaj treść zadania jeszcze raz i spróbuj rozpisać samodzielnie.
+2. Dopiero gdy utkniesz w konkretnym miejscu, pytaj Pomocnika.
+
+**Jak pytać skutecznie:**
+- Opisz, co próbowałeś: *„Próbowałem użyć `if`, ale nie wiem, jak porównać dwa napisy String."*
+- Powiedz, czego nie rozumiesz, zamiast prosić o gotowe rozwiązanie: *„Wyjaśnij, co robi `trim()` i dlaczego jest potrzebne."*
+- Wklej swój kod i zapytaj, dlaczego nie działa: *„Mój program kompiluje się, ale dioda nie reaguje. Gdzie może być błąd?"*
+- Poproś o wskazówkę, nie o kod: *„Jaką funkcję powinienem tu użyć?"*
+
+**Czego unikać:**
+- Nie wklejaj treści zadania z prośbą „napisz mi to". Gotowy kod niczego Cię nie nauczy.
+- Nie akceptuj odpowiedzi, której nie rozumiesz — pytaj dalej, aż każda linijka będzie dla Ciebie jasna.
+</Callout>
+
+<Task title="Zadanie 6" estimate="20 min">
 Zamiast zapalać diodę tylko na sekundę, zapamiętaj jej stan w zmiennej `bool`.
 Po wpisaniu `zielona` zielona dioda ma zmienić stan na przeciwny: jeśli świeci,
 ma zgasnąć; jeśli jest zgaszona, ma się zapalić.
 </Task>
 
-<Task title="Zadanie 6" estimate="10 min">
-Przerób powyższy program w taki sposób, aby w przypadku błędnego koloru wysyłał odpowiedni komunikat przez terminal. Swoim rozwiązaniem podziel się w komentarzu!
-</Task>
-
-<Task title="Zadanie 7 ★" estimate="20 min">
-Zadanie trudniejsze, z gwiazdką. Napisz program, który po wysłaniu koloru diody zmieni jej stan na przeciwny. Jeśli dioda jest włączona, to zostanie wyłączona i na odwrót. Podpowiedź: koniecznie użyj dodatkowych zmiennych typu `bool`, które będą pamiętały aktualny stan diod.
-</Task>
 
 <Troubleshooting>
   <Issue title="W Monitorze portu szeregowego widać dziwne znaki">
