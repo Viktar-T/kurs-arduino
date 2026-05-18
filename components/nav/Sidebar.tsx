@@ -1,14 +1,11 @@
 /**
  * Sidebar — Weekend → Day → Lesson, with block badges.
  *
- * Stub. Build the nav tree via `buildNav()` from `lib/content.ts`
- * (Server Component) and render. Replace shadcn primitives once
- * `npx shadcn@latest add sidebar` has been run.
+ * Server Component: fetches nav data and passes it to DayAccordion
+ * (Client Component) for interactive accordion behaviour.
  */
-import Link from "next/link";
-
 import { buildNav } from "@/lib/content";
-import { Badge } from "@/components/ui";
+import { DayAccordion } from "@/components/nav/DayAccordion";
 
 export function Sidebar() {
   const weekends = buildNav();
@@ -20,24 +17,9 @@ export function Sidebar() {
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider opacity-70">
             Zjazd {w.weekend}
           </h2>
-          <ul className="space-y-3">
+          <ul className="space-y-1">
             {w.days.map((d) => (
-              <li key={d.day}>
-                <p className="mb-1 font-medium">Dzień {d.day}</p>
-                <ul className="space-y-1 border-l border-slate-200 pl-3">
-                  {d.lessons.map((l) => (
-                    <li key={l.href} className="flex items-baseline gap-2">
-                      <Badge variant="block">B{l.block}</Badge>
-                      <Link
-                        href={l.href}
-                        className="hover:underline"
-                      >
-                        {l.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
+              <DayAccordion key={d.day} day={d} defaultOpen />
             ))}
           </ul>
         </section>

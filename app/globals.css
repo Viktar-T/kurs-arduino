@@ -152,6 +152,62 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ── Day accordion ──────────────────────────────────────────── */
+.day-accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0.25rem;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #243236;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.day-accordion-trigger:hover {
+  background-color: var(--forbot-green-soft);
+  color: var(--forbot-green-dark);
+}
+
+.day-accordion-chevron {
+  flex-shrink: 0;
+  color: var(--article-muted);
+  transition: transform 0.25s ease;
+}
+
+.day-accordion-panel {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* ── Sidebar collapse toggle ────────────────────────────────── */
+.sidebar-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--forbot-line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--article-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: var(--forbot-green-soft);
+  border-color: var(--forbot-green);
+  color: var(--forbot-green-dark);
+}
+
 .forbot-badge {
   border-radius: 3px;
   background: var(--forbot-green-soft);

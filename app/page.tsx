@@ -23,7 +23,7 @@ export default function Home() {
         </p>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4">
         <Link
           href="/harmonogram"
           className="landing-card p-5 transition-colors"
@@ -31,15 +31,6 @@ export default function Home() {
           <h2 className="text-lg font-semibold">Harmonogram</h2>
           <p className="mt-1 text-sm opacity-70">
             10 dni szkoleniowych w 5 zjazdach. Lekcje uporządkowane chronologicznie.
-          </p>
-        </Link>
-        <Link
-          href="/program"
-          className="landing-card p-5 transition-colors"
-        >
-          <h2 className="text-lg font-semibold">Program kursu</h2>
-          <p className="mt-1 text-sm opacity-70">
-            13 bloków tematycznych wg programu zamawiającego.
           </p>
         </Link>
       </section>
