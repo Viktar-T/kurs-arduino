@@ -26,6 +26,8 @@
 
 html,
 body {
+  height: 100%;
+  overflow: hidden;
   background: #ffffff !important;
   color: var(--foreground);
   color-scheme: light;
