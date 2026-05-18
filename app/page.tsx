@@ -18,7 +18,7 @@ export default function Home() {
           Podstawy programowania i budowy robotów z Arduino
         </h1>
         <p className="article-summary text-lg">
-          80 godzin dydaktycznych · 10 dni szkoleniowych · 5 zjazdów weekendowych
+          80 godzin dydaktycznych · 10 dni szkoleniowych · 5 weekendów szkoleniowych
           (maj–czerwiec 2026). Materiały kursu w formie lekcji online.
         </p>
       </header>
@@ -30,7 +30,7 @@ export default function Home() {
         >
           <h2 className="text-lg font-semibold">Harmonogram</h2>
           <p className="mt-1 text-sm opacity-70">
-            10 dni szkoleniowych w 5 zjazdach. Lekcje uporządkowane chronologicznie.
+            10 dni szkoleniowych w 5 weekendach. Lekcje uporządkowane chronologicznie.
           </p>
         </Link>
       </section>

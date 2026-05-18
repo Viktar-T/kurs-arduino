@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui";
 export const metadata: Metadata = {
   title: "Harmonogram — 10 dni · Kurs Arduino",
   description:
-    "Plan 10 dni szkoleniowych kursu Arduino dla TTC Szczecin (5 zjazdów, maj–czerwiec 2026).",
+    "Plan 10 dni szkoleniowych kursu Arduino dla TTC Szczecin (5 weekendów, maj–czerwiec 2026).",
 };
 
 const WEEKEND_DATES: Record<number, string> = {
@@ -29,7 +29,7 @@ export default function HarmonogramPage() {
     <Shell>
       <h1>Harmonogram — 10 dni szkoleniowych</h1>
       <p className="article-summary">
-        Plan kursu rozłożony na 5 zjazdów weekendowych, 10 dni po 8 godzin
+        Plan kursu rozłożony na 5 weekendów szkoleniowych, 10 dni po 8 godzin
         dydaktycznych (łącznie 80 h).
       </p>
 
@@ -43,7 +43,7 @@ export default function HarmonogramPage() {
           {weekends.map((w) => (
             <section key={w.weekend}>
               <h2 className="text-lg font-semibold">
-                Zjazd {w.weekend}
+                Weekend {w.weekend}
                 <span className="ml-2 text-sm font-normal opacity-60">
                   {WEEKEND_DATES[w.weekend]}
                 </span>

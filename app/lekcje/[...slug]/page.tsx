@@ -78,7 +78,7 @@ export default async function LessonPage({ params }: PageProps) {
     <Shell
       breadcrumbs={[
         { label: "Kurs", href: "/" },
-        { label: `Zjazd ${fm.weekend}`, href: "/harmonogram" },
+        { label: `Weekend ${fm.weekend}`, href: "/harmonogram" },
         { label: `Dzień ${fm.day}`, href: "/harmonogram" },
         { label: fm.title },
       ]}
@@ -88,43 +88,45 @@ export default async function LessonPage({ params }: PageProps) {
         title: "Postęp w opublikowanych lekcjach",
       }}
     >
-      <header className="not-prose mb-6">
-        <p className="article-meta text-xs uppercase tracking-wider">
-          Dzień {fm.day} · Zjazd {fm.weekend} ·{" "}
-          <Badge variant="block">B{fm.block}</Badge> · {fm.duration} min
-        </p>
-        <h1 className="mt-1 text-3xl font-semibold">{fm.title}</h1>
-        <p className="article-summary mt-2 text-base">{fm.summary}</p>
-      </header>
+      <div className="article-content max-w-none">
+        <header className="not-prose mb-6">
+          <p className="article-meta text-xs uppercase tracking-wider">
+            Dzień {fm.day} · Weekend {fm.weekend} ·{" "}
+            <Badge variant="block">B{fm.block}</Badge> · {fm.duration} min
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold">{fm.title}</h1>
+          <p className="article-summary mt-2 text-base">{fm.summary}</p>
+        </header>
 
-      <Objectives items={fm.objectives} />
+        <Objectives items={fm.objectives} />
 
-      {fm.prerequisites.length > 0 && (
-        <Prerequisites items={resolvePrerequisites(fm.prerequisites, lessons)} />
-      )}
+        {fm.prerequisites.length > 0 && (
+          <Prerequisites items={resolvePrerequisites(fm.prerequisites, lessons)} />
+        )}
 
-      {fm.hardware.length > 0 && <Hardware items={fm.hardware} />}
+        {fm.hardware.length > 0 && <Hardware items={fm.hardware} />}
 
-      {content}
+        {content}
 
-      <Pagination
-        previous={
-          previous
-            ? {
-                title: previous.frontmatter.title,
-                href: previous.href,
-              }
-            : undefined
-        }
-        next={
-          next
-            ? {
-                title: next.frontmatter.title,
-                href: next.href,
-              }
-            : undefined
-        }
-      />
+        <Pagination
+          previous={
+            previous
+              ? {
+                  title: previous.frontmatter.title,
+                  href: previous.href,
+                }
+              : undefined
+          }
+          next={
+            next
+              ? {
+                  title: next.frontmatter.title,
+                  href: next.href,
+                }
+              : undefined
+          }
+        />
+      </div>
     </Shell>
   );
 }

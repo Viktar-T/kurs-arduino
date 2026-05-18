@@ -13,7 +13,7 @@ export function SidebarShell({ sidebar, children }: SidebarShellProps) {
 
   return (
     <div
-      className="site-shell mx-auto grid w-full max-w-6xl gap-8 px-4 py-8"
+      className="site-shell mx-auto grid w-full gap-8 px-6 py-8"
       style={{
         gridTemplateColumns: sidebarOpen ? "16rem 1fr" : "0px 1fr",
         transition: "grid-template-columns 0.3s ease",
@@ -32,7 +32,7 @@ export function SidebarShell({ sidebar, children }: SidebarShellProps) {
         </div>
       </aside>
 
-      <main className="article-content max-w-none" style={{ minWidth: 0 }}>
+      <main className="min-w-0" style={{ minWidth: 0 }}>
         <button
           type="button"
           onClick={() => setSidebarOpen((o) => !o)}
