@@ -48,10 +48,16 @@ export function DayAccordion({ day, defaultOpen = true }: DayAccordionProps) {
         <ul className="space-y-1 border-l border-slate-200 pl-3 pt-1 pb-1">
           {day.lessons.map((l) => (
             <li key={l.href} className="flex items-baseline gap-2">
-              <Badge variant="block">B{l.block}</Badge>
-              <Link href={l.href} className="hover:underline">
-                {l.title}
-              </Link>
+              {l.publish ? (
+                <>
+                  <Badge variant="block">B{l.block}</Badge>
+                  <Link href={l.href} className="hover:underline">
+                    {l.title}
+                  </Link>
+                </>
+              ) : (
+                <span className="opacity-40 italic">w przygotowaniu</span>
+              )}
             </li>
           ))}
         </ul>

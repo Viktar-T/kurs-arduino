@@ -41,15 +41,11 @@ export interface Lesson {
  * Walk `content/lekcje/**\/*.mdx` recursively. Cached for the duration of a build.
  */
 let _cache: Lesson[] | null = null;
+let _cacheAll: Lesson[] | null = null;
 const SHOULD_CACHE_CONTENT = process.env.NODE_ENV !== "development";
 
-export function getAllLessons(): Lesson[] {
-  if (SHOULD_CACHE_CONTENT && _cache) return _cache;
-  if (!fs.existsSync(CONTENT_ROOT)) {
-    const empty: Lesson[] = [];
-    if (SHOULD_CACHE_CONTENT) _cache = empty;
-    return empty;
-  }
+function loadLessons(publishedOnly: boolean): Lesson[] {
+  if (!fs.existsSync(CONTENT_ROOT)) return [];
 
   const lessons: Lesson[] = [];
   for (const dayFolder of fs.readdirSync(CONTENT_ROOT)) {
@@ -63,7 +59,7 @@ export function getAllLessons(): Lesson[] {
       const raw = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(raw);
       const frontmatter = parseLessonFrontmatter(data, filePath);
-      if (!frontmatter.publish) continue;
+      if (publishedOnly && !frontmatter.publish) continue;
 
       const fileSlug = file.replace(/\.mdx$/, "");
       lessons.push({
@@ -88,7 +84,21 @@ export function getAllLessons(): Lesson[] {
     );
   });
 
+  return lessons;
+}
+
+export function getAllLessons(): Lesson[] {
+  if (SHOULD_CACHE_CONTENT && _cache) return _cache;
+  const lessons = loadLessons(true);
   if (SHOULD_CACHE_CONTENT) _cache = lessons;
+  return lessons;
+}
+
+/** Includes unpublished (draft) lessons — used for nav/sidebar only. */
+export function getAllLessonsIncludingDrafts(): Lesson[] {
+  if (SHOULD_CACHE_CONTENT && _cacheAll) return _cacheAll;
+  const lessons = loadLessons(false);
+  if (SHOULD_CACHE_CONTENT) _cacheAll = lessons;
   return lessons;
 }
 
@@ -116,10 +126,11 @@ export interface NavLesson {
   href: string;
   block: number;
   duration: number;
+  publish: boolean;
 }
 
 export function buildNav(): NavWeekend[] {
-  const lessons = getAllLessons();
+  const lessons = getAllLessonsIncludingDrafts();
   const byWeekend = new Map<number, Map<number, NavLesson[]>>();
 
   for (const l of lessons) {
@@ -127,7 +138,8 @@ export function buildNav(): NavWeekend[] {
     if (!byWeekend.has(weekend)) byWeekend.set(weekend, new Map());
     const days = byWeekend.get(weekend)!;
     if (!days.has(day)) days.set(day, []);
-    days.get(day)!.push({ title, href: l.href, block, duration });
+    const { publish } = l.frontmatter;
+    days.get(day)!.push({ title, href: l.href, block, duration, publish });
   }
 
   return Array.from(byWeekend.entries())
