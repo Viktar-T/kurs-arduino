@@ -46,7 +46,11 @@
       "Bash(cd \"d:\\\\Life-OS\\\\123-Edu-Kursy\\\\15_courses\\\\2026-TTC-Szczecin-Arduino-i-Roboty\\\\kurs-arduino\" && find public/img/lekcje -type f 2>/dev/null | sort > /tmp/all_images.txt && cat /tmp/all_images.txt)",
       "Read(//tmp/**)",
       "Bash(npx tsc *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash",
+      "PowerShell",
+      "Edit",
+      "Write"
     ]
   }
 }

@@ -83,7 +83,9 @@ void loop() {
   height={145}
 />
 
-Najważniejsze pojęcia są trzy: czas stanu wysokiego, okres oraz wypełnienie. Okres to czas jednego pełnego cyklu sygnału. Wypełnienie mówi, przez jaką część tego cyklu sygnał pozostaje w stanie wysokim.
+Najważniejsze pojęcia są trzy: **czas stanu wysokiego**, **okres** oraz **wypełnienie**.  
+**Okres** to czas jednego pełnego cyklu sygnału.  
+**Wypełnienie** mówi, przez jaką część tego cyklu sygnał pozostaje w stanie wysokim.  
 
 <Table
   caption="Parametry pierwszego przebiegu"
@@ -134,10 +136,84 @@ Gdy zamienimy czasy miejscami, otrzymamy małe wypełnienie. Pin jest w stanie w
 
 PWM polega właśnie na szybkim przełączaniu sygnału prostokątnego i regulacji jego wypełnienia. Jeżeli dzieje się to wystarczająco szybko, dioda nie wygląda jak migająca, tylko jak świecąca słabiej albo mocniej. Podobnie silnik może pracować wolniej albo szybciej, bo dostaje energię tylko przez część czasu.
 
+<Task title="Zadanie — zmiana jasności LED przez wypełnienie" estimate="15 min">
+W tym zadaniu zbudujemy własny programowy PWM (Software PWM) aby kontrolować jasność diody LED.
+Podłącz diodę LED z rezystorem do pinu `3`. Wgraj poniższy szkic i obserwuj jak świeci dioda.
+
+<Code lang="cpp" file="pwm-reczne-10ms.ino">
+```cpp
+void setup() {
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3, HIGH);
+  delay(1);
+
+  digitalWrite(3, LOW);
+  delay(9);
+}
+```
+</Code>
+
+Okres sygnału wynosi tu `10 ms` (1 ms + 9 ms), a wypełnienie `10%`. Zmień wartości opóźnień tak, aby wypełnienie wynosiło `50%`, a następnie `90%`. Sprawdź jak zmienia się jasność diody.
+
+Następnie przepisz szkic używając `delayMicroseconds()` zamiast `delay()`. Dzięki temu uzyskasz dokładniejszą kontrolę nad krótkimi impulsami. Przykład z wypełnieniem `0,5%` (50 µs stanu wysokiego na 9600 µs okresu):
+
+<Code lang="cpp" file="pwm-reczne-delayMicroseconds.ino">
+```cpp
+void setup() {
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(3, HIGH);
+  delayMicroseconds(50);
+
+  digitalWrite(3, LOW);
+  delayMicroseconds(9550);
+}
+```
+</Code>
+
+1. Zmień wartość `50` na `500`, `1000`, `5000`. Jak zmienia się jasność diody? Jaki wniosek możesz wyciągnąć o zależności między wypełnieniem a jasnością?
+2. Zmień Pin z `3` na `2` i uruchom program. Jak widzicie pin `2` nie ma symbolu `~`. Dlaczego wciąż możemy regulować jasność diody? 
+Żeby zrozumieć przeczytaj sekcję "Głębiej: częstotliwość sprzętowego PWM w Arduino UNO"  poniżej.
+
+</Task>
+
 <Expandable title="Głębiej: częstotliwość sprzętowego PWM w Arduino UNO" heading="####">
 W powyższych przykładach używamy opóźnień jednej sekundy i dioda widocznie miga. Sprzętowy PWM na pinach oznaczonych `~` działa domyślnie znacznie szybciej: piny `3`, `9`, `10`, `11` generują sygnał z częstotliwością **490 Hz**, a piny `5` i `6` — **980 Hz**. Jeden cykl trwa odpowiednio około `2 ms` i `1 ms` — zbyt szybko, żeby ludzkie oko mogło śledzić miganie.
 
 Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC (Direct Current, prąd stały) pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy `20 ms` niezależnie od sprzętowego PWM.
+
+</Expandable>
+
+<Expandable title="Głębiej: Dlaczego pin `2` działa z naszym kodem, choć nie ma symbolu `~`?" heading="####">
+
+W zadaniu sterujemy jasnością diody przez ręczne wpisywanie bardzo krótkich `digitalWrite(HIGH)` i `digitalWrite(LOW)` z `delayMicroseconds()`. To jest **programowy PWM (Software PWM)**: główny procesor Arduino sam włącza i wyłącza pin, wykonując po kolei kolejne linie kodu. Nie potrzebuje żadnych specjalnych układów — każdy pin może to robić. Dlatego pin `2` bez `~` działa tak samo jak pin `3` z `~` w tym ćwiczeniu.
+
+**Sprzętowy PWM jest zupełnie innym mechanizmem.** Funkcja `analogWrite()` deleguje generowanie sygnału do wbudowanych modułów mikrokontrolera zwanych **Timerami**. Timer to mały, niezależny licznik, który tyka z częstotliwością 16 MHz i sam zmienia stan pinu bez angażowania głównego procesora. Processor w tym czasie wykonuje inne zadania.
+
+W sercu Arduino UNO R3, układzie **ATmega328P**, inżynierowie firmy Microchip umieścili dokładnie **trzy Timery**, a każdy z nich ma dwa fizyczne kanały wyjściowe. Te kanały są na stałe, krzemowymi ścieżkami, połączone z konkretnymi pinami:
+
+<Table
+  caption="Timery ATmega328P i przypisane do nich piny PWM"
+  headers={["Timer", "Typ", "Piny"]}
+  rows={[
+    ["Timer0", "8-bitowy", <><strong>5</strong>, <strong>6</strong></>],
+    ["Timer1", "16-bitowy", <><strong>9</strong>, <strong>10</strong></>],
+    ["Timer2", "8-bitowy", <><strong>3</strong>, <strong>11</strong></>],
+  ]}
+/>
+
+Matematyka jest nieubłagana: 3 Timery × 2 kanały = **6 sprzętowych wyjść PWM**. To właśnie te piny oznaczone `~`. Pin `2` nie jest fizycznie podłączony do żadnego Timera — brakuje mu krzemowej ścieżki wewnątrz układu scalonego.
+
+Kiedy wywołasz `analog3Write(2, 128)`, oprogramowanie Arduino widzi brak połączenia z Timerem i po prostu ignoruje polecenie PWM (pin zachowuje się jak zwykłe `digitalWrite`). Żeby mieć sprzętowy PWM, musisz użyć pinu z `~`.
+
+<Callout type="note" title="Timer0 a funkcje millis() i delay()">
+Timer0 jest domyślnie używany przez Arduino do odliczania czasu — bez niego `millis()`, `micros()` i `delay()` przestałyby działać. Sterowanie jasnością przez pin `5` lub `6` nadal działa, ale jeśli kiedyś zmienisz ustawienia Timer0 ręcznie (przez rejestry), zaburzysz odmierzanie czasu.
+</Callout>
 </Expandable>
 
 ## 2. Do czego używamy PWM
@@ -191,7 +267,7 @@ ADC ma wyższą rozdzielczość, bo precyzja pomiaru jest ważna — 10-bitowy A
 Gdy chcesz sterować serwem lub silnikiem wartością odczytaną przez `analogRead()`, musisz przeskalować zakresy. Użyj `map(odczyt, 0, 1023, 0, 255)` albo po prostu podziel wynik przez `4`.
 </Expandable>
 
-## 4. Sterowanie jasnością diody LED
+## 4. Sterowanie jasnością diody LED z pinów PWM za pomocą funkcji analogWrite()
 
 Pierwszy praktyczny układ jest prosty: dioda LED z rezystorem podłączona do pinu `3`, czyli jednego z pinów PWM. Będziemy stopniowo zwiększać wypełnienie sygnału, aby dioda płynnie się rozjaśniała.
 

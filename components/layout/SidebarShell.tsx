@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 interface SidebarShellProps {
   sidebar: ReactNode;
@@ -10,6 +11,25 @@ interface SidebarShellProps {
 
 export function SidebarShell({ sidebar, children }: SidebarShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const mainRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const key = `scroll:${pathname}`;
+
+    const saved = sessionStorage.getItem(key);
+    if (saved !== null) {
+      requestAnimationFrame(() => {
+        el.scrollTop = Number(saved);
+      });
+    }
+
+    const onScroll = () => sessionStorage.setItem(key, String(el.scrollTop));
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [pathname]);
 
   return (
     <div
@@ -39,6 +59,7 @@ export function SidebarShell({ sidebar, children }: SidebarShellProps) {
       </aside>
 
       <main
+        ref={mainRef}
         style={{
           overflowY: "auto",
           height: "100%",
