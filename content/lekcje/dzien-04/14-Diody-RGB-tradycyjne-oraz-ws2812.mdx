@@ -797,7 +797,7 @@ Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI
 
 Jeśli projekt wymaga tylko jednej lub dwóch diod do sygnalizacji stanu — tradycyjna RGB jest prostsza i tańsza. Jeśli jednak zależy nam na wielu diodach RGB lub efektach świetlnych, WS2812 jest zdecydowanie wygodniejszym wyborem.
 
-<Expandable title="Głębiej: korekcja gamma — dlaczego `analogWrite(64)` nie jest „połową jasności"" heading="####">
+<Expandable title='Głębiej: korekcja gamma — dlaczego `analogWrite(64)` nie jest „połową jasności"' heading="####">
 Programujesz płynne rozjaśnianie LED od `0` do `255` w równych krokach co `10`. Oczekujesz liniowego efektu — a tymczasem oko widzi, że dioda **gwałtownie skacze** w pierwszej połowie i ledwo się zmienia w drugiej. Dlaczego?
 
 Powód leży w **nieliniowości ludzkiego wzroku** — opisuje ją tzw. **krzywa gamma**. Nasze oko jest dużo bardziej czułe na zmiany w zakresie niskiej jasności niż wysokiej. Dlatego percepcyjna „połowa jasności" odpowiada wartości PWM około **`64`–`73`**, a nie `128`.
