@@ -77,6 +77,16 @@ Wilgotność względną wyraża się w **%RH** — w zakresie od 0 do 100:
 Ilość wody, którą powietrze może pomieścić, zależy od jego temperatury — dlatego przy tej samej ilości pary wodnej w zimnym pomieszczeniu %RH będzie wyższe niż w ciepłym. Z tego powodu DHT-11 mierzy **jednocześnie** temperaturę i wilgotność.
 </Callout>
 
+<Expandable title="Głębiej: wilgotność względna a punkt rosy" heading="####">
+
+Wilgotność względna nie mówi wprost, ile gramów wody jest w powietrzu. Mówi, jak blisko powietrze jest nasycenia parą wodną przy aktualnej temperaturze. Ciepłe powietrze może pomieścić więcej pary wodnej niż zimne, dlatego `60 %RH` przy 25 °C oznacza więcej wody niż `60 %RH` przy 10 °C.
+
+Punkt rosy to temperatura, do której trzeba schłodzić powietrze, aby osiągnęło `100 %RH` i para wodna zaczęła się skraplać. Gdy zimna szyba ma temperaturę poniżej punktu rosy, pojawia się na niej woda — nawet jeśli czujnik w pokoju pokazuje np. tylko `60 %RH`.
+
+W praktycznych projektach sama wilgotność względna wystarcza do prostych alarmów, ale punkt rosy jest ważny w wentylacji, suszeniu, szklarni i systemach zapobiegających kondensacji.
+
+</Expandable>
+
 ## 2. Czujnik DHT-11 w praktyce
 
 <Photo
@@ -169,7 +179,7 @@ Zacznij od pustego szkieletu z dołączoną biblioteką, definicją pinu i inicj
 <Code lang="cpp" file="dht11-szkielet.ino">
 ```cpp
 #include "DHT.h"
-#define DHT11_PIN 2
+const byte DHT11_PIN = 2;
 
 void setup()
 {
@@ -190,7 +200,7 @@ Dodaj obiekt `dht` (globalnie) i wywołaj `dht.setup()` w `setup()`, podając nu
 <Code lang="cpp" file="dht11-init.ino">
 ```cpp
 #include "DHT.h"
-#define DHT11_PIN 2
+const byte DHT11_PIN = 2;
 DHT dht;
 
 void setup()
@@ -217,7 +227,7 @@ Najprostszy program odczytujący i wyświetlający dane co sekundę:
 <Code lang="cpp" file="dht11-podstawowy.ino">
 ```cpp
 #include "DHT.h"
-#define DHT11_PIN 2
+const byte DHT11_PIN = 2;
 DHT dht;
 
 void setup()
@@ -274,7 +284,7 @@ Ulepszona wersja programu z obsługą błędów:
 <Code lang="cpp" file="dht11-z-obsluga-bledow.ino">
 ```cpp
 #include "DHT.h"
-#define DHT11_PIN 2
+const byte DHT11_PIN = 2;
 DHT dht;
 
 void setup()

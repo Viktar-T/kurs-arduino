@@ -80,6 +80,18 @@ W tej lekcji mówimy o szczotkowych silnikach DC, czyli popularnych małych nap�
 
 Na potrzeby kursu interesują nas małe silniki zasilane zwykle napięciem około `5`-`9 V`, których prąd pracy mieści się w możliwościach użytego sterownika. Sama zasada sterowania jest jednak uniwersalna: mocniejszy silnik wymaga mocniejszego sterownika i odpowiedniego zasilania.
 
+<Expandable title="Głębiej: silnik szczotkowy kontra bezszczotkowy (BLDC) i krokowy" heading="####">
+W świecie napędów elektrycznych spotkasz trzy popularne typy silników — każdy z innym sposobem sterowania.
+
+**Silnik szczotkowy DC** (omawiany w tej lekcji) to klasyk: prąd dostarczany jest do wirnika przez węglowe szczotki ślizgające się po komutatorze. Zalety to prostota sterowania (wystarczą dwa przewody i zmiana polaryzacji) oraz niska cena. Wady: szczotki się zużywają (trzeba je czasem wymieniać), iskrzą i są źródłem zakłóceń elektromagnetycznych.
+
+**Silnik bezszczotkowy (BLDC, Brushless DC)** to nowoczesna alternatywa: zamiast szczotek elektronika zewnętrzna w odpowiedniej kolejności włącza trzy cewki w stojanie. Działa cicho, dłużej, bez iskrzenia — używany w dronach, dyskach SSD, e-rowerach. Wymaga specjalnego sterownika **ESC (Electronic Speed Controller)** — nie da się go uruchomić zwykłym mostkiem H.
+
+**Silnik krokowy (stepper)** porusza się o ściśle określone kąty (`1,8°` na krok to standard). Świetnie nadaje się tam, gdzie trzeba precyzyjnie spozycjonować coś bez sprzężenia zwrotnego: drukarki 3D, plotery, lasery CNC. Wymaga sterownika typu `A4988` lub `DRV8825`, który generuje sygnał krok-kierunek.
+
+W kursie skupiamy się na silniku szczotkowym DC, bo jest najprostszy do nauczenia podstaw — ale gdy zaczniesz budować swoje projekty, świadomie wybieraj typ silnika do zadania.
+</Expandable>
+
 ## 2. Dlaczego silnika nie wolno podłączać bezpośrednio
 
 Arduino UNO może bezpiecznie sterować małymi sygnałami. Typowy pin mikrokontrolera może dostarczyć tylko niewielki prąd, rzędu kilkunastu lub kilkudziesięciu miliamperów. Silnik DC podczas pracy, a szczególnie przy starcie lub zablokowaniu wału, może pobierać setki miliamperów albo więcej.
@@ -317,6 +329,22 @@ void loop() {
 </Code>
 
 Wartości `analogWrite()` od `0` do `255` odpowiadają wypełnieniu PWM od `0%` do `100%`. Rzeczywisty silnik może nie ruszyć przy bardzo małych wartościach, bo musi pokonać tarcie i bezwładność.
+
+<Expandable title="Głębiej: dlaczego silnik z PWM piszczy i jak to naprawić" heading="####">
+Jeżeli kiedyś usłyszysz wyraźny pisk z silnika DC sterowanego PWM-em, to nie awaria — to **akustyczny efekt częstotliwości przełączania mostka H**. Cewki silnika i jego elementy mechaniczne drgają w rytm impulsów PWM, a jeśli częstotliwość mieści się w paśmie słyszalnym (do `~20 kHz`), słyszysz to jako dźwięk.
+
+Domyślne częstotliwości sprzętowego PWM w Arduino UNO to:
+- Piny `5`, `6` (Timer0): **~980 Hz**
+- Piny `3`, `9`, `10`, `11` (Timer1, Timer2): **~490 Hz**
+
+Obie wartości leżą głęboko w paśmie słyszalnym — stąd charakterystyczny pisk. Można go zlikwidować na trzy sposoby:
+
+1. **Podnieść częstotliwość PWM powyżej słyszalnego pasma** (`> 20 kHz`) — modyfikacja preskalerów Timer'ów. To wymaga grzebania w rejestrach mikrokontrolera i może popsuć inne funkcje (`millis()` zależy od Timer0).
+2. **Użyć dedykowanego sterownika silników** typu `DRV8833` lub `TB6612FNG`, które same generują PWM z odpowiednią częstotliwością.
+3. **Zaakceptować pisk** — w robotach edukacyjnych i prototypach często nikomu nie przeszkadza.
+
+W produktach komercyjnych (np. drony, e-hulajnogi) sterowniki silników zwykle pracują z PWM `> 20 kHz` właśnie dla wygody akustycznej.
+</Expandable>
 
 <Expandable title="Minimalny próg uruchomienia silnika i kalibracja PWM" heading="####">
 

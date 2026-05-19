@@ -110,6 +110,16 @@ Zamiast długich pisków słyszysz krótkie **„pyknięcia"** — i to wyłącz
   alt="Animacja pokazująca odkształcanie blaszki piezo przy zmianie napięcia"
 />
 
+<Expandable title="Głębiej: dlaczego buzzer piezo potrzebuje zmian napięcia?" heading="####">
+
+Element piezoelektryczny działa trochę jak bardzo cienki kondensator połączony z mechaniczną blaszką. Gdy napięcie rośnie albo maleje, materiał piezo minimalnie zmienia kształt, a ta szybka zmiana porusza powietrzem i tworzy falę dźwiękową.
+
+Stałe napięcie odkształca blaszkę tylko raz, dlatego przy wolnym `digitalWrite()` słyszysz pojedyncze „pyknięcia”. Dopiero cykliczne przełączanie stanu setki lub tysiące razy na sekundę powoduje regularne drgania, które odbieramy jako ton.
+
+Funkcja `tone()` robi właśnie to: generuje przebieg prostokątny o zadanej częstotliwości. Dla buzzera najgłośniej będzie w okolicy częstotliwości rezonansowej, bo wtedy mechaniczna blaszka najłatwiej wpada w drgania.
+
+</Expandable>
+
 Jeśli zmniejszysz opóźnienie (np. do 100 ms, a potem do 10 ms), dźwięki będą następować coraz szybciej i zaczną tworzyć rozpoznawalny ton:
 
 <Code lang="cpp" file="buzzer-test-10ms.ino">

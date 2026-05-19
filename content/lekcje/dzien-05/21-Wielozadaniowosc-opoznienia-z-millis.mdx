@@ -66,7 +66,7 @@ Pojedyncze miganie diody LED nie sprawia trudności:
 
 <Code lang="cpp" file="led-delay-1.ino">
 ```cpp
-#define LED1pin 3
+const byte LED1pin = 3;
 
 void setup()
 {
@@ -93,8 +93,8 @@ Problem pojawia się, gdy chcemy migać **dwiema diodami z różnymi interwałam
 
 <Code lang="cpp" file="led-delay-2.ino">
 ```cpp
-#define LED1pin 3
-#define LED2pin 4
+const byte LED1pin = 3;
+const byte LED2pin = 4;
 
 void setup()
 {
@@ -171,6 +171,16 @@ void loop()
 Zawsze deklaruj zmienne przechowujące wartość `millis()` jako `unsigned long`. Użycie `int` lub `long` może spowodować błędy przepełnienia, gdy licznik przekroczy 32 767 lub 2 147 483 647 ms.
 </Callout>
 
+<Expandable title="Głębiej: co dzieje się po przepełnieniu millis()?" heading="####">
+
+`millis()` nie rośnie w nieskończoność. Po około 49,7 dniach licznik typu `unsigned long` osiąga maksymalną wartość i wraca do zera. To normalne zachowanie liczb bez znaku w mikrokontrolerze.
+
+Dlatego nie porównujemy czasu w stylu `if (millis() > start + interwal)`. Taki zapis może zawieść w okolicy przepełnienia. Bezpieczny wzorzec to odejmowanie: `if (aktualnyCzas - zapamietanyCzas >= interwal)`. Arytmetyka `unsigned long` sprawia, że różnica pozostaje poprawna nawet wtedy, gdy licznik zdążył „zawinąć się” przez zero.
+
+W praktyce oznacza to, że dobrze napisany kod z `millis()` może działać tygodniami bez specjalnej obsługi resetu licznika. Warunek jest bezpieczny, o ile wszystkie zmienne czasu mają typ `unsigned long`.
+
+</Expandable>
+
 ## 3. Mierzenie różnicy czasu
 
 Sama wartość `millis()` niewiele nam daje. Prawdziwa użyteczność tej funkcji ujawnia się, gdy **porównujemy dwa odczyty** — sprawdzamy, czy od ostatniego zdarzenia minął wystarczający czas.
@@ -221,7 +231,7 @@ Teraz zastosujemy ten wzorzec do migania diodą LED. Kluczem jest zapamiętanie 
 
 <Code lang="cpp" file="led-millis.ino">
 ```cpp
-#define LED1 3
+const byte LED1 = 3;
 
 int stanLED1 = LOW; // aktualny stan diody
 
@@ -269,8 +279,8 @@ Wystarczy dodać drugi zestaw zmiennych (stan, czas zapamiętany, interwał) i d
 
 <Code lang="cpp" file="dwa-led-millis.ino">
 ```cpp
-#define LED1 3
-#define LED2 4
+const byte LED1 = 3;
+const byte LED2 = 4;
 
 int stanLED1 = LOW;
 int stanLED2 = LOW;
@@ -326,9 +336,9 @@ Wzorzec `millis()` łatwo łączy się z odczytem wejść. Poniższy szkic zmien
 
 <Code lang="cpp" file="dwa-led-przycisk.ino">
 ```cpp
-#define LED1 3
-#define LED2 4
-#define PRZYCISK 2
+const byte LED1 = 3;
+const byte LED2 = 4;
+const byte PRZYCISK = 2;
 
 int stanLED1 = LOW;
 int stanLED2 = LOW;
@@ -418,9 +428,9 @@ Logika działania:
 
 <Code lang="cpp" file="schody-oswietlenie.ino">
 ```cpp
-#define OSWIETLENIE 4   // przekaźnik lub MOSFET sterujący światłem
-#define KONTAKTRON 3    // kontaktron na drzwiach (LOW = drzwi otwarte)
-#define PIR 5           // wyjście cyfrowe czujnika PIR (HIGH = ruch)
+const byte OSWIETLENIE = 4;   // przekaźnik lub MOSFET sterujący światłem
+const byte KONTAKTRON = 3;    // kontaktron na drzwiach (LOW = drzwi otwarte)
+const byte PIR = 5;           // wyjście cyfrowe czujnika PIR (HIGH = ruch)
 
 unsigned long aktualnyCzas = 0;
 unsigned long zapamietanyCzasOswietlenie = 0;
@@ -463,7 +473,7 @@ void loop()
 </Callout>
 
 <Expandable title="Rozszerzenie: dodaj drugi PIR na górze schodów" heading="###">
-Wystarczy zadeklarować `#define PIR2 6`, skonfigurować pin jako `INPUT` i rozszerzyć warunek:
+Wystarczy zadeklarować `const byte PIR2 = 6;`, skonfigurować pin jako `INPUT` i rozszerzyć warunek:
 
 ```cpp
 else if (digitalRead(PIR) == HIGH || digitalRead(PIR2) == HIGH)

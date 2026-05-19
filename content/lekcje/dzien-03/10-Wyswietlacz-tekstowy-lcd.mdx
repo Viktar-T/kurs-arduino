@@ -171,6 +171,19 @@ void loop() {
 
 `lcd.begin(16, 2)` informuje bibliotekę, że pracujemy z wyświetlaczem 16 znaków na 2 wiersze. `lcd.setCursor(kolumna, wiersz)` ustawia miejsce pisania. Numeracja zaczyna się od zera, więc `(0, 0)` to pierwszy znak pierwszego wiersza, a `(0, 1)` to pierwszy znak drugiego wiersza.
 
+<Expandable title="Głębiej: jak HD44780 pamięta tekst — DDRAM i CGROM" heading="####">
+Sterownik **HD44780** ma w środku dwa rodzaje pamięci, których zrozumienie wyjaśnia wiele dziwnych zachowań LCD:
+
+- **DDRAM (Display Data RAM)** — tu trzymane są kody znaków aktualnie wyświetlanych. Ma **80 bajtów**, ale wyświetlacz 2×16 pokazuje tylko 32. Pozostałe 48 bajtów istnieje „poza widokiem" — możesz je zapisać i potem przewinąć ekran funkcją `lcd.scrollDisplayLeft()`/`scrollDisplayRight()`, aby je zobaczyć.
+- **CGROM (Character Generator ROM)** — stała tablica wzorów pikseli dla około 240 standardowych znaków (litery A–Z, cyfry, podstawowe symbole, znaki japońskie kana). To dlatego polskie znaki diakrytyczne (ą, ć, ę) zwykle się nie wyświetlają — nie ma ich w CGROM.
+
+Adresy DDRAM w wyświetlaczu 2×16 są nieoczywiste:
+- Wiersz 1: `0x00`–`0x0F`
+- Wiersz 2: `0x40`–`0x4F`
+
+Między wierszami jest „dziura" `0x10`–`0x3F`. Biblioteka `LiquidCrystal` ukrywa to za funkcją `setCursor(kolumna, wiersz)`, ale gdybyś kiedyś zobaczył wyświetlacz 4×20, „logiczna" kolejność wierszy w pamięci to 1, 3, 2, 4 — efekt tego samego mapowania.
+</Expandable>
+
 <Photo
   file="10.05-lcd-pierwszy-tekst-arduino.jpg"
   caption="Pierwszy tekst wyświetlony na LCD z Arduino."
@@ -344,6 +357,20 @@ void loop() {
 />
 
 Zwróć uwagę, że stały tekst pierwszej linii wpisujemy tylko raz w `setup()`. W pętli aktualizujemy tylko fragment z wynikiem. To ogranicza miganie i sprawia, że ekran jest czytelniejszy.
+
+<Expandable title="Głębiej: dlaczego po wyniku piszemy `V ` (V ze spacją)" heading="####">
+Spójrz na linię: `lcd.print("V ");` — to nie literówka, lecz **technika maskowania starszych znaków**.
+
+LCD nie czyści automatycznie tego, co już wyświetlił. Jeśli najpierw wyświetlimy `4.85V`, a potem zmiana napięcia da krótszą wartość `4.8V`, na ekranie zobaczymy `4.8V` + ostatnią cyfrę `5` ze starego odczytu, czyli `4.8V5`. Spacja po `V` „zamiata" tę jedną pozycję — i błąd znika.
+
+Inne sposoby radzenia sobie z tym problemem:
+
+- **`lcd.clear()` w pętli** — działa, ale powoduje migotanie, bo wyświetlacz na chwilę gaśnie.
+- **Stała szerokość pola** — sformatuj liczbę funkcją `sprintf(bufor, "%5.2fV", odczyt)`, żeby zawsze zajmowała 5 znaków (np. ` 4.85V`).
+- **Wymazywanie tylko zmienianego pola** — `lcd.setCursor(0, 1); lcd.print("        ");` przed nowym `print()` (8 spacji = 8 wyczyszczonych pozycji).
+
+W praktyce: **doklejanie spacji** to najprostszy trik dla małych pól (1–2 znaki), `sprintf()` lepiej sprawdza się przy pełnych liniach z liczbami zmiennej długości.
+</Expandable>
 
 <Task title="Zadanie 3" estimate="15 min">
 Zmień program tak, aby oprócz napięcia pokazywał też surową wartość ADC. W pierwszej linii wyświetl `ADC: XXXX`, a w drugiej `U: X.XXV`.

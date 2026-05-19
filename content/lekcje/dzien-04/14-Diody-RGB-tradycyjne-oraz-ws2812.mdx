@@ -117,6 +117,26 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
 
 Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwienemu, zielonemu i niebieskiemu kanałowi.
 
+<Expandable title="Głębiej: wspólna katoda kontra wspólna anoda — uważaj na zakup!" heading="####">
+Producenci diod RGB oferują **dwa warianty** wewnętrznego połączenia. Wybór decyduje o tym, jak będziesz pisał kod — a wizualnie diody wyglądają identycznie.
+
+**Wspólna katoda (CC, Common Cathode):**
+- Najdłuższa nóżka idzie do **GND**.
+- Każdy kolor zapalasz **stanem HIGH** na pinie.
+- `digitalWrite(R, HIGH)` zapala czerwony.
+- `analogWrite(R, 255)` to pełna jasność, `analogWrite(R, 0)` to wyłączenie.
+
+**Wspólna anoda (CA, Common Anode):**
+- Najdłuższa nóżka idzie do **+5V**.
+- Każdy kolor zapalasz **stanem LOW** na pinie (prąd musi „wpłynąć" do Arduino).
+- `digitalWrite(R, LOW)` zapala czerwony.
+- `analogWrite(R, 0)` to pełna jasność, `analogWrite(R, 255)` to wyłączenie — **logika odwrócona!**
+
+Najprostszy test bez patrzenia na dokumentację: podłącz najdłuższą nóżkę przez rezystor `1 kΩ` do `+5V` i kolejno dotykaj pozostałych nóżek przewodem od GND. Jeśli diody świecą — masz **wspólną anodę**. Jeśli nie — przekładasz wspólną nóżkę do GND i testujesz dotykając do +5V; wtedy to **wspólna katoda**.
+
+W kodzie z lekcji używamy diody **wspólnej katody**. Jeśli kupiłeś przypadkiem wspólną anodę, zamień każde `analogWrite(R, wartosc)` na `analogWrite(R, 255 - wartosc)` i program zadziała poprawnie.
+</Expandable>
+
 <Table
   caption="Wyprowadzenia diody RGB (wspólna katoda)"
   headers={["Nóżka", "Funkcja", "Pin Arduino"]}
@@ -148,9 +168,9 @@ Pierwszy szkic zaświeci każdy kolor po kolei, potem połączy je razem, a na k
 
 <Code lang="cpp" file="rgb-pierwsze-kolory.ino">
 ```cpp
-#define czerwona 3
-#define zielona 5
-#define niebieska 6
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
 
 void setup() {
   pinMode(czerwona, OUTPUT); // Piny podłączone do diody jako wyjścia
@@ -237,14 +257,14 @@ Do jednego Arduino możemy podłączyć wiele tradycyjnych diod RGB — każda p
 <Code lang="cpp" file="rgb-dwie-diody.ino">
 ```cpp
 // Definicja wyprowadzeń pierwszej diody
-#define czerwona  3
-#define zielona   5
-#define niebieska 6
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
 
 // Definicja wyprowadzeń drugiej diody
-#define czerwona2  9
-#define zielona2  10
-#define niebieska2 11
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
 
 void setup() {
   pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
@@ -289,14 +309,14 @@ Funkcja `analogWrite(pin, wartość)` ustawia wypełnienie PWM w zakresie 0–25
 <Code lang="cpp" file="rgb-mieszanie-kolorow.ino">
 ```cpp
 // Definicja wyprowadzeń pierwszej diody
-#define czerwona  3
-#define zielona   5
-#define niebieska 6
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
 
 // Definicja wyprowadzeń drugiej diody
-#define czerwona2  9
-#define zielona2  10
-#define niebieska2 11
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
 
 void setup() {
   pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
@@ -338,14 +358,14 @@ Możemy wzbogacić efekt o **losową składową** koloru, używając `random()` 
 <Code lang="cpp" file="rgb-losowe-kolory.ino">
 ```cpp
 // Definicja wyprowadzeń pierwszej diody
-#define czerwona  3
-#define zielona   5
-#define niebieska 6
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
 
 // Definicja wyprowadzeń drugiej diody
-#define czerwona2  9
-#define zielona2  10
-#define niebieska2 11
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
 
 void setup() {
   pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
@@ -384,12 +404,12 @@ Dodanie drugiej pętli `for` ze zmniejszającą się zmienną `zmiana` sprawia, 
 <Code lang="cpp" file="rgb-animacja-obu-kierunkach.ino">
 ```cpp
 // Definicja wyprowadzeń (identyczne jak poprzednio)
-#define czerwona  3
-#define zielona   5
-#define niebieska 6
-#define czerwona2  9
-#define zielona2  10
-#define niebieska2 11
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
 
 void setup() {
   pinMode(czerwona, OUTPUT);
@@ -473,6 +493,28 @@ Każda dioda WS2812 zawiera miniaturowy sterownik, który:
 3. **Przekazuje dalej** pozostałe dane do następnej diody w szeregu.
 
 Dzięki temu do sterowania 8 (lub 800) diod wystarczy **jeden pin Arduino**.
+
+<Expandable title="Głębiej: jak fizycznie wygląda protokół WS2812 — bit po bicie" heading="####">
+Dlaczego do WS2812 trzeba używać biblioteki zamiast zwykłego `digitalWrite()`? Bo protokół jest **niewiarygodnie wymagający czasowo** — różnica między bitem `0` a bitem `1` to ułamek mikrosekundy.
+
+Protokół WS2812 koduje bity przez **długość impulsu wysokiego** w pojedynczym cyklu trwającym `1,25 µs`:
+
+<Table
+  caption="Kodowanie bitów w WS2812"
+  headers={["Bit", "Stan wysoki", "Stan niski", "Łącznie"]}
+  rows={[
+    ["0", "ok. 0,35 µs", "ok. 0,90 µs", "1,25 µs"],
+    ["1", "ok. 0,70 µs", "ok. 0,55 µs", "1,25 µs"],
+    ["Reset (latch)", "—", "> 50 µs ciągłego LOW", "—"],
+  ]}
+/>
+
+Każda dioda potrzebuje **24 bitów** (8 G + 8 R + 8 B — kolejność GRB to nie pomyłka, tak działa WS2812). Linijka 8 diod to **192 bity**, czyli `192 × 1,25 µs ≈ 240 µs` na pełną aktualizację.
+
+`digitalWrite()` w Arduino trwa około **5 µs** — to czterokrotnie dłużej niż cały cykl jednego bitu. **Niemożliwe jest** wygenerowanie tego sygnału klasycznymi funkcjami. Biblioteka **Adafruit NeoPixel** używa precyzyjnie pomierzonych pętli w asemblerze i wyłącza przerwania na czas wysyłania, żeby `millis()` ani inne timery nie zaburzyły taktu.
+
+Dlatego podczas `linijka.show()` wszystkie przerwania są zablokowane — i dlatego `delay()` opartego na `millis()` nie powinieneś używać tuż przed `show()` w precyzyjnych systemach czasu rzeczywistego.
+</Expandable>
 
 ### 4.1 Podłączenie diod WS2812
 
@@ -754,6 +796,29 @@ Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI
 />
 
 Jeśli projekt wymaga tylko jednej lub dwóch diod do sygnalizacji stanu — tradycyjna RGB jest prostsza i tańsza. Jeśli jednak zależy nam na wielu diodach RGB lub efektach świetlnych, WS2812 jest zdecydowanie wygodniejszym wyborem.
+
+<Expandable title="Głębiej: korekcja gamma — dlaczego `analogWrite(64)` nie jest „połową jasności"" heading="####">
+Programujesz płynne rozjaśnianie LED od `0` do `255` w równych krokach co `10`. Oczekujesz liniowego efektu — a tymczasem oko widzi, że dioda **gwałtownie skacze** w pierwszej połowie i ledwo się zmienia w drugiej. Dlaczego?
+
+Powód leży w **nieliniowości ludzkiego wzroku** — opisuje ją tzw. **krzywa gamma**. Nasze oko jest dużo bardziej czułe na zmiany w zakresie niskiej jasności niż wysokiej. Dlatego percepcyjna „połowa jasności" odpowiada wartości PWM około **`64`–`73`**, a nie `128`.
+
+Rozwiązanie to **korekcja gamma** — zamiast wysyłać `wartosc` bezpośrednio do `analogWrite()`, transformujesz ją przez potęgę (zwykle `γ = 2,2` lub `2,8`):
+
+```cpp
+byte gammaKorekta(byte wartosc) {
+  float znormalizowana = wartosc / 255.0;
+  float skorygowana = pow(znormalizowana, 2.2);
+  return (byte)(skorygowana * 255);
+}
+
+// użycie:
+analogWrite(LED, gammaKorekta(linearWartosc));
+```
+
+W praktyce zamiast liczyć `pow()` w czasie pracy, używa się **wstępnie obliczonej tablicy 256 wartości** w pamięci PROGMEM. Adafruit NeoPixel ma wbudowaną tablicę `NeoPixel::gamma8[]` — wystarczy `linijka.setPixelColor(i, linijka.gamma32(linijka.Color(r, g, b)))`.
+
+Bez korekcji gamma efekt płynnej tęczy lub oddychającej diody wygląda „kanciasto". Z korekcją — naprawdę płynnie. To pierwszy poziom dobrego efektu świetlnego.
+</Expandable>
 
 ## Podsumowanie
 

@@ -72,6 +72,16 @@ Wewnątrz klawiatura jest zorganizowana w **wiersze i kolumny**. Każdy klawisz 
   alt="Schemat wewnętrznych połączeń klawiatury matrycowej 4x4"
 />
 
+<Expandable title="Głębiej: jak Arduino skanuje matrycę klawiatury?" heading="####">
+
+Klawiatura 4×4 nie wysyła gotowego numeru klawisza. W środku każdy przycisk jest tylko połączeniem jednego wiersza z jedną kolumną. Arduino musi więc aktywować wiersze po kolei i sprawdzać, na której kolumnie pojawiła się zmiana stanu.
+
+Przykład: jeśli program aktywuje wiersz R2 i widzi sygnał na kolumnie C3, to wie, że naciśnięto klawisz leżący na przecięciu R2 i C3. Biblioteka `Keypad` wykonuje to skanowanie bardzo szybko, filtruje drgania styków i zwraca gotowy znak przez `getKey()`.
+
+Przy wielu jednoczesnych naciśnięciach mogą pojawić się niejednoznaczności, bo kilka połączeń w matrycy tworzy dodatkowe ścieżki prądu. Profesjonalne klawiatury rozwiązują to diodami przy każdym klawiszu, ale w prostych klawiaturach Arduino zwykle zakładamy naciskanie jednego klawisza naraz.
+
+</Expandable>
+
 ## 2. Klawiatura z zestawu
 
 W zestawie Arduino znajduje się foliowa klawiatura matrycowa 4×4. Na froncie widać oznaczenia klawiszy `1`–`9`, `0`, `*`, `#` oraz `A`–`D`. Z tyłu wyprowadzone jest **8 elastycznych pinów** — cztery dla wierszy i cztery dla kolumn.
@@ -272,9 +282,9 @@ Zaczynamy od zbudowania szkieletu programu z pustymi blokami `case`. Zmienna `st
 
 <Code lang="cpp" file="centralka-szkielet.ino">
 ```cpp
-#define BUZZER 11
-#define KONTAKTRON 10
-#define PIR 1
+const byte BUZZER = 11;
+const byte KONTAKTRON = 10;
+const byte PIR = 1;
 
 #include <Keypad.h>            // Biblioteka obsługi klawiatury
 #include <Adafruit_NeoPixel.h> // Biblioteka linijki LED
@@ -488,9 +498,9 @@ Poniżej pełny, działający program łączący wszystkie cztery stany:
 
 <Code lang="cpp" file="centralka-alarmowa.ino">
 ```cpp
-#define BUZZER 11
-#define KONTAKTRON 10
-#define PIR 1
+const byte BUZZER = 11;
+const byte KONTAKTRON = 10;
+const byte PIR = 1;
 
 #include <Keypad.h>
 #include <Adafruit_NeoPixel.h>

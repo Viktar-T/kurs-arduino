@@ -131,7 +131,7 @@ Program musi: odczytać wartość ADC z pinu A5, przeliczyć ją na napięcie (m
 
 <Code lang="cpp" file="lm35-podstawowy.ino">
 ```cpp
-#define LM35 A5
+const byte LM35 = A5;
 
 void setup() {
   Serial.begin(9600);
@@ -149,6 +149,16 @@ void loop() {
 }
 ```
 </Code>
+
+<Expandable title="Głębiej: skąd bierze się rozdzielczość pomiaru LM35?" heading="####">
+
+Arduino UNO mierzy napięcie wejściowe przetwornikiem ADC o rozdzielczości 10 bitów, czyli zwraca wartości od `0` do `1023`. Przy domyślnym odniesieniu `5 V` jeden krok ADC odpowiada około `4,88 mV`.
+
+LM35 daje `10 mV` na każdy 1 °C, więc jeden krok ADC to mniej więcej `0,49 °C`. Oznacza to, że nawet przy idealnym czujniku odczyt będzie przeskakiwał skokami około pół stopnia, jeśli używamy domyślnego zakresu 0–5 V.
+
+Precyzję można poprawić przez stabilniejsze napięcie odniesienia albo uśrednianie wielu pomiarów. Uśrednianie nie zwiększa prawdziwej dokładności czujnika, ale zmniejsza przypadkowe wahania odczytu w Monitorze portu szeregowego.
+
+</Expandable>
 
 <Photo
   file="19.05-lm35-odczyt-uart.gif"
@@ -178,7 +188,7 @@ W każdej iteracji sprawdzamy, czy bieżąca temperatura jest wyższa od zapami�
 
 <Code lang="cpp" file="lm35-max.ino">
 ```cpp
-#define LM35 A5
+const byte LM35 = A5;
 
 float tempMAX = 0; // Aktualna temperatura maksymalna
 
@@ -214,7 +224,7 @@ Pułapka przy śledzeniu minimum: jeśli inicjujemy zmienną wartością `0`, ni
 
 <Code lang="cpp" file="lm35-min-max.ino">
 ```cpp
-#define LM35 A5
+const byte LM35 = A5;
 
 float tempMAX = 0;   // Aktualna temperatura maksymalna
 float tempMIN = 150; // Inicjujemy górną granicą zakresu!

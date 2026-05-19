@@ -92,10 +92,10 @@ Używamy trybu **INPUT_PULLUP** — wbudowany rezystor podciągający utrzymuje 
 
 <Code lang="cpp" file="kontaktron-led.ino">
 ```cpp
-#define LED_R 10
-#define LED_G 11
-#define LED_B 12
-#define KONTAKTRON 0
+const byte LED_R = 10;
+const byte LED_G = 11;
+const byte LED_B = 12;
+const byte KONTAKTRON = 0;
 
 void setup() {
   pinMode(LED_R, OUTPUT);
@@ -145,6 +145,16 @@ PIR (Passive InfraRed — pasywna podczerwień) wykrywa ruch na podstawie zmian 
   caption="Czujnik PIR z soczewką Fresnela — pod białą kopułką kryje się właściwy sensor podczerwieni."
   alt="Czujnik PIR — soczewka Fresnela i sensor IR"
 />
+
+<Expandable title="Głębiej: dlaczego PIR wykrywa ruch, a nie samą obecność?" heading="####">
+
+W module PIR znajdują się zwykle dwa małe elementy piroelektryczne połączone różnicowo. Stała temperatura tła daje podobny sygnał z obu części, więc elektronika traktuje ją jako stan spoczynku.
+
+Ruch człowieka powoduje szybką zmianę rozkładu promieniowania podczerwonego: najpierw jedna część sensora widzi cieplejszy obiekt, potem druga. Układ wykrywa właśnie tę zmianę, a soczewka Fresnela dzieli pole widzenia na wiele stref, żeby nawet niewielkie przesunięcie człowieka dawało wyraźny impuls.
+
+Z tego powodu PIR może nie reagować na osobę siedzącą bez ruchu, ale może zareagować na ciepłe powietrze z kaloryfera, przeciąg z okna albo nagłą zmianę oświetlenia słonecznego na obudowie czujnika.
+
+</Expandable>
 
 ### Parametry modułu HC-SR501
 
@@ -233,11 +243,11 @@ Przed uruchomieniem ustaw Tx w minimum (najkrótszy czas sygnału) i Sx w maksim
 
 <Code lang="cpp" file="pir-led.ino">
 ```cpp
-#define LED_R 10
-#define LED_G 11
-#define LED_B 12
-#define KONTAKTRON 0
-#define PIR 2
+const byte LED_R = 10;
+const byte LED_G = 11;
+const byte LED_B = 12;
+const byte KONTAKTRON = 0;
+const byte PIR = 2;
 
 void setup() {
   pinMode(LED_R, OUTPUT);
@@ -370,11 +380,11 @@ Program świeci zieloną LED w spoczynku. Gdy PIR wykryje ruch, przerwanie natyc
 
 <Code lang="cpp" file="pir-przerwanie-alarm.ino">
 ```cpp
-#define LED_R 10
-#define LED_G 11
-#define LED_B 12
-#define KONTAKTRON 0
-#define PIR 2
+const byte LED_R = 10;
+const byte LED_G = 11;
+const byte LED_B = 12;
+const byte KONTAKTRON = 0;
+const byte PIR = 2;
 
 void setup() {
   pinMode(LED_R, OUTPUT);
@@ -419,11 +429,11 @@ Gdy ISR musi przekazać informację do `loop()`, używamy zmiennej **globalnej**
 
 <Code lang="cpp" file="pir-volatile-licznik.ino">
 ```cpp
-#define LED_R 10
-#define LED_G 11
-#define LED_B 12
-#define KONTAKTRON 0
-#define PIR 2
+const byte LED_R = 10;
+const byte LED_G = 11;
+const byte LED_B = 12;
+const byte KONTAKTRON = 0;
+const byte PIR = 2;
 
 volatile int ileRazy = 0; // Współdzielona między loop() a ISR — musi być volatile
 

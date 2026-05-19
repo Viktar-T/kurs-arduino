@@ -177,13 +177,13 @@ Zanim wyświetlimy cyfry, sprawdźmy, czy wszystkie segmenty działają poprawni
 
 <Code lang="cpp" file="test_segmentow.ino">
 ```cpp
-#define SEG_C 2
-#define SEG_E 3
-#define SEG_D 4
-#define SEG_B 5
-#define SEG_G 6
-#define SEG_A 7
-#define SEG_F 8
+const byte SEG_C = 2;
+const byte SEG_E = 3;
+const byte SEG_D = 4;
+const byte SEG_B = 5;
+const byte SEG_G = 6;
+const byte SEG_A = 7;
+const byte SEG_F = 8;
 
 void setup() {
   // Konfiguracja pinow jako wyjscia
@@ -234,13 +234,13 @@ Kluczem do wyświetlania cyfr jest funkcja przyjmująca liczbę 0–9 i ustawiaj
 
 <Code lang="cpp" file="wyswietlanie_cyfr.ino">
 ```cpp
-#define SEG_C 2
-#define SEG_E 3
-#define SEG_D 4
-#define SEG_B 5
-#define SEG_G 6
-#define SEG_A 7
-#define SEG_F 8
+const byte SEG_C = 2;
+const byte SEG_E = 3;
+const byte SEG_D = 4;
+const byte SEG_B = 5;
+const byte SEG_G = 6;
+const byte SEG_A = 7;
+const byte SEG_F = 8;
 
 void setup() {
   // Konfiguracja pinow jako wyjscia
@@ -401,13 +401,13 @@ Wywołując funkcję `wyswietlacz()` w pętli `for`, łatwo zbudujemy licznik od
 
 <Code lang="cpp" file="licznik_0_9.ino">
 ```cpp
-#define SEG_C 2
-#define SEG_E 3
-#define SEG_D 4
-#define SEG_B 5
-#define SEG_G 6
-#define SEG_A 7
-#define SEG_F 8
+const byte SEG_C = 2;
+const byte SEG_E = 3;
+const byte SEG_D = 4;
+const byte SEG_B = 5;
+const byte SEG_G = 6;
+const byte SEG_A = 7;
+const byte SEG_F = 8;
 
 void setup() {
   // Konfiguracja pinow jako wyjscia
@@ -574,18 +574,28 @@ Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci
 
 Idea multipleksowania: **bardzo szybko** na zmianę włączamy wyświetlacz 1 (z cyfrą dla niego), potem wyświetlacz 2 (z jego cyfrą), i tak w kółko. Ludzkie oko nie nadąża za przełączaniem przy częstotliwości ~100 Hz — wydaje się, że oba świecą jednocześnie!
 
+<Expandable title="Głębiej: dlaczego multipleksowany wyświetlacz wygląda jak ciągle świecący?" heading="####">
+
+Podczas multipleksowania w jednej chwili świeci tylko jedna cyfra, ale przełączanie jest tak szybkie, że oko i mózg uśredniają obraz w czasie. To zjawisko nazywa się bezwładnością widzenia: krótkie błyski następujące po sobie są odbierane jako stabilne światło.
+
+Jest jednak koszt: każda cyfra świeci tylko przez część czasu. Przy dwóch cyfrach każda ma około 50% czasu świecenia, przy czterech — około 25%. Dlatego wyświetlacze multipleksowane często steruje się nieco większym prądem chwilowym albo dobiera mniejsze rezystory, ale zawsze w granicach dopuszczalnych dla LED, tranzystorów i mikrokontrolera.
+
+Drugim ograniczeniem jest odświeżanie. Jeśli program zatrzyma się na długim `delay()`, jedna cyfra może zostać włączona zbyt długo, a druga zgaśnie. Dlatego biblioteki takie jak `SevSeg` wymagają bardzo częstego wywoływania `refreshDisplay()`.
+
+</Expandable>
+
 <Code lang="cpp" file="multipleksowanie.ino">
 ```cpp
-#define SEG_C 2
-#define SEG_E 3
-#define SEG_D 4
-#define SEG_B 5
-#define SEG_G 6
-#define SEG_A 7
-#define SEG_F 8
+const byte SEG_C = 2;
+const byte SEG_E = 3;
+const byte SEG_D = 4;
+const byte SEG_B = 5;
+const byte SEG_G = 6;
+const byte SEG_A = 7;
+const byte SEG_F = 8;
 
-#define WYSW_1 10
-#define WYSW_2 9
+const byte WYSW_1 = 10;
+const byte WYSW_2 = 9;
 
 void setup() {
   // Konfiguracja pinow jako wyjscia

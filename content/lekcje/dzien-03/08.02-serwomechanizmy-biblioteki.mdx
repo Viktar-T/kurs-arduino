@@ -1,0 +1,193 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Serwomechanizmy i biblioteki Arduino"
+slug: "serwomechanizmy-biblioteki"
+summary: "Budowa i zasilanie serwomechanizmu, biblioteka Servo, metody attach() i write(), sterowanie kątem przez potencjometr z map() oraz zasady bezpiecznego zasilania elementów wykonawczych."
+
+day: 3
+weekend: 2
+order: 4
+duration: 45
+block: 1
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
+forbotCourse: 1
+forbotChapter: 5
+
+objectives:
+  - "Uruchomić serwomechanizm z użyciem biblioteki Servo"
+  - "Wskazać ograniczenia zasilania serw i silników z Arduino"
+
+prerequisites:
+  - "dzien-02/przetwornik-adc-pomiar-napiecia"
+  - "dzien-03/pwm"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Serwomechanizm", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Stabilizator LM7805", qty: 1 }
+  - { name: "Bateria 9 V z klipsem", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 10 }
+
+tags: [arduino, servo, biblioteki, serwomechanizm]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-silniki-pwm-serwomechanizm-zewnetrzne-biblioteki-id3913"
+
+publish: true
+updated: "2026-05-13"
+---
+
+PWM poznany w poprzedniej lekcji to sygnał, który Arduino generuje cyfrowo i który pozwala sterować analogowym zachowaniem elementów. Teraz użyjemy go do czegoś konkretnego: pokażemy, jak sterować serwomechanizmem za pomocą biblioteki `Servo`, jak go bezpiecznie zasilić i jak połączyć odczyt potencjometru z pozycją wału.
+
+## 1. Serwomechanizm: czym jest i jak działa
+
+Serwomechanizm to mały napęd, w którym w jednej obudowie znajdują się **silnik, przekładnia oraz sterownik**. Typowe serwo modelarskie nie obraca się bez końca jak zwykły silnik DC. Zamiast tego **ustawia wał w zadanej pozycji**, najczęściej w zakresie około `0`-`180°`.
+
+<Photo
+  file="08.07-serwomechanizm-micro-sg90.png"
+  caption="Serwomechanizm typu micro, podobny do popularnego SG90."
+  alt="Mały serwomechanizm modelarski typu micro"
+  width={546}
+  height={364}
+/>
+
+Serwo ma zwykle trzy przewody: **masę, zasilanie oraz sygnał sterujący**. Kolory mogą różnić się zależnie od producenta, ale masa jest najczęściej **czarna lub brązowa**, zasilanie **czerwone**, a sygnał **żółty, pomarańczowy albo biały**.
+
+<Callout type="hazard" title="Nie obracaj ramienia serwa na siłę">
+W środku małego serwa są delikatne plastikowe koła zębate. Ręczne przekręcanie wału bez potrzeby może uszkodzić przekładnię. Pozycję serwa zmieniamy programowo.
+</Callout>
+
+Standardowy sygnał sterujący serwem ma okres około `20 ms`. Długość impulsu w tym okresie informuje elektronikę serwa, pod jakim kątem ma ustawić wał. W praktyce nie będziemy generować tych impulsów ręcznie, bo Arduino ma gotową bibliotekę `Servo`.
+Zbadaj biblioteke `Servo.h` i spróbuj zrozumieć jak działa [https://docs.arduino.cc/programming/](https://docs.arduino.cc/programming/).
+
+<Expandable title="Głębiej: jak elektronika serwa interpretuje sygnał sterujący" heading="####">
+Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz). Elektronika serwa nie patrzy na wypełnienie procentowe, lecz na bezwzględną długość impulsu w stanie wysokim:
+
+- **1 ms** → pozycja `0°`
+- **1,5 ms** → pozycja środkowa `90°`
+- **2 ms** → pozycja `180°`
+
+Biblioteka `Servo.h` domyślnie używa impulsów `544 µs` (mikrosekund) dla `0°` i `2400 µs` dla `180°`. Jeśli serwo nie dochodzi do skrajnych pozycji albo drży na krańcach, podaj własne granice w mikrosekudach przez `attach(pin, minUs, maxUs)` — wartości zależą od konkretnego modelu serwa.
+</Expandable>
+
+## 2. Zasilanie serwomechanizmu
+
+Serwo zawiera silnik, a silniki potrafią pobierać duży prąd, szczególnie podczas startu i przy obciążeniu. Zasilanie serwa bezpośrednio z tego samego źródła co mikrokontroler może powodować reset Arduino, zakłócenia pracy układu albo uszkodzenie elementów.
+
+<Callout type="warning" title="Wspólna masa jest obowiązkowa">
+Jeżeli serwo ma osobne zasilanie, masa tego zasilania musi być połączona z masą Arduino. Bez wspólnego punktu odniesienia sygnał sterujący z pinu Arduino nie będzie jednoznaczny dla elektroniki serwa.
+</Callout>
+
+W ćwiczeniu wykorzystujemy układ ze stabilizatorem `LM7805`, który zasila serwomechanizm napięciem około `5 V`. Sygnał sterujący podłączamy do pinu `9` Arduino.
+
+<Schematic
+  src="/img/lekcje/08.08-podlaczenie-serwomechanizmu-arduino.png"
+  caption="Podłączenie serwomechanizmu: osobne zasilanie 5 V, wspólna masa i sygnał z pinu 9."
+  alt="Schemat podłączenia serwomechanizmu do Arduino ze stabilizatorem zasilania"
+  width={676}
+  height={356}
+/>
+
+## 3. Biblioteka `Servo` w praktyce
+
+Biblioteka to gotowy zestaw funkcji i typów, które rozszerzają możliwości programu. Dzięki `Servo.h` nie musimy samodzielnie liczyć czasów impulsów. Wystarczy utworzyć obiekt serwa, wskazać pin i podać żądany kąt.
+
+<Code lang="cpp" file="servo-pierwszy-ruch.ino">
+```cpp
+#include <Servo.h>
+
+Servo serwomechanizm;
+
+int pozycja = 0;
+int zmiana = 6;
+
+void setup() {
+  serwomechanizm.attach(9);
+}
+
+void loop() {
+  if (pozycja < 180) {
+    serwomechanizm.write(pozycja);
+  } else {
+    pozycja = 0;
+  }
+
+  pozycja = pozycja + zmiana;
+  delay(200);
+}
+```
+</Code>
+
+W programie `#include <Servo.h>` dołącza bibliotekę. Linia `Servo serwomechanizm;` tworzy obiekt, przez który będziemy sterować napędem. Funkcja `attach(9)` przypisuje serwo do pinu `9`, a `write(pozycja)` ustawia kąt z zakresu `0`-`180`.
+
+<Task title="Zadanie 4" estimate="10 min">
+Zmień wartość zmiennej `zmiana` na `1`, `3`, `10` i `30`. Sprawdź, jak wpływa to na płynność oraz szybkość ruchu serwa.
+</Task>
+
+<Task title="Zadanie 5" estimate="20 min">
+Napisz program, który ustawia serwo w pozycji przesłanej z Monitora portu szeregowego. Akceptuj tylko liczby od `0` do `180`. Dla innych wartości wyświetl komunikat o błędzie.
+</Task>
+
+## 4. Sterowanie serwem potencjometrem
+
+W poprzedniej lekcji odczytywaliśmy potencjometr przez ADC. Teraz możemy połączyć te umiejętności: odczyt z `analogRead()` ma zakres `0`-`1023`, a serwo przyjmuje kąt `0`-`180`. Funkcja `map()` pozwala przeskalować jeden zakres na drugi.
+
+<Code lang="cpp" file="servo-potencjometr.ino">
+```cpp
+#include <Servo.h>
+
+Servo serwomechanizm;
+
+int odczyt = 0;
+int pozycja = 0;
+
+void setup() {
+  serwomechanizm.attach(9);
+}
+
+void loop() {
+  odczyt = analogRead(A5);
+  pozycja = map(odczyt, 0, 1023, 0, 180);
+
+  serwomechanizm.write(pozycja);
+  delay(20);
+}
+```
+</Code>
+
+<Task title="Zadanie 6" estimate="15 min">
+Podłącz potencjometr jako dzielnik napięcia do wejścia `A5` i uruchom program `servo-potencjometr.ino`. Ustaw potencjometr w trzech pozycjach: minimum, środek i maksimum. Sprawdź, czy ramię serwa odpowiada tym ustawieniom.
+</Task>
+
+<Expandable title="Dlaczego serwo może drżeć?" heading="####">
+Lekkie drżenie może wynikać z zakłóceń zasilania, słabych styków na płytce stykowej, zbyt dużego obciążenia ramienia albo niestabilnego odczytu z potencjometru. Najpierw sprawdź wspólną masę i zasilanie serwa, a dopiero potem poprawiaj program.
+</Expandable>
+
+## 5. Nie podłączaj zwykłych silników bezpośrednio do Arduino
+
+W tej lekcji sterujemy serwem, ale sygnał z pinu Arduino trafia tylko do wewnętrznego sterownika serwomechanizmu. **Pin nie zasila silnika bezpośrednio.** To bardzo ważna różnica.
+
+<Callout type="hazard" title="Silnik DC wymaga sterownika">
+Zwykły silnik DC potrafi pobrać wielokrotnie więcej prądu niż pin Arduino może bezpiecznie dostarczyć. Nie podłączaj silnika bezpośrednio do pinu mikrokontrolera. Do sterowania silnikami używa się elementów pośredniczących, na przykład tranzystorów, modułów MOSFET (Metal-Oxide-Semiconductor Field-Effect Transistor, tranzystor polowy) albo mostków H.
+</Callout>
+
+W kolejnych lekcjach wrócimy do silników DC i pokażemy, jak sterować nimi poprawnie. Na tym etapie zapamiętaj zasadę: pin Arduino steruje, ale nie zasila dużych obciążeń.
+
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+PWM i serwomechanizmy otwierają wiele ciekawych pytań — AI pomoże je zgłębić:
+
+- **Serwo bez biblioteki** — gdy już rozumiesz `Servo.write()`, spróbuj: „Jak sterować serwomechanizmem w Arduino za pomocą bezpośredniej modulacji pinu, bez biblioteki Servo?". AI pokaże niskopoziomową mechanikę, która kryje się za biblioteką.
+- **Drgający serwo** — jeśli serwo drga lub nie trafia dokładnie w pozycję, wklej swój kod i napisz: „Moje serwo drga na pozycji 90°. Jakie mogą być przyczyny i jak to naprawić?". AI sprawdzi zasilanie, uziemienie i timing w kodzie.
+</Callout>
+
+## Podsumowanie
+
+Serwomechanizm ustawia wał w zadanym położeniu (0–180°) na podstawie długości impulsu sterującego o stałym okresie `20 ms`. Biblioteka `Servo` ukrywa szczegóły timingu: `attach(pin)` przypisuje serwo do pinu, a `write(kąt)` zadaje żądaną pozycję. Elementy wykonawcze zawierające silniki muszą mieć osobne zasilanie z wspólną masą — pin Arduino steruje, ale nie dostarcza dużych prądów.

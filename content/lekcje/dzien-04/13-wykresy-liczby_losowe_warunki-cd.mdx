@@ -133,8 +133,8 @@ Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo j
 
 <Code lang="cpp" file="hc-sr04-wykres.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);
@@ -174,8 +174,8 @@ Naprawmy to: ograniczmy maksymalną wartość do zakresu podawanego przez produc
 
 <Code lang="cpp" file="hc-sr04-wykres-poprawiony.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);
@@ -330,6 +330,22 @@ Arduino to deterministyczna maszyna — generator liczb losowych startuje zawsze
   width={350}
   height={250}
 />
+
+<Expandable title="Głębiej: dlaczego `random()` jest tak naprawdę pseudolosowy" heading="####">
+Komputer cyfrowy jest z natury **deterministyczny** — z tego samego stanu wejściowego zawsze wyprodukuje ten sam wynik. Prawdziwa losowość wymaga źródła chaosu z zewnątrz: szumu termicznego, rozpadu radioaktywnego, ruchu myszki. Bez takiego źródła Arduino udaje losowość przez sprytny algorytm zwany **PRNG (Pseudo-Random Number Generator)**.
+
+Klasyczna implementacja (używana m.in. przez `random()` Arduino) to **liniowy generator kongruentny (LCG)**:
+
+```
+seed = (seed * mnoznik + przyrost) mod modulo
+```
+
+Każde wywołanie `random()` aktualizuje wewnętrzną zmienną `seed` według tego wzoru, a zwraca przeskalowany wynik. Liczby wyglądają losowo — w testach statystycznych przechodzą za „przypadkowe" — ale po dokładnie tych samych `seed`, mnożniku i przyroście **zawsze** wyjdzie ta sama sekwencja.
+
+Dlatego po resecie Arduino dostajesz `141, 117, 233, 99...` w tej samej kolejności: `seed` startuje od wartości `1` (lub innej stałej), a wzór jest deterministyczny.
+
+**Kiedy pseudolosowość wystarczy:** gry, animacje świetlne, symulacje. **Kiedy NIE wystarczy:** kryptografia, generowanie kluczy bezpieczeństwa, loteria — tu używa się sprzętowych generatorów (RNG) z fizycznym źródłem szumu.
+</Expandable>
 
 ### Losowe ziarno — `randomSeed()`
 
@@ -492,6 +508,31 @@ void loop() {
   ]}
 />
 
+<Expandable title="Głębiej: ocena leniwa (short-circuit) i jej praktyczne pułapki" heading="####">
+C++ stosuje tzw. **ocenę leniwą** (ang. *short-circuit evaluation*) dla operatorów `&&` i `||`. To znaczy, że kompilator przerywa sprawdzanie warunku, gdy wynik jest już znany:
+
+- `A && B` — jeśli `A` jest fałszywe, `B` **nigdy nie zostanie obliczone** (cały warunek na pewno fałszywy).
+- `A || B` — jeśli `A` jest prawdziwe, `B` **nigdy nie zostanie obliczone** (cały warunek na pewno prawdziwy).
+
+**Praktyczna korzyść:** możesz bezpiecznie sprawdzić warunek wstępny przed potencjalnie niebezpiecznym wyrażeniem:
+
+```cpp
+if (czujnikPodlaczony && analogRead(A0) > 500) {
+  // Jeśli czujnik nie jest podłączony, analogRead się nie wykona
+}
+```
+
+**Pułapka — efekty uboczne w warunkach:** jeśli w warunku wywołasz funkcję, która **coś robi** (zwiększa licznik, zapisuje do EEPROM, miga diodą), short-circuit może spowodować, że funkcja nie zostanie wywołana w ogóle.
+
+```cpp
+if (false && zwiekszLicznik()) {  // zwiekszLicznik() NIGDY się nie wykona
+  ...
+}
+```
+
+Dlatego dobra praktyka: w warunkach `if` używaj tylko **funkcji bez efektów ubocznych** (czystych) — np. odczyt pinu, porównanie zmiennych. Funkcje, które coś zmieniają w systemie, wywołuj w osobnych liniach przed `if`.
+</Expandable>
+
 <Expandable title="Operator ! i prawa De Morgana" heading="####">
 
 Operator `!` odwraca wartość logiczną: `!true` daje `false` i odwrotnie. Przydaje się, gdy chcesz sprawdzić, że coś **nie** jest prawdziwe:
@@ -533,8 +574,8 @@ Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 
 
 <Code lang="cpp" file="alarm-czujnik-przycisk.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 9
+const byte trigPin = 12;
+const byte echoPin = 9;
 
 void setup() {
   pinMode(trigPin, OUTPUT);

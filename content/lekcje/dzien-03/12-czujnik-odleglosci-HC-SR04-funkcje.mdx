@@ -99,6 +99,25 @@ void zamigajLED() {
 
 Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości. Ciało funkcji (kod między `{` a `}`) wykonuje się za każdym razem, gdy napiszemy `zamigajLED()`.
 
+<Expandable title="Głębiej: anatomia definicji funkcji w C++" heading="####">
+Każda definicja funkcji w C++ ma cztery elementy w stałej kolejności — warto je sobie nazwać, bo przyspiesza to czytanie kodu.
+
+```cpp
+int dodaj(int a, int b) {
+  return a + b;
+}
+```
+
+- **Typ zwracany** (`int`) — co funkcja oddaje do miejsca wywołania. `void` oznacza „nic nie zwracam".
+- **Nazwa** (`dodaj`) — własna nazwa, którą wywołasz funkcję. Konwencja w Arduino: `camelCase`, opisowa, w formie czasownika (`zmierzOdleglosc`, `zamigajLED`).
+- **Lista parametrów** (`int a, int b`) — co funkcja przyjmuje. Każdy parametr ma typ i nazwę, oddzielone przecinkami. Puste nawiasy `()` to brak parametrów.
+- **Ciało** (kod w `{ }`) — instrukcje wykonywane przy każdym wywołaniu.
+
+W Arduino IDE możesz pisać funkcje **w dowolnej kolejności** — IDE generuje za ciebie tzw. *prototypy* (deklaracje na początku pliku). W klasycznym C++ funkcja musi być zadeklarowana przed pierwszym użyciem — dlatego w bibliotekach zewnętrznych zobaczysz pliki `.h` z prototypami i `.cpp` z implementacjami.
+
+Zasada **jedna funkcja = jedno zadanie** to fundament czystego kodu. Gdy funkcja zaczyna mieć więcej niż 20–30 linii lub robi „kilka rzeczy naraz", to dobry sygnał, że warto ją podzielić na mniejsze.
+</Expandable>
+
 <Callout type="note" title="Gdzie umieszczać definicje funkcji?">
 Funkcję możesz zdefiniować przed `setup()` lub po `loop()` — Arduino IDE nie wymaga wcześniejszej deklaracji. Dla czytelności warto trzymać `setup()` i `loop()` na górze, a pomocnicze funkcje poniżej.
 </Callout>
@@ -131,6 +150,38 @@ void zamigajLED(int czas) {
 </Code>
 
 Wartość `50` przekazana przy wywołaniu trafia do zmiennej `czas` wewnątrz funkcji. Możemy teraz wywołać `zamigajLED(100)` albo `zamigajLED(500)` i za każdym razem dioda mignie inaczej.
+
+<Expandable title="Głębiej: przekazywanie przez wartość kontra przez referencję" heading="####">
+Gdy wywołujemy `zamigajLED(50)`, do funkcji trafia **kopia** liczby `50` — funkcja może zmieniać `czas` ile chce, oryginalna zmienna na zewnątrz pozostaje nietknięta. To jest **przekazywanie przez wartość** (ang. *pass by value*), domyślne w C++.
+
+```cpp
+void podwoj(int x) {
+  x = x * 2;   // zmieniamy lokalną kopię
+}
+
+void loop() {
+  int a = 5;
+  podwoj(a);
+  Serial.println(a);  // wciąż 5!
+}
+```
+
+Czasem chcemy, żeby funkcja **zmodyfikowała** zmienną w miejscu wywołania — np. funkcja `zmierzOdleglosc(int &dystans, int &czas)` zwracająca dwa wyniki naraz. Wtedy używamy **referencji** — symbolu `&` przy typie parametru:
+
+```cpp
+void podwoj(int &x) {
+  x = x * 2;   // teraz zmieniamy oryginał
+}
+
+void loop() {
+  int a = 5;
+  podwoj(a);
+  Serial.println(a);  // 10
+}
+```
+
+Przy małych typach (`int`, `byte`, `float`) różnica wydajności jest nieistotna. Przy dużych obiektach (np. obiekt `String` albo tablica 100-elementowa) przekazywanie przez wartość kopiuje całość — to wolniej. Wtedy częsta jest forma `const Obiekt &x` — referencja (szybko) plus `const` (gwarancja, że funkcja nie zmieni oryginału).
+</Expandable>
 
 ### Wiele argumentów
 
@@ -328,8 +379,8 @@ Zaczynamy od podstawowego programu wyzwalającego pomiar:
 
 <Code lang="cpp" file="hc-sr04-wyzwolenie.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);
@@ -352,8 +403,8 @@ Teraz mierzymy czas echa funkcją `pulseIn()` i przeliczamy na centymetry:
 
 <Code lang="cpp" file="hc-sr04-dystans-cm.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);
@@ -419,8 +470,8 @@ Zamknijmy cały pomiar w jednej funkcji — kod `loop()` będzie wtedy bardzo pr
 
 <Code lang="cpp" file="hc-sr04-funkcja.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);
@@ -529,8 +580,8 @@ Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się
 
 <Code lang="cpp" file="alarm-zblizkowy.ino">
 ```cpp
-#define trigPin 12
-#define echoPin 11
+const byte trigPin = 12;
+const byte echoPin = 11;
 
 void setup() {
   Serial.begin(9600);

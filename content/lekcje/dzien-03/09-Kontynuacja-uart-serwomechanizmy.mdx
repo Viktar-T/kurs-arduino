@@ -100,6 +100,21 @@ void loop() {
   ]}
 />
 
+<Expandable title="Głębiej: dlaczego programiści tak lubią HEX" heading="####">
+Komputer pracuje na bitach, a my czytamy dziesiętnie — między tymi dwoma światami leży **szesnastkowy** zapis, idealnie dopasowany do bajtów. Jedna cyfra HEX (`0`–`F`) odpowiada dokładnie **4 bitom (nibble)**, więc każdy bajt (8 bitów) to zwięzłe dwie cyfry HEX, np. `0xFF` = `255` = `11111111` BIN.
+
+Spójrz na liczbę `2345` z przykładu:
+- BIN: `100100101001` (12 bitów — łatwo się zgubić)
+- HEX: `0x929` (3 cyfry — krótko i jednoznacznie)
+
+HEX króluje wszędzie tam, gdzie liczy się **wewnętrzny układ bitów**:
+- **Adresy w pamięci**: `0x7F` lub `0x3F` jako adresy I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa).
+- **Maski bitowe i rejestry**: `PORTB = 0x0F` od razu mówi „cztery dolne piny w stan wysoki".
+- **Kolory RGB**: `#FF8800` to czytelnie `255, 136, 0`, a nie trzeba liczyć potęg dwójki.
+
+Przedrostek `0x` w kodzie C++ oznacza, że liczba jest w HEX (np. `int x = 0x1A;`). Bez niego kompilator potraktowałby `1A` jako błąd, a `10` jako zwykłą dziesiątkę.
+</Expandable>
+
 ## 2. Precyzja liczb niecałkowitych
 
 Arduino potrafi przechowywać liczby z częścią ułamkową w typie `float`, ale na małych mikrokontrolerach warto używać ich ostrożnie. Operacje zmiennoprzecinkowe są wolniejsze i mają ograniczoną precyzję.
@@ -173,6 +188,27 @@ void loop() {
 />
 
 Nową linię możemy dodać na kilka sposobów: przez pusty `Serial.println()`, przez użycie `Serial.println("tekst")` albo przez znak specjalny `\n` w tekście. Do wyrównywania kolumn przydaje się też tabulator `\t`.
+
+<Expandable title="Głębiej: znaki specjalne (escape sequences) w C++" heading="####">
+Niektórych znaków nie da się wpisać bezpośrednio w kodzie — albo nie są drukowalne (jak nowa linia), albo mają specjalne znaczenie dla kompilatora (jak cudzysłów wewnątrz tekstu). Rozwiązaniem są **sekwencje ucieczki** (ang. *escape sequences*): zaczynają się od znaku `\` (backslash) i tworzą jeden specjalny znak w pamięci.
+
+<Table
+  caption="Najczęściej używane sekwencje ucieczki w Arduino"
+  headers={["Sekwencja", "Znaczenie", "Kod ASCII"]}
+  rows={[
+    ["\\n", "Nowa linia (line feed, LF)", "10"],
+    ["\\r", "Powrót karetki (carriage return, CR)", "13"],
+    ["\\t", "Tabulator poziomy", "9"],
+    ["\\\"", "Cudzysłów wewnątrz tekstu", "34"],
+    ["\\\\", "Pojedynczy backslash", "92"],
+    ["\\0", "Znak końca napisu (null)", "0"],
+  ]}
+/>
+
+`Serial.println()` w środku dopisuje **dwa znaki: `\r\n`** (CR + LF) — to historyczna konwencja po dalekopisach. Większość terminali rozumie samo `\n`, ale na przykład klasyczny HyperTerminal Windowsa wymagał obu znaków, dlatego biblioteka Arduino zachowuje pełną wersję.
+
+Sekwencja `\0` (null terminator) automatycznie kończy każdy literał typu `char*` w pamięci. Dlatego napis `"Ala"` zajmuje **4 bajty**, a nie 3 — ostatni to niewidoczne `\0`.
+</Expandable>
 
 <Code lang="cpp" file="nowe-linie-i-tabulator.ino">
 ```cpp
