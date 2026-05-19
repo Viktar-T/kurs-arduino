@@ -140,32 +140,36 @@ Napisz program, który ustawia serwo w pozycji przesłanej z Monitora portu szer
 
 W poprzedniej lekcji odczytywaliśmy potencjometr przez ADC. Teraz możemy połączyć te umiejętności: odczyt z `analogRead()` ma zakres `0`-`1023`, a serwo przyjmuje kąt `0`-`180`. Funkcja `map()` pozwala przeskalować jeden zakres na drugi.
 
-<Code lang="cpp" file="servo-potencjometr.ino">
+<Task title="Zadanie 6" estimate="15 min">
+Do układu podłącz potencjometr w roli dzielnika napięcia do wejścia `A5`. 
+Następnie wykorzystaj przetwornik ADC  do pomiaru napięcia ustawionego na potencjometrze. 
+Im będzie ono większe tym serwo powinno znajdować się bliżej swojej skrajnej, prawej pozycji.
+</Task>
+
+<Expandable title="Rozwiązanie: Zadanie 6" heading="####">
+Odczyt z `analogRead()` daje wartość w zakresie `0`–`1023`. Funkcja `map()` przeskaluje ją liniowo na zakres `0`–`180`, czyli stopnie serwa.
+
+<Code lang="cpp" file="serwo-potencjometr.ino">
 ```cpp
 #include <Servo.h>
 
 Servo serwomechanizm;
-
-int odczyt = 0;
-int pozycja = 0;
 
 void setup() {
   serwomechanizm.attach(9);
 }
 
 void loop() {
-  odczyt = analogRead(A5);
-  pozycja = map(odczyt, 0, 1023, 0, 180);
-
-  serwomechanizm.write(pozycja);
-  delay(20);
+  int odczyt = analogRead(A5);              // 0–1023
+  int kat = map(odczyt, 0, 1023, 0, 180);  // przeskaluj do 0–180°
+  serwomechanizm.write(kat);
+  delay(20);                                // czas na reakcję serwa
 }
 ```
 </Code>
 
-<Task title="Zadanie 6" estimate="15 min">
-Podłącz potencjometr jako dzielnik napięcia do wejścia `A5` i uruchom program `servo-potencjometr.ino`. Ustaw potencjometr w trzech pozycjach: minimum, środek i maksimum. Sprawdź, czy ramię serwa odpowiada tym ustawieniom.
-</Task>
+`map(wartość, fromLow, fromHigh, toLow, toHigh)` — funkcja wbudowana w Arduino, która wykonuje proporcjonalne przeskalowanie zakresu wejściowego na zakres wyjściowy. Delay `20 ms` odpowiada jednemu okresowi sygnału sterującego serwa i daje elektronice czas na przetworzenie nowej pozycji.
+</Expandable>
 
 <Expandable title="Dlaczego serwo może drżeć?" heading="####">
 Lekkie drżenie może wynikać z zakłóceń zasilania, słabych styków na płytce stykowej, zbyt dużego obciążenia ramienia albo niestabilnego odczytu z potencjometru. Najpierw sprawdź wspólną masę i zasilanie serwa, a dopiero potem poprawiaj program.
