@@ -428,8 +428,11 @@ Napisz program, który za pomocą pętli `for` miga diodą 5 razy. Następnie sp
 
 ## 10. Płynne rozpędzanie silnika
 
-Skoro licznik pętli `for` może przyjmować kolejne wartości, możemy użyć go jako wypełnienia PWM. Dzięki temu silnik będzie stopniowo zwiększał prędkość, a dioda w symulacji będzie płynnie się rozjaśniać.
+Skoro licznik pętli `for` może przyjmować kolejne wartości, możemy użyć go jako wypełnienia PWM. 
+Dzięki temu silnik będzie stopniowo zwiększał prędkość, a dioda w symulacji będzie płynnie się rozjaśniać.
+Proszę samodzielnie napisać program, który będzie płynnie zwiększał prędkość.
 
+<Expandable title="Rozwiązanie" heading="####">
 <Code lang="cpp" file="silnik-plynne-rozpedzanie.ino">
 ```cpp
 const byte PIN_ENABLE = 6;
@@ -453,10 +456,11 @@ void loop() {
 }
 ```
 </Code>
+</Expandable>
 
 Rozruch prawdziwego silnika jest trudniejszy niż świecenie diody. Silnik musi pokonać tarcie, może piszczeć przy małym PWM i ruszyć dopiero od pewnej wartości. Jeśli robot nie rusza, problemem może być zbyt słabe zasilanie albo zbyt małe wypełnienie PWM.
 
-<Task title="Zadanie 4" estimate="20 min">
+<Task title="Zadanie 4" estimate="5 min">
 Napisz program, który używa dwóch pętli `for`: pierwsza płynnie rozpędza silnik od `0` do `255`, a druga płynnie hamuje od `255` do `0`.
 </Task>
 
