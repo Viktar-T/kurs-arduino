@@ -84,7 +84,7 @@ W tej lekcji używamy monochromatycznego wyświetlacza tekstowego zgodnego ze st
 Typowy moduł LCD ma 16-pinowe złącze. Część pinów odpowiada za zasilanie, część za sterowanie, część za dane, a dwa ostatnie za podświetlenie ekranu.
 
 <Schematic
-  src="/img/lekcje/10.02-lcd-2x16-piny.png"
+  src="/img/lekcje/10.02.02-lcd-2x16-piny.png"
   caption="Wyświetlacz LCD 2×16 ma zwykle 16 wyprowadzeń."
   alt="Wyświetlacz tekstowy LCD 2x16 z opisem pinów"
   width={936}
@@ -104,7 +104,7 @@ LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 
     ["5", "RW (Read/Write, odczyt/zapis)", "Tryb odczytu/zapisu, zwykle podłączony do GND"],
     ["6", "E (Enable, zezwolenie)", "Sygnał zatwierdzający przesłanie danych"],
     ["11-14", "D4-D7", "Cztery linie danych w trybie 4-bitowym"],
-    ["15-16", "LED+/LED-", "Podświetlenie wyświetlacza"],
+    ["15-16", "(Anoda) LED+/ (Katoda) LED-", "Podświetlenie wyświetlacza"],
   ]}
 />
 
@@ -118,6 +118,49 @@ Tryb 4-bitowy jest popularniejszy, bo oszczędza 4 piny Arduino. Te piny można 
 
 </Expandable>
 
+<Expandable title="Szczegółowy opis wszystkich 16 pinów LCD" heading="####">
+
+Złącze LCD ma 16 wyprowadzeń. Poniżej opis każdego z nich — co robi, jakie napięcie podawać i czy można go pominąć.
+
+| Nr | Symbol | Pełna nazwa | Co tu podłączyć |
+|---|---|---|---|
+| 1 | GND | Ground (masa) | GND Arduino |
+| 2 | VCC | Voltage Common Collector (zasilanie) | 5 V Arduino |
+| 3 | V0 | Voltage contrast (kontrast) | środkowy pin potencjometru 10 kΩ |
+| 4 | RS | Register Select (wybór rejestru) | dowolny pin cyfrowy Arduino |
+| 5 | R/W | Read/Write (odczyt/zapis) | GND (tryb zapisu) |
+| 6 | E | Enable (zezwolenie) | dowolny pin cyfrowy Arduino |
+| 7 | D0 | Data bit 0 | niepodłączony w trybie 4-bitowym |
+| 8 | D1 | Data bit 1 | niepodłączony w trybie 4-bitowym |
+| 9 | D2 | Data bit 2 | niepodłączony w trybie 4-bitowym |
+| 10 | D3 | Data bit 3 | niepodłączony w trybie 4-bitowym |
+| 11 | D4 | Data bit 4 (starszy nibble) | dowolny pin cyfrowy Arduino |
+| 12 | D5 | Data bit 5 | dowolny pin cyfrowy Arduino |
+| 13 | D6 | Data bit 6 | dowolny pin cyfrowy Arduino |
+| 14 | D7 | Data bit 7 (MSB) | dowolny pin cyfrowy Arduino |
+| 15 | A / LED+ | Anode (anoda podświetlenia) | 5 V przez rezystor ~150–470 Ω |
+| 16 | K / LED− | Kathode (katoda podświetlenia) | GND Arduino |
+
+**Pin 3 — V0 (kontrast)**
+Napięcie między 0 V a 5 V decyduje, jak ciemne są pola pikseli. Przy 0 V kontekst jest zbyt wysoki (same czarne prostokąty), przy 5 V zbyt niski (niewidoczny tekst). Potencjometr daje płynną regulację. Jeśli nie masz potencjometru, możesz spróbować stałego napięcia ok. 0,5–1 V z dzielnika, ale ustaw to empirycznie.
+
+**Pin 4 — RS (Register Select)**
+Sterownik HD44780 ma dwa rejestry wewnętrzne. Gdy RS = LOW (0), wysyłasz **komendę** (np. wyczyść ekran, przesuń kursor). Gdy RS = HIGH (1), wysyłasz **dane** — kod znaku do wyświetlenia. Biblioteka `LiquidCrystal` steruje tym pinem automatycznie.
+
+**Pin 5 — R/W (Read/Write)**
+LOW = zapis do LCD, HIGH = odczyt z LCD (np. odczyt flagi zajętości). W praktyce prawie zawsze piszemy do wyświetlacza i nigdy nie czytamy — dlatego R/W łączymy na stałe do GND. Zwolnienie tego pinu pozwoli zaoszczędzić jedno wyprowadzenie Arduino.
+
+**Pin 6 — E (Enable)**
+Opadające zbocze (HIGH → LOW) na tym pinie mówi sterownikowi: „odczytaj teraz dane z linii D4–D7". Biblioteka generuje ten sygnał automatycznie przy każdym zapisie znaku lub komendy.
+
+**Piny 7–10 (D0–D3) — nieużywane w trybie 4-bitowym**
+W trybie 8-bitowym wszystkie osiem linii danych jest aktywnych i jeden bajt wysyłany jest jednym impulsem E. W trybie 4-bitowym D0–D3 pozostają niepodłączone — możesz je zostawić w powietrzu lub podciągnąć do GND (oba sposoby działają, bo sterownik ignoruje te linie po inicjalizacji 4-bitowej).
+
+**Piny 15–16 — podświetlenie (LED+ / LED−)**
+To zwykła dioda LED wbudowana w ekran. Typowy prąd to 15–25 mA przy napięciu 3,2–4,2 V. Rezystor szeregowy 150–470 Ω chroni pin Arduino przed przekroczeniem dopuszczalnego prądu wyjściowego (40 mA max). Niektóre moduły mają rezystor wlutowany na płytce — przed podłączeniem sprawdź schemat modułu.
+
+</Expandable>
+
 ## 3. Podłączenie LCD do Arduino
 
 Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjometru do regulacji kontrastu i przewodów. Potencjometr działa jako dzielnik napięcia, którego środkowy pin podłączamy do wejścia kontrastu `V0`.
@@ -126,6 +169,14 @@ Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjo
   src="/img/lekcje/10.03-podlaczenie-lcd-do-arduino.png"
   caption="Podłączenie LCD do Arduino w trybie 4-bitowym."
   alt="Schemat połączenia wyświetlacza LCD 2x16 z Arduino UNO"
+  width={450}
+  height={652}
+/>
+
+<Schematic
+  src="/img/lekcje/10.03.02-podlaczenie-lcd-do-arduino.png"
+  caption="Podłączenie LCD do Arduino "
+  alt="Schemat połączenia"
   width={450}
   height={652}
 />
@@ -306,9 +357,66 @@ Do kasowania zawartości służy `lcd.clear()`. Nie warto jednak czyścić ekran
 Sprawdź różnicę między `lcd.noDisplay()` i `lcd.clear()`. Najpierw ukryj tekst i pokaż go ponownie, a potem wyczyść ekran i spróbuj odzyskać tekst bez ponownego `lcd.print()`.
 </Task>
 
+<Expandable title="Rozwiązanie i wyjaśnienie — Zadanie 2" heading="####">
+
+Poniższy szkic pokazuje obie operacje jedna po drugiej: najpierw cykl `noDisplay/display`, potem `clear` i próba odzyskania tekstu.
+
+<Code lang="cpp" file="lcd-nodisplay-vs-clear.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("Kurs Arduino");
+  lcd.setCursor(0, 1);
+  lcd.print("Na Forbocie!");
+
+  // --- Część 1: noDisplay / display ---
+  delay(2000);
+  lcd.noDisplay();   // tekst znika z ekranu, ale DDRAM pamięta go dalej
+  delay(1000);
+  lcd.display();     // tekst wraca — żadnego lcd.print()!
+
+  // --- Część 2: clear i próba odzysku ---
+  delay(2000);
+  lcd.clear();       // kasuje DDRAM — tekst jest bezpowrotnie stracony
+  delay(1000);
+  lcd.display();     // nic się nie pojawia — DDRAM jest pusty
+}
+
+void loop() {
+}
+```
+</Code>
+
+**Co widać na ekranie:**
+
+<Table
+  caption="Co widać na ekranie w każdym etapie"
+  headers={["Etap", "Co widzisz", "Dlaczego"]}
+  rows={[
+    ["Po setup()", "Kurs Arduino / Na Forbocie!", "Tekst wpisany do DDRAM"],
+    ["Po noDisplay()", "Podświetlone, puste pola", "LCD wyłącza odczyt pikseli, ale DDRAM nie znika"],
+    ["Po display()", "Tekst znowu widoczny", "LCD znów odczytuje DDRAM — dane były tam cały czas"],
+    ["Po clear() + display()", "Całkowicie puste pola", "clear() wymazał DDRAM; nie ma czego wyświetlić"],
+  ]}
+/>
+
+**Kluczowa różnica:**
+
+- `lcd.noDisplay()` to tylko przełącznik widoczności — sterownik HD44780 przestaje aktualizować piksele, ale zawartość DDRAM pozostaje nienaruszona. Wywołanie `lcd.display()` wystarcza, żeby przywrócić obraz.
+- `lcd.clear()` wpisuje do całego DDRAM kod spacji (0x20) i przesuwa kursor do pozycji (0, 0). Tekst jest skasowany na poziomie pamięci, więc `lcd.display()` nie może go przywrócić — należy wywołać `lcd.print()` od nowa.
+
+**Praktyczna zasada:** używaj `lcd.noDisplay()` do ukrywania informacji bez jej usuwania (np. wygaszanie po kilku sekundach bezczynności). Używaj `lcd.clear()` tylko wtedy, gdy naprawdę chcesz zastąpić cały ekran nowym tekstem — i zawsze po `clear()` od razu pisz nową treść, żeby uniknąć migotania.
+
+</Expandable>
+
 ## 7. Wynik ADC na wyświetlaczu
 
-LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC (Analog-to-Digital Converter, przetwornik analogowo-cyfrowy) na napięcie i pokazuje go w drugiej linii LCD.
+LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i rezystor (10 kΩ) tworzą dzielnik napięcia, którego wyjście podłączamy do `A0`. Program przelicza wynik ADC (Analog-to-Digital Converter, przetwornik analogowo-cyfrowy) na napięcie i pokazuje go w drugiej linii LCD.
 
 <Schematic
   src="/img/lekcje/10.09-lcd-czujnik-swiatla-schemat.png"
@@ -376,9 +484,127 @@ W praktyce: **doklejanie spacji** to najprostszy trik dla małych pól (1–2 zn
 Zmień program tak, aby oprócz napięcia pokazywał też surową wartość ADC. W pierwszej linii wyświetl `ADC: XXXX`, a w drugiej `U: X.XXV`.
 </Task>
 
+<Expandable title="Rozwiązanie i wyjaśnienie — Zadanie 3" heading="####">
+
+Kluczowa zmiana to wypisanie surowej wartości `analogRead()` w pierwszej linii i przeliczonego napięcia w drugiej. Każde pole odświeżamy z powrotem do tej samej pozycji kursora, żeby uniknąć migotania.
+
+<Code lang="cpp" file="lcd-adc-i-napiecie.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("ADC:");
+
+  lcd.setCursor(0, 1);
+  lcd.print("U:");
+}
+
+void loop() {
+  int surowy = analogRead(A0);
+  double napiecie = surowy * 5.0 / 1024.0;
+
+  // wiersz 1: ADC: XXXX
+  lcd.setCursor(4, 0);
+  lcd.print(surowy);
+  lcd.print("    ");   // spacje zamiatają resztki starszej liczby
+
+  // wiersz 2: U: X.XXV
+  lcd.setCursor(2, 1);
+  lcd.print(napiecie, 2);
+  lcd.print("V ");
+
+  delay(250);
+}
+```
+</Code>
+
+**Co i dlaczego:**
+
+- Etykiety `ADC:` i `U:` są wpisane raz w `setup()` — nie zmieniają się, więc nie ma sensu ich odświeżać w każdym obiegu pętli.
+- `lcd.print(surowy)` wypisuje liczbę całkowitą 0–1023. Doklejone spacje (`"    "`) gwarantują, że jeśli liczba się skróci (np. z 1023 na 987), nie zostanie cyfra z poprzedniego odczytu.
+- `lcd.print(napiecie, 2)` wypisuje liczbę zmiennoprzecinkową z dokładnością do 2 miejsc po przecinku — format `X.XX`.
+- `lcd.setCursor(4, 0)` ustawia kursor za etykietą `ADC:` (4 znaki). Analogicznie `lcd.setCursor(2, 1)` ustawia za `U:` (2 znaki). Dzięki temu etykieta i wartość nie nachodzą na siebie.
+
+</Expandable>
+
 <Task title="Zadanie 4" estimate="20 min">
 Napisz prosty stoper na LCD. Jeden przycisk uruchamia pomiar czasu, drugi zatrzymuje go i wyświetla napis `Koniec` oraz zmierzony czas w sekundach.
 </Task>
+
+<Expandable title="Rozwiązanie i wyjaśnienie — Zadanie 4" heading="####">
+
+Stoper używa dwóch przycisków i licznika sekund odliczanego przez `delay(1000)`. Po wciśnięciu START program wchodzi w pętlę `while`, która co sekundę inkrementuje licznik i aktualizuje LCD — aż do wciśnięcia STOP.
+
+Podłącz przyciski: **START** do pinu 8, **STOP** do pinu 9, oba z `INPUT_PULLUP` (wewnętrzny rezystor Arduino, bez zewnętrznych elementów).
+
+<Code lang="cpp" file="lcd-stoper.ino">
+```cpp
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+const int PIN_START = 8;
+const int PIN_STOP  = 9;
+
+void setup() {
+  pinMode(PIN_START, INPUT_PULLUP);
+  pinMode(PIN_STOP,  INPUT_PULLUP);
+
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Nacisnij START");
+}
+
+void loop() {
+  if (digitalRead(PIN_START) == LOW) {
+    delay(50);  // debounce
+
+    unsigned int sekundy = 0;
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Czas: 0 s");
+
+    // licz sekundy az STOP zostanie wcisniety
+    while (digitalRead(PIN_STOP) == HIGH) {
+      delay(1000);
+      sekundy++;
+      lcd.setCursor(6, 0);
+      lcd.print(sekundy);
+      lcd.print(" s  ");
+    }
+
+    // STOP wcisniety — pokaz wynik
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Koniec!");
+    lcd.setCursor(0, 1);
+    lcd.print(sekundy);
+    lcd.print(" s");
+
+    // czekaj az przycisk STOP zostanie zwolniony
+    while (digitalRead(PIN_STOP) == LOW) {}
+    delay(100);
+  }
+}
+```
+</Code>
+
+**Co i dlaczego:**
+
+- `INPUT_PULLUP` włącza wewnętrzny rezystor podciągający Arduino — przycisk zwiera pin do GND i daje stan `LOW`. Nie potrzebujemy zewnętrznych rezystorów.
+- Po wykryciu START program wchodzi w pętlę `while`, która trwa tak długo, jak STOP jest niewciśnięty (`HIGH`). Wewnątrz pętli `delay(1000)` odmierza jedną sekundę, a `sekundy++` zwiększa licznik.
+- Po wyjściu z `while` (STOP wciśnięty) ekran jest czyszczony i pokazywany wynik.
+- Druga pętla `while (digitalRead(PIN_STOP) == LOW) {}` czeka, aż przycisk zostanie fizycznie zwolniony — bez tego kolejny obieg `loop()` natychmiast wykryłby START i zrestartował stoper.
+- `lcd.print(" s  ")` — spacje po jednostce zamazują resztki starszej, dłuższej liczby, tak jak w poprzednich przykładach.
+
+</Expandable>
 
 ## 8. Podświetlenie LCD i PWM
 
@@ -393,10 +619,10 @@ Podświetlenie LCD to dioda LED wbudowana w moduł. W wielu wyświetlaczach jest
 />
 
 <Callout type="hazard" title="Sprawdź prąd podświetlenia">
-Pin Arduino nie jest zasilaczem dużej mocy. Jeśli nie wiesz, ile prądu pobiera podświetlenie LCD, użyj rezystora ograniczającego prąd albo tranzystora sterującego.
+Pin Arduino nie jest zasilaczem dużej mocy. Jeśli nie wiesz, ile prądu pobiera podświetlenie LCD, użyj rezystora ograniczającego prąd (220–470 Ω) albo tranzystora sterującego.
 </Callout>
 
-Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Modulation, modulacja szerokości impulsu), możemy płynnie zmieniać jasność przez `analogWrite()`.
+Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Modulation, modulacja szerokości impulsu) — pin 15 LCD (LED+) łączymy z pinem **11** Arduino (lub innym pinem PWM oznaczonym `~`), a pin 16 LCD (LED−) do GND — możemy płynnie zmieniać jasność przez `analogWrite()`.
 
 <Code lang="cpp" file="lcd-pwm-podswietlenie.ino">
 ```cpp
