@@ -1,0 +1,275 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Własne funkcje w C++"
+slug: "funkcje-wlasne"
+summary: "Lekcja z kursu Forbot #9: własne funkcje bez argumentów i z argumentami, funkcje zwracające wynik, anatomia definicji funkcji, zasada jednej odpowiedzialności."
+
+day: 3
+weekend: 2
+order: 4
+duration: 35
+block: 2
+blockTitle: "Podstawy programowania: C++ i Arduino"
+forbotCourse: 1
+forbotChapter: 9
+
+objectives:
+  - "Wyjaśnić, po co wydzielamy kod do osobnych funkcji"
+  - "Napisać własną funkcję bez argumentów, z argumentami i zwracającą wynik"
+  - "Odróżnić przekazywanie przez wartość od przekazywania przez referencję"
+
+prerequisites:
+  - "dzien-03/sterowanie-silnikami-dc"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Dioda LED", qty: 3, optional: true }
+  - { name: "Rezystor 1000 Ω", qty: 3, optional: true }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, funkcje, cpp, void, return, argumenty]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-czujnik-odleglosci-hc-sr04-funkcje-id4290"
+
+publish: true
+updated: "2026-05-21"
+---
+
+W tej lekcji nauczysz się pisać własne funkcje w C++ — zarówno proste, jak i z argumentami oraz wartością zwracaną. W następnej lekcji użyjesz funkcji razem z czujnikiem HC-SR04 do zbudowania prostego alarmu zbliżeniowego.
+
+<Photo
+  file="12.01-led-miganie-animacja.gif"
+  caption="Miganie diodą — klasyczny przykład do nauki własnych funkcji."
+  alt="Animacja migającej diody LED (Light Emitting Diode, dioda elektroluminescencyjna) na płytce Arduino"
+  width={341}
+  height={341}
+/>
+
+## 1. Własne funkcje bez argumentów
+
+Do tej pory cały kod umieszczaliśmy w `setup()` i `loop()`. Gdy program zaczyna rosnąć, warto wydzielić powtarzające się fragmenty do osobnych funkcji. Funkcja to nazwany blok kodu, który wywołujemy jedną linią zamiast kopiować kilkanaście.
+
+Poniżej prosty program migający diodą — najpierw bez funkcji:
+
+<Code lang="cpp" file="blink-bez-funkcji.ino">
+```cpp
+const byte PIN_LED = 13;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(PIN_LED, HIGH);
+  delay(1000);
+  digitalWrite(PIN_LED, LOW);
+  delay(1000);
+}
+```
+</Code>
+
+Teraz ten sam efekt z własną funkcją `zamigajLED()`:
+
+<Code lang="cpp" file="blink-funkcja.ino">
+```cpp
+const byte PIN_LED = 13;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  zamigajLED();
+}
+
+void zamigajLED() {
+  digitalWrite(PIN_LED, HIGH);
+  delay(500);
+  digitalWrite(PIN_LED, LOW);
+  delay(500);
+}
+```
+</Code>
+
+Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości. Ciało funkcji (kod między `{` a `}`) wykonuje się za każdym razem, gdy napiszemy `zamigajLED()`.
+
+<Callout type="note" title="Gdzie umieszczać definicje funkcji?">
+Funkcję możesz zdefiniować przed `setup()` lub po `loop()` — Arduino IDE nie wymaga wcześniejszej deklaracji. Dla czytelności warto trzymać `setup()` i `loop()` na górze, a pomocnicze funkcje poniżej.
+</Callout>
+
+<Task title="Zadanie 1" estimate="5 min">
+Przepisz program z lekcji o miganiu diodą tak, żeby sekwencja migania była w osobnej funkcji `migaj()`. Wywołaj ją z `loop()`.
+</Task>
+
+## 2. Funkcje z argumentami
+
+Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie-takich-samych funkcji dla różnych czasów migania, piszemy jedną z parametrem:
+
+<Code lang="cpp" file="blink-z-argumentem.ino">
+```cpp
+const byte PIN_LED = 13;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  zamigajLED(50);
+}
+
+void zamigajLED(int czas) {
+  digitalWrite(PIN_LED, HIGH);
+  delay(czas);
+  digitalWrite(PIN_LED, LOW);
+  delay(czas);
+}
+```
+</Code>
+
+Wartość `50` przekazana przy wywołaniu trafia do zmiennej `czas` wewnątrz funkcji. Możemy teraz wywołać `zamigajLED(100)` albo `zamigajLED(500)` i za każdym razem dioda mignie inaczej.
+
+### Wiele argumentów
+
+Dodajmy drugi argument — liczbę mignięć:
+
+<Code lang="cpp" file="blink-dwa-argumenty.ino">
+```cpp
+const byte PIN_LED = 13;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+  zamigajLED(100, 5);
+}
+
+void loop() {
+}
+
+void zamigajLED(int czas, int ile) {
+  for (int i = 0; i < ile; i++) {
+    digitalWrite(PIN_LED, HIGH);
+    delay(czas);
+    digitalWrite(PIN_LED, LOW);
+    delay(czas);
+  }
+}
+```
+</Code>
+
+Trzeci argument może wskazywać numer pinu, co pozwala sterować różnymi diodami tą samą funkcją:
+
+<Code lang="cpp" file="blink-trzy-argumenty.ino">
+```cpp
+const byte PIN_LED1 = 13;
+const byte PIN_LED2 = 8;
+
+void setup() {
+  zamigajLED(100, 5, PIN_LED1);
+  zamigajLED(150, 4, PIN_LED2);
+}
+
+void loop() {
+}
+
+void zamigajLED(int czas, int ile, int pin) {
+  pinMode(pin, OUTPUT);
+
+  for (int i = 0; i < ile; i++) {
+    digitalWrite(pin, HIGH);
+    delay(czas);
+    digitalWrite(pin, LOW);
+    delay(czas);
+  }
+}
+```
+</Code>
+
+<Task title="Zadanie 2" estimate="10 min">
+Napisz funkcję `sygnalSOS()` bez argumentów, która wyda trzy krótkie i trzy długie mignięcia diodą, korzystając wewnętrznie z funkcji `zamigajLED(int czas, int ile, int pin)`.
+</Task>
+
+## 3. Funkcje zwracające wynik
+
+Funkcja może nie tylko coś robić, ale też oddać wynik do miejsca wywołania. Deklarujemy wtedy typ zwracany (np. `int`) zamiast `void`, a wewnątrz używamy `return`:
+
+<Code lang="cpp" file="funkcja-zwracajaca.ino">
+```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int wynik = kwadratPole(4);
+  Serial.println(wynik);
+  delay(500);
+}
+
+int kwadratPole(int a) {
+  return a * a;
+}
+```
+</Code>
+
+Możemy też wstawić wywołanie bezpośrednio w argumencie `Serial.println()`:
+
+```cpp
+Serial.println(kwadratPole(4));
+```
+
+Funkcja zwracająca wartość sprawdza się wszędzie tam, gdzie potrzebujemy obliczyć coś i użyć wyniku w dalszej logice — na przykład przy pomiarze odległości.
+
+<Expandable title="Interaktywny przykład — pole kwadratu z UART (Universal Asynchronous Receiver-Transmitter)" heading="####">
+
+Program czyta liczbę wpisaną w Monitorze portu szeregowego, oblicza pole kwadratu i odpowiada wynikiem:
+
+```cpp
+String odebraneDane = "";
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    odebraneDane = Serial.readStringUntil('\n');
+    int wynik = kwadratPole(odebraneDane.toInt());
+    Serial.println(wynik);
+  }
+}
+
+int kwadratPole(int a) {
+  return a * a;
+}
+```
+
+Wpisz `5` w terminalu — powinieneś otrzymać `25`.
+
+</Expandable>
+
+## Podsumowanie — anatomia definicji funkcji w C++
+
+Każda definicja funkcji w C++ ma cztery elementy w stałej kolejności — warto je sobie nazwać, bo przyspiesza to czytanie kodu.
+
+```cpp
+int dodaj(int a, int b) {
+  return a + b;
+}
+```
+
+- **Typ zwracany** (`int`) — co funkcja oddaje do miejsca wywołania. `void` oznacza „nic nie zwracam".
+- **Nazwa** (`dodaj`) — własna nazwa, którą wywołasz funkcję. Konwencja w Arduino: `camelCase`, opisowa, w formie czasownika (`zmierzOdleglosc`, `zamigajLED`).
+- **Lista parametrów** (`int a, int b`) — co funkcja przyjmuje. Każdy parametr ma typ i nazwę, oddzielone przecinkami. Puste nawiasy `()` to brak parametrów.
+- **Ciało** (kod w `{ }`) — instrukcje wykonywane przy każdym wywołaniu.
+
+W Arduino IDE możesz pisać funkcje **w dowolnej kolejności** — IDE generuje za ciebie tzw. *prototypy* (deklaracje na początku pliku). W klasycznym C++ funkcja musi być zadeklarowana przed pierwszym użyciem — dlatego w bibliotekach zewnętrznych zobaczysz pliki `.h` z prototypami i `.cpp` z implementacjami.
+
+Zasada **jedna funkcja = jedno zadanie** to fundament czystego kodu. Gdy funkcja zaczyna mieć więcej niż 20–30 linii lub robi „kilka rzeczy naraz", to dobry sygnał, że warto ją podzielić na mniejsze.
+
+Własne funkcje porządkują kod: wydzielasz powtarzające się bloki, nadajesz im nazwy i możesz wielokrotnie wywoływać jedną linijką. Argumenty sprawiają, że funkcja jest elastyczna — jeden fragment kodu działa dla różnych wartości. Funkcja zwracająca wynik pozwala użyć obliczonej wartości tam, gdzie jej potrzebujesz.

@@ -1,4 +1,4 @@
-﻿---
+---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -6,295 +6,68 @@ status: draft
 sensitivity: low
 
 # --- Site-driving fields ---
-title: "Czujnik odległości HC-SR04 i funkcje"
-slug: "czujnik-odleglosci-hc-sr04-funkcje"
-summary: "Plan lekcji na podstawie kursu Forbot #9: własne funkcje bez argumentów i z argumentami, funkcje zwracające wynik, czujnik ultradźwiękowy HC-SR04, pomiar czasu impulsu i sprawdzanie zakresu odległości."
+title: "Czujnik odległości HC-SR04"
+slug: "czujnik-hc-sr04"
+summary: "Lekcja z kursu Forbot #9: czujnik ultradźwiękowy HC-SR04, zasada pomiaru impulsu, funkcja zmierzOdleglosc(), sprawdzanie zakresu, alarm zbliżeniowy."
 
 day: 3
 weekend: 2
-order: 4
-duration: 60
-block: 1
-blockTitle: "Podstawy Arduino oraz środowisko programowania"
+order: 5
+duration: 35
+block: 9
+blockTitle: "Czujnik odległości HC-SR04 i funkcje"
 forbotCourse: 1
 forbotChapter: 9
 
 objectives:
   - "Podłączyć czujnik ultradźwiękowy HC-SR04 do Arduino"
   - "Wyjaśnić zasadę pomiaru odległości za pomocą impulsu ultradźwiękowego"
-  - "Napisać własną funkcję z argumentami i wartością zwracaną"
+  - "Napisać funkcję zmierzOdleglosc() zwracającą wynik w centymetrach"
   - "Zmierzyć odległość i wykorzystać ją w warunkach programu"
 
 prerequisites:
-  - "dzien-03/sterowanie-silnikami-dc"
+  - "dzien-03/funkcje-wlasne"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
+  - { name: "Buzzer pasywny", qty: 1 }
   - { name: "Dioda LED", qty: 3, optional: true }
   - { name: "Rezystor 1000 Ω", qty: 3, optional: true }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 1 }
 
-tags: [arduino, hc-sr04, czujnik-odleglosci, funkcje, pulsein, ultradzwieki]
+tags: [arduino, hc-sr04, czujnik-odleglosci, pulsein, ultradzwieki, funkcje]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-czujnik-odleglosci-hc-sr04-funkcje-id4290"
 
 publish: true
-updated: "2026-05-13"
+updated: "2026-05-21"
 ---
 
-W tej lekcji nauczysz się pisać własne funkcje w C++ — zarówno proste, jak i z argumentami oraz wartością zwracaną. Następnie poznasz czujnik ultradźwiękowy HC-SR04 i użyjesz go razem z funkcją do zbudowania prostego alarmu zbliżeniowego.
+W poprzedniej lekcji poznałeś własne funkcje w C++. Teraz zastosujesz je w praktyce — poznasz czujnik ultradźwiękowy HC-SR04 i użyjesz funkcji zwracającej wynik do zbudowania prostego alarmu zbliżeniowego.
 
-<Photo
-  file="12.01-led-miganie-animacja.gif"
-  caption="Miganie diodą — klasyczny przykład do nauki własnych funkcji."
-  alt="Animacja migającej diody LED (Light Emitting Diode, dioda elektroluminescencyjna) na płytce Arduino"
-  width={341}
-  height={341}
-/>
-
-## 1. Własne funkcje bez argumentów
-
-Do tej pory cały kod umieszczaliśmy w `setup()` i `loop()`. Gdy program zaczyna rosnąć, warto wydzielić powtarzające się fragmenty do osobnych funkcji. Funkcja to nazwany blok kodu, który wywołujemy jedną linią zamiast kopiować kilkanaście.
-
-Poniżej prosty program migający diodą — najpierw bez funkcji:
-
-<Code lang="cpp" file="blink-bez-funkcji.ino">
-```cpp
-const byte PIN_LED = 13;
-
-void setup() {
-  pinMode(PIN_LED, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(PIN_LED, HIGH);
-  delay(1000);
-  digitalWrite(PIN_LED, LOW);
-  delay(1000);
-}
-```
-</Code>
-
-Teraz ten sam efekt z własną funkcją `zamigajLED()`:
-
-<Code lang="cpp" file="blink-funkcja.ino">
-```cpp
-const byte PIN_LED = 13;
-
-void setup() {
-  pinMode(PIN_LED, OUTPUT);
-}
-
-void loop() {
-  zamigajLED();
-}
-
-void zamigajLED() {
-  digitalWrite(PIN_LED, HIGH);
-  delay(500);
-  digitalWrite(PIN_LED, LOW);
-  delay(500);
-}
-```
-</Code>
-
-Słowo `void` przed nazwą oznacza, że funkcja nie zwraca żadnej wartości. Ciało funkcji (kod między `{` a `}`) wykonuje się za każdym razem, gdy napiszemy `zamigajLED()`.
-
-<Callout type="note" title="Gdzie umieszczać definicje funkcji?">
-Funkcję możesz zdefiniować przed `setup()` lub po `loop()` — Arduino IDE nie wymaga wcześniejszej deklaracji. Dla czytelności warto trzymać `setup()` i `loop()` na górze, a pomocnicze funkcje poniżej.
-</Callout>
-
-<Task title="Zadanie 1" estimate="5 min">
-Przepisz program z lekcji o miganiu diodą tak, żeby sekwencja migania była w osobnej funkcji `migaj()`. Wywołaj ją z `loop()`.
-</Task>
-
-## 2. Funkcje z argumentami
-
-Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie-takich-samych funkcji dla różnych czasów migania, piszemy jedną z parametrem:
-
-<Code lang="cpp" file="blink-z-argumentem.ino">
-```cpp
-const byte PIN_LED = 13;
-
-void setup() {
-  pinMode(PIN_LED, OUTPUT);
-}
-
-void loop() {
-  zamigajLED(50);
-}
-
-void zamigajLED(int czas) {
-  digitalWrite(PIN_LED, HIGH);
-  delay(czas);
-  digitalWrite(PIN_LED, LOW);
-  delay(czas);
-}
-```
-</Code>
-
-Wartość `50` przekazana przy wywołaniu trafia do zmiennej `czas` wewnątrz funkcji. Możemy teraz wywołać `zamigajLED(100)` albo `zamigajLED(500)` i za każdym razem dioda mignie inaczej.
-
-### Wiele argumentów
-
-Dodajmy drugi argument — liczbę mignięć:
-
-<Code lang="cpp" file="blink-dwa-argumenty.ino">
-```cpp
-const byte PIN_LED = 13;
-
-void setup() {
-  pinMode(PIN_LED, OUTPUT);
-  zamigajLED(100, 5);
-}
-
-void loop() {
-}
-
-void zamigajLED(int czas, int ile) {
-  for (int i = 0; i < ile; i++) {
-    digitalWrite(PIN_LED, HIGH);
-    delay(czas);
-    digitalWrite(PIN_LED, LOW);
-    delay(czas);
-  }
-}
-```
-</Code>
-
-Trzeci argument może wskazywać numer pinu, co pozwala sterować różnymi diodami tą samą funkcją:
-
-<Code lang="cpp" file="blink-trzy-argumenty.ino">
-```cpp
-const byte PIN_LED1 = 13;
-const byte PIN_LED2 = 8;
-
-void setup() {
-  zamigajLED(100, 5, PIN_LED1);
-  zamigajLED(150, 4, PIN_LED2);
-}
-
-void loop() {
-}
-
-void zamigajLED(int czas, int ile, int pin) {
-  pinMode(pin, OUTPUT);
-
-  for (int i = 0; i < ile; i++) {
-    digitalWrite(pin, HIGH);
-    delay(czas);
-    digitalWrite(pin, LOW);
-    delay(czas);
-  }
-}
-```
-</Code>
-
-<Task title="Zadanie 2" estimate="10 min">
-Napisz funkcję `sygnalSOS()` bez argumentów, która wyda trzy krótkie i trzy długie mignięcia diodą, korzystając wewnętrznie z funkcji `zamigajLED(int czas, int ile, int pin)`.
-</Task>
-
-## 3. Funkcje zwracające wynik
-
-Funkcja może nie tylko coś robić, ale też oddać wynik do miejsca wywołania. Deklarujemy wtedy typ zwracany (np. `int`) zamiast `void`, a wewnątrz używamy `return`:
-
-<Code lang="cpp" file="funkcja-zwracajaca.ino">
-```cpp
-void setup() {
-  Serial.begin(9600);
-}
-
-void loop() {
-  int wynik = kwadratPole(4);
-  Serial.println(wynik);
-  delay(500);
-}
-
-int kwadratPole(int a) {
-  return a * a;
-}
-```
-</Code>
-
-Możemy też wstawić wywołanie bezpośrednio w argumencie `Serial.println()`:
-
-```cpp
-Serial.println(kwadratPole(4));
-```
-
-Funkcja zwracająca wartość sprawdza się wszędzie tam, gdzie potrzebujemy obliczyć coś i użyć wyniku w dalszej logice — na przykład przy pomiarze odległości.
-
-<Expandable title="Interaktywny przykład — pole kwadratu z UART (Universal Asynchronous Receiver-Transmitter)" heading="####">
-
-Program czyta liczbę wpisaną w Monitorze portu szeregowego, oblicza pole kwadratu i odpowiada wynikiem:
-
-```cpp
-String odebraneDane = "";
-
-void setup() {
-  Serial.begin(9600);
-}
-
-void loop() {
-  if (Serial.available() > 0) {
-    odebraneDane = Serial.readStringUntil('\n');
-    int wynik = kwadratPole(odebraneDane.toInt());
-    Serial.println(wynik);
-  }
-}
-
-int kwadratPole(int a) {
-  return a * a;
-}
-```
-
-Wpisz `5` w terminalu — powinieneś otrzymać `25`.
-
-</Expandable>
-
-## Podsumowanie — anatomija definicji funkcji w C++
-
-Każda definicja funkcji w C++ ma cztery elementy w stałej kolejności — warto je sobie nazwać, bo przyspiesza to czytanie kodu.
-
-```cpp
-int dodaj(int a, int b) {
-  return a + b;
-}
-```
-
-- **Typ zwracany** (`int`) — co funkcja oddaje do miejsca wywołania. `void` oznacza „nic nie zwracam".
-- **Nazwa** (`dodaj`) — własna nazwa, którą wywołasz funkcję. Konwencja w Arduino: `camelCase`, opisowa, w formie czasownika (`zmierzOdleglosc`, `zamigajLED`).
-- **Lista parametrów** (`int a, int b`) — co funkcja przyjmuje. Każdy parametr ma typ i nazwę, oddzielone przecinkami. Puste nawiasy `()` to brak parametrów.
-- **Ciało** (kod w `{ }`) — instrukcje wykonywane przy każdym wywołaniu.
-
-W Arduino IDE możesz pisać funkcje **w dowolnej kolejności** — IDE generuje za ciebie tzw. *prototypy* (deklaracje na początku pliku). W klasycznym C++ funkcja musi być zadeklarowana przed pierwszym użyciem — dlatego w bibliotekach zewnętrznych zobaczysz pliki `.h` z prototypami i `.cpp` z implementacjami.
-
-Zasada **jedna funkcja = jedno zadanie** to fundament czystego kodu. Gdy funkcja zaczyna mieć więcej niż 20–30 linii lub robi „kilka rzeczy naraz", to dobry sygnał, że warto ją podzielić na mniejsze.
-
-
----
-
-## 4. Czujnik ultradźwiękowy HC-SR04
+## 1. Czujnik ultradźwiękowy HC-SR04
 
 HC-SR04 mierzy odległość za pomocą ultradźwięków — wysyła krótki impuls dźwiękowy i mierzy czas, po jakim echo wraca do czujnika.
 
-<Photo
+<Table
+  rows={[
+    [<Photo
   file="12.02-hc-sr04-tyl.jpg"
   caption="Tylna strona czujnika HC-SR04 z opisem wyprowadzeń."
   alt="Czujnik odległości HC-SR04 — widok od tyłu"
   width={400}
   height={267}
-/>
-
-<Photo
-  file="12.03-hc-sr04-przod.jpg"
-  caption="Przednia strona czujnika — dwie 'oczy' to przetwornik nadawczy i odbiorczy."
-  alt="Czujnik odległości HC-SR04 — widok od przodu"
+/>, <Photo
+  file="12.03-hc-sr04-przod.png"
+  caption="Potrzebne komponenty: Arduino UNO, czujnik HC-SR04, buzzer i płytka stykowa."
+  alt="Komponenty do lekcji: Arduino UNO, czujnik HC-SR04, buzzer i płytka stykowa"
   width={400}
   height={267}
+/>],   
+  ]}
 />
 
 Czujnik ma cztery piny:
@@ -308,14 +81,6 @@ Czujnik ma cztery piny:
     ["Echo", "Sygnał echa (wyjście)", "Dowolny pin cyfrowy"],
     ["GND (Ground, masa)", "Masa", "GND Arduino"],
   ]}
-/>
-
-<Photo
-  file="12.04-hc-sr04-piny-opis.jpg"
-  caption="Opis pinów czujnika HC-SR04."
-  alt="Diagram pinów HC-SR04: Vcc, Trig, Echo, GND"
-  width={400}
-  height={267}
 />
 
 ### Zasada działania
@@ -337,7 +102,7 @@ HC-SR04 to prosty i tani czujnik, ale ma kilka praktycznych ograniczeń:
 
 </Expandable>
 
-## 5. Miernik odległości
+## 2. Miernik odległości
 
 Podłącz czujnik do Arduino jak na schemacie:
 
@@ -350,11 +115,11 @@ Podłącz czujnik do Arduino jak na schemacie:
 />
 
 <Photo
-  file="12.06-hc-sr04-podlaczenie-foto.jpg"
-  caption="Zmontowany układ — HC-SR04 na płytce stykowej podłączony do Arduino."
-  alt="Fotografia Arduino UNO z czujnikiem HC-SR04 na płytce stykowej"
-  width={650}
-  height={433}
+  file="12.04-hc-sr04-komponenty.jpg"
+  caption="Zmontowany układ testowy — czujnik HC-SR04 podłączony do Arduino UNO."
+  alt="Arduino UNO z czujnikiem HC-SR04 na płytce stykowej — widok ogólny"
+  width={600}
+  height={400}
 />
 
 Zaczynamy od podstawowego programu wyzwalającego pomiar:
@@ -426,29 +191,16 @@ Prędkość dźwięku w powietrzu zależy od temperatury. Wzór przybliżony:
 
 Przy `20 °C` wynosi ok. `343 m/s`, a przy `0 °C` ok. `331 m/s`. Dzielnik `58` odpowiada temperaturze pokojowej — przy mrozie lub upale wynik jest nieco zaburzony.
 
-Jeśli masz dostęp do czujnika temperatury (np. DHT11 z kolejnych lekcji), możesz na bieżąco przeliczać dzielnik:
-
-```cpp
-long zmierzOdlegloscDokl(float temperatura) {
-  float v = 331.3 + 0.606 * temperatura; // m/s
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  long czas = pulseIn(echoPin, HIGH);
-  // czas [µs] * v [m/s] / 20000 → dystans [cm]
-  return (long)(czas * v / 20000.0);
-}
-```
-
 W sali szkolnej różnica temperatury między zimą a latem to ok. `20 °C`, co przekłada się na błąd pomiaru ok. `3%`. Przy zasięgu `100 cm` to ok. `3 cm` — często pomijalne, ale przy precyzyjnym omijaniu przeszkód warto mieć to z tyłu głowy.
 
 </Expandable>
 
-## 6. Funkcja zwracająca odległość
+## 3. Funkcja zwracająca odległość
 
+<Task title="Zadanie 3" estimate="10 min">
 Zamknijmy cały pomiar w jednej funkcji — kod `loop()` będzie wtedy bardzo przejrzysty:
+
+<Expandable title="Przykład rozwiązania" heading="####">
 
 <Code lang="cpp" file="hc-sr04-funkcja.ino">
 ```cpp
@@ -484,9 +236,13 @@ int zmierzOdleglosc() {
 ```
 </Code>
 
-<Task title="Zadanie 3" estimate="10 min">
-Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością.
+</Expandable>
 </Task>
+
+<Task title="Zadanie 4" estimate="10 min">
+Kontynuj prace z kodem z poprzedniego zadania. Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. 
+Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. 
+Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością. Dodaj funkcje uśredniania pomiarów.
 
 <Expandable title="Uśrednianie pomiarów — stabilniejsze wskazania" heading="####">
 
@@ -506,8 +262,11 @@ int zmierzOdlegloscUsredniona(int probek) {
 Wywołanie `zmierzOdlegloscUsredniona(5)` pobiera `5` pomiarów i zwraca ich średnią. Jedno `delay(20)` to `20 ms` przerwy między próbkami — pięć próbek zajmuje łącznie ok. `100 ms`. Im więcej próbek, tym wolniejsza reakcja programu. W robotach mobilnych `3`–`5` pomiarów to zazwyczaj dobry kompromis między stabilnością odczytu a szybkością reagowania na przeszkody.
 
 </Expandable>
+</Task>
 
-## 7. Sprawdzanie zakresu odległości
+
+
+## 4. Sprawdzanie zakresu odległości
 
 Możemy napisać funkcję `zakres()`, która sprawdza, czy zmierzona odległość mieści się w podanym przedziale, i reaguje stanem pinu (np. buzzera lub diody):
 
@@ -529,24 +288,26 @@ void zakres(int a, int b) {
 
 Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się w odległości od 10 do 25 cm:
 
-<Photo
+<Table
+  rows={[
+    [<Photo
   file="12.07-buzzer-z-etykieta.jpg"
   caption="Buzzer z naklejką — naklejka tłumi dźwięk, zdejm ją przed użyciem."
   alt="Buzzer pasywny z etykietą fabryczną"
   width={300}
   height={225}
-/>
-
-<Photo
+/>, <Photo
   file="12.08-buzzer-bez-etykiety.jpg"
   caption="Buzzer po zdjęciu naklejki."
   alt="Buzzer pasywny bez naklejki"
   width={300}
   height={225}
+/>],   
+  ]}
 />
 
 <Schematic
-  src="/img/lekcje/12.09-schemat-hc-sr04-buzzer.jpg"
+  src="/img/lekcje/12.09-schemat-hc-sr04-buzzer.png"
   caption="Schemat układu: Arduino, HC-SR04 i buzzer."
   alt="Schemat połączeń: Arduino UNO, czujnik HC-SR04 i buzzer"
   width={700}
@@ -605,14 +366,14 @@ void zakres(int a, int b) {
 ```
 </Code>
 
-<Task title="Zadanie 4" estimate="15 min">
+<Task title="Zadanie 5" estimate="15 min">
 Zmień granice `zakres(10, 25)` na własne wartości. Następnie dodaj drugą diodę LED i napisz funkcję `zakres2()`, która reaguje na inny przedział odległości. Przy okazji: czy dało się skrócić kod, przekazując pin jako argument?
 </Task>
 
 <MiniProject title="Wizualny wskaźnik odległości" estimate="20 min">
 
 <Photo
-  file="12.11-wskaznik-led-odleglosc.png"
+  file="12.11-wskaznik-led-odleglosc.jpg"
   caption="Rząd diod LED jako wizualny wskaźnik odległości — im bliżej, tym więcej diod świeci."
   alt="Schemat: rząd diod LED imitujący pasek postępu odległości"
   width={600}
@@ -637,7 +398,5 @@ Funkcje i czujnik HC-SR04 to świetny moment, żeby nauczyć się pisać modular
 </Callout>
 
 ## Podsumowanie
-
-Własne funkcje porządkują kod: wydzielasz powtarzające się bloki, nadajesz im nazwy i możesz wielokrotnie wywoływać jedną linijką. Argumenty sprawiają, że funkcja jest elastyczna — jeden fragment kodu działa dla różnych wartości. Funkcja zwracająca wynik pozwala użyć obliczonej wartości tam, gdzie jej potrzebujesz.
 
 Czujnik HC-SR04 mierzy odległość ultradźwiękami: krótki impuls na `Trig`, pomiar czasu echa na `Echo` przez `pulseIn()`, przeliczenie przez `58` — i masz odległość w centymetrach. Zamknięcie pomiaru w funkcji `zmierzOdleglosc()` dało przejrzysty program alarmu zbliżeniowego, w którym `loop()` robi jedną rzecz: sprawdza zakres.
