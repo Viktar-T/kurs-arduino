@@ -63,14 +63,16 @@ Poniżej prosty program migający diodą — najpierw bez funkcji:
 
 <Code lang="cpp" file="blink-bez-funkcji.ino">
 ```cpp
+const byte PIN_LED = 13;
+
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(13, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(1000);
-  digitalWrite(13, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(1000);
 }
 ```
@@ -80,8 +82,10 @@ Teraz ten sam efekt z własną funkcją `zamigajLED()`:
 
 <Code lang="cpp" file="blink-funkcja.ino">
 ```cpp
+const byte PIN_LED = 13;
+
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
@@ -89,9 +93,9 @@ void loop() {
 }
 
 void zamigajLED() {
-  digitalWrite(13, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(500);
-  digitalWrite(13, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(500);
 }
 ```
@@ -132,8 +136,10 @@ Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie
 
 <Code lang="cpp" file="blink-z-argumentem.ino">
 ```cpp
+const byte PIN_LED = 13;
+
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
@@ -141,9 +147,9 @@ void loop() {
 }
 
 void zamigajLED(int czas) {
-  digitalWrite(13, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(czas);
-  digitalWrite(13, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(czas);
 }
 ```
@@ -189,8 +195,10 @@ Dodajmy drugi argument — liczbę mignięć:
 
 <Code lang="cpp" file="blink-dwa-argumenty.ino">
 ```cpp
+const byte PIN_LED = 13;
+
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
   zamigajLED(100, 5);
 }
 
@@ -199,9 +207,9 @@ void loop() {
 
 void zamigajLED(int czas, int ile) {
   for (int i = 0; i < ile; i++) {
-    digitalWrite(13, HIGH);
+    digitalWrite(PIN_LED, HIGH);
     delay(czas);
-    digitalWrite(13, LOW);
+    digitalWrite(PIN_LED, LOW);
     delay(czas);
   }
 }
@@ -212,9 +220,12 @@ Trzeci argument może wskazywać numer pinu, co pozwala sterować różnymi diod
 
 <Code lang="cpp" file="blink-trzy-argumenty.ino">
 ```cpp
+const byte PIN_LED1 = 13;
+const byte PIN_LED2 = 8;
+
 void setup() {
-  zamigajLED(100, 5, 13);
-  zamigajLED(150, 4, 8);
+  zamigajLED(100, 5, PIN_LED1);
+  zamigajLED(150, 4, PIN_LED2);
 }
 
 void loop() {
@@ -531,12 +542,13 @@ Możemy napisać funkcję `zakres()`, która sprawdza, czy zmierzona odległoś�
 
 <Code lang="cpp" file="hc-sr04-zakres.ino">
 ```cpp
+// PIN_BUZZER = 2
 void zakres(int a, int b) {
   int jakDaleko = zmierzOdleglosc();
   if ((jakDaleko > a) && (jakDaleko < b)) {
-    digitalWrite(2, HIGH);
+    digitalWrite(PIN_BUZZER, HIGH);
   } else {
-    digitalWrite(2, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
   }
 }
 ```
@@ -580,14 +592,15 @@ Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się
 
 <Code lang="cpp" file="alarm-zblizkowy.ino">
 ```cpp
-const byte trigPin = 12;
-const byte echoPin = 11;
+const byte trigPin   = 12;
+const byte echoPin   = 11;
+const byte PIN_BUZZER = 2;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  pinMode(2, OUTPUT);
+  pinMode(trigPin,    OUTPUT);
+  pinMode(echoPin,    INPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
@@ -613,9 +626,9 @@ int zmierzOdleglosc() {
 void zakres(int a, int b) {
   int jakDaleko = zmierzOdleglosc();
   if ((jakDaleko > a) && (jakDaleko < b)) {
-    digitalWrite(2, HIGH);
+    digitalWrite(PIN_BUZZER, HIGH);
   } else {
-    digitalWrite(2, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
   }
 }
 ```

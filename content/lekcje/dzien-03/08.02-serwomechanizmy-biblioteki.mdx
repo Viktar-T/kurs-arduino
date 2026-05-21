@@ -104,13 +104,15 @@ Biblioteka to gotowy zestaw funkcji i typów, które rozszerzają możliwości p
 ```cpp
 #include <Servo.h>
 
+const byte PIN_SERVO = 9;
+
 Servo serwomechanizm;
 
 int pozycja = 0;
 int zmiana = 6;
 
 void setup() {
-  serwomechanizm.attach(9);
+  serwomechanizm.attach(PIN_SERVO);
 }
 
 void loop() {
@@ -153,10 +155,12 @@ Odczyt z `analogRead()` daje wartość w zakresie `0`–`1023`. Funkcja `map()` 
 ```cpp
 #include <Servo.h>
 
+const byte PIN_SERVO = 9;
+
 Servo serwomechanizm;
 
 void setup() {
-  serwomechanizm.attach(9);
+  serwomechanizm.attach(PIN_SERVO);
 }
 
 void loop() {

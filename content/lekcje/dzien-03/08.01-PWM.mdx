@@ -55,15 +55,17 @@ Zacznijmy od zwykłego migania diodą. Jeżeli przez sekundę podajemy na pin `H
 
 <Code lang="cpp" file="miganie-50-procent.ino">
 ```cpp
+const byte PIN_LED = 3;
+
 void setup() {
-  pinMode(3, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(3, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(1000);
 
-  digitalWrite(3, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(1000);
 }
 ```
@@ -96,15 +98,17 @@ Jeśli wydłużymy czas świecenia i skrócimy czas zgaszenia, wypełnienie wzro
 
 <Code lang="cpp" file="miganie-duze-wypelnienie.ino">
 ```cpp
+const byte PIN_LED = 3;
+
 void setup() {
-  pinMode(3, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(3, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(1667);
 
-  digitalWrite(3, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(333);
 }
 ```
@@ -136,15 +140,17 @@ Podłącz diodę LED z rezystorem do pinu `3`. Wgraj poniższy szkic i obserwuj 
 
 <Code lang="cpp" file="pwm-reczne-10ms.ino">
 ```cpp
+const byte PIN_LED = 3;
+
 void setup() {
-  pinMode(3, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(3, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(1);
 
-  digitalWrite(3, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(9);
 }
 ```
@@ -156,15 +162,17 @@ Następnie przepisz szkic używając `delayMicroseconds()` zamiast `delay()`. Dz
 
 <Code lang="cpp" file="pwm-reczne-delayMicroseconds.ino">
 ```cpp
+const byte PIN_LED = 3;
+
 void setup() {
-  pinMode(3, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(3, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delayMicroseconds(50);
 
-  digitalWrite(3, LOW);
+  digitalWrite(PIN_LED, LOW);
   delayMicroseconds(9550);
 }
 ```

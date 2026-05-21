@@ -352,7 +352,8 @@ Komunikacja z DS18B20 przebiega przez bibliotekę `DallasTemperature`. Zaczniemy
 **Krok 2 — zadeklaruj podłączenie:**
 
 ```cpp
-OneWire oneWire(A5);             // Linia 1-Wire na pinie A5
+const byte PIN_DS18B20 = A5;
+OneWire oneWire(PIN_DS18B20);        // Linia 1-Wire na pinie A5
 DallasTemperature sensors(&oneWire); // Przekaż obiekt oneWire do biblioteki
 ```
 
@@ -381,7 +382,9 @@ Kompletny program:
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-OneWire oneWire(A5);              // Linia 1-Wire na pinie A5
+const byte PIN_DS18B20 = A5;
+
+OneWire oneWire(PIN_DS18B20);        // Linia 1-Wire na pinie A5
 DallasTemperature sensors(&oneWire); // Inicjalizacja biblioteki
 
 void setup() {
@@ -433,7 +436,9 @@ W poprzedniej sekcji inicjalizowaliśmy `tempMIN = 150`. Elegantsze rozwiązanie
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-OneWire oneWire(A5);
+const byte PIN_DS18B20 = A5;
+
+OneWire oneWire(PIN_DS18B20);
 DallasTemperature sensors(&oneWire);
 
 float tempMAX = 0; // Wartość startowa — zostanie nadpisana w setup()
@@ -501,7 +506,9 @@ Aby odczytać dane z drugiego czujnika, odwołujemy się do indeksu `1`:
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-OneWire oneWire(A5);
+const byte PIN_DS18B20 = A5;
+
+OneWire oneWire(PIN_DS18B20);
 DallasTemperature sensors(&oneWire);
 
 void setup() {
@@ -571,7 +578,9 @@ Kompletny program z adresowaniem:
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-OneWire oneWire(A5);
+const byte PIN_DS18B20 = A5;
+
+OneWire oneWire(PIN_DS18B20);
 DallasTemperature sensors(&oneWire);
 
 // Unikalny adres czujnika — odczytaj swój własny!
@@ -643,10 +652,12 @@ Kluczowa jest funkcja wyświetlająca temperaturę. Zakres: od −40 do +40 °C 
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// Konfiguracja linijki WS2812 — 8 diod, pin A0
-Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+const byte PIN_LED_STRIP = A0;  // linijka WS2812
+const byte PIN_DS18B20   = A5;  // czujnik temperatury 1-Wire
 
-OneWire oneWire(A5);
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, PIN_LED_STRIP, NEO_GRB + NEO_KHZ800);
+
+OneWire oneWire(PIN_DS18B20);
 DallasTemperature sensors(&oneWire);
 
 // Wstaw własny adres czujnika odczytany z przykładu OneWire!

@@ -203,7 +203,14 @@ Do obsługi LCD używamy biblioteki `LiquidCrystal`. Najpierw dołączamy biblio
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   lcd.begin(16, 2);
@@ -269,7 +276,14 @@ Wyświetlacz LCD może pokazywać kursor. Domyślnie jest on wyłączony. Funkcj
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   lcd.begin(16, 2);
@@ -323,7 +337,14 @@ Funkcje `lcd.display()` i `lcd.noDisplay()` włączają lub wyłączają widoczn
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   lcd.begin(16, 2);
@@ -365,7 +386,14 @@ Poniższy szkic pokazuje obie operacje jedna po drugiej: najpierw cykl `noDispla
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   lcd.begin(16, 2);
@@ -430,7 +458,14 @@ LCD pozwala pokazać wynik pomiaru bez komputera. W przykładzie fotorezystor i 
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 double odczyt;
 
 void setup() {
@@ -492,7 +527,14 @@ Kluczowa zmiana to wypisanie surowej wartości `analogRead()` w pierwszej linii 
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   lcd.begin(16, 2);
@@ -547,10 +589,16 @@ Podłącz przyciski: **START** do pinu 8, **STOP** do pinu 9, oba z `INPUT_PULLU
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS    = 2;
+const byte PIN_EN    = 3;
+const byte PIN_D4    = 4;
+const byte PIN_D5    = 5;
+const byte PIN_D6    = 6;
+const byte PIN_D7    = 7;
+const byte PIN_START = 8;
+const byte PIN_STOP  = 9;
 
-const int PIN_START = 8;
-const int PIN_STOP  = 9;
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 void setup() {
   pinMode(PIN_START, INPUT_PULLUP);
@@ -628,7 +676,15 @@ Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Mod
 ```cpp
 #include <LiquidCrystal.h>
 
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+const byte PIN_RS = 2;
+const byte PIN_EN = 3;
+const byte PIN_D4 = 4;
+const byte PIN_D5 = 5;
+const byte PIN_D6 = 6;
+const byte PIN_D7 = 7;
+const byte PIN_BL = 11;  // podświetlenie LCD (PWM)
+
+LiquidCrystal lcd(PIN_RS, PIN_EN, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
 
 int jasnosc = 0;
 int zmiana = 5;
@@ -644,7 +700,7 @@ void setup() {
 }
 
 void loop() {
-  analogWrite(11, jasnosc);
+  analogWrite(PIN_BL, jasnosc);
 
   jasnosc = jasnosc + zmiana;
 

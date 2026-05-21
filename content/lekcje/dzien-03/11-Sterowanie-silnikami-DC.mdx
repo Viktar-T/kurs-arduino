@@ -52,14 +52,6 @@ updated: "2026-05-13"
 
 W tej lekcji zajmiemy się małymi silnikami DC (Direct Current, prąd stały). Nauczysz się, dlaczego nie wolno podłączać ich bezpośrednio do pinów Arduino, do czego służy mostek H, jak zmieniać kierunek obrotów i jak regulować prędkość przez PWM (Pulse Width Modulation, modulacja szerokości impulsu). Przy okazji poznamy pętlę `for`, która bardzo ułatwia płynne zmiany wartości.
 
-<Photo
-  file="11.01-sterowanie-silnikami-dc-okladka.png"
-  caption="Sterowanie silnikami DC wymaga elementu pośredniczącego między Arduino a napędem."
-  alt="Grafika kursu Arduino o sterowaniu silnikami DC i pętli for"
-  width={700}
-  height={466}
-/>
-
 <Callout type="hazard" title="Najważniejsza zasada tej lekcji">
 Nigdy nie podłączaj zwykłego silnika DC bezpośrednio do pinu Arduino. Pin mikrokontrolera służy do sterowania sygnałem, a nie do zasilania obciążenia pobierającego setki miliamperów.
 </Callout>
@@ -158,7 +150,7 @@ W układzie `L293D` rolę tranzystorów pełnią struktury Darlingtona sterowane
 
 ## 4. Kierunek obrotów i tabela prawdy
 
-Do sterowania jednym silnikiem używamy dwóch wejść kierunku oraz wejścia `ENABLE`. Dwa wejścia kierunku decydują, w którą stronę popłynie prąd przez silnik. `ENABLE` włącza dany kanał i później może otrzymać sygnał PWM do regulacji prędkości.
+Do sterowania jednym silnikiem używamy dwóch wejść kierunku (INPUT 1, INPUT 2) oraz wejścia `ENABLE`. Dwa wejścia kierunku decydują, w którą stronę popłynie prąd przez silnik. `ENABLE` włącza dany kanał i później może otrzymać sygnał PWM do regulacji prędkości.
 
 <Schematic
   src="/img/lekcje/11.05-tabela-prawdy-mostka-h.png"
@@ -172,7 +164,7 @@ Dwie różne kombinacje zatrzymują silnik. W zależności od sterownika może t
 
 ## 5. Zasilanie i pierwsze podłączenie L293D
 
-Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB (Universal Serial Bus, uniwersalna magistrala szeregowa), a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
+Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić zasilanie Arduino i silników: Arduino może być zasilane z USB, a silnik z osobnego źródła przez mostek H. Masy muszą być wspólne, aby sygnały sterujące miały ten sam punkt odniesienia.
 
 <Schematic
   src="/img/lekcje/11.06-l293d-zasilanie-i-wyjscie-silnika.png"
@@ -185,6 +177,22 @@ Zasilanie jest najczęstszym źródłem problemów. Najbezpieczniej rozdzielić 
 <Callout type="hazard" title="Bateria 9 V to tylko demonstracja">
 Klasyczna bateria 9 V ma małą wydajność prądową. W kursie wystarcza do demonstracji i symulacji, ale do robota z prawdziwymi silnikami zwykle potrzebne są akumulatory o dużo większej wydajności.
 </Callout>
+
+<Expandable title="Po co kondensator przy zasilaniu L293D?" heading="####">
+
+Na schemacie widać kondensator umieszczony blisko pinów zasilania `L293D`. To tzw. **kondensator odsprzęgający** (bypass capacitor) — zazwyczaj 100 nF ceramiczny.
+
+Silnik DC to nie zwykły opornik. Przy każdym uruchomieniu, zatrzymaniu lub zmianie kierunku pobiera z linii zasilania krótki, ale intensywny impuls prądu. Ten impuls powoduje chwilowy spadek napięcia na przewodach i ścieżkach płytki.
+
+Kondensator działa jak mały lokalny magazyn ładunku tuż przy układzie scalonym:
+
+- **Wyrównuje skoki napięcia** — kiedy silnik pobiera impuls prądu, kondensator momentalnie go uzupełnia z własnego ładunku, zanim prąd zdąży popłynąć z odległego źródła zasilania.
+- **Filtruje zakłócenia elektryczne** — komutacja (przełączanie szczotek w silniku) generuje szybkie impulsy zakłócające. Kondensator pochłania te zakłócenia zanim wnikną głębiej w obwód.
+- **Chroni logikę Arduino** — bez odsprzęgania skoki napięcia mogłyby zakłócać pracę mikrokontrolera, powodując losowe resety lub błędne odczyty czujników.
+
+Kondensator umieszcza się **jak najbliżej pinów zasilania układu** — długie przewody do niego samego zmniejszają skuteczność filtrowania.
+
+</Expandable>
 
 Na płytce stykowej warto zacząć od połączenia pinów masy układu `L293D`. Można użyć krótkich odcinków przewodu albo odciętych nóżek rezystorów.
 
@@ -260,21 +268,25 @@ W naszym układzie przyjmujemy, że pin `6` Arduino steruje wejściem `ENABLE`, 
 
 <Code lang="cpp" file="silnik-kierunek.ino">
 ```cpp
-void setup() {
-  pinMode(6, OUTPUT);
-  digitalWrite(6, HIGH);
+const byte PIN_ENABLE = 6;
+const byte PIN_IN1    = 7;
+const byte PIN_IN2    = 8;
 
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
+void setup() {
+  pinMode(PIN_ENABLE, OUTPUT);
+  digitalWrite(PIN_ENABLE, HIGH);
+
+  pinMode(PIN_IN1, OUTPUT);
+  pinMode(PIN_IN2, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(7, LOW);
-  digitalWrite(8, HIGH);
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, HIGH);
   delay(3000);
 
-  digitalWrite(7, HIGH);
-  digitalWrite(8, LOW);
+  digitalWrite(PIN_IN1, HIGH);
+  digitalWrite(PIN_IN2, LOW);
   delay(3000);
 }
 ```
@@ -298,31 +310,31 @@ Po wgraniu programu diody powinny świecić naprzemiennie. Nie jest to zwykłe m
   height={261}
 />
 
-<Task title="Zadanie 1" estimate="10 min">
-Zmień czasy `delay(3000)` na różne wartości, np. `1000` i `5000`. Sprawdź, czy potrafisz przewidzieć, która dioda będzie świecić dłużej.
-</Task>
-
 ## 8. Sterowanie prędkością przez PWM
 
 Wejście `ENABLE` mostka H można sterować sygnałem PWM. Wtedy mostek bardzo szybko włącza i wyłącza zasilanie silnika, a średnia moc zależy od wypełnienia sygnału. W symulacji zobaczysz zmianę jasności diody.
 
 <Code lang="cpp" file="silnik-pwm-dwie-predkosci.ino">
 ```cpp
+const byte PIN_ENABLE = 6;
+const byte PIN_IN1    = 7;
+const byte PIN_IN2    = 8;
+
 void setup() {
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
+  pinMode(PIN_ENABLE, OUTPUT);
+  pinMode(PIN_IN1, OUTPUT);
+  pinMode(PIN_IN2, OUTPUT);
 }
 
 void loop() {
-  analogWrite(6, 100);
-  digitalWrite(7, LOW);
-  digitalWrite(8, HIGH);
+  analogWrite(PIN_ENABLE, 100);
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, HIGH);
   delay(3000);
 
-  analogWrite(6, 255);
-  digitalWrite(7, LOW);
-  digitalWrite(8, HIGH);
+  analogWrite(PIN_ENABLE, 255);
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, HIGH);
   delay(3000);
 }
 ```
@@ -353,8 +365,10 @@ Każdy silnik ma tzw. **próg uruchomienia** (*stall threshold*) — minimalną 
 Warto wyznaczyć go doświadczalnie — wystarczy prosta pętla:
 
 ```cpp
+const byte PIN_ENABLE = 6;
+
 for (int i = 0; i <= 255; i++) {
-  analogWrite(6, i);
+  analogWrite(PIN_ENABLE, i);
   Serial.println(i);
   delay(100);
 }
@@ -412,28 +426,28 @@ for (int i = 25; i > 0; i--) {}
 Napisz program, który za pomocą pętli `for` miga diodą 5 razy. Następnie spróbuj napisać ten sam program z użyciem pętli `while`.
 </Task>
 
-<Task title="Zadanie 3" estimate="15 min">
-Napisz program, który odczytuje z UART (Universal Asynchronous Receiver-Transmitter, uniwersalny asynchroniczny nadajnik-odbiornik) liczbę z zakresu `0`-`9`, a następnie wypisuje w terminalu tyle znaków `*`, ile wynosi odebrana liczba.
-</Task>
-
 ## 10. Płynne rozpędzanie silnika
 
 Skoro licznik pętli `for` może przyjmować kolejne wartości, możemy użyć go jako wypełnienia PWM. Dzięki temu silnik będzie stopniowo zwiększał prędkość, a dioda w symulacji będzie płynnie się rozjaśniać.
 
 <Code lang="cpp" file="silnik-plynne-rozpedzanie.ino">
 ```cpp
-void setup() {
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
+const byte PIN_ENABLE = 6;
+const byte PIN_IN1    = 7;
+const byte PIN_IN2    = 8;
 
-  digitalWrite(7, LOW);
-  digitalWrite(8, HIGH);
+void setup() {
+  pinMode(PIN_ENABLE, OUTPUT);
+  pinMode(PIN_IN1, OUTPUT);
+  pinMode(PIN_IN2, OUTPUT);
+
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, HIGH);
 }
 
 void loop() {
   for (int i = 0; i <= 255; i++) {
-    analogWrite(6, i);
+    analogWrite(PIN_ENABLE, i);
     delay(25);
   }
 }

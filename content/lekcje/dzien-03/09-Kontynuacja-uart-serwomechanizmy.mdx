@@ -439,13 +439,15 @@ Program odczytuje fotorezystor, przelicza wynik na kąt serwa i porusza wskazów
 ```cpp
 #include <Servo.h>
 
+const byte PIN_SERVO = 11;
+
 Servo serwomechanizm;
 
 byte pozycja = 0;
 int pozycjaPoprzednia = 0;
 
 void setup() {
-  serwomechanizm.attach(11);
+  serwomechanizm.attach(PIN_SERVO);
   Serial.begin(9600);
 }
 

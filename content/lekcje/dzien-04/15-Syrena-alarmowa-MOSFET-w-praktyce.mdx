@@ -89,14 +89,16 @@ Zacznijmy od sprawdzenia, jak buzzer reaguje na sygnał generowany przez `digita
 
 <Code lang="cpp" file="buzzer-test-sekundy.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT); // Konfiguracja A5 jako wyjście
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(A5, LOW); // Cykliczna zmiana stanu wyjścia
+  digitalWrite(PIN_BUZZER, LOW);
   delay(1000);
-  digitalWrite(A5, HIGH);
+  digitalWrite(PIN_BUZZER, HIGH);
   delay(1000);
 }
 ```
@@ -124,14 +126,16 @@ Jeśli zmniejszysz opóźnienie (np. do 100 ms, a potem do 10 ms), dźwięki bę
 
 <Code lang="cpp" file="buzzer-test-10ms.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(A5, LOW);
+  digitalWrite(PIN_BUZZER, LOW);
   delay(10);
-  digitalWrite(A5, HIGH);
+  digitalWrite(PIN_BUZZER, HIGH);
   delay(10);
 }
 ```
@@ -166,9 +170,11 @@ Ważna uwaga: wywołanie `tone()` **uruchamia sygnał i pozostawia go aktywnym**
 
 <Code lang="cpp" file="buzzer-tone-ciagly.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
-  tone(A5, 1000); // Wygeneruj sygnał 1000 Hz — zostanie aktywny do noTone()
+  pinMode(PIN_BUZZER, OUTPUT);
+  tone(PIN_BUZZER, 1000); // Wygeneruj sygnał 1000 Hz — zostanie aktywny do noTone()
 }
 
 void loop() {
@@ -181,14 +187,16 @@ Proste pikanie z `tone()` i `noTone()`:
 
 <Code lang="cpp" file="buzzer-tone-pikanie.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
-  tone(A5, 1000); // Wygeneruj sygnał 1000 Hz na pinie A5
+  tone(PIN_BUZZER, 1000); // Wygeneruj sygnał 1000 Hz
   delay(1000);
-  noTone(A5);     // Wyłącz generowanie sygnału
+  noTone(PIN_BUZZER);     // Wyłącz generowanie sygnału
   delay(1000);
 }
 ```
@@ -200,14 +208,16 @@ Każdy buzzer ma **częstotliwość rezonansową** — przy niej gra najgłośni
 
 <Code lang="cpp" file="buzzer-skan-czestotliwosci.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
   // tone() na Arduino UNO obsługuje zakres 31–65535 Hz
   for (int czestotliwosc = 31; czestotliwosc < 65535; czestotliwosc++) {
-    tone(A5, czestotliwosc);
+    tone(PIN_BUZZER, czestotliwosc);
   }
 }
 ```
@@ -219,14 +229,16 @@ Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **400
 
 <Code lang="cpp" file="buzzer-rezonans.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
-  tone(A5, 4000); // Generuj sygnał 4000 Hz — okolice rezonansu
+  tone(PIN_BUZZER, 4000); // Generuj sygnał 4000 Hz — okolice rezonansu
   delay(100);
-  noTone(A5);
+  noTone(PIN_BUZZER);
   delay(100);
 }
 ```
@@ -244,14 +256,16 @@ Zmiana częstotliwości w pętli tworzy efekt syreny. Wartości 4300 Hz i 3500 H
 
 <Code lang="cpp" file="syrena-alarmowa.ino">
 ```cpp
+const byte PIN_BUZZER = A5;
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
 }
 
 void loop() {
-  tone(A5, 4300); // Ton wysoki
+  tone(PIN_BUZZER, 4300); // Ton wysoki
   delay(150);
-  tone(A5, 3500); // Ton niski
+  tone(PIN_BUZZER, 3500); // Ton niski
   delay(150);
 }
 ```
@@ -356,14 +370,16 @@ Po podłączeniu zasilacza wgraj program testowy. Między luźnymi przewodami (d
 
 <Code lang="cpp" file="mosfet-test.ino">
 ```cpp
+const byte PIN_GATE = A5;  // bramka MOSFET
+
 void setup() {
-  pinMode(A5, OUTPUT); // Konfiguracja A5 jako wyjście
+  pinMode(PIN_GATE, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(A5, LOW);  // MOSFET wyłączony — brak napięcia na drenie
+  digitalWrite(PIN_GATE, LOW);  // MOSFET wyłączony — brak napięcia na drenie
   delay(1000);
-  digitalWrite(A5, HIGH); // MOSFET włączony — ~12 V na drenie
+  digitalWrite(PIN_GATE, HIGH); // MOSFET włączony — ~12 V na drenie
   delay(1000);
 }
 ```
@@ -409,14 +425,16 @@ Teraz syrena brzmi wyraźnie głośniej.
 
 <Code lang="cpp" file="syrena-przez-mosfet.ino">
 ```cpp
+const byte PIN_GATE = A5;  // bramka MOSFET
+
 void setup() {
-  pinMode(A5, OUTPUT);
+  pinMode(PIN_GATE, OUTPUT);
 }
 
 void loop() {
-  tone(A5, 4300); // Ton wysoki — MOSFET przełącza 12 V
+  tone(PIN_GATE, 4300); // Ton wysoki — MOSFET przełącza 12 V
   delay(150);
-  tone(A5, 3500); // Ton niski
+  tone(PIN_GATE, 3500); // Ton niski
   delay(150);
 }
 ```

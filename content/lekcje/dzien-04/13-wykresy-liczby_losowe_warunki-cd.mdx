@@ -407,8 +407,10 @@ Obie formy można mieszać: `random(50)` i `random(10, 50)` to różne zakresy.
 
 <Code lang="cpp" file="losowe-miganie.ino">
 ```cpp
+const byte PIN_LED = 13;
+
 void setup() {
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
   randomSeed(analogRead(0));
 }
 
@@ -416,9 +418,9 @@ void loop() {
   int czasWlaczona = random(10, 100) * 10;  // 100–990 ms, skok co 10
   int czasWylaczona = random(5, 50) * 10;   // 50–490 ms, skok co 10
 
-  digitalWrite(13, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   delay(czasWlaczona);
-  digitalWrite(13, LOW);
+  digitalWrite(PIN_LED, LOW);
   delay(czasWylaczona);
 }
 ```
@@ -448,20 +450,25 @@ Dioda zielona (pin `8`) świeci, gdy **którykolwiek** przycisk jest wciśnięty
 
 <Code lang="cpp" file="warunki-or.ino">
 ```cpp
+const byte PIN_BTN1  = 10;
+const byte PIN_BTN2  = 9;
+const byte PIN_LED_G = 8;
+const byte PIN_LED_R = 7;
+
 void setup() {
-  pinMode(10, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
-  pinMode(8, OUTPUT);
-  pinMode(7, OUTPUT);
-  digitalWrite(8, LOW);
-  digitalWrite(7, LOW);
+  pinMode(PIN_BTN1,  INPUT_PULLUP);
+  pinMode(PIN_BTN2,  INPUT_PULLUP);
+  pinMode(PIN_LED_G, OUTPUT);
+  pinMode(PIN_LED_R, OUTPUT);
+  digitalWrite(PIN_LED_G, LOW);
+  digitalWrite(PIN_LED_R, LOW);
 }
 
 void loop() {
-  if (digitalRead(9) == LOW || digitalRead(10) == LOW) {
-    digitalWrite(8, HIGH);
+  if (digitalRead(PIN_BTN2) == LOW || digitalRead(PIN_BTN1) == LOW) {
+    digitalWrite(PIN_LED_G, HIGH);
   } else {
-    digitalWrite(8, LOW);
+    digitalWrite(PIN_LED_G, LOW);
   }
 }
 ```
@@ -473,26 +480,31 @@ Dioda czerwona (pin `7`) świeci tylko wtedy, gdy **oba** przyciski są wciśni�
 
 <Code lang="cpp" file="warunki-and-or.ino">
 ```cpp
+const byte PIN_BTN1  = 10;
+const byte PIN_BTN2  = 9;
+const byte PIN_LED_G = 8;
+const byte PIN_LED_R = 7;
+
 void setup() {
-  pinMode(10, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
-  pinMode(8, OUTPUT);
-  pinMode(7, OUTPUT);
-  digitalWrite(8, LOW);
-  digitalWrite(7, LOW);
+  pinMode(PIN_BTN1,  INPUT_PULLUP);
+  pinMode(PIN_BTN2,  INPUT_PULLUP);
+  pinMode(PIN_LED_G, OUTPUT);
+  pinMode(PIN_LED_R, OUTPUT);
+  digitalWrite(PIN_LED_G, LOW);
+  digitalWrite(PIN_LED_R, LOW);
 }
 
 void loop() {
-  if (digitalRead(9) == LOW || digitalRead(10) == LOW) {
-    digitalWrite(8, HIGH);
+  if (digitalRead(PIN_BTN2) == LOW || digitalRead(PIN_BTN1) == LOW) {
+    digitalWrite(PIN_LED_G, HIGH);
   } else {
-    digitalWrite(8, LOW);
+    digitalWrite(PIN_LED_G, LOW);
   }
 
-  if (digitalRead(9) == LOW && digitalRead(10) == LOW) {
-    digitalWrite(7, HIGH);
+  if (digitalRead(PIN_BTN2) == LOW && digitalRead(PIN_BTN1) == LOW) {
+    digitalWrite(PIN_LED_R, HIGH);
   } else {
-    digitalWrite(7, LOW);
+    digitalWrite(PIN_LED_R, LOW);
   }
 }
 ```
@@ -574,15 +586,17 @@ Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 
 
 <Code lang="cpp" file="alarm-czujnik-przycisk.ino">
 ```cpp
-const byte trigPin = 12;
-const byte echoPin = 9;
+const byte trigPin   = 12;
+const byte echoPin   = 9;
+const byte PIN_BTN   = 10;
+const byte PIN_BUZZER = 11;
 
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  pinMode(10, INPUT_PULLUP);  // Przycisk
-  pinMode(11, OUTPUT);        // Buzzer
-  digitalWrite(11, LOW);
+  pinMode(trigPin,    OUTPUT);
+  pinMode(echoPin,    INPUT);
+  pinMode(PIN_BTN,    INPUT_PULLUP);
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
 }
 
 void loop() {
@@ -597,10 +611,10 @@ void loop() {
   czas = pulseIn(echoPin, HIGH);
   dystans = czas / 58;
 
-  if ((dystans > 20 && dystans < 40) || digitalRead(10) == LOW) {
-    digitalWrite(11, HIGH);
+  if ((dystans > 20 && dystans < 40) || digitalRead(PIN_BTN) == LOW) {
+    digitalWrite(PIN_BUZZER, HIGH);
   } else {
-    digitalWrite(11, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
   }
 }
 ```
