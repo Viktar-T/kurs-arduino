@@ -163,7 +163,7 @@ noTone(pin); // Wyłącz generowanie sygnału na pinie
 ```
 
 <Callout type="warning" title="Konflikt z PWM">
-Funkcja `tone()` używa tego samego timera co PWM (Pulse Width Modulation, modulacja szerokości impulsu) na pinach **3** i **11**. Gdy `tone()` jest aktywne, nie można jednocześnie generować PWM na tych pinach.
+Funkcja `tone()` używa tego samego timera co PWM (Pulse Width Modulation) na pinach **3** i **11**. Gdy `tone()` jest aktywne, nie można jednocześnie generować PWM na tych pinach.
 </Callout>
 
 Ważna uwaga: wywołanie `tone()` **uruchamia sygnał i pozostawia go aktywnym** aż do wywołania `noTone()` lub kolejnego `tone()`. Dlatego program poniżej gra dźwięk cały czas, mimo że `tone()` jest wywołane tylko raz w `setup()`:
@@ -366,7 +366,8 @@ Schemat połączeń:
 Pomyłka w połączeniach MOSFETa może uszkodzić całe Arduino. Dokładnie zweryfikuj schemat przed każdym włączeniem zasilania zewnętrznego.
 </Callout>
 
-Po podłączeniu zasilacza wgraj program testowy. Między luźnymi przewodami (dren i VIN) powinno naprzemiennie pojawiać się napięcie ~12 V co sekundę:
+Po podłączeniu zasilacza wgraj program testowy. 
+Między luźnymi przewodami (dren i VIN) powinno naprzemiennie pojawiać się napięcie ~12 V co sekundę. **Podłcz miernik i sprawdż**.
 
 <Code lang="cpp" file="mosfet-test.ino">
 ```cpp
