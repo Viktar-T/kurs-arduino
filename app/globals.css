@@ -13,6 +13,8 @@
   --forbot-code: #f5f7f6;
   --forbot-warning: #fff4cf;
   --forbot-warning-line: #f0b429;
+  --forbot-miniproject: #ffedb3;
+  --forbot-miniproject-line: #d99a14;
   --forbot-danger: #fff0ee;
   --forbot-danger-line: #d94a38;
 }
@@ -250,11 +252,17 @@ a:hover {
 
 .forbot-callout-note,
 .forbot-callout-tip,
-.forbot-miniproject,
 .forbot-hardware {
   border-color: var(--forbot-line);
   border-left-color: var(--forbot-green);
   background: var(--forbot-green-soft);
+}
+
+.article-content .forbot-miniproject,
+.forbot-miniproject {
+  border-color: var(--forbot-miniproject-line);
+  border-left-color: var(--forbot-miniproject-line);
+  background: var(--forbot-miniproject);
 }
 
 .forbot-callout-warning,

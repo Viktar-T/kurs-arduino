@@ -6,9 +6,9 @@ status: draft
 sensitivity: low
 
 # --- Site-driving fields ---
-title: "Wykresy, liczby losowe i warunki — ciąg dalszy"
-slug: "wykresy-liczby-losowe-warunki-cd"
-summary: "Plan lekcji na podstawie kursu Forbot #10: rysowanie wykresów z danych Arduino, wykres odległości z HC-SR04, kilka wartości na wykresie, liczby losowe oraz łączenie warunków logicznych."
+title: "Wykresy i warunki — ciąg dalszy"
+slug: "wykresy-warunki-cd"
+summary: "Plan lekcji na podstawie kursu Forbot #10: rysowanie wykresów z danych Arduino, wykres odległości z HC-SR04, kilka wartości na wykresie oraz łączenie warunków logicznych."
 
 day: 4
 weekend: 2
@@ -22,7 +22,6 @@ forbotChapter: 10
 objectives:
   - "Wysyłać dane z Arduino w formie nadającej się do rysowania wykresów"
   - "Pokazać na wykresie odczyty z czujnika odległości"
-  - "Użyć liczb losowych w prostym programie"
   - "Łączyć warunki logiczne w bardziej złożone decyzje programu"
 
 prerequisites:
@@ -37,7 +36,7 @@ hardware:
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 1 }
 
-tags: [arduino, wykresy, serial-plotter, liczby-losowe, warunki, hc-sr04]
+tags: [arduino, wykresy, serial-plotter, warunki, hc-sr04]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
 
@@ -45,7 +44,7 @@ publish: true
 updated: "2026-05-13"
 ---
 
-W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym, generować liczby losowe oraz łączyć warunki logiczne w bardziej złożone decyzje. To ostatnia lekcja pierwszego dnia — zamkniemy go praktycznym przykładem alarmu z czujnikiem odległości i przyciskiem.
+W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym oraz łączyć warunki logiczne w bardziej złożone decyzje. To ostatnia lekcja pierwszego dnia — zamkniemy go praktycznym przykładem alarmu z czujnikiem odległości i przyciskiem.
 
 ## 1. Rysowanie wykresów z Arduino
 
@@ -129,7 +128,7 @@ Zmień wartość `delay(200)` na `50` i obserwuj, jak wykres staje się bardziej
 
 ## 2. Wykres odległości od przeszkody
 
-Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w lekcji 12 (`trigPin = 12`, `echoPin = 11`):
+Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w [lekcji 12, rozdziale „Miernik odległości”](../dzien-03/12.02-czujnik-hc-sr04#2-miernik-odleglosci) (`trigPin = 12`, `echoPin = 11`):
 
 <Code lang="cpp" file="hc-sr04-wykres.ino">
 ```cpp
@@ -270,167 +269,7 @@ Na wykresie zobaczysz wtedy czytelną legendę z nazwami. Uwaga: w starszym IDE 
 Wyślij jednocześnie odczyt z potencjometru (A5) i odległość z HC-SR04. Obserwuj oba wykresy nakładające się na siebie. Co się dzieje z wykresem czujnika, gdy zasłonisz go dłonią?
 </Task>
 
-## 4. Liczby losowe
-
-Funkcja `random(n)` zwraca pseudolosową liczbę z zakresu od `0` do `n-1`. Nie wymaga żadnego podłączenia — działa czysto programowo:
-
-<Photo
-  file="13.08-kostki-losowe.jpg"
-  caption="Liczby losowe — jak rzut kostką, ale w kodzie."
-  alt="Kostki do gry symbolizujące losowość"
-  width={400}
-  height={267}
-/>
-
-<Code lang="cpp" file="liczby-losowe.ino">
-```cpp
-void setup() {
-  Serial.begin(9600);
-}
-
-void loop() {
-  Serial.println(random(300));
-  delay(1000);
-}
-```
-</Code>
-
-<Photo
-  file="13.09-random-wyjscie-1.png"
-  caption="Pierwsze uruchomienie — losowe liczby z zakresu 0–299."
-  alt="Monitor portu szeregowego: pierwsze uruchomienie random(300)"
-  width={350}
-  height={250}
-/>
-
-### Pułapka: powtarzające się sekwencje
-
-Arduino to deterministyczna maszyna — generator liczb losowych startuje zawsze z tego samego miejsca. Przy każdym resecie zobaczysz tę samą sekwencję:
-
-<Photo
-  file="13.10-random-wyjscie-2.png"
-  caption="Drugie uruchomienie — identyczna sekwencja jak za pierwszym razem."
-  alt="Monitor portu szeregowego: drugie uruchomienie pokazuje te same liczby"
-  width={350}
-  height={250}
-/>
-
-<Photo
-  file="13.11-random-wyjscie-3.png"
-  caption="Trzecie uruchomienie — wciąż ta sama sekwencja."
-  alt="Monitor portu szeregowego: trzecie uruchomienie random(300)"
-  width={350}
-  height={250}
-/>
-
-<Photo
-  file="13.12-random-wyjscie-4.png"
-  caption="Czwarte uruchomienie — identyczna seria. Widać, że to pseudolosowość."
-  alt="Monitor portu szeregowego: czwarte uruchomienie random(300)"
-  width={350}
-  height={250}
-/>
-
-<Expandable title="Głębiej: dlaczego `random()` jest tak naprawdę pseudolosowy" heading="####">
-Komputer cyfrowy jest z natury **deterministyczny** — z tego samego stanu wejściowego zawsze wyprodukuje ten sam wynik. Prawdziwa losowość wymaga źródła chaosu z zewnątrz: szumu termicznego, rozpadu radioaktywnego, ruchu myszki. Bez takiego źródła Arduino udaje losowość przez sprytny algorytm zwany **PRNG (Pseudo-Random Number Generator)**.
-
-Klasyczna implementacja (używana m.in. przez `random()` Arduino) to **liniowy generator kongruentny (LCG)**:
-
-```
-seed = (seed * mnoznik + przyrost) mod modulo
-```
-
-Każde wywołanie `random()` aktualizuje wewnętrzną zmienną `seed` według tego wzoru, a zwraca przeskalowany wynik. Liczby wyglądają losowo — w testach statystycznych przechodzą za „przypadkowe" — ale po dokładnie tych samych `seed`, mnożniku i przyroście **zawsze** wyjdzie ta sama sekwencja.
-
-Dlatego po resecie Arduino dostajesz `141, 117, 233, 99...` w tej samej kolejności: `seed` startuje od wartości `1` (lub innej stałej), a wzór jest deterministyczny.
-
-**Kiedy pseudolosowość wystarczy:** gry, animacje świetlne, symulacje. **Kiedy NIE wystarczy:** kryptografia, generowanie kluczy bezpieczeństwa, loteria — tu używa się sprzętowych generatorów (RNG) z fizycznym źródłem szumu.
-</Expandable>
-
-### Losowe ziarno — `randomSeed()`
-
-Żeby sekwencje były naprawdę różne po każdym uruchomieniu, inicjujemy generator losowym ziarnem. Pin `A0` niepodłączony do niczego ma przypadkowy szum — świetne źródło ziarna:
-
-<Code lang="cpp" file="liczby-losowe-seed.ino">
-```cpp
-void setup() {
-  Serial.begin(9600);
-  randomSeed(analogRead(0));
-}
-
-void loop() {
-  Serial.println(random(300));
-  delay(1000);
-}
-```
-</Code>
-
-<Photo
-  file="13.13-random-seed-1.png"
-  caption="Z randomSeed — pierwsze uruchomienie daje inną sekwencję niż poprzednie."
-  alt="Monitor portu szeregowego: pierwsze uruchomienie z randomSeed"
-  width={350}
-  height={250}
-/>
-
-<Photo
-  file="13.14-random-seed-2.png"
-  caption="Z randomSeed — drugie uruchomienie, inna sekwencja."
-  alt="Monitor portu szeregowego: drugie uruchomienie z randomSeed"
-  width={350}
-  height={250}
-/>
-
-<Photo
-  file="13.15-random-seed-3.png"
-  caption="Z randomSeed — trzecie uruchomienie, ponownie inna sekwencja."
-  alt="Monitor portu szeregowego: trzecie uruchomienie z randomSeed"
-  width={350}
-  height={250}
-/>
-
-<Expandable title="Zakres z dolnym limitem: random(a, b)" heading="####">
-
-`random(300)` daje zakres `0–299`. Jeśli chcesz zakres `10–99`, użyj:
-
-```cpp
-random(10, 100)   // wynik: 10, 11, ..., 99
-```
-
-Obie formy można mieszać: `random(50)` i `random(10, 50)` to różne zakresy.
-
-</Expandable>
-
-## 5. Losowe miganie diodą
-
-Łączymy liczby losowe z PWM (Pulse Width Modulation, modulacja szerokości impulsu) i pętlą główną, żeby dioda migała w nieprzewidywalny sposób:
-
-<Code lang="cpp" file="losowe-miganie.ino">
-```cpp
-const byte PIN_LED = 13;
-
-void setup() {
-  pinMode(PIN_LED, OUTPUT);
-  randomSeed(analogRead(0));
-}
-
-void loop() {
-  int czasWlaczona = random(10, 100) * 10;  // 100–990 ms, skok co 10
-  int czasWylaczona = random(5, 50) * 10;   // 50–490 ms, skok co 10
-
-  digitalWrite(PIN_LED, HIGH);
-  delay(czasWlaczona);
-  digitalWrite(PIN_LED, LOW);
-  delay(czasWylaczona);
-}
-```
-</Code>
-
-<Task title="Zadanie 3" estimate="10 min">
-Napisz program z dwiema diodami (piny 12 i 13). W każdym obiegu pętli losuj, która z nich zapali się i na jak długo. Druga ma być w tym czasie wyłączona.
-</Task>
-
-## 6. Łączenie instrukcji warunkowych
+## 4. Łączenie instrukcji warunkowych
 
 Operator `||` to **lub** — warunek jest spełniony, gdy przynajmniej jedna część jest prawdziwa. Operator `&&` to **i** — obie muszą być prawdziwe.
 
@@ -568,11 +407,11 @@ Obie wersje dają identyczny wynik — wybierz tę, która jest dla ciebie czyte
 
 </Expandable>
 
-<Task title="Zadanie 4" estimate="10 min">
+<Task title="Zadanie 3" estimate="10 min">
 Dodaj do programu trzecią diodę (pin `6`), która świeci tylko gdy **jeden** z przycisków jest wciśnięty (ale nie oba razem). Wskazówka: użyj XOR-a zapisanego jako `(A || B) && !(A && B)`.
 </Task>
 
-## 7. Warunki w praktyce — alarm z czujnikiem i przyciskiem
+## 5. Warunki w praktyce — alarm z czujnikiem i przyciskiem
 
 Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 20–40 cm **lub** gdy przycisk jest wciśnięty — alarm działa zarówno automatycznie, jak i ręcznie:
 
@@ -583,6 +422,8 @@ Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 
   width={650}
   height={433}
 />
+
+<Expandable title="Przykład kodu" heading="####">
 
 <Code lang="cpp" file="alarm-czujnik-przycisk.ino">
 ```cpp
@@ -619,6 +460,8 @@ void loop() {
 }
 ```
 </Code>
+
+</Expandable>
 
 <Callout type="tip" title="Czytaj warunek od prawej do lewej">
 `(dystans > 20 && dystans < 40) || digitalRead(10) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
@@ -663,13 +506,13 @@ Skorzystaj z funkcji `zmierzOdleglosc()` z poprzedniej lekcji i warunków `if-el
 </MiniProject>
 
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
-Operatory logiczne, liczby losowe i Serial Plotter — AI pomoże zrozumieć te tematy głębiej:
+Operatory logiczne i Serial Plotter — AI pomoże zrozumieć te tematy głębiej:
 
 - **Upraszczanie warunków logicznych** — masz skomplikowany warunek `if`? Wklej go do AI i napisz: „Uprość ten warunek logiczny i wyjaśnij, czy można zastosować prawa De Morgana". Nauka algebry Boole'a na własnym kodzie jest skuteczniejsza niż teoria z podręcznika.
 - **Serial Plotter — interpretacja wykresu** — wgraj kod z wieloma seriami danych, uruchom Plotter i zrób zrzut ekranu. Opisz AI, co widzisz: „Na wykresie mam dwie linie — jedna gwałtownie rośnie, druga jest stała. Co to może oznaczać w kontekście pomiaru HC-SR04?". AI pomoże zinterpretować zachowanie układu.
-- **Dlaczego randomSeed z analogRead(0)?** — zapytaj AI: „Dlaczego `randomSeed(analogRead(0))` daje za każdym razem inną sekwencję liczb losowych, podczas gdy `randomSeed(42)` daje zawsze tę samą?". Zrozumiesz pojęcie entropii i ziarna generatora.
 </Callout>
 
 ## Podsumowanie
 
-Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Liczby losowe (`random()`) ożywiają efekty świetlne i gry, a `randomSeed(analogRead(0))` sprawia, że każde uruchomienie daje inną sekwencję. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.
+Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.
+

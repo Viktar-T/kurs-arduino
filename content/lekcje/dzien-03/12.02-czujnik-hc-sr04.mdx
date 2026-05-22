@@ -122,31 +122,23 @@ Podłącz czujnik do Arduino jak na schemacie:
   height={400}
 />
 
-Zaczynamy od podstawowego programu wyzwalającego pomiar:
+Zaczynamy od pełnego programu: wyzwalamy pomiar, mierzymy czas echa funkcją `pulseIn()` i przeliczamy wynik na centymetry. Opis `pulseIn()` znajdziesz też w [dokumentacji Arduino](https://docs.arduino.cc/language-reference/?_gl=1*kpmpc9*_up*MQ..*_ga*MzU5ODg2ODMwLjE3NzkxMTA4ODE.*_ga_NEXN8H46L5*czE3NzkxODQ2OTAkbzIkZzAkdDE3NzkxODQ2OTAkajYwJGwwJGg2NzQyMTQzNzk.):
 
-<Code lang="cpp" file="hc-sr04-wyzwolenie.ino">
+<Expandable title="Jak działa pulseIn()?" heading="####">
+
+`pulseIn(pin, HIGH)` czeka, aż na wskazanym pinie pojawi się stan wysoki, mierzy czas trwania tego stanu i zwraca wynik w mikrosekundach. W przypadku HC-SR04 ten czas odpowiada temu, jak długo impuls `Echo` był w stanie wysokim.
+
+Jeśli użyjesz `pulseIn(echoPin, HIGH)`, Arduino mierzy czas od początku do końca impulsu na pinie `echoPin`. Im dłużej wraca echo ultradźwiękowe, tym dłuższy impuls i większa zmierzona odległość.
+
+Funkcja może też otrzymać trzeci argument — limit oczekiwania:
+
 ```cpp
-const byte trigPin = 12;
-const byte echoPin = 11;
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-}
-
-void loop() {
-  // Wyzwolenie pomiaru
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-}
+czas = pulseIn(echoPin, HIGH, 25000);
 ```
-</Code>
 
-Teraz mierzymy czas echa funkcją `pulseIn()` i przeliczamy na centymetry:
+Wtedy Arduino czeka maksymalnie `25000 µs`. Jeśli impuls nie nadejdzie w tym czasie, funkcja zwróci `0`, a program nie będzie blokowany przez domyślne, dłuższe oczekiwanie.
+
+</Expandable>
 
 <Code lang="cpp" file="hc-sr04-dystans-cm.ino">
 ```cpp
