@@ -47,7 +47,9 @@ publish: true
 updated: "2026-05-15"
 ---
 
-Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB (Red, Green, Blue — czerwony, zielony, niebieski): klasyczne (trzy osobne kanały, PWM (Pulse Width Modulation, modulacja szerokości impulsu)) oraz nowoczesne (diody programowalne WS2812 ze zintegrowanym sterownikiem i biblioteką NeoPixel).
+Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB (Red, Green, Blue):  
+- klasyczne (trzy **osobne kanały**, PWM (Pulse Width Modulation))  
+- nowoczesne (diody **programowalne WS2812** ze zintegrowanym sterownikiem i biblioteką NeoPixel).
 
 ## 1. Czym są diody programowalne?
 
@@ -467,6 +469,56 @@ void loop() {
 Zmodyfikuj szkic z losowymi kolorami tak, aby każda z dwóch diod losowała **niezależnie** swoją składową. Używaj `random(255)` dwukrotnie w `setup()` — raz dla każdej diody.
 </Task>
 
+<Expandable title="Rozwiązanie Zadania 2" heading="####">
+Wystarczy przygotować dwie osobne zmienne: `zmianaLosowa` dla pierwszej diody oraz `zmianaLosowa2` dla drugiej. Każda z nich dostaje własną wartość z `random(255)`, więc diody nie mają już tej samej losowej składowej koloru.
+
+<Code lang="cpp" file="rgb-losowe-kolory-niezalezne.ino">
+```cpp
+// Definicja wyprowadzeń pierwszej diody
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
+
+// Definicja wyprowadzeń drugiej diody
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
+
+int zmianaLosowa = 0;
+int zmianaLosowa2 = 0;
+
+void setup() {
+  pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+
+  randomSeed(analogRead(A5)); // Ziarno dla generatora liczb losowych
+  zmianaLosowa = random(255);  // Losowa składowa dla pierwszej diody
+  zmianaLosowa2 = random(255); // Losowa składowa dla drugiej diody
+}
+
+void loop() {
+  int zmiana = 0;
+
+  for (zmiana = 0; zmiana < 255; zmiana++) { // Płynna zmiana kolorów
+    analogWrite(czerwona, zmianaLosowa);
+    analogWrite(zielona, zmiana);
+    analogWrite(niebieska, 255 - zmiana);
+
+    analogWrite(czerwona2, zmiana);
+    analogWrite(zielona2, 255 - zmiana);
+    analogWrite(niebieska2, zmianaLosowa2);
+
+    delay(10);
+  }
+}
+```
+</Code>
+</Expandable>
+
 ## 4. Diody programowalne WS2812
 
 Skoro tradycyjna dioda RGB wymaga 3 pinów, obsłużenie 8 diod wymagałoby 24 pinów — Arduino UNO ma ich tylko 14 cyfrowych! Tutaj z pomocą przychodzą diody WS2812.
@@ -518,7 +570,39 @@ Dlatego podczas `linijka.show()` wszystkie przerwania są zablokowane — i dlat
 
 ### 4.1 Podłączenie diod WS2812
 
-Moduł linijki WS2812 (8 diod) mocujemy w płytce stykowej. Masę łączymy z GND, zasilanie +5V z magistralą +5V, a przewód danych (DIN) z pinem A0 Arduino.
+Moduł linijki WS2812 (8 diod) mocujemy w płytce stykowej tak, aby wygodnie doprowadzić do niego trzy przewody: zasilanie, masę i sygnał sterujący.  
+Masę łączymy z **GND**, zasilanie **+5V** z magistralą +5V, a **przewód danych (DIN)** z pinem A0 Arduino.
+
+Najważniejsze jest czytanie oznaczeń bezpośrednio na module. Różne linijki WS2812 mogą wyglądać podobnie, ale mieć inaczej ułożone wyprowadzenia. Nie kieruj się więc samą kolejnością pinów na zdjęciu — szukaj opisów typu `GND`, `5V`, `VCC`, `VIN`, `DIN` oraz czasem `DOUT`.
+
+<Table
+  caption="Typowe wyprowadzenia modułu WS2812"
+  headers={["Oznaczenie", "Znaczenie", "Połączenie w ćwiczeniu"]}
+  rows={[
+    ["GND / -", "Masa układu", "GND Arduino i masa płytki stykowej"],
+    ["5V / VCC / VIN / +", "Dodatnia szyna zasilania", "+5V z Arduino lub zewnętrznego zasilacza 5 V"],
+    ["DIN / Data IN", "Wejście danych do pierwszej diody", "Pin A0 Arduino przez rezystor 300–500 Ω"],
+    ["DOUT / Data OUT", "Wyjście danych do kolejnego modułu", "Nie podłączamy w tym ćwiczeniu"],
+  ]}
+/>
+
+Podłączaj układ w bezpiecznej kolejności:
+
+1. Odłącz Arduino od USB i zasilania.
+2. Włóż linijkę WS2812 w płytkę stykową.
+3. Połącz **GND** modułu z masą układu.
+4. Połącz pin zasilania modułu z szyną **+5V**.
+5. Wstaw kondensator elektrolityczny około **100 µF** między **+5V** i **GND** możliwie blisko modułu.
+6. Połącz pin A0 Arduino z wejściem **DIN** przez rezystor z zakresu **300–500 Ω**.
+7. Dopiero na końcu podłącz Arduino do komputera.
+
+<Callout type="warning" title="Nie pomyl DIN z DOUT">
+Sygnał z Arduino musi trafić do wejścia **DIN** pierwszej diody. Pin **DOUT** służy do przekazywania danych dalej, do następnej linijki lub taśmy. Jeśli podłączysz Arduino do `DOUT`, diody najczęściej nie zareagują.
+</Callout>
+
+<Callout type="tip" title="Rezystor i kondensator chronią układ">
+Rezystor w linii danych tłumi krótkie zakłócenia na przewodzie sygnałowym. Jeśli nie masz rezystora 470 Ω, możesz użyć wartości zbliżonej z zakresu 300–500 Ω; dwa rezystory 1 kΩ połączone równolegle dadzą około 500 Ω. Kondensator 100 µF między +5V i GND pomaga przy nagłych zmianach poboru prądu, np. gdy wiele diod jednocześnie świeci jasno.
+</Callout>
 
 <Schematic
   src="/img/lekcje/14.22-schemat-ws2812-podlaczenie.jpg"
@@ -542,7 +626,7 @@ Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to 
 
 ### 4.2 Instalacja biblioteki Adafruit NeoPixel
 
-Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy ją przez menedżer bibliotek Arduino IDE (Integrated Development Environment, zintegrowane środowisko programistyczne).
+Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy ją przez menedżer bibliotek Arduino IDE.
 
 <Photo
   file="14.24-instalacja-biblioteki-neopixel.png"
@@ -582,13 +666,15 @@ Następnie w Arduino IDE: **Szkic → Dołącz bibliotekę → Dodaj bibliotekę
 
 ### 4.3 Podstawowe funkcje biblioteki NeoPixel
 
-Konfiguracja obiektu linijki odbywa się w jednej linii. Argumenty to: liczba diod, numer pinu i typ sygnału:
+Konfiguracja obiektu linijki odbywa się w jednej linii.  
+Argumenty to: **liczba diod**, **numer pinu** i **typ sygnału**:
 
 <Code lang="cpp" file="neopixel-konfiguracja.ino">
 ```cpp
 #include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
 
 // Konfiguracja linijki: 8 diod, pin A0, format GRB + 800 kHz
+// NEO_GRB oznacza kolejność kolorów w diodzie, a NEO_KHZ800 prędkość sygnału dla WS2812
 Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
 
 void setup() {
@@ -616,7 +702,7 @@ void loop() {
 />
 
 <Callout type="warning" title="Zawsze wywołuj linijka.show()">
-`setPixelColor()` tylko zapisuje kolor w pamięci RAM (Random Access Memory, pamięć o dostępie swobodnym). Dopiero `show()` fizycznie wysyła dane do diod. Bez `show()` diody się nie zmienią.
+`setPixelColor()` tylko zapisuje kolor w pamięci RAM. Dopiero `show()` fizycznie wysyła dane do diod. Bez `show()` diody się nie zmienią.
 </Callout>
 
 ### 4.4 Pierwszy test diody programowalnej
@@ -713,9 +799,21 @@ void loop() {
 ```
 </Code>
 
-### Sygnalizator — wersja sekwencyjna
+## Sygnalizator — wersja sekwencyjna
 
-Bardziej realistyczny efekt uzyskamy, zapalając diody kolejno zamiast wszystkich naraz:
+<Task title="Zadanie 2: sygnalizator sekwencyjny" estimate="10 min">
+Bardziej realistyczny efekt uzyskamy, zapalając diody kolejno zamiast wszystkich naraz. Zmodyfikuj szkic sygnalizatora tak, aby diody 0–3 zapalały się na czerwono, a diody 4–7 na niebiesko, jedna po drugiej, z krótkim opóźnieniem po każdej diodzie.
+</Task>
+
+<Photo
+  file="14.28-ws2812-animacja-alarm.gif"
+  caption="Sygnalizator alarmowy na linijce WS2812 — efekt sekwencyjny czerwono-niebieski."
+  alt="Animacja GIF: linijka WS2812 wyświetlająca animację czerwono-niebieską sygnalizatora"
+  width={600}
+  height={400}
+/>
+
+<Expandable title="Przykład rozwiązania: sygnalizator sekwencyjny" heading="####">
 
 <Code lang="cpp" file="sygnalizator-sekwencja.ino">
 ```cpp
@@ -744,13 +842,7 @@ void loop() {
 ```
 </Code>
 
-<Photo
-  file="14.28-ws2812-animacja-alarm.gif"
-  caption="Sygnalizator alarmowy na linijce WS2812 — efekt sekwencyjny czerwono-niebieski."
-  alt="Animacja GIF: linijka WS2812 wyświetlająca animację czerwono-niebieską sygnalizatora"
-  width={600}
-  height={400}
-/>
+</Expandable>
 
 <Task title="Zadanie 3" estimate="15 min">
 Zmodyfikuj sygnalizator sekwencyjny tak, aby:
@@ -760,6 +852,43 @@ Zmodyfikuj sygnalizator sekwencyjny tak, aby:
 
 **Wskazówka:** Użyj dwóch oddzielnych pętli `for` — jedna z `i++`, druga z `i--`.
 </Task>
+
+<Expandable title="Przykład rozwiązania Zadania 3" heading="####">
+
+<Code lang="cpp" file="sygnalizator-sekwencja-dwa-kierunki.ino">
+```cpp
+#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
+
+Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  linijka.begin(); // Inicjalizacja
+  linijka.show();
+}
+
+void loop() {
+  int i = 0;
+
+  for (i = 0; i < 4; i++) { // Pierwsza połowa od lewej do prawej
+    linijka.setPixelColor(i, linijka.Color(255, 0, 0)); // Czerwony
+    linijka.show();
+    delay(100);
+  }
+
+  for (i = 7; i >= 4; i--) { // Druga połowa od prawej do lewej
+    linijka.setPixelColor(i, linijka.Color(0, 0, 255)); // Niebieski
+    linijka.show();
+    delay(100);
+  }
+
+  linijka.clear();
+  linijka.show();
+  delay(500);
+}
+```
+</Code>
+
+</Expandable>
 
 <MiniProject title="Tęczowa animacja" estimate="20 min">
 
