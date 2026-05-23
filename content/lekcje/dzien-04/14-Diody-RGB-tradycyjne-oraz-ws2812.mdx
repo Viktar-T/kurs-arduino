@@ -208,14 +208,15 @@ void loop() {
 
 Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, żółty (czerwony + zielony), turkusowy (zielony + niebieski) i biały (wszystkie trzy):
 
-<Photo
+<Table
+  rows={[
+    [ <Photo
   file="14.12-dioda-rgb-czerwona.jpg"
   caption="Dioda RGB świeci na czerwono — tylko kanał R włączony."
   alt="Dioda RGB emitująca czerwone światło"
   width={400}
   height={300}
-/>
-
+/>, 
 <Photo
   file="14.13-dioda-rgb-zielona.jpg"
   caption="Dioda RGB świeci na zielono — tylko kanał G włączony."
@@ -223,21 +224,22 @@ Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, �
   width={400}
   height={300}
 />
-
-<Photo
+],
+    [<Photo
   file="14.14-dioda-rgb-niebieska.jpg"
   caption="Dioda RGB świeci na niebiesko — tylko kanał B włączony."
   alt="Dioda RGB emitująca niebieskie światło"
   width={400}
   height={300}
-/>
-
+/>, 
 <Photo
   file="14.15-dioda-rgb-mix.jpg"
   caption="Wszystkie trzy kanały włączone jednocześnie — dioda świeci na biało."
   alt="Dioda RGB emitująca białe światło (wszystkie kanały włączone)"
   width={400}
   height={300}
+/>],
+  ]}
 />
 
 <Task title="Zadanie 1" estimate="5 min">
