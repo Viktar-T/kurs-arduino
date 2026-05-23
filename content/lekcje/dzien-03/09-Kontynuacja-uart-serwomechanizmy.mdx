@@ -373,6 +373,68 @@ Wielu kompilatorów C++ ostrzega przed nieumyślnym fall-through. Jeśli chcesz 
 Wróć do [programu sterującego diodami przez UART](/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne#9-sterowanie-diodami-przez-uart) z lekcji o komunikacji z PC. Przepisz obsługę komend tak, aby zamiast kilku `if` używać `switch` i pojedynczych znaków poleceń.
 </Task>
 
+<Expandable title="Rozwiązanie zadania 2" heading="####">
+
+Zamiast odczytywać całe napisy (`"zielona"`, `"czerwona"`), używamy `Serial.read()` do pobrania jednego znaku i `switch` do wybrania akcji. Komendy: `z` — zielona, `c` — czerwona, `o` — obie.
+
+<Code lang="cpp" file="diody-switch-uart.ino">
+```cpp
+const byte pinZielona = 8;
+const byte pinCzerwona = 9;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(pinZielona, OUTPUT);
+  pinMode(pinCzerwona, OUTPUT);
+
+  digitalWrite(pinZielona, LOW);
+  digitalWrite(pinCzerwona, LOW);
+
+  Serial.println("Komendy: z=zielona, c=czerwona, o=obie");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char komenda = Serial.read();
+
+    switch (komenda) {
+      case 'z':
+        digitalWrite(pinZielona, HIGH);
+        delay(1000);
+        digitalWrite(pinZielona, LOW);
+        break;
+
+      case 'c':
+        digitalWrite(pinCzerwona, HIGH);
+        delay(1000);
+        digitalWrite(pinCzerwona, LOW);
+        break;
+
+      case 'o':
+        digitalWrite(pinZielona, HIGH);
+        digitalWrite(pinCzerwona, HIGH);
+        delay(1000);
+        digitalWrite(pinZielona, LOW);
+        digitalWrite(pinCzerwona, LOW);
+        break;
+
+      default:
+        if (komenda != '\n' && komenda != '\r') {
+          Serial.print("Nieznana komenda: ");
+          Serial.println(komenda);
+        }
+        break;
+    }
+  }
+}
+```
+</Code>
+
+Filtr `komenda != '\n' && komenda != '\r'` w `default` zapobiega wypisywaniu błędu dla znaków końca linii, które terminal dodaje automatycznie.
+
+</Expandable>
+
 ## 6. Serwomechanizm jako analogowy wskaźnik światła
 
 Nie każdą wartość trzeba pokazywać na ekranie. Czasem czytelniejszy jest klasyczny wskaźnik ze wskazówką, podobny do mierników analogowych. Zbudujemy taki wskaźnik z serwomechanizmu i fotorezystora.
