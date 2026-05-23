@@ -40,6 +40,7 @@ hardware:
 tags: [arduino, servo, biblioteki, serwomechanizm]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-silniki-pwm-serwomechanizm-zewnetrzne-biblioteki-id3913"
+  - "https://forbot.pl/blog/kurs-elektroniki-stabilizatory-napiecia-id4353"
 
 publish: true
 updated: "2026-05-13"
@@ -95,6 +96,30 @@ W ćwiczeniu wykorzystujemy układ ze stabilizatorem `LM7805`, który zasila ser
   width={676}
   height={356}
 />
+
+### Stabilizator LM7805
+
+`LM7805` to liniowy stabilizator napięcia w obudowie **TO-220**. Na wejście podajemy wyższe napięcie (np. `9 V` z baterii), a na wyjściu pojawia się stabilne **`5 V`** — niezależnie od zmian obciążenia, do maksymalnego prądu `1,5 A`.
+
+<Photo
+  file="08.09-lm7805-wyprowadzenia.png"
+  caption="Wyprowadzenia stabilizatora LM7805 (patrząc na płaską ściankę obudowy od lewej: IN, GND, OUT)."
+  alt="Rysunek wyprowadzeń stabilizatora LM7805: wyprowadzenie 1 — IN, 2 — GND, 3 — OUT"
+  width={569}
+  height={379}
+/>
+
+| Wyprowadzenie | Nazwa | Funkcja |
+|:---:|---|---|
+| 1 | **IN** | Napięcie wejściowe — podaj tutaj `9 V` z baterii |
+| 2 | **GND** | Masa — połączona wspólnie z masą Arduino |
+| 3 | **OUT** | Stabilizowane `5 V` — zasila serwomechanizm |
+
+Na wejściu i wyjściu stabilizatora dołącz kondensatory `100 nF` do masy. Wymaga tego producent układu, a przy okazji tłumią zakłócenia generowane przez silnik serwa podczas ruchu.
+
+<Callout type="note" title="Minimalny dropout LM7805">
+LM7805 potrzebuje co najmniej `2 V` różnicy między napięciem wejściowym a wyjściowym. Bateria `9 V` daje duży zapas: `9 − 5 = 4 V`. Gdy bateria rozładuje się poniżej ok. `7 V`, napięcie `5 V` na wyjściu zacznie spadać.
+</Callout>
 
 ## 3. Biblioteka `Servo` w praktyce
 

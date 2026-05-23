@@ -19,3 +19,6 @@ Based on your time estimates, redistribute the files sequentially into multiple 
 - Move the overflow sequentially into new folders: `dzien-02`, `dzien-03`, etc., applying the same 360-minute rule to each day.
 
 
+
+
+
