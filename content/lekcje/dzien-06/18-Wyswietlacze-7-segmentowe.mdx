@@ -1,4 +1,4 @@
-﻿---
+---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -6,42 +6,42 @@ status: draft
 sensitivity: low
 
 # --- Site-driving fields ---
-title: "WyĹ›wietlacze 7-segmentowe"
+title: "Wyświetlacze 7-segmentowe"
 slug: "wyswietlacze-7-segmentowe"
-summary: "Lekcja z kursu Forbot II #6: budowa wyĹ›wietlacza 7-segmentowego, konfiguracje wspĂłlnej katody i anody, podĹ‚Ä…czenie wyĹ›wietlacza LDD040AUE-101A do Arduino, wyĹ›wietlanie cyfr za pomocÄ… switch/case, multipleksowanie dwĂłch wyĹ›wietlaczy przez tranzystory NPN BC547 oraz biblioteka SevSeg."
+summary: "Lekcja z kursu Forbot II #6: budowa wyświetlacza 7-segmentowego, konfiguracje wspólnej katody i anody, podłączenie wyświetlacza LDD040AUE-101A do Arduino, wyświetlanie cyfr za pomocą switch/case, multipleksowanie dwóch wyświetlaczy przez tranzystory NPN BC547 oraz biblioteka SevSeg."
 
 day: 6
 weekend: 3
-order: 3
+order: 6
 duration: 90
 block: 12
-blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyĹ›wietlacze"
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
 forbotCourse: 2
 forbotChapter: 6
 
 objectives:
-  - "OpisaÄ‡ budowÄ™ wyĹ›wietlacza 7-segmentowego i oznaczyÄ‡ segmenty Aâ€“G"
-  - "WyjaĹ›niÄ‡ rĂłĹĽnicÄ™ miÄ™dzy konfiguracjÄ… wspĂłlnej katody a wspĂłlnej anody"
-  - "OdczytaÄ‡ pinout dwucyfrowego wyĹ›wietlacza na podstawie datasheet"
-  - "PodĹ‚Ä…czyÄ‡ wyĹ›wietlacz do Arduino z rezystorami ochronnymi"
-  - "NapisaÄ‡ funkcjÄ™ wyĹ›wietlajÄ…cÄ… cyfry 0â€“9 przy uĹĽyciu switch/case"
-  - "ZrealizowaÄ‡ multipleksowanie dwĂłch wyĹ›wietlaczy przez tranzystory NPN BC547"
-  - "ZainstalowaÄ‡ i skonfigurowaÄ‡ bibliotekÄ™ SevSeg"
-  - "WyĹ›wietliÄ‡ na wyĹ›wietlaczu wartoĹ›Ä‡ odczytanÄ… z potencjometru"
+  - "Opisać budowę wyświetlacza 7-segmentowego i oznaczyć segmenty A–G"
+  - "Wyjaśnić różnicę między konfiguracją wspólnej katody a wspólnej anody"
+  - "Odczytać pinout dwucyfrowego wyświetlacza na podstawie datasheet"
+  - "Podłączyć wyświetlacz do Arduino z rezystorami ochronnymi"
+  - "Napisać funkcję wyświetlającą cyfry 0–9 przy użyciu switch/case"
+  - "Zrealizować multipleksowanie dwóch wyświetlaczy przez tranzystory NPN BC547"
+  - "Zainstalować i skonfigurować bibliotekę SevSeg"
+  - "Wyświetlić na wyświetlaczu wartość odczytaną z potencjometru"
 
 prerequisites:
   - "dzien-04/klawiatura-wlasny-system-alarmowy"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
-  - { name: "Kabel USB-A â€” USB-B", qty: 1 }
-  - { name: "WyĹ›wietlacz 7-segmentowy dwucyfrowy LDD040AUE-101A (wspĂłlna katoda)", qty: 1 }
-  - { name: "Rezystor 1 kÎ©", qty: 7 }
-  - { name: "Rezystor 10 kÎ©", qty: 2 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Wyświetlacz 7-segmentowy dwucyfrowy LDD040AUE-101A (wspólna katoda)", qty: 1 }
+  - { name: "Rezystor 1 kΩ", qty: 7 }
+  - { name: "Rezystor 10 kΩ", qty: 2 }
   - { name: "Tranzystor NPN BC547", qty: 2 }
-  - { name: "Potencjometr 10 kÎ©", qty: 1 }
-  - { name: "PĹ‚ytka stykowa", qty: 1 }
-  - { name: "Przewody poĹ‚Ä…czeniowe", qty: 1 }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
 
 tags: [arduino, wyswietlacz, 7-segmentowy, multipleksowanie, tranzystor, bc547, sevseg, biblioteka, switch-case]
 sources:
@@ -52,95 +52,95 @@ publish: true
 updated: "2026-05-15"
 ---
 
-W projektach Arduino najczÄ™Ĺ›ciej spotykanym wyĹ›wietlaczem jest LCD z tekstem, rzadziej graficzny. Wiele osĂłb zupeĹ‚nie pomija jednak **wyĹ›wietlacze 7-segmentowe** â€” a szkoda, bo widzieliĹ›my je setki razy: na zegarkach cyfrowych, multimetrach czy kasach fiskalnych. W tej lekcji poznasz ich budowÄ™, nauczysz siÄ™ podĹ‚Ä…czaÄ‡ je do Arduino i sterowaÄ‡ nimi â€” najpierw rÄ™cznie, a potem za pomocÄ… gotowej biblioteki.
+W projektach Arduino najczęściej spotykanym wyświetlaczem jest LCD z tekstem, rzadziej graficzny. Wiele osób zupełnie pomija jednak **wyświetlacze 7-segmentowe** — a szkoda, bo widzieliśmy je setki razy: na zegarkach cyfrowych, multimetrach czy kasach fiskalnych. W tej lekcji poznasz ich budowę, nauczysz się podłączać je do Arduino i sterować nimi — najpierw ręcznie, a potem za pomocą gotowej biblioteki.
 
-## 1. Czym jest wyĹ›wietlacz 7-segmentowy
+## 1. Czym jest wyświetlacz 7-segmentowy
 
-WyĹ›wietlacz 7-segmentowy skĹ‚ada siÄ™ z siedmiu podĹ‚uĹĽnych elementĂłw Ĺ›wietlnych uĹ‚oĹĽonych w ksztaĹ‚t cyfry osiem. KaĹĽdy segment to w praktyce **dioda LED**, a caĹ‚oĹ›Ä‡ umieszczona jest w jednej obudowie. Segmenty oznaczamy literami **Aâ€“G** zgodnie z przyjÄ™tym standardem.
+Wyświetlacz 7-segmentowy składa się z siedmiu podłużnych elementów świetlnych ułożonych w kształt cyfry osiem. Każdy segment to w praktyce **dioda LED**, a całość umieszczona jest w jednej obudowie. Segmenty oznaczamy literami **A–G** zgodnie z przyjętym standardem.
 
 <Photo
   file="18.02-budowa-wyswietlacza-7seg.png"
-  caption="Standardowe oznaczenie segmentĂłw Aâ€“G wyĹ›wietlacza 7-segmentowego."
-  alt="Schemat wyĹ›wietlacza 7-segmentowego z oznaczonymi segmentami A przez G"
+  caption="Standardowe oznaczenie segmentów A–G wyświetlacza 7-segmentowego."
+  alt="Schemat wyświetlacza 7-segmentowego z oznaczonymi segmentami A przez G"
 />
 
-WyĹ›wietlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentĂłw. Na przykĹ‚ad:
+Wyświetlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentów. Na przykład:
 
-- **Cyfra 1** â€” segmenty B i C
-- **Cyfra 2** â€” segmenty A, B, D, E i G
-- **Cyfra 8** â€” wszystkie segmenty Aâ€“G
+- **Cyfra 1** — segmenty B i C
+- **Cyfra 2** — segmenty A, B, D, E i G
+- **Cyfra 8** — wszystkie segmenty A–G
 
 <Photo
   file="18.03-cyfry-segmenty-schemat.png"
-  caption="Mapowanie cyfr 0â€“9 na segmenty wyĹ›wietlacza â€” ktĂłre segmenty trzeba zapaliÄ‡ dla kaĹĽdej cyfry."
-  alt="Tabela pokazujÄ…ca, ktĂłre segmenty Aâ€“G naleĹĽy zapaliÄ‡ dla cyfr 0 do 9"
+  caption="Mapowanie cyfr 0–9 na segmenty wyświetlacza — które segmenty trzeba zapalić dla każdej cyfry."
+  alt="Tabela pokazująca, które segmenty A–G należy zapalić dla cyfr 0 do 9"
 />
 
 <Photo
   file="18.04-cyfry-segmenty-zdjecie.jpg"
-  caption="Fizyczny wyglÄ…d cyfr na wyĹ›wietlaczu 7-segmentowym."
-  alt="ZdjÄ™cie wyĹ›wietlacza 7-segmentowego prezentujÄ…cego rĂłĹĽne cyfry"
+  caption="Fizyczny wygląd cyfr na wyświetlaczu 7-segmentowym."
+  alt="Zdjęcie wyświetlacza 7-segmentowego prezentującego różne cyfry"
 />
 
-NiektĂłre wyĹ›wietlacze majÄ… dodatkowo **punkt dziesiÄ™tny (P)** â€” niezaleĹĽnÄ… diodÄ™ LED, ktĂłra moĹĽe sĹ‚uĹĽyÄ‡ jako przecinek lub peĹ‚niÄ‡ innÄ… rolÄ™. Uwaga: czasem mimo fizycznej obecnoĹ›ci kropki nie ma za niÄ… LED-a i sterowanie nie jest moĹĽliwe.
+Niektóre wyświetlacze mają dodatkowo **punkt dziesiętny (P)** — niezależną diodę LED, która może służyć jako przecinek lub pełnić inną rolę. Uwaga: czasem mimo fizycznej obecności kropki nie ma za nią LED-a i sterowanie nie jest możliwe.
 
-DostÄ™pne sÄ… wyĹ›wietlacze w rĂłĹĽnych rozmiarach, kolorach i konfiguracjach â€” jednoliczbowe i wieloliczbowe (2, 4 cyfry w jednej obudowie).
+Dostępne są wyświetlacze w różnych rozmiarach, kolorach i konfiguracjach — jednoliczbowe i wieloliczbowe (2, 4 cyfry w jednej obudowie).
 
-## 2. Konfiguracje â€” wspĂłlna katoda i wspĂłlna anoda
+## 2. Konfiguracje — wspólna katoda i wspólna anoda
 
-WewnÄ…trz wyĹ›wietlacza wszystkie diody LED mogÄ… byÄ‡ poĹ‚Ä…czone na dwa sposoby:
+Wewnątrz wyświetlacza wszystkie diody LED mogą być połączone na dwa sposoby:
 
-**WspĂłlna katoda** â€” wszystkie minusy (katody) diod poĹ‚Ä…czone sÄ… razem i wyprowadzone jako wspĂłlny pin GND. Segment zapala siÄ™ po podaniu stanu **HIGH** (napiÄ™cia) na jego pin.
+**Wspólna katoda** — wszystkie minusy (katody) diod połączone są razem i wyprowadzone jako wspólny pin GND. Segment zapala się po podaniu stanu **HIGH** (napięcia) na jego pin.
 
 <Photo
   file="18.05-wspolna-katoda.png"
-  caption="Konfiguracja wspĂłlnej katody â€” wszystkie katody diod poĹ‚Ä…czone razem."
-  alt="Schemat wewnÄ™trzny wyĹ›wietlacza ze wspĂłlnÄ… katodÄ…"
+  caption="Konfiguracja wspólnej katody — wszystkie katody diod połączone razem."
+  alt="Schemat wewnętrzny wyświetlacza ze wspólną katodą"
 />
 
-**WspĂłlna anoda** â€” wszystkie plusy (anody) diod poĹ‚Ä…czone sÄ… razem i podĹ‚Ä…czone do zasilania. Segment zapala siÄ™ po podaniu stanu **LOW** (masy) na jego pin.
+**Wspólna anoda** — wszystkie plusy (anody) diod połączone są razem i podłączone do zasilania. Segment zapala się po podaniu stanu **LOW** (masy) na jego pin.
 
 <Photo
   file="18.06-wspolna-anoda.png"
-  caption="Konfiguracja wspĂłlnej anody â€” wszystkie anody diod poĹ‚Ä…czone razem."
-  alt="Schemat wewnÄ™trzny wyĹ›wietlacza ze wspĂłlnÄ… anodÄ…"
+  caption="Konfiguracja wspólnej anody — wszystkie anody diod połączone razem."
+  alt="Schemat wewnętrzny wyświetlacza ze wspólną anodą"
 />
 
-<Callout type="note" title="SprawdĹş konfiguracjÄ™ przed podĹ‚Ä…czeniem">
-Przed podĹ‚Ä…czeniem wyĹ›wietlacza **zawsze sprawdzaj w datasheet**, czy masz do czynienia ze wspĂłlnÄ… katodÄ…, czy anodÄ…. PomyĹ‚ka spowoduje, ĹĽe wyĹ›wietlacz nie bÄ™dzie dziaĹ‚aĹ‚ lub zaĹ›wiecÄ… siÄ™ odwrotne segmenty.
+<Callout type="note">
+Przed podłączeniem wyświetlacza **zawsze sprawdzaj w datasheet**, czy masz do czynienia ze wspólną katodą, czy anodą. Pomyłka spowoduje, że wyświetlacz nie będzie działał lub zaświecą się odwrotne segmenty.
 </Callout>
 
-## 3. Testowany wyĹ›wietlacz â€” LDD040AUE-101A
+## 3. Testowany wyświetlacz — LDD040AUE-101A
 
-W zestawie kursowym znajdziesz **dwucyfrowy wyĹ›wietlacz ze wspĂłlnÄ… katodÄ…** oznaczony jako `LDD040AUE-101A` lub `LDD040AAG-101`. Obie wersje sÄ… identyczne â€” rĂłĹĽniÄ… siÄ™ tylko kolorem podĹ›wietlenia.
+W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** oznaczony jako `LDD040AUE-101A` lub `LDD040AAG-101`. Obie wersje są identyczne — różnią się tylko kolorem podświetlenia.
 
 <Photo
   file="18.07-wyswietlacz-LDD040-przod.png"
-  caption="WyĹ›wietlacz LDD040AUE-101A â€” widok od przodu z oznaczeniem wyprowadzeĹ„."
-  alt="Schemat wyĹ›wietlacza LDD040AUE-101A z numerowanymi pinami"
+  caption="Wyświetlacz LDD040AUE-101A — widok od przodu z oznaczeniem wyprowadzeń."
+  alt="Schemat wyświetlacza LDD040AUE-101A z numerowanymi pinami"
 />
 
 <Photo
   file="18.08-wyswietlacz-LDD040-tyl.png"
-  caption="WyĹ›wietlacz LDD040AUE-101A â€” widok od tyĹ‚u. Numery 1 i 16 naniesione przez producenta uĹ‚atwiajÄ… orientacjÄ™."
-  alt="TyĹ‚ wyĹ›wietlacza LDD040AUE-101A z widocznymi oznaczeniami pinĂłw 1 i 16"
+  caption="Wyświetlacz LDD040AUE-101A — widok od tyłu. Numery 1 i 16 naniesione przez producenta ułatwiają orientację."
+  alt="Tył wyświetlacza LDD040AUE-101A z widocznymi oznaczeniami pinów 1 i 16"
 />
 
-Z datasheetu wynika, ĹĽe w jednej obudowie mieszczÄ… siÄ™ **dwa niezaleĹĽne wyĹ›wietlacze** (7 wewnÄ™trznych struktur dla kaĹĽdego). Pin punktu dziesiÄ™tnego P nie ma podĹ‚Ä…czonego LED-a â€” w tej lekcji go nie uĹĽywamy.
+Z datasheetu wynika, że w jednej obudowie mieszczą się **dwa niezależne wyświetlacze** (7 wewnętrznych struktur dla każdego). Pin punktu dziesiętnego P nie ma podłączonego LED-a — w tej lekcji go nie używamy.
 
-Numery pinĂłw Ĺ‚atwo odczytaÄ‡, bo producent oznacza na spodzie wyĹ›wietlacza piny **1** i **16**.
+Numery pinów łatwo odczytać, bo producent oznacza na spodzie wyświetlacza piny **1** i **16**.
 
-<Callout type="warning" title="Rezystory ochronne sÄ… obowiÄ…zkowe">
-Diody LED wewnÄ…trz wyĹ›wietlacza palÄ… siÄ™ Ĺ‚atwiej niĹĽ zwykĹ‚e LED-y! **Nigdy nie podĹ‚Ä…czaj segmentĂłw bezpoĹ›rednio do Arduino bez rezystorĂłw ochronnych.** Zastosuj rezystory 1 kÎ© na kaĹĽdym pinie segmentu.
+<Callout type="warning">
+Diody LED wewnątrz wyświetlacza palą się łatwiej niż zwykłe LED-y! **Nigdy nie podłączaj segmentów bezpośrednio do Arduino bez rezystorów ochronnych.** Zastosuj rezystory 1 kΩ na każdym pinie segmentu.
 </Callout>
 
-## 4. PodĹ‚Ä…czenie wyĹ›wietlacza do Arduino
+## 4. Podłączenie wyświetlacza do Arduino
 
-Zaczynamy od podĹ‚Ä…czenia pierwszego wyĹ›wietlacza. Korzystamy z pinĂłw 1, 2, 3, 13, 14, 15, 16 wyĹ›wietlacza â€” kaĹĽdy przez rezystor 1 kÎ©.
+Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3, 13, 14, 15, 16 wyświetlacza — każdy przez rezystor 1 kΩ.
 
 <Table
-  caption="Mapowanie pinĂłw wyĹ›wietlacza na piny Arduino"
-  headers={["Pin wyĹ›wietlacza", "Segment", "Pin Arduino"]}
+  caption="Mapowanie pinów wyświetlacza na piny Arduino"
+  headers={["Pin wyświetlacza", "Segment", "Pin Arduino"]}
   rows={[
     ["1", "C", "2"],
     ["2", "E", "3"],
@@ -149,31 +149,31 @@ Zaczynamy od podĹ‚Ä…czenia pierwszego wyĹ›wietlacza. Korzystamy z pinĂ
     ["14", "G", "6"],
     ["15", "A", "7"],
     ["16", "F", "8"],
-    ["WspĂłlna katoda", "GND", "GND"]
+    ["Wspólna katoda", "GND", "GND"]
   ]}
 />
 
 <Photo
   file="18.09-podlaczenie-pierwszy-segment.jpg"
-  caption="Pierwszy etap montaĹĽu â€” umieszczanie wyĹ›wietlacza na pĹ‚ytce stykowej."
-  alt="WyĹ›wietlacz 7-segmentowy umieszczony na pĹ‚ytce stykowej"
+  caption="Pierwszy etap montażu — umieszczanie wyświetlacza na płytce stykowej."
+  alt="Wyświetlacz 7-segmentowy umieszczony na płytce stykowej"
 />
 
 <Photo
   file="18.10-podlaczenie-rezystory.jpg"
-  caption="MontaĹĽ rezystorĂłw 1 kÎ© na kaĹĽdym pinie segmentu â€” czÄ™Ĺ›Ä‡ rezystorĂłw biegnie pod wyĹ›wietlaczem."
-  alt="PĹ‚ytka stykowa z wyĹ›wietlaczem i rezystorami 1 kÎ©"
+  caption="Montaż rezystorów 1 kΩ na każdym pinie segmentu — część rezystorów biegnie pod wyświetlaczem."
+  alt="Płytka stykowa z wyświetlaczem i rezystorami 1 kΩ"
 />
 
 <Photo
   file="18.11-podlaczenie-kompletny-uklad.jpg"
-  caption="Kompletny ukĹ‚ad z pierwszym wyĹ›wietlaczem podĹ‚Ä…czonym do Arduino â€” wszystkie 7 segmentĂłw przez rezystory 1 kÎ©."
-  alt="ZdjÄ™cie kompletnego ukĹ‚adu: Arduino UNO, pĹ‚ytka stykowa, wyĹ›wietlacz 7-segmentowy"
+  caption="Kompletny układ z pierwszym wyświetlaczem podłączonym do Arduino — wszystkie 7 segmentów przez rezystory 1 kΩ."
+  alt="Zdjęcie kompletnego układu: Arduino UNO, płytka stykowa, wyświetlacz 7-segmentowy"
 />
 
-## 5. Test segmentĂłw
+## 5. Test segmentów
 
-Zanim wyĹ›wietlimy cyfry, sprawdĹşmy, czy wszystkie segmenty dziaĹ‚ajÄ… poprawnie â€” program zaĹ›wieca je jeden po drugim:
+Zanim wyświetlimy cyfry, sprawdźmy, czy wszystkie segmenty działają poprawnie — program zaświeca je jeden po drugim:
 
 <Code lang="cpp" file="test_segmentow.ino">
 ```cpp
@@ -195,7 +195,7 @@ void setup() {
   pinMode(SEG_F, OUTPUT);
   pinMode(SEG_G, OUTPUT);
 
-  // Test segmentow â€” zapalamy kolejno A do G
+  // Test segmentow — zapalamy kolejno A do G
   digitalWrite(SEG_A, HIGH);
   delay(800);
   digitalWrite(SEG_B, HIGH);
@@ -218,19 +218,19 @@ void loop() {
 
 <Photo
   file="18.12-test-segmentow-a.jpg"
-  caption="Wynik testu â€” zapalony segment A (gĂłrna pozioma kreska)."
-  alt="WyĹ›wietlacz 7-segmentowy z zapalonym segmentem A"
+  caption="Wynik testu — zapalony segment A (górna pozioma kreska)."
+  alt="Wyświetlacz 7-segmentowy z zapalonym segmentem A"
 />
 
 <Photo
   file="18.13-test-segmentow-wszystkie.jpg"
-  caption="Wszystkie segmenty zapalone â€” wyĹ›wietlacz pokazuje cyfrÄ™ 8."
-  alt="WyĹ›wietlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
+  caption="Wszystkie segmenty zapalone — wyświetlacz pokazuje cyfrę 8."
+  alt="Wyświetlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
 />
 
-## 6. WyĹ›wietlanie pojedynczych cyfr
+## 6. Wyświetlanie pojedynczych cyfr
 
-Kluczem do wyĹ›wietlania cyfr jest funkcja przyjmujÄ…ca liczbÄ™ 0â€“9 i ustawiajÄ…ca odpowiednie stany na wyjĹ›ciach za pomocÄ… instrukcji `switch/case`:
+Kluczem do wyświetlania cyfr jest funkcja przyjmująca liczbę 0–9 i ustawiająca odpowiednie stany na wyjściach za pomocą instrukcji `switch/case`:
 
 <Code lang="cpp" file="wyswietlanie_cyfr.ino">
 ```cpp
@@ -368,36 +368,36 @@ void wyswietlacz(int cyfra) {
 
 <Photo
   file="18.14-wyswietlanie-cyfry-5.jpg"
-  caption="WyĹ›wietlacz pokazuje cyfrÄ™ 5 â€” segmenty A, C, D, F, G zapalone."
-  alt="WyĹ›wietlacz 7-segmentowy pokazujÄ…cy cyfrÄ™ 5"
+  caption="Wyświetlacz pokazuje cyfrę 5 — segmenty A, C, D, F, G zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 5"
 />
 
 <Photo
   file="18.15-wyswietlanie-cyfry-8.jpg"
-  caption="Cyfra 8 na wyĹ›wietlaczu â€” wszystkie segmenty zapalone."
-  alt="WyĹ›wietlacz 7-segmentowy pokazujÄ…cy cyfrÄ™ 8"
+  caption="Cyfra 8 na wyświetlaczu — wszystkie segmenty zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 8"
 />
 
-<Expandable heading="####" title="Dlaczego switch/case, a nie if/else?">
-Instrukcja `switch/case` jest tu czytelniejsza niĹĽ seria `if/else if`, bo kaĹĽda cyfra to odrÄ™bny, zamkniÄ™ty przypadek. Kompilator moĹĽe teĹĽ wygenerowaÄ‡ z niej efektywnÄ… tablicÄ™ skokĂłw (jump table), co sprawia, ĹĽe wykonuje siÄ™ szybciej niĹĽ Ĺ‚aĹ„cuch warunkĂłw.
+<Expandable heading="##" title="Dlaczego switch/case, a nie if/else?">
+Instrukcja `switch/case` jest tu czytelniejsza niż seria `if/else if`, bo każda cyfra to odrębny, zamknięty przypadek. Kompilator może też wygenerować z niej efektywną tablicę skoków (jump table), co sprawia, że wykonuje się szybciej niż łańcuch warunków.
 </Expandable>
 
-<Task title="Zadanie 6.1 â€” symbol bĹ‚Ä™du" estimate="10 min">
-Rozszerz funkcjÄ™ `wyswietlacz()` o obsĹ‚ugÄ™ wartoĹ›ci wiÄ™kszych niĹĽ 9. Gdy podana cyfra przekracza 9, wyĹ›wietlacz powinien pokazaÄ‡ symbol bĹ‚Ä™du zĹ‚oĹĽony z zapalonych segmentĂłw **A, G i D** (poziome kreski â€” gĂłrna, Ĺ›rodkowa i dolna). PrzeĹ›lij kod oraz zdjÄ™cie dziaĹ‚ajÄ…cego ukĹ‚adu.
+<Task title="Zadanie 6.1 — symbol błędu">
+Rozszerz funkcję `wyswietlacz()` o obsługę wartości większych niż 9. Gdy podana cyfra przekracza 9, wyświetlacz powinien pokazać symbol błędu złożony z zapalonych segmentów **A, G i D** (poziome kreski — górna, środkowa i dolna). Prześlij kod oraz zdjęcie działającego układu.
 </Task>
 
-<Task title="Zadanie 6.2 â€” sterowanie przyciskami" estimate="15 min">
-Dodaj do ukĹ‚adu trzy przyciski:
-- **S1** â€” zwiÄ™ksza wyĹ›wietlanÄ… cyfrÄ™ o 1
-- **S2** â€” zmniejsza wyĹ›wietlanÄ… cyfrÄ™ o 1
-- **S3** â€” resetuje do zera
+<Task title="Zadanie 6.2 — sterowanie przyciskami">
+Dodaj do układu trzy przyciski:
+- **S1** — zwiększa wyświetlaną cyfrę o 1
+- **S2** — zmniejsza wyświetlaną cyfrę o 1
+- **S3** — resetuje do zera
 
-Zadbaj o obsĹ‚ugÄ™ zakresĂłw (po 9 wrĂłÄ‡ do 0, przed 0 zatrzymaj siÄ™ lub przejdĹş do 9). PrzeĹ›lij kod oraz wideo dziaĹ‚ajÄ…cego ukĹ‚adu.
+Zadbaj o obsługę zakresów (po 9 wróć do 0, przed 0 zatrzymaj się lub przejdź do 9). Prześlij kod oraz wideo działającego układu.
 </Task>
 
-## 7. Licznik na wyĹ›wietlaczu 7-segmentowym
+## 7. Licznik na wyświetlaczu 7-segmentowym
 
-WywoĹ‚ujÄ…c funkcjÄ™ `wyswietlacz()` w pÄ™tli `for`, Ĺ‚atwo zbudujemy licznik od 0 do 9:
+Wywołując funkcję `wyswietlacz()` w pętli `for`, łatwo zbudujemy licznik od 0 do 9:
 
 <Code lang="cpp" file="licznik_0_9.ino">
 ```cpp
@@ -488,31 +488,31 @@ void wyswietlacz(int cyfra) {
 
 <Photo
   file="18.16-licznik-animacja.gif"
-  caption="Animacja licznika â€” wyĹ›wietlacz cyklicznie pokazuje cyfry 0â€“9."
-  alt="Animacja GIF przedstawiajÄ…ca licznik 0â€“9 na wyĹ›wietlaczu 7-segmentowym"
+  caption="Animacja licznika — wyświetlacz cyklicznie pokazuje cyfry 0–9."
+  alt="Animacja GIF przedstawiająca licznik 0–9 na wyświetlaczu 7-segmentowym"
 />
 
 <Photo
   file="18.17-licznik-cyfry-gif.gif"
-  caption="Kolejne cyfry na wyĹ›wietlaczu 7-segmentowym w trakcie dziaĹ‚ania licznika."
-  alt="GIF z kolejnymi cyframi wyĹ›wietlanymi na wyĹ›wietlaczu 7-segmentowym"
+  caption="Kolejne cyfry na wyświetlaczu 7-segmentowym w trakcie działania licznika."
+  alt="GIF z kolejnymi cyframi wyświetlanymi na wyświetlaczu 7-segmentowym"
 />
 
-## 8. Drugi wyĹ›wietlacz â€” multipleksowanie
+## 8. Drugi wyświetlacz — multipleksowanie
 
-Teraz robi siÄ™ trudniej â€” przynajmniej po stronie poĹ‚Ä…czeĹ„.
+Teraz robi się trudniej — przynajmniej po stronie połączeń.
 
-**Naiwne podejĹ›cie** to podĹ‚Ä…czenie drugiego wyĹ›wietlacza do kolejnych 7 pinĂłw Arduino. Problem: skoĹ„czyĹ‚yby siÄ™ wolne piny, a przy 3 lub 4 wyĹ›wietlaczach byĹ‚oby to zupeĹ‚nie niemoĹĽliwe.
+**Naiwne podejście** to podłączenie drugiego wyświetlacza do kolejnych 7 pinów Arduino. Problem: skończyłyby się wolne piny, a przy 3 lub 4 wyświetlaczach byłoby to zupełnie niemożliwe.
 
-**Sprytne rozwiÄ…zanie:** podĹ‚Ä…czymy segmenty obu wyĹ›wietlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i uĹĽyjemy tylko 7 pinĂłw dla segmentĂłw. Ĺ»eby wyĹ›wietlaÄ‡ **rĂłĹĽne cyfry** na kaĹĽdym wyĹ›wietlaczu, zastosujemy **multipleksowanie** z tranzystorami.
+**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami.
 
-### 8.1. PoĹ‚Ä…czenie segmentĂłw
+### 8.1. Połączenie segmentów
 
-OdpowiadajÄ…ce sobie piny segmentĂłw obu wyĹ›wietlaczy Ĺ‚Ä…czymy razem:
+Odpowiadające sobie piny segmentów obu wyświetlaczy łączymy razem:
 
 <Table
-  caption="PoĹ‚Ä…czenie pinĂłw obu wyĹ›wietlaczy (piny segmentĂłw)"
-  headers={["Pin wyĹ›wietlacza 1", "Pin wyĹ›wietlacza 2", "Segment"]}
+  caption="Połączenie pinów obu wyświetlaczy (piny segmentów)"
+  headers={["Pin wyświetlacza 1", "Pin wyświetlacza 2", "Segment"]}
   rows={[
     ["1 (C)", "8 (C)", "C"],
     ["2 (E)", "7 (E)", "E"],
@@ -526,61 +526,61 @@ OdpowiadajÄ…ce sobie piny segmentĂłw obu wyĹ›wietlaczy Ĺ‚Ä…czymy r
 
 <Photo
   file="18.18-drugi-wyswietlacz-schemat.png"
-  caption="Schemat podĹ‚Ä…czenia dwĂłch wyĹ›wietlaczy ze wspĂłlnymi pinami segmentĂłw."
-  alt="Schemat poĹ‚Ä…czeĹ„ dwĂłch wyĹ›wietlaczy 7-segmentowych ze wspĂłlnymi segmentami"
+  caption="Schemat podłączenia dwóch wyświetlaczy ze wspólnymi pinami segmentów."
+  alt="Schemat połączeń dwóch wyświetlaczy 7-segmentowych ze wspólnymi segmentami"
 />
 
 <Photo
   file="18.19-drugi-wyswietlacz-polaczenia.jpg"
-  caption="ĹÄ…czenie odpowiadajÄ…cych sobie pinĂłw segmentĂłw obu wyĹ›wietlaczy za pomocÄ… zworek."
-  alt="PĹ‚ytka stykowa z dwoma wyĹ›wietlaczami poĹ‚Ä…czonymi zworkami"
+  caption="Łączenie odpowiadających sobie pinów segmentów obu wyświetlaczy za pomocą zworek."
+  alt="Płytka stykowa z dwoma wyświetlaczami połączonymi zworkami"
 />
 
 <Photo
   file="18.20-drugi-wyswietlacz-uklad.jpg"
-  caption="Oba wyĹ›wietlacze podĹ‚Ä…czone wspĂłlnymi segmentami â€” na razie wyĹ›wietlajÄ… identycznÄ… cyfrÄ™."
-  alt="Dwa wyĹ›wietlacze 7-segmentowe podĹ‚Ä…czone do Arduino pokazujÄ…ce tÄ™ samÄ… cyfrÄ™"
+  caption="Oba wyświetlacze podłączone wspólnymi segmentami — na razie wyświetlają identyczną cyfrę."
+  alt="Dwa wyświetlacze 7-segmentowe podłączone do Arduino pokazujące tę samą cyfrę"
 />
 
 ### 8.2. Sterowanie przez tranzystory NPN (BC547)
 
-Gdy zapalone sÄ… wszystkie segmenty, przez katodÄ™ wyĹ›wietlacza moĹĽe pĹ‚ynÄ…Ä‡ ponad 20 mA â€” za duĹĽo dla bezpoĹ›redniego podĹ‚Ä…czenia do pinu Arduino. Dlatego kaĹĽdy wyĹ›wietlacz wĹ‚Ä…czamy przez **tranzystor NPN BC547**:
+Gdy zapalone są wszystkie segmenty, przez katodę wyświetlacza może płynąć ponad 20 mA — za dużo dla bezpośredniego podłączenia do pinu Arduino. Dlatego każdy wyświetlacz włączamy przez **tranzystor NPN BC547**:
 
-- **Kolektor** tranzystora â†’ katoda wyĹ›wietlacza (pin 4 â€” wyĹ›wietlacz 1; pin 5 â€” wyĹ›wietlacz 2)
-- **Baza** przez rezystor 10 kÎ© â†’ pin Arduino (pin 10 â€” wyĹ›wietlacz 1; pin 9 â€” wyĹ›wietlacz 2)
-- **Emiter** â†’ GND
+- **Kolektor** tranzystora → katoda wyświetlacza (pin 4 — wyświetlacz 1; pin 5 — wyświetlacz 2)
+- **Baza** przez rezystor 10 kΩ → pin Arduino (pin 10 — wyświetlacz 1; pin 9 — wyświetlacz 2)
+- **Emiter** → GND
 
-Stan **HIGH** na pinie Arduino â†’ tranzystor przewodzi â†’ wyĹ›wietlacz Ĺ›wieci.
+Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci.
 
 <Photo
   file="18.21-tranzystor-BC547-uklad.jpg"
-  caption="Tranzystor BC547 jako klucz sterujÄ…cy wyĹ›wietlaczem â€” kolektor do katody wyĹ›wietlacza."
-  alt="Schemat podĹ‚Ä…czenia tranzystora BC547 do wyĹ›wietlacza 7-segmentowego"
+  caption="Tranzystor BC547 jako klucz sterujący wyświetlaczem — kolektor do katody wyświetlacza."
+  alt="Schemat podłączenia tranzystora BC547 do wyświetlacza 7-segmentowego"
 />
 
 <Photo
   file="18.22-tranzystor-BC547-podlaczenie.jpg"
-  caption="MontaĹĽ tranzystora BC547 na pĹ‚ytce stykowej â€” baza przez rezystor 10 kÎ© do Arduino."
-  alt="Tranzystor BC547 na pĹ‚ytce stykowej z rezystorem 10 kÎ© na bazie"
+  caption="Montaż tranzystora BC547 na płytce stykowej — baza przez rezystor 10 kΩ do Arduino."
+  alt="Tranzystor BC547 na płytce stykowej z rezystorem 10 kΩ na bazie"
 />
 
 <Photo
   file="18.23-tranzystor-kompletny-uklad.jpg"
-  caption="Kompletny ukĹ‚ad z dwoma wyĹ›wietlaczami sterowanymi przez tranzystory NPN."
-  alt="PĹ‚ytka stykowa z dwoma wyĹ›wietlaczami i dwoma tranzystorami BC547"
+  caption="Kompletny układ z dwoma wyświetlaczami sterowanymi przez tranzystory NPN."
+  alt="Płytka stykowa z dwoma wyświetlaczami i dwoma tranzystorami BC547"
 />
 
 ### 8.3. Multipleksowanie w praktyce
 
-Idea multipleksowania: **bardzo szybko** na zmianÄ™ wĹ‚Ä…czamy wyĹ›wietlacz 1 (z cyfrÄ… dla niego), potem wyĹ›wietlacz 2 (z jego cyfrÄ…), i tak w kĂłĹ‚ko. Ludzkie oko nie nadÄ…ĹĽa za przeĹ‚Ä…czaniem przy czÄ™stotliwoĹ›ci ~100 Hz â€” wydaje siÄ™, ĹĽe oba Ĺ›wiecÄ… jednoczeĹ›nie!
+Idea multipleksowania: **bardzo szybko** na zmianę włączamy wyświetlacz 1 (z cyfrą dla niego), potem wyświetlacz 2 (z jego cyfrą), i tak w kółko. Ludzkie oko nie nadąża za przełączaniem przy częstotliwości ~100 Hz — wydaje się, że oba świecą jednocześnie!
 
-<Expandable title="GĹ‚Ä™biej: dlaczego multipleksowany wyĹ›wietlacz wyglÄ…da jak ciÄ…gle Ĺ›wiecÄ…cy?" heading="####">
+<Expandable title="Głębiej: dlaczego multipleksowany wyświetlacz wygląda jak ciągle świecący?" heading="####">
 
-Podczas multipleksowania w jednej chwili Ĺ›wieci tylko jedna cyfra, ale przeĹ‚Ä…czanie jest tak szybkie, ĹĽe oko i mĂłzg uĹ›redniajÄ… obraz w czasie. To zjawisko nazywa siÄ™ bezwĹ‚adnoĹ›ciÄ… widzenia: krĂłtkie bĹ‚yski nastÄ™pujÄ…ce po sobie sÄ… odbierane jako stabilne Ĺ›wiatĹ‚o.
+Podczas multipleksowania w jednej chwili świeci tylko jedna cyfra, ale przełączanie jest tak szybkie, że oko i mózg uśredniają obraz w czasie. To zjawisko nazywa się bezwładnością widzenia: krótkie błyski następujące po sobie są odbierane jako stabilne światło.
 
-Jest jednak koszt: kaĹĽda cyfra Ĺ›wieci tylko przez czÄ™Ĺ›Ä‡ czasu. Przy dwĂłch cyfrach kaĹĽda ma okoĹ‚o 50% czasu Ĺ›wiecenia, przy czterech â€” okoĹ‚o 25%. Dlatego wyĹ›wietlacze multipleksowane czÄ™sto steruje siÄ™ nieco wiÄ™kszym prÄ…dem chwilowym albo dobiera mniejsze rezystory, ale zawsze w granicach dopuszczalnych dla LED, tranzystorĂłw i mikrokontrolera.
+Jest jednak koszt: każda cyfra świeci tylko przez część czasu. Przy dwóch cyfrach każda ma około 50% czasu świecenia, przy czterech — około 25%. Dlatego wyświetlacze multipleksowane często steruje się nieco większym prądem chwilowym albo dobiera mniejsze rezystory, ale zawsze w granicach dopuszczalnych dla LED, tranzystorów i mikrokontrolera.
 
-Drugim ograniczeniem jest odĹ›wieĹĽanie. JeĹ›li program zatrzyma siÄ™ na dĹ‚ugim `delay()`, jedna cyfra moĹĽe zostaÄ‡ wĹ‚Ä…czona zbyt dĹ‚ugo, a druga zgaĹ›nie. Dlatego biblioteki takie jak `SevSeg` wymagajÄ… bardzo czÄ™stego wywoĹ‚ywania `refreshDisplay()`.
+Drugim ograniczeniem jest odświeżanie. Jeśli program zatrzyma się na długim `delay()`, jedna cyfra może zostać włączona zbyt długo, a druga zgaśnie. Dlatego biblioteki takie jak `SevSeg` wymagają bardzo częstego wywoływania `refreshDisplay()`.
 
 </Expandable>
 
@@ -682,67 +682,67 @@ void wyswietlacz(int cyfra) {
 
 <Photo
   file="18.24-multipleksowanie-uklad.jpg"
-  caption="Kompletny ukĹ‚ad multipleksowania â€” dwa wyĹ›wietlacze, dwa tranzystory, wspĂłlne segmenty."
-  alt="ZdjÄ™cie ukĹ‚adu multipleksowania dwĂłch wyĹ›wietlaczy 7-segmentowych"
+  caption="Kompletny układ multipleksowania — dwa wyświetlacze, dwa tranzystory, wspólne segmenty."
+  alt="Zdjęcie układu multipleksowania dwóch wyświetlaczy 7-segmentowych"
 />
 
 <Photo
   file="18.25-multipleksowanie-wynik-statyczny.jpg"
-  caption="WyĹ›wietlacze pokazujÄ… rĂłĹĽne cyfry dziÄ™ki multipleksowaniu."
-  alt="Dwa wyĹ›wietlacze 7-segmentowe pokazujÄ…ce rĂłĹĽne cyfry jednoczeĹ›nie"
+  caption="Wyświetlacze pokazują różne cyfry dzięki multipleksowaniu."
+  alt="Dwa wyświetlacze 7-segmentowe pokazujące różne cyfry jednocześnie"
 />
 
-**WpĹ‚yw opĂłĹşnienia na jakoĹ›Ä‡ obrazu:**
+**Wpływ opóźnienia na jakość obrazu:**
 
 <Photo
   file="18.26-multipleksowanie-100ms.gif"
-  caption="delay(100) â€” wyraĹşne migotanie, oko zdÄ…ĹĽa zobaczyÄ‡ kaĹĽde przeĹ‚Ä…czenie."
-  alt="Animacja GIF multipleksowania z opĂłĹşnieniem 100 ms â€” widoczne migotanie"
+  caption="delay(100) — wyraźne migotanie, oko zdąża zobaczyć każde przełączenie."
+  alt="Animacja GIF multipleksowania z opóźnieniem 100 ms — widoczne migotanie"
 />
 
 <Photo
   file="18.27-multipleksowanie-50ms.gif"
-  caption="delay(50) â€” migotanie mniej widoczne, ale nadal zauwaĹĽalne."
-  alt="Animacja GIF multipleksowania z opĂłĹşnieniem 50 ms"
+  caption="delay(50) — migotanie mniej widoczne, ale nadal zauważalne."
+  alt="Animacja GIF multipleksowania z opóźnieniem 50 ms"
 />
 
 <Photo
   file="18.28-multipleksowanie-10ms.gif"
-  caption="delay(10) â€” ~50 Hz odĹ›wieĹĽania, oko widzi stabilny obraz na obu wyĹ›wietlaczach."
-  alt="Animacja GIF multipleksowania z opĂłĹşnieniem 10 ms â€” stabilny obraz"
+  caption="delay(10) — ~50 Hz odświeżania, oko widzi stabilny obraz na obu wyświetlaczach."
+  alt="Animacja GIF multipleksowania z opóźnieniem 10 ms — stabilny obraz"
 />
 
-<Callout type="warning" title="delay() blokuje multipleksowanie">
-PodejĹ›cie z `delay()` w multipleksowaniu dziaĹ‚a demonstracyjnie, ale **blokuje caĹ‚y procesor**. W praktycznych projektach nie moĹĽesz uĹĽywaÄ‡ `delay()` razem z multipleksowaniem â€” zamiast tego uĹĽywaj `millis()` (omĂłwione w lekcji o wielozadaniowoĹ›ci) lub skorzystaj z gotowej biblioteki SevSeg.
+<Callout type="warning">
+Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje cały procesor**. W praktycznych projektach nie możesz używać `delay()` razem z multipleksowaniem — zamiast tego używaj `millis()` (omówione w lekcji o wielozadaniowości) lub skorzystaj z gotowej biblioteki SevSeg.
 </Callout>
 
-<Task title="Zadanie 6.3 â€” licznik 0â€“99">
-Napisz program wyĹ›wietlajÄ…cy na dwĂłch wyĹ›wietlaczach licznik od 00 do 99. Licznik moĹĽe dziaĹ‚aÄ‡ automatycznie (co sekundÄ™) lub reagowaÄ‡ na naciĹ›niÄ™cie przycisku. PrzeĹ›lij kod, zdjÄ™cia i wideo dziaĹ‚ajÄ…cego ukĹ‚adu.
+<Task title="Zadanie 6.3 — licznik 0–99">
+Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Licznik może działać automatycznie (co sekundę) lub reagować na naciśnięcie przycisku. Prześlij kod, zdjęcia i wideo działającego układu.
 
-*WskazĂłwka:* DziesiÄ…tki wyĹ›lij na wyĹ›wietlacz 1, jednoĹ›ci na wyĹ›wietlacz 2.
+*Wskazówka:* Dziesiątki wyślij na wyświetlacz 1, jedności na wyświetlacz 2.
 </Task>
 
-<Callout type="tip" title="Jak uĹĽywaÄ‡ Pomocnika AI do nauki programowania">
-WyĹ›wietlacze 7-segmentowe i multipleksowanie to temat, gdzie AI pomoĹĽe zrozumieÄ‡ zarĂłwno fizykÄ™, jak i kod:
+<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
+Wyświetlacze 7-segmentowe i multipleksowanie to temat, gdzie AI pomoże zrozumieć zarówno fizykę, jak i kod:
 
-- **Zasada multipleksowania** â€” zapytaj AI: â€žWyjaĹ›nij, dlaczego szybkie przeĹ‚Ä…czanie miÄ™dzy dwoma wyĹ›wietlaczami 7-segmentowymi (multipleksowanie) sprawia, ĹĽe oko widzi oba jednoczeĹ›nie. Co to jest persistence of vision?". Zrozumiesz, dlaczego `delay()` niszczy multipleksowanie.
-- **Wzorce segmentĂłw dla liter** â€” poproĹ› AI: â€žWygeneruj tablicÄ™ bajtĂłw dla wyĹ›wietlacza 7-segmentowego przedstawiajÄ…cÄ… litery A, b, C, d, E, F. UĹĽyj kolejnoĹ›ci segmentĂłw A, B, C, D, E, F, G". AI wygeneruje wartoĹ›ci gotowe do `switch-case`.
-- **Dlaczego delay() blokuje multipleksowanie?** â€” wklej kod z `delay()` wewnÄ…trz pÄ™tli multipleksowania i zapytaj: â€žWyjaĹ›nij, co siÄ™ stanie z obrazem na wyĹ›wietlaczu, gdy `delay(500)` jest wywoĹ‚ane wewnÄ…trz pÄ™tli multipleksowania. Jak to naprawiÄ‡ uĹĽywajÄ…c `millis()`?". To naturalne wprowadzenie do wielozadaniowoĹ›ci.
+- **Zasada multipleksowania** — zapytaj AI: „Wyjaśnij, dlaczego szybkie przełączanie między dwoma wyświetlaczami 7-segmentowymi (multipleksowanie) sprawia, że oko widzi oba jednocześnie. Co to jest persistence of vision?". Zrozumiesz, dlaczego `delay()` niszczy multipleksowanie.
+- **Wzorce segmentów dla liter** — poproś AI: „Wygeneruj tablicę bajtów dla wyświetlacza 7-segmentowego przedstawiającą litery A, b, C, d, E, F. Użyj kolejności segmentów A, B, C, D, E, F, G". AI wygeneruje wartości gotowe do `switch-case`.
+- **Dlaczego delay() blokuje multipleksowanie?** — wklej kod z `delay()` wewnątrz pętli multipleksowania i zapytaj: „Wyjaśnij, co się stanie z obrazem na wyświetlaczu, gdy `delay(500)` jest wywołane wewnątrz pętli multipleksowania. Jak to naprawić używając `millis()`?". To naturalne wprowadzenie do wielozadaniowości.
 </Callout>
 
 ## 9. Gotowa biblioteka SevSeg
 
-Programowanie multipleksowania rÄ™cznie jest moĹĽliwe, ale skomplikowane. Na szczÄ™Ĺ›cie istnieje biblioteka **SevSeg**, ktĂłra obsĹ‚uguje caĹ‚Ä… zĹ‚oĹĽonoĹ›Ä‡ za nas.
+Programowanie multipleksowania ręcznie jest możliwe, ale skomplikowane. Na szczęście istnieje biblioteka **SevSeg**, która obsługuje całą złożoność za nas.
 
 ### 9.1. Instalacja biblioteki
 
-1. WejdĹş na GitHub i pobierz repozytorium SevSeg jako ZIP (*Clone or download â†’ Download ZIP*).
+1. Wejdź na GitHub i pobierz repozytorium SevSeg jako ZIP (*Clone or download → Download ZIP*).
 2. Wypakuj folder `SevSeg-master`.
 3. Skopiuj go do katalogu bibliotek Arduino: `C:\Users\<nazwa_uzytkownika>\Documents\Arduino\libraries\`.
 4. Uruchom ponownie Arduino IDE.
-5. SprawdĹş instalacjÄ™: *Plik â†’ PrzykĹ‚ady* â€” powinien pojawiÄ‡ siÄ™ dziaĹ‚ **SevSeg**.
+5. Sprawdź instalację: *Plik → Przykłady* — powinien pojawić się dział **SevSeg**.
 
-### 9.2. WyĹ›wietlanie liczby
+### 9.2. Wyświetlanie liczby
 
 <Code lang="cpp" file="sevseg_liczba.ino">
 ```cpp
@@ -760,14 +760,14 @@ void setup() {
 
 void loop() {
   sevseg.setNumber(34, 2); // Wyswietl 34 (2 cyfry)
-  sevseg.refreshDisplay(); // Odswiezanie â€” musi byc wywolywane regularnie!
+  sevseg.refreshDisplay(); // Odswiezanie — musi byc wywolywane regularnie!
 }
 ```
 </Code>
 
-Pierwsza wartoĹ›Ä‡ `setNumber()` to wyĹ›wietlana liczba; druga to liczba cyfr. Metoda `refreshDisplay()` sama obsĹ‚uguje multipleksowanie â€” ale **musi byÄ‡ wywoĹ‚ywana bardzo czÄ™sto**, najlepiej w kaĹĽdym obrocie pÄ™tli `loop()`.
+Pierwsza wartość `setNumber()` to wyświetlana liczba; druga to liczba cyfr. Metoda `refreshDisplay()` sama obsługuje multipleksowanie — ale **musi być wywoływana bardzo często**, najlepiej w każdym obrocie pętli `loop()`.
 
-### 9.3. WyĹ›wietlanie znakĂłw
+### 9.3. Wyświetlanie znaków
 
 <Code lang="cpp" file="sevseg_znaki.ino">
 ```cpp
@@ -792,29 +792,29 @@ void loop() {
 
 <Photo
   file="18.29-sevseg-biblioteka-uklad.jpg"
-  caption="UkĹ‚ad testowy z bibliotekÄ… SevSeg â€” te same poĹ‚Ä…czenia fizyczne co wczeĹ›niej."
-  alt="UkĹ‚ad z dwoma wyĹ›wietlaczami 7-segmentowymi dziaĹ‚ajÄ…cy z bibliotekÄ… SevSeg"
+  caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
+  alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
 />
 
 <Photo
   file="18.30-sevseg-dostepne-znaki.png"
-  caption="Znaki obsĹ‚ugiwane przez bibliotekÄ™ SevSeg â€” cyfry 0â€“9 i litery Aâ€“Z (z rĂłĹĽnÄ… czytelnoĹ›ciÄ… na 7 segmentach)."
-  alt="Tabela znakĂłw obsĹ‚ugiwanych przez bibliotekÄ™ SevSeg w formacie binarnym"
+  caption="Znaki obsługiwane przez bibliotekę SevSeg — cyfry 0–9 i litery A–Z (z różną czytelnością na 7 segmentach)."
+  alt="Tabela znaków obsługiwanych przez bibliotekę SevSeg w formacie binarnym"
 />
 
 <Photo
   file="18.31-sevseg-licznik-animacja.gif"
-  caption="Animacja licznika zrealizowanego z bibliotekÄ… SevSeg â€” oba wyĹ›wietlacze dziaĹ‚ajÄ… pĹ‚ynnie."
-  alt="Animacja GIF licznika z bibliotekÄ… SevSeg na dwĂłch wyĹ›wietlaczach 7-segmentowych"
+  caption="Animacja licznika zrealizowanego z biblioteką SevSeg — oba wyświetlacze działają płynnie."
+  alt="Animacja GIF licznika z biblioteką SevSeg na dwóch wyświetlaczach 7-segmentowych"
 />
 
-## 10. Ostatni przykĹ‚ad â€” potencjometr na wyĹ›wietlaczu
+## 10. Ostatni przykład — potencjometr na wyświetlaczu
 
-PoĹ‚Ä…czmy wyĹ›wietlacz z potencjometrem: odczytamy wartoĹ›Ä‡ z ADC, przeskalujemy jÄ… do zakresu 0â€“99 i wyĹ›wietlimy na wyĹ›wietlaczu.
+Połączmy wyświetlacz z potencjometrem: odczytamy wartość z ADC, przeskalujemy ją do zakresu 0–99 i wyświetlimy na wyświetlaczu.
 
-**PodĹ‚Ä…czenie potencjometru:**
-- ZewnÄ™trzne wyprowadzenia â†’ 5V i GND
-- Ĺšrodkowe wyprowadzenie (suwak) â†’ pin A0
+**Podłączenie potencjometru:**
+- Zewnętrzne wyprowadzenia → 5V i GND
+- Środkowe wyprowadzenie (suwak) → pin A0
 
 <Code lang="cpp" file="sevseg_potencjometr.ino">
 ```cpp
@@ -831,8 +831,8 @@ void setup() {
 }
 
 void loop() {
-  int potencjometr = analogRead(A0);              // Odczyt 0â€“1023
-  potencjometr = map(potencjometr, 0, 1023, 0, 99); // Przeskalowanie do 0â€“99
+  int potencjometr = analogRead(A0);              // Odczyt 0–1023
+  potencjometr = map(potencjometr, 0, 1023, 0, 99); // Przeskalowanie do 0–99
 
   sevseg.setNumber(potencjometr, 2);
   sevseg.refreshDisplay();
@@ -842,35 +842,35 @@ void loop() {
 
 <Photo
   file="18.32-potencjometr-uklad.jpg"
-  caption="UkĹ‚ad z potencjometrem podĹ‚Ä…czonym do A0 â€” Ĺ›rodkowe wyprowadzenie do A0, boczne do 5V i GND."
-  alt="PĹ‚ytka stykowa z potencjometrem podĹ‚Ä…czonym do pinu A0 Arduino"
+  caption="Układ z potencjometrem podłączonym do A0 — środkowe wyprowadzenie do A0, boczne do 5V i GND."
+  alt="Płytka stykowa z potencjometrem podłączonym do pinu A0 Arduino"
 />
 
 <Photo
   file="18.33-potencjometr-wynik.jpg"
-  caption="WyĹ›wietlacz pokazuje wartoĹ›Ä‡ odczytanÄ… z potencjometru â€” obracanie gaĹ‚ki zmienia liczbÄ™."
-  alt="WyĹ›wietlacze 7-segmentowe pokazujÄ…ce wartoĹ›Ä‡ z potencjometru"
+  caption="Wyświetlacz pokazuje wartość odczytaną z potencjometru — obracanie gałki zmienia liczbę."
+  alt="Wyświetlacze 7-segmentowe pokazujące wartość z potencjometru"
 />
 
-<Callout type="warning" title="SevSeg wymaga ciÄ…gĹ‚ego refreshDisplay()">
-**WaĹĽne ograniczenie biblioteki SevSeg:** biblioteka uĹ‚atwia konfiguracjÄ™, ale **nie eliminuje potrzeby multipleksowania**. CaĹ‚y proces wymaga ciÄ…gĹ‚ego wywoĹ‚ywania `refreshDisplay()`. Z tego powodu programy korzystajÄ…ce z wyĹ›wietlaczy 7-segmentowych **nie mogÄ… uĹĽywaÄ‡ `delay()`** â€” wszystkie opĂłĹşnienia muszÄ… byÄ‡ realizowane za pomocÄ… `millis()`. Zajmiemy siÄ™ tym szczegĂłĹ‚owo w lekcji o wielozadaniowoĹ›ci.
+<Callout type="warning">
+**Ważne ograniczenie biblioteki SevSeg:** biblioteka ułatwia konfigurację, ale **nie eliminuje potrzeby multipleksowania**. Cały proces wymaga ciągłego wywoływania `refreshDisplay()`. Z tego powodu programy korzystające z wyświetlaczy 7-segmentowych **nie mogą używać `delay()`** — wszystkie opóźnienia muszą być realizowane za pomocą `millis()`. Zajmiemy się tym szczegółowo w lekcji o wielozadaniowości.
 
-JeĹ›li chcesz zobaczyÄ‡ dziaĹ‚ajÄ…cy przykĹ‚ad z `millis()`, zajrzyj do przykĹ‚adĂłw biblioteki: *Plik â†’ PrzykĹ‚ady â†’ SevSeg â†’ SevSeg_Counter*.
+Jeśli chcesz zobaczyć działający przykład z `millis()`, zajrzyj do przykładów biblioteki: *Plik → Przykłady → SevSeg → SevSeg_Counter*.
 </Callout>
 
 <Photo
   file="18.34-podsumowanie.jpg"
-  caption="Gotowy ukĹ‚ad z bibliotekÄ… SevSeg i potencjometrem â€” wyĹ›wietlacze dziaĹ‚ajÄ… pĹ‚ynnie bez delay()."
-  alt="Kompletny ukĹ‚ad z dwoma wyĹ›wietlaczami 7-segmentowymi i potencjometrem"
+  caption="Gotowy układ z biblioteką SevSeg i potencjometrem — wyświetlacze działają płynnie bez delay()."
+  alt="Kompletny układ z dwoma wyświetlaczami 7-segmentowymi i potencjometrem"
 />
 
 ## Podsumowanie
 
-W tej lekcji poznaĹ‚eĹ› wyĹ›wietlacze 7-segmentowe od podstaw:
+W tej lekcji poznałeś wyświetlacze 7-segmentowe od podstaw:
 
-- KaĹĽdy wyĹ›wietlacz to 7 diod LED w jednej obudowie, oznaczonych literami **Aâ€“G**. CyfrÄ™ wyĹ›wietlasz, zapalajÄ…c odpowiednie segmenty.
-- IstniejÄ… dwa typy: **wspĂłlna katoda** (segmenty wĹ‚Ä…cza HIGH) i **wspĂłlna anoda** (segmenty wĹ‚Ä…cza LOW).
-- Zawsze stosuj **rezystory ochronne 1 kÎ©** na pinach segmentĂłw â€” diody w wyĹ›wietlaczu palÄ… siÄ™ Ĺ‚atwiej niĹĽ zwykĹ‚e LED-y.
-- Przy wielu wyĹ›wietlaczach zamiast dedykowanych pinĂłw dla kaĹĽdego stosuj **multipleksowanie** â€” wspĂłlne segmenty + tranzystory NPN sterujÄ…ce kaĹĽdym wyĹ›wietlaczem osobno.
-- Multipleksowanie z `delay()` blokuje procesor; w praktyce uĹĽywaj **biblioteki SevSeg** i jej metody `refreshDisplay()` wywoĹ‚ywanej cyklicznie z `millis()`.
-- `setNumber(wartoĹ›Ä‡, cyfry)` wyĹ›wietla liczby, `setChars("XY")` â€” znaki.
+- Każdy wyświetlacz to 7 diod LED w jednej obudowie, oznaczonych literami **A–G**. Cyfrę wyświetlasz, zapalając odpowiednie segmenty.
+- Istnieją dwa typy: **wspólna katoda** (segmenty włącza HIGH) i **wspólna anoda** (segmenty włącza LOW).
+- Zawsze stosuj **rezystory ochronne 1 kΩ** na pinach segmentów — diody w wyświetlaczu palą się łatwiej niż zwykłe LED-y.
+- Przy wielu wyświetlaczach zamiast dedykowanych pinów dla każdego stosuj **multipleksowanie** — wspólne segmenty + tranzystory NPN sterujące każdym wyświetlaczem osobno.
+- Multipleksowanie z `delay()` blokuje procesor; w praktyce używaj **biblioteki SevSeg** i jej metody `refreshDisplay()` wywoływanej cyklicznie z `millis()`.
+- `setNumber(wartość, cyfry)` wyświetla liczby, `setChars("XY")` — znaki.
