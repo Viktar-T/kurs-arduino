@@ -10,12 +10,12 @@ title: "Sterowanie silnikami DC"
 slug: "sterowanie-silnikami-dc"
 summary: "Bezpieczne sterowanie małymi silnikami DC przez mostek H L293D, symulacja silnika diodami, kierunek obrotów, PWM do regulacji prędkości oraz pętla for."
 
-day: 3
+day: 4
 weekend: 2
-order: 3
+order: 1
 duration: 90
-block: 1
-blockTitle: "Podstawy Arduino oraz środowisko programowania"
+block: 8
+blockTitle: "Sterowanie silnikami DC i pętla for"
 forbotCourse: 1
 forbotChapter: 8
 
@@ -131,6 +131,43 @@ W kursie użyjemy układu `L293D`. To starszy, ale popularny scalony mostek H w 
   width={566}
   height={490}
 />
+
+<Expandable title="Opis każdego pinu L293D" heading="####">
+
+L293D to obudowa DIP-16 z szesnastoma nogami. Cztery nogi masy pełnią też rolę radiatora — odprowadzają ciepło do płytki stykowej.
+
+<Table
+  caption="Wyprowadzenia układu L293D (obudowa DIP-16)"
+  headers={["Nr pinu", "Oznaczenie", "Kierunek", "Opis"]}
+  rows={[
+    ["1",  "EN1,2 (ENABLE 1–2)", "wejście",  "Zezwolenie na pracę kanałów 1 i 2. Stan wysoki = kanały aktywne; PWM tu = regulacja prędkości."],
+    ["2",  "IN1 (INPUT 1)",      "wejście",  "Sygnał kierunku dla kanału 1 (para z IN2 decyduje o polaryzacji wyjść OUT1/OUT2)."],
+    ["3",  "OUT1 (OUTPUT 1)",    "wyjście",  "Jedno z wyjść pierwszego mostka H — podłącz tu jeden zacisk silnika A."],
+    ["4",  "GND",                "masa",     "Masa układu i odprowadzenie ciepła — musi być podłączona do wspólnej masy."],
+    ["5",  "GND",                "masa",     "Masa układu i odprowadzenie ciepła — musi być podłączona do wspólnej masy."],
+    ["6",  "OUT2 (OUTPUT 2)",    "wyjście",  "Drugie wyjście pierwszego mostka H — podłącz tu drugi zacisk silnika A."],
+    ["7",  "IN2 (INPUT 2)",      "wejście",  "Sygnał kierunku dla kanału 2 (para z IN1)."],
+    ["8",  "VS (VCC2)",          "zasilanie","Napięcie zasilania silników — niezależne od logiki; tutaj bateria lub zasilacz silnika (do 36 V)."],
+    ["9",  "EN3,4 (ENABLE 3–4)", "wejście",  "Zezwolenie na pracę kanałów 3 i 4 — analogicznie do EN1,2; dla drugiego silnika."],
+    ["10", "IN3 (INPUT 3)",      "wejście",  "Sygnał kierunku dla kanału 3."],
+    ["11", "OUT3 (OUTPUT 3)",    "wyjście",  "Jedno z wyjść drugiego mostka H — podłącz tu jeden zacisk silnika B."],
+    ["12", "GND",                "masa",     "Masa układu i odprowadzenie ciepła."],
+    ["13", "GND",                "masa",     "Masa układu i odprowadzenie ciepła."],
+    ["14", "OUT4 (OUTPUT 4)",    "wyjście",  "Drugie wyjście drugiego mostka H — podłącz tu drugi zacisk silnika B."],
+    ["15", "IN4 (INPUT 4)",      "wejście",  "Sygnał kierunku dla kanału 4 (para z IN3)."],
+    ["16", "VSS (VCC1)",         "zasilanie","Napięcie zasilania logiki — zawsze 5 V z Arduino lub regulatora."],
+  ]}
+/>
+
+**Podsumowanie połączeń dla jednego silnika:**
+- Pin `16` → `5 V` (logika)
+- Pin `8` → napięcie silnika (np. `9 V` z baterii)
+- Piny `4`, `5`, `12`, `13` → wspólna masa
+- Pin `1` → ENABLE (cyfrowy `HIGH` lub PWM)
+- Piny `2`, `7` → IN1, IN2 (kierunek)
+- Piny `3`, `6` → OUT1, OUT2 (do zacisków silnika)
+
+</Expandable>
 
 Układ `L293D` ma oddzielne zasilanie logiki i silników. Pin `16` zasila część logiczną napięciem `5 V`, a pin `8` zasila silniki. Masy obu źródeł muszą być połączone.
 

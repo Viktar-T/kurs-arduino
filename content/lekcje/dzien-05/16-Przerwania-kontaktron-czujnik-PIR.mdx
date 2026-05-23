@@ -10,9 +10,9 @@ title: "Przerwania, kontaktron i czujnik PIR"
 slug: "przerwania-kontaktron-czujnik-pir"
 summary: "Lekcja z kursu Forbot II #4: czujnik kontaktronowy jako alarm okienny, czujnik PIR HC-SR501 (parametry, tryby pracy, potencjometry), koncepcja przerwań sprzętowych, funkcja attachInterrupt(), tryby wyzwalania RISING/FALLING/CHANGE/LOW oraz słowo kluczowe volatile."
 
-day: 4
-weekend: 2
-order: 4
+day: 5
+weekend: 3
+order: 1
 duration: 90
 block: 12
 blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
@@ -144,8 +144,8 @@ PIR (Passive InfraRed — pasywna podczerwień) wykrywa ruch na podstawie zmian 
   file="16.05-pir-czujnik-opis.jpg"
   caption="Czujnik PIR z soczewką Fresnela — pod białą kopułką kryje się właściwy sensor podczerwieni."
   alt="Czujnik PIR — soczewka Fresnela i sensor IR"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 <Expandable title="Głębiej: dlaczego PIR wykrywa ruch, a nie samą obecność?" heading="####">
@@ -183,15 +183,15 @@ Moduł pracuje w zakresie 5–20 V — zasilanie wprost z Arduino jest idealne. 
   file="16.06-pir-uklad-zdjecie.jpg"
   caption="Moduł HC-SR501 — widok od góry z białą soczewką Fresnela."
   alt="Widok górny modułu HC-SR501 z soczewką Fresnela"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />,
 <Photo
   file="16.07-pir-schemat-polaczen.jpg"
   caption="Spód modułu HC-SR501 z wyprowadzeniami Vcc, GND, OUT oraz dwoma potencjometrami regulacyjnymi."
   alt="Widok spodu modułu HC-SR501 — wyprowadzenia i potencjometry"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 ],
   ]}
@@ -203,8 +203,8 @@ Od spodu modułu widać dwa **potencjometry regulacyjne**:
   file="16.08-pir-potencjometry.jpg"
   caption="Potencjometry Tx (czas) i Sx (czułość) modułu HC-SR501."
   alt="Zbliżenie na potencjometry Tx i Sx na spodzie modułu HC-SR501"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 <Table
@@ -250,8 +250,8 @@ Przed uruchomieniem ustaw Tx w minimum (najkrótszy czas sygnału) i Sx w maksim
   file="16.11-pir-wynik.jpg"
   caption="Ustawienie potencjometrów do testów: Tx w minimum, Sx w maksimum."
   alt="Zbliżenie na potencjometry HC-SR501 w pozycjach testowych"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 ### Program z czujnikiem PIR
@@ -304,8 +304,8 @@ Budując bardziej rozbudowane programy, szybko napotkasz problem: Arduino sprawd
   file="16.12-analogia-gotowanie-zupy.jpg"
   caption="Plan na dziś: gotujemy zupę! Wyobraź sobie, że co chwilę przerywasz gotowanie, żeby podejść do okna i sprawdzić, czy kurier już jedzie."
   alt="Garnek z gotującą się zupą — ilustracja analogii do pollingu czujnika"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 Wyobraź sobie: gotujesz zupę i czekasz na kuriera. Bez przerwań co chwilę przerywasz gotowanie, żeby podejść do okna i sprawdzić — nieefektywne i łatwo coś przegapić.
@@ -314,8 +314,8 @@ Wyobraź sobie: gotujesz zupę i czekasz na kuriera. Bez przerwań co chwilę pr
   file="16.13-analogia-sasiadka.jpg"
   caption="Rozwiązanie: prosisz sąsiadkę, żeby obserwowała wejście i zapukała, gdy kurier przyjedzie. Ty gotujesz spokojnie."
   alt="Starsza kobieta przy oknie z lornetką — ilustracja mechanizmu przerwania sprzętowego"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, gdy kurier przyjedzie. Ty gotujesz spokojnie i reagujesz dopiero na sygnał. Dokładnie tak działa **przerwanie sprzętowe** — specjalny mechanizm w tle monitoruje pin i gdy nastąpi zdefiniowane zdarzenie, natychmiast przerywa główny program i wywołuje Twoją funkcję obsługi.
@@ -324,8 +324,8 @@ Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, 
   file="16.14-analogia-alarm-zlodziej.jpg"
   caption="Czy alarm zdąży zauważyć szybkiego złodzieja? Tylko przerwanie gwarantuje natychmiastową reakcję — polling może nie zdążyć."
   alt="Złodziej wchodzący przez okno — ilustracja konieczności natychmiastowej reakcji na zdarzenie"
-  width="400"
-  height="300"
+  width={400}
+  height={300}
 />
 
 ### Kiedy stosować przerwania
@@ -354,8 +354,8 @@ Arduino UNO obsługuje przerwania sprzętowe wyłącznie na pinach **2** (int.0)
   file="16.16-arduino-przerwania-piny.png"
   caption="Numeracja przerwań w Arduino UNO — piny 2 i 3 obsługują przerwania sprzętowe int.0 i int.1."
   alt="Schemat Arduino UNO z zaznaczonymi pinami przerwań 2 i 3"
-  width="700"
-  height="400"
+  width={700}
+  height={400}
 />
 
 Do rejestracji funkcji obsługi przerwania służy:
@@ -372,8 +372,8 @@ Funkcja `digitalPinToInterrupt()` automatycznie przelicza numer pinu na numer pr
   file="16.15-przerwanie-tryby-zbocza.png"
   caption="Zbocze rosnące (RISING) i opadające (FALLING) — momenty zmiany stanu pinu, w których wyzwalane jest przerwanie."
   alt="Diagram sygnału cyfrowego z zaznaczonymi zboczami rosnącym i opadającym"
-  width="700"
-  height="400"
+  width={700}
+  height={400}
 />
 
 <Table
@@ -527,8 +527,8 @@ Kolory sygnalizują aktualny poziom zagrożenia:
   file="16.17-timer-opoznienie-ostrzezenie.jpg"
   caption="Długi czas wykonywania ISR zatrzymuje cały program — każde wywołanie przerwania blokuje mikrokontroler."
   alt="Zegar — ilustracja problemu długotrwałego wykonywania ISR"
-  width="700"
-  height="400"
+  width={700}
+  height={400}
 />
 
 Jeśli umieścisz `delay(5000)` wewnątrz ISR, **każde wykrycie ruchu zatrzymuje cały program na 5 sekund**. Jeśli w `loop()` masz `delay(1000)`, timing wszystkich operacji zacznie się kumulować i zachowanie układu stanie się nieprzewidywalne — bardzo trudne do debugowania.
