@@ -494,14 +494,31 @@ Masz teraz 5 cm „strefy buforowej" — alarm nie będzie drżał przy granicy 
 
 </Expandable>
 
-<MiniProject title="System parkowania" estimate="20 min">
 
-Zbuduj uproszczony system pomocy parkowania:
-- Odległość > 40 cm: cisza, dioda zielona.
-- Odległość 20–40 cm: dioda żółta, buzzer „pika" wolno (1 sek. przerwy).
-- Odległość < 20 cm: dioda czerwona, buzzer „pika" szybko (200 ms przerwy).
+<MiniProject title="Symulacja robota follower" estimate="30 min">
 
-Skorzystaj z funkcji `zmierzOdleglosc()` z poprzedniej lekcji i warunków `if-else if-else`.
+Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
+
+**Sprzęt:** HC-SR04 + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
+
+**Logika sterowania:**
+
+<Table
+  headers={["Odległość od obiektu", "Działanie silnika"]}
+  rows={[
+    ["W zadanym zakresie (np. 15–20 cm)", "jedzie z ustaloną prędkością"],
+    ["Za mała (obiekt za blisko)", "zwalnia, zatrzymuje się, a następnie jedzie do tyłu"],
+    ["Za duża (obiekt za daleko)", "przyspiesza, by nadrobić dystans"],
+  ]}
+/>
+
+**Wymagania:**
+
+1. Zdefiniuj dwie stałe: `DIST_MIN` i `DIST_MAX` (zakres docelowy w cm).
+2. Wyświetlaj aktualną odległość i prędkość silnika przez `Serial.println()` — obserwuj wykres w Serial Plotter.
+3. Użyj co najmniej jednego złożonego warunku (`&&` lub `||`).
+
+**Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i wypisywać ją obok odległości — zobaczysz dwa wykresy jednocześnie.
 
 </MiniProject>
 
@@ -515,4 +532,11 @@ Operatory logiczne i Serial Plotter — AI pomoże zrozumieć te tematy głębie
 ## Podsumowanie
 
 Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.
+
+## 6. Projekty finałowe — integracja wiedzy z lekcji 04–13
+
+Poniższe cztery projekty sprawdzają, czy potrafisz samodzielnie połączyć zagadnienia z pierwszych czterech dni kursu. Wracaj do poprzednich lekcji, gdy potrzebujesz przypomnienia schematu lub składni.
+
+
+
 
