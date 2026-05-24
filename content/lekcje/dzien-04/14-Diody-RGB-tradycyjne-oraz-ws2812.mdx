@@ -117,7 +117,7 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
   height={300}
 />
 
-Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwienemu, zielonemu i niebieskiemu kanałowi.
+Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwonemu, zielonemu i niebieskiemu kanałowi.
 
 <Expandable title="Głębiej: wspólna katoda kontra wspólna anoda — uważaj na zakup!" heading="####">
 Producenci diod RGB oferują **dwa warianty** wewnętrznego połączenia. Wybór decyduje o tym, jak będziesz pisał kod — a wizualnie diody wyglądają identycznie.
@@ -918,7 +918,7 @@ Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI
   headers={["Cecha", "Tradycyjna RGB", "WS2812 (programowalna)"]}
   rows={[
     ["Liczba pinów Arduino", "3 piny na diodę", "1 pin na całą linijkę"],
-    ["Rezystory", "Konieczne (3 szt. na diodę)", "Nie są wymagane"],
+    ["Rezystory", "Konieczne (3 szt. na diodę)", "Zalecany rezystor w linii danych"],
     ["Adresowanie diod", "Nie — wszystkie reagują tak samo", "Tak — każda niezależnie"],
     ["Biblioteka", "Nie potrzeba", "Wymagana (NeoPixel)"],
     ["Koszt", "Niski", "Wyższy"],
@@ -946,7 +946,7 @@ byte gammaKorekta(byte wartosc) {
 analogWrite(LED, gammaKorekta(linearWartosc));
 ```
 
-W praktyce zamiast liczyć `pow()` w czasie pracy, używa się **wstępnie obliczonej tablicy 256 wartości** w pamięci PROGMEM. Adafruit NeoPixel ma wbudowaną tablicę `NeoPixel::gamma8[]` — wystarczy `linijka.setPixelColor(i, linijka.gamma32(linijka.Color(r, g, b)))`.
+W praktyce zamiast liczyć `pow()` w czasie pracy, używa się **wstępnie obliczonej tablicy 256 wartości** w pamięci PROGMEM. Biblioteka Adafruit NeoPixel ma wbudowane funkcje `gamma8()` i `gamma32()` — wystarczy `linijka.setPixelColor(i, linijka.gamma32(linijka.Color(r, g, b)))`.
 
 Bez korekcji gamma efekt płynnej tęczy lub oddychającej diody wygląda „kanciasto". Z korekcją — naprawdę płynnie. To pierwszy poziom dobrego efektu świetlnego.
 </Expandable>
