@@ -499,26 +499,34 @@ Masz teraz 5 cm „strefy buforowej" — alarm nie będzie drżał przy granicy 
 
 Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
 
-**Sprzęt:** HC-SR04 + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
+**Sprzęt:** HC-SR04 + potencjometr (pin A0) + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
 
 **Logika sterowania:**
 
 <Table
   headers={["Odległość od obiektu", "Działanie silnika"]}
   rows={[
-    ["W zadanym zakresie (np. 15–20 cm)", "jedzie z ustaloną prędkością"],
+    ["W zadanym zakresie", "jedzie z ustaloną prędkością"],
     ["Za mała (obiekt za blisko)", "zwalnia, zatrzymuje się, a następnie jedzie do tyłu"],
     ["Za duża (obiekt za daleko)", "przyspiesza, by nadrobić dystans"],
   ]}
 />
 
+**Potencjometr przesuwa cały zakres:** szerokość okna (np. 5 cm) pozostaje stała, a potencjometr ustawia jego środek — od 10 cm (pokrętło w lewo) do 40 cm (pokrętło w prawo). Wzór:
+
+```cpp
+int srodek  = map(analogRead(A0), 0, 1023, 10, 40); // środek zakresu w cm
+int DIST_MIN = srodek - 2;  // dolna granica
+int DIST_MAX = srodek + 2;  // górna granica (zakres = 5 cm)
+```
+
 **Wymagania:**
 
-1. Zdefiniuj dwie stałe: `DIST_MIN` i `DIST_MAX` (zakres docelowy w cm).
-2. Wyświetlaj aktualną odległość i prędkość silnika przez `Serial.println()` — obserwuj wykres w Serial Plotter.
+1. Odczytuj potencjometr w każdej iteracji pętli i przeliczaj `DIST_MIN` / `DIST_MAX`.
+2. Wyświetlaj przez `Serial.print("\t")` trzy wartości w jednej linii: odległość, `DIST_MIN`, `DIST_MAX` — w Serial Plotter zobaczysz ruchome „widełki" wokół rzeczywistego dystansu.
 3. Użyj co najmniej jednego złożonego warunku (`&&` lub `||`).
 
-**Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i wypisywać ją obok odległości — zobaczysz dwa wykresy jednocześnie.
+**Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i dopisać ją jako czwartą kolumnę wykresu.
 
 </MiniProject>
 
