@@ -1,0 +1,87 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Mini-projekt: Symulacja robota follower"
+slug: "miniproject-robot-follower"
+summary: "Projekt integrujący HC-SR04, silnik DC (lub serwo), mostek H i potencjometr: robot utrzymuje stałą odległość od obiektu, a potencjometr przesuwa zadany zakres. Trzy wartości (dystans, DIST_MIN, DIST_MAX) wizualizowane jednocześnie w Serial Plotter."
+
+day: 4
+weekend: 2
+order: 5
+duration: 30
+block: 10
+blockTitle: "Wykresy, liczby losowe, warunki"
+forbotCourse: 1
+forbotChapter: 10
+
+objectives:
+  - "Samodzielnie połączyć Serial Plotter, czujnik HC-SR04, silnik DC i logikę warunkową w jeden działający projekt"
+  - "Używać funkcji map() do przeliczania odczytu potencjometru na zakres odległości"
+  - "Wizualizować trzy serie danych jednocześnie w Serial Plotter (dystans, DIST_MIN, DIST_MAX)"
+
+prerequisites:
+  - "dzien-04/13.01-miniProject"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Czujnik odległości HC-SR04", qty: 1 }
+  - { name: "Potencjometr", qty: 1 }
+  - { name: "Silnik DC lub serwomechanizm", qty: 1 }
+  - { name: "Mostek H (L298N lub TB6612)", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 1 }
+
+tags: [arduino, hc-sr04, serial-plotter, silnik-dc, robot-follower, mini-projekt, map]
+sources:
+  - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
+
+publish: true
+updated: "2026-05-24"
+---
+
+Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
+
+<MiniProject title="Symulacja robota follower" estimate="30 min">
+
+Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
+
+**Sprzęt:** HC-SR04 + potencjometr (pin A0) + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
+
+**Logika sterowania:**
+
+<Table
+  headers={["Odległość od obiektu", "Działanie silnika"]}
+  rows={[
+    ["W zadanym zakresie", "jedzie z ustaloną prędkością"],
+    ["Za mała (obiekt za blisko)", "zwalnia, zatrzymuje się, a następnie jedzie do tyłu"],
+    ["Za duża (obiekt za daleko)", "przyspiesza, by nadrobić dystans"],
+  ]}
+/>
+
+**Potencjometr przesuwa cały zakres:** szerokość okna (np. 5 cm) pozostaje stała, a potencjometr ustawia jego środek — od 10 cm (pokrętło w lewo) do 40 cm (pokrętło w prawo). Wzór:
+
+```cpp
+int srodek  = map(analogRead(A0), 0, 1023, 10, 40); // środek zakresu w cm
+int DIST_MIN = srodek - 2;  // dolna granica
+int DIST_MAX = srodek + 2;  // górna granica (zakres = 5 cm)
+```
+
+**Wymagania:**
+
+1. Odczytuj potencjometr w każdej iteracji pętli i przeliczaj `DIST_MIN` / `DIST_MAX`.
+2. Wyświetlaj przez `Serial.print("\t")` trzy wartości w jednej linii: odległość, `DIST_MIN`, `DIST_MAX` — w Serial Plotter zobaczysz ruchome „widełki" wokół rzeczywistego dystansu.
+3. Użyj co najmniej jednego złożonego warunku (`&&` lub `||`).
+
+**Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i dopisać ją jako czwartą kolumnę wykresu.
+
+</MiniProject>
+
+## Projekty finałowe — integracja wiedzy z lekcji 04–13
+
+Poniższe cztery projekty sprawdzają, czy potrafisz samodzielnie połączyć zagadnienia z pierwszych czterech dni kursu. Wracaj do poprzednich lekcji, gdy potrzebujesz przypomnienia schematu lub składni.

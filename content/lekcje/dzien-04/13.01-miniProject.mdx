@@ -1,4 +1,4 @@
-﻿---
+---
 # --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
 type: note
 namespace: "123-Edu-Kursy"
@@ -41,7 +41,7 @@ sources:
   - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
 
 publish: true
-updated: "2026-05-13"
+updated: "2026-05-24"
 ---
 
 W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym oraz łączyć warunki logiczne w bardziej złożone decyzje. To ostatnia lekcja pierwszego dnia — zamkniemy go praktycznym przykładem alarmu z czujnikiem odległości i przyciskiem.
@@ -128,7 +128,7 @@ Zmień wartość `delay(200)` na `50` i obserwuj, jak wykres staje się bardziej
 
 ## 2. Wykres odległości od przeszkody
 
-Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w [lekcji 12, rozdziale „Miernik odległości”](../dzien-03/12.02-czujnik-hc-sr04#2-miernik-odleglosci) (`trigPin = 12`, `echoPin = 11`):
+Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w [lekcji 12, rozdziale „Miernik odległości"](../dzien-03/12.02-czujnik-hc-sr04#2-miernik-odleglosci) (`trigPin = 12`, `echoPin = 11`):
 
 <Code lang="cpp" file="hc-sr04-wykres.ino">
 ```cpp
@@ -494,42 +494,6 @@ Masz teraz 5 cm „strefy buforowej" — alarm nie będzie drżał przy granicy 
 
 </Expandable>
 
-
-<MiniProject title="Symulacja robota follower" estimate="30 min">
-
-Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
-
-**Sprzęt:** HC-SR04 + potencjometr (pin A0) + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
-
-**Logika sterowania:**
-
-<Table
-  headers={["Odległość od obiektu", "Działanie silnika"]}
-  rows={[
-    ["W zadanym zakresie", "jedzie z ustaloną prędkością"],
-    ["Za mała (obiekt za blisko)", "zwalnia, zatrzymuje się, a następnie jedzie do tyłu"],
-    ["Za duża (obiekt za daleko)", "przyspiesza, by nadrobić dystans"],
-  ]}
-/>
-
-**Potencjometr przesuwa cały zakres:** szerokość okna (np. 5 cm) pozostaje stała, a potencjometr ustawia jego środek — od 10 cm (pokrętło w lewo) do 40 cm (pokrętło w prawo). Wzór:
-
-```cpp
-int srodek  = map(analogRead(A0), 0, 1023, 10, 40); // środek zakresu w cm
-int DIST_MIN = srodek - 2;  // dolna granica
-int DIST_MAX = srodek + 2;  // górna granica (zakres = 5 cm)
-```
-
-**Wymagania:**
-
-1. Odczytuj potencjometr w każdej iteracji pętli i przeliczaj `DIST_MIN` / `DIST_MAX`.
-2. Wyświetlaj przez `Serial.print("\t")` trzy wartości w jednej linii: odległość, `DIST_MIN`, `DIST_MAX` — w Serial Plotter zobaczysz ruchome „widełki" wokół rzeczywistego dystansu.
-3. Użyj co najmniej jednego złożonego warunku (`&&` lub `||`).
-
-**Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i dopisać ją jako czwartą kolumnę wykresu.
-
-</MiniProject>
-
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Operatory logiczne i Serial Plotter — AI pomoże zrozumieć te tematy głębiej:
 
@@ -540,11 +504,3 @@ Operatory logiczne i Serial Plotter — AI pomoże zrozumieć te tematy głębie
 ## Podsumowanie
 
 Serial Plotter przekształca liczby z `Serial.println()` w wykres — wystarczy zamienić tekst na gołe cyfry. Kilka serii jednocześnie oddzielasz tabulatorami. Operatory `&&` i `||` pozwalają łączyć wiele warunków w jednej decyzji: czujnik i przycisk mogą razem decydować, czy alarm ma zabrzmieć. To solidna baza do własnych projektów — każdy z tych elementów możesz teraz łączyć swobodnie.
-
-## 6. Projekty finałowe — integracja wiedzy z lekcji 04–13
-
-Poniższe cztery projekty sprawdzają, czy potrafisz samodzielnie połączyć zagadnienia z pierwszych czterech dni kursu. Wracaj do poprzednich lekcji, gdy potrzebujesz przypomnienia schematu lub składni.
-
-
-
-
