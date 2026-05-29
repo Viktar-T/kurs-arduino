@@ -338,13 +338,7 @@ Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, 
 - W prostych, krótkich programach bez opóźnień.
 - Gdy czas reakcji na zdarzenie nie jest krytyczny.
 
-<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
-Przerwania to jeden z trudniejszych konceptów w programowaniu mikrokontrolerów — AI może pomóc zbudować właściwy model mentalny:
 
-- **Polling kontra przerwania** — zapytaj AI: „Wytłumacz różnicę między pollowaniem (sprawdzaniem w pętli) a przerwaniami sprzętowymi na przykładzie przycisku. Kiedy które podejście jest lepsze?". Zrozumiesz, dlaczego przerwania są niezbędne w systemach czasu rzeczywistego.
-- **Dlaczego volatile jest obowiązkowe?** — wklej kod z ISR i zapytaj: „Dlaczego zmienna współdzielona między ISR a główną pętlą musi być zadeklarowana jako `volatile`? Co się dzieje bez tego słowa kluczowego?". AI wyjaśni, jak kompilator optymalizuje kod i dlaczego to jest niebezpieczne.
-- **Pułapki delay() w ISR** — poproś AI: „Co się stanie, jeśli wywołam `delay(1000)` wewnątrz funkcji obsługi przerwania w Arduino? Dlaczego jest to błąd i jak to naprawić?". To klasyczna pułapka, o której warto wiedzieć zanim natrafi się na nią w praktyce.
-</Callout>
 
 ## 4. Przerwania w Arduino — attachInterrupt()
 
@@ -446,11 +440,28 @@ void alarm() {
 
 ## 6. Przykład 2 — volatile i licznik wykryć
 
-Gdy ISR musi przekazać informację do `loop()`, używamy zmiennej **globalnej** oznaczonej słowem kluczowym `volatile`. Bez `volatile` kompilator może zoptymalizować zmienną do rejestru procesora — `loop()` nie zobaczyłaby aktualnej wartości zmienionej przez ISR.
+Gdy ISR musi przekazać informację do `loop()`, używamy zmiennej **globalnej** oznaczonej słowem kluczowym `volatile`. Bez `volatile` kompilator może zoptymalizować zmienną do **rejestru procesora** — `loop()` nie zobaczyłaby aktualnej wartości zmienionej przez ISR.
 
 <Callout type="note" title="Słowo kluczowe volatile">
-`volatile` informuje kompilator: „ta zmienna może być zmieniona poza normalnym tokiem programu (np. przez ISR) — zawsze czytaj jej wartość bezpośrednio z pamięci, nie korzystaj z wartości zapisanej w rejestrze procesora."
+`volatile` informuje kompilator: „ta zmienna może być zmieniona poza normalnym tokiem programu (np. przez ISR) — zawsze czytaj jej wartość bezpośrednio z **pamięci RAM**, nie korzystaj z wartości zapisanej w **rejestrze procesora**."
 </Callout>
+
+<Expandable title="Głębiej: słowo kluczowe volatile" heading="####">
+
+Kompilator optymalizuje kod, zakładając że **tylko bieżąca funkcja** zmienia lokalne i globalne zmienne. W pętli `loop()` może więc raz odczytać `ileRazy` do **rejestru procesora** i w kolejnych obrotach używać **starej wartości z rejestru** — bez ponownego zajrzenia do pamięci RAM.
+
+Tymczasem ISR (`alarm()`) wykonuje się **w dowolnym momencie** — nawet w środku `loop()`. Dla mikrokontrolera to dwa fragmenty kodu współdzielące jedną zmienną, choć kompilator tego „nie widzi”.
+
+`volatile` wyłącza taką optymalizację: **każdy** odczyt i zapis idzie bezpośrednio do RAM. Dzięki temu `loop()` widzi licznik zaktualizowany przez ISR.
+
+**Czego `volatile` nie gwarantuje:**
+
+- **Atomowości** — operacja `ileRazy++` to odczyt, dodanie 1 i zapis. ISR może przerwać ją w połowie, jeśli wywołasz ją też w `loop()`.
+- **Bezpieczeństwa złożonych typów** — struktury czy tablice współdzielone z ISR wymagają dodatkowej ostrożności (krótka blokada przerwań: `noInterrupts()` … `interrupts()` albo kopiowanie do zmiennej lokalnej w `loop()`).
+
+**Praktyka w tej lekcji:** ISR tylko inkrementuje prosty licznik (`ileRazy++`), a cała logika LED zostaje w `loop()`. To bezpieczny i czytelny wzorzec na start.
+
+</Expandable>
 
 <Code lang="cpp" file="pir-volatile-licznik.ino">
 ```cpp
