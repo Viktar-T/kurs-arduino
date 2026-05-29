@@ -43,6 +43,7 @@ hardware:
 tags: [arduino, buzzer, tone, mosfet, syrena, irl540n, dzwiek, piezo]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-ii-syrena-alarmowa-mosfet-w-praktyce-id15497"
+  - "https://forbot.pl/blog/kurs-elektroniki-ii-tranzystory-unipolarne-mosfet-id7960"
 
 cover: "/img/lekcje/15.01-kurs-arduino-ii-okladka.png"
 publish: true
@@ -59,6 +60,8 @@ Podczas pierwszego poziomu kursu Arduino generowaliśmy dźwięki za pomocą buz
   file="15.02-buzzer-bez-generatora.jpg"
   caption="Buzzer bez generatora z zestawu. Wygląda identycznie jak ten z generatorem."
   alt="Zdjęcie buzzera bez generatora z zestawu Arduino"
+  width={600}
+  height={400}
 />
 
 <Callout type="warning" title="Jak odróżnić buzzer z generatorem od buzzera bez generatora?">
@@ -122,7 +125,11 @@ Funkcja `tone()` robi właśnie to: generuje przebieg prostokątny o zadanej cz�
 
 </Expandable>
 
-Jeśli zmniejszysz opóźnienie (np. do 100 ms, a potem do 10 ms), dźwięki będą następować coraz szybciej i zaczną tworzyć rozpoznawalny ton:
+<Task title="Zadanie — od pyknięć do tonu" estimate="5 min">
+Zmniejsz opóźnienie w szkicu testowym (np. najpierw do 100 ms, a potem do 10 ms) i sprawdź, jak zmienia się dźwięk. Dźwięki powinny następować coraz szybciej i zacząć tworzyć rozpoznawalny ton.
+</Task>
+
+<Expandable title="Przykład rozwiązania: buzzer-test-10ms" heading="####">
 
 <Code lang="cpp" file="buzzer-test-10ms.ino">
 ```cpp
@@ -141,13 +148,15 @@ void loop() {
 ```
 </Code>
 
+</Expandable>
+
 <Callout type="note" title="Wada metody z delay()">
 `delay()` wstrzymuje **cały program** — Arduino nie może w tym czasie robić niczego innego. Dlatego do generowania dźwięku używamy dedykowanej funkcji `tone()`, która korzysta z wbudowanego timera i nie blokuje pętli głównej.
 </Callout>
 
 ## 4. Funkcja tone()
 
-Funkcja `tone()` generuje sygnał prostokątny o zadanej częstotliwości na wybranym pinie, korzystając z timera wbudowanego w mikrokontroler.
+Funkcja `tone()` generuje sygnał prostokątny o zadanej częstotliwości na wybranym pinie, korzystając z **timera wbudowanego** w mikrokontroler.
 
 Składnia:
 
@@ -225,7 +234,17 @@ void loop() {
 
 Po uruchomieniu słyszysz świst, a potem różne dźwięki — cykl powtarza się co kilka sekund. Zmieniając zakres pętli można precyzyjniej wyznaczyć rezonans.
 
-Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **4000 Hz (hertz, jednostka częstotliwości) ± 500 Hz**, czyli zakres 3500–4500 Hz. Sprawdzamy:
+<Task title="Zadanie 1 — wyznaczanie rezonansu" estimate="10 min">
+Zbuduj i wgraj program skanujący zakres i wsłuchaj się, przy której częstotliwości buzzer gra najgłośniej. Następnie wpisz tę wartość bezpośrednio do `tone()` i potwierdź, że dźwięk jest faktycznie najgłośniejszy. Co się dzieje przy opóźnieniu 1 ms zamiast 10 ms?
+</Task>
+
+<Expandable title="Odpowiedż: częstotliwość rezonansowa buzzera z zestawu" heading="####">
+
+Dla buzzera z zestawu nota katalogowa podaje częstotliwość rezonansową **4000 Hz (hertz, jednostka częstotliwości) ± 500 Hz**, czyli zakres 3500–4500 Hz.
+
+</Expandable>
+
+Sprawdzamy:
 
 <Code lang="cpp" file="buzzer-rezonans.ino">
 ```cpp
@@ -245,10 +264,6 @@ void loop() {
 </Code>
 
 Dźwięk jest teraz wyraźnie głośniejszy.
-
-<Task title="Zadanie 1 — wyznaczanie rezonansu" estimate="10 min">
-Wgraj program skanujący zakres i wsłuchaj się, przy której częstotliwości buzzer gra najgłośniej. Następnie wpisz tę wartość bezpośrednio do `tone()` i potwierdź, że dźwięk jest faktycznie najgłośniejszy. Co się dzieje przy opóźnieniu 1 ms zamiast 10 ms?
-</Task>
 
 ## 6. Głośna syrena alarmowa
 
@@ -309,6 +324,68 @@ Wklej te definicje do swojego programu i komponuj melodie: `tone(A5, NOTE_C4, 50
 
 </Expandable>
 
+<Task title="Zadanie — własna melodia" estimate="20 min">
+Skomponuj prostą melodię (np. fragment **„Panie Janie"** albo **„Wlazł kotek na płotek"**) i zagraj ją na buzzerze. Wykorzystaj:
+
+- tablicę z częstotliwościami nut (możesz użyć stałych `NOTE_C4`, `NOTE_D4`, … z `pitches.h` lub wpisać częstotliwości w Hz),
+- tablicę z czasami trwania każdej nuty (np. 200, 400, 800 ms),
+- pętlę `for`, która przejdzie po wszystkich nutach i zagra każdą funkcją `tone(pin, częstotliwość, czas)`,
+- krótką pauzę po każdej nucie (np. 50 ms), żeby kolejne dźwięki się rozróżniały.
+
+**Wskazówka:** liczbę nut policz raz, automatycznie: `sizeof(melodia) / sizeof(melodia[0])`. Wtedy gdy dodasz nową nutę do tablicy, pętla `for` sama się dostosuje.
+</Task>
+
+<Expandable title="Przykład rozwiązania: panie-janie.ino" heading="####">
+
+Pierwszy wers piosenki „Panie Janie" (C-D-E-C × 2, E-F-G × 2):
+
+<Code lang="cpp" file="panie-janie.ino">
+```cpp
+const byte PIN_BUZZER = A5;
+
+// Częstotliwości nut (Hz) — pierwszy wers „Panie Janie"
+const int melodia[] = {
+  262, 294, 330, 262,  // Pa-nie Ja-nie
+  262, 294, 330, 262,  // Pa-nie Ja-nie
+  330, 349, 392,       // Ra-no wstań
+  330, 349, 392        // Ra-no wstań
+};
+
+// Czas trwania każdej nuty (ms)
+const int czasy[] = {
+  300, 300, 300, 300,
+  300, 300, 300, 300,
+  300, 300, 600,
+  300, 300, 600
+};
+
+const byte LICZBA_NUT = sizeof(melodia) / sizeof(melodia[0]);
+
+void setup() {
+  pinMode(PIN_BUZZER, OUTPUT);
+
+  for (byte i = 0; i < LICZBA_NUT; i++) {
+    tone(PIN_BUZZER, melodia[i], czasy[i]);
+    delay(czasy[i] + 50); // poczekaj aż nuta skończy się + krótka pauza
+  }
+
+  noTone(PIN_BUZZER);
+}
+
+void loop() {
+  // melodia gra raz przy starcie — nie powtarzamy
+}
+```
+</Code>
+
+Trzy szczegóły, które warto zauważyć:
+
+- `tone(pin, częstotliwość, czas)` z trzecim argumentem **sam wyłącza** dźwięk po podanym czasie — nie trzeba wywoływać `noTone()` po każdej nucie.
+- `delay(czasy[i] + 50)` — bez tego pętla zaczęłaby kolejną nutę natychmiast, jeszcze zanim poprzednia umilkła; 50 ms to słyszalna przerwa między dźwiękami.
+- `sizeof(melodia) / sizeof(melodia[0])` to standardowy idiom C++: dzieli rozmiar całej tablicy w bajtach przez rozmiar jednego elementu — wynik to liczba elementów. Dzięki temu po dodaniu nuty nie trzeba ręcznie poprawiać warunku w pętli `for`.
+
+</Expandable>
+
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Buzzer, `tone()` i MOSFET to temat łączący akustykę z elektroniką mocy — AI jest tu cennym pomocnikiem:
 
@@ -319,13 +396,11 @@ Buzzer, `tone()` i MOSFET to temat łączący akustykę z elektroniką mocy — 
 
 ## 8. MOSFET — sterowanie wyższym napięciem
 
-Niektóre podzespoły wymagają zasilania **9 V lub 12 V** — więcej niż Arduino może dostarczyć ze swojego pinu (max ~20 mA przy 5 V). Tutaj z pomocą przychodzą tranzystory **MOSFET** (ang. Metal-Oxide-Semiconductor Field-Effect Transistor).
+Pin Arduino dostarcza ok. **20 mA przy 5 V** — za mało, by zasilić obciążenia **9–12 V** pobierające amper(y). **Tranzystor** to półprzewodnikowy przełącznik: małym sygnałem z Arduino sterujesz dużym prądem w osobnym obwodzie mocy.
 
-Zalety użycia MOSFET:
-- sterowanie napięciami powyżej 5 V,
-- obsługa dużych prądów (kilka amperów).
+W praktyce spotkasz **tranzystory bipolarne** (NPN — sterowane prądem bazy) i **MOSFET-y** (sterowane napięciem bramki). Do przełączania wyższego napięcia wybieramy MOSFET: **5 V na bramce** wystarczy, by otworzyć kanał dren–źródło i przepuścić prąd z obwodu 12 V.
 
-**Przykład praktyczny:** taśmy LED (Light Emitting Diode, dioda elektroluminescencyjna) 12 V wymagają kilku amperów — bezpośrednie sterowanie z Arduino jest niemożliwe. MOSFET pełni rolę „elektronicznego przełącznika" sterowanego małym sygnałem z Arduino.
+**Przykład:** taśma LED 12 V (kilka amperów) — bez MOSFET-a Arduino jej nie zasili. Więcej teorii: [Tranzystory unipolarne — MOSFET (Forbot)](https://forbot.pl/blog/kurs-elektroniki-ii-tranzystory-unipolarne-mosfet-id7960).
 
 ### Tranzystor IRL540N
 
@@ -345,6 +420,12 @@ Wyprowadzenia IRL540N (patrząc od frontu, od lewej):
 - **Gate (G)** — bramka: sygnał sterujący z Arduino,
 - **Drain (D)** — dren: podłączamy do obciążenia (strona „+"),
 - **Source (S)** — źródło: masa GND.
+
+<Schematic
+  src="/img/lekcje/15.10-MOSFET.png"
+  caption="Opis wyprowadzeń tranzystora IRL540N (po lewej widok od dołu, czyli od strony nóżek)."
+  alt="Opis wyprowadzeń tranzystora IRL540N (po lewej widok od dołu, czyli od strony nóżek)."
+/>
 
 ## 9. MOSFET w praktyce — buzzer zasilany 12 V
 
