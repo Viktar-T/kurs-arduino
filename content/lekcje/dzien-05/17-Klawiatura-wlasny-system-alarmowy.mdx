@@ -62,6 +62,8 @@ Klawiatura numeryczna to wygodny sposób na wprowadzanie danych do Arduino. Popu
   file="17.01-klawiatura-numeryczna-przyklad.jpg"
   caption="Przykład klawiatury numerycznej — 16 przycisków podłączonych do Arduino zaledwie 8 przewodami."
   alt="Zdjęcie klawiatury numerycznej 4x4"
+  width={600}
+  height={400}
 />
 
 Wewnątrz klawiatura jest zorganizowana w **wiersze i kolumny**. Każdy klawisz łączy jeden wiersz z jedną kolumną. Arduino wysyła sygnał kolejno przez każdy wiersz i sprawdza, który klawisz jest wciśnięty, odczytując stan kolumn — to technika zwana **skanowaniem matrycy**.
@@ -90,12 +92,16 @@ W zestawie Arduino znajduje się foliowa klawiatura matrycowa 4×4. Na froncie w
   file="17.03-klawiatura-matrycowa-przod.jpg"
   caption="Klawiatura matrycowa z zestawu — 16 przycisków, 8 wyprowadzeń."
   alt="Zdjęcie klawiatury matrycowej 4x4 od frontu"
+  width={600}
+  height={400}
 />
 
 <Photo
   file="17.04-klawiatura-matrycowa-tyl.jpg"
   caption="Tył klawiatury matrycowej — widoczne 8 elastycznych pinów wychodzących z taśmy."
   alt="Zdjęcie tyłu klawiatury matrycowej z widocznymi pinami"
+  width={600}
+  height={400}
 />
 
 ## 3. Podłączenie klawiatury do Arduino
@@ -109,6 +115,8 @@ Piny klawiatury podłączamy do pinów cyfrowych Arduino od **2 do 9**:
   file="17.05-klawiatura-podlaczenie-arduino.jpg"
   caption="Połączenie klawiatury matrycowej z Arduino — piny 2–9."
   alt="Zdjęcie klawiatury podłączonej do Arduino przewodami"
+  width={600}
+  height={400}
 />
 
 <Callout type="note" title="Przejściówka do płytki stykowej">
@@ -209,6 +217,8 @@ void loop() {
   file="17.09-efekt-pierwszego-programu.jpg"
   caption="Efekt działania pierwszego programu — Monitor portu szeregowego wyświetla naciskane klawisze."
   alt="Zrzut ekranu Monitora portu szeregowego z wypisanymi znakami klawiszy"
+  width={600}
+  height={400}
 />
 
 <Task title="Zadanie 1 — test klawiatury" estimate="5 min">
@@ -223,6 +233,8 @@ Teraz zastosujemy klawiaturę w praktycznym projekcie: **centralce alarmowej**. 
   file="17.10-alarm-scenariusz.jpg"
   caption="Scenariusz alarmu — okno z czujnikiem i czas na rozbrojenie."
   alt="Ilustracja scenariusza systemu alarmowego przy oknie"
+  width={600}
+  height={400}
 />
 
 ### Automat stanów
@@ -233,6 +245,8 @@ Program centralki działa jak **automat stanów** (ang. *state machine*) — w d
   file="17.11-automat-stanow-alarmu.png"
   caption="Diagram automatu stanów centralki alarmowej — cztery stany i przejścia między nimi."
   alt="Diagram automatu stanów z czterema stanami: czuwanie, monitorowanie, rozbrajanie, alarm"
+  width={600}
+  height={400}
 />
 
 Cztery stany systemu:
@@ -278,7 +292,11 @@ Do budowy centralki potrzebujemy czterech elementów poza klawiaturą:
 
 ## 7. Szkielet kodu — automat stanów
 
-Zaczynamy od zbudowania szkieletu programu z pustymi blokami `case`. Zmienna `stanAlarmu` przechowuje bieżący stan i decyduje, który blok wykonuje się w pętli `loop()`:
+<Task title="Zadanie — szkielet automatu stanów" estimate="15 min">
+Proszę spróbować samodzielnie wykonać pierwszy krok: zbuduj szkielet programu z pustymi blokami `case`. Zmienna `stanAlarmu` ma przechowywać bieżący stan i decydować, który blok wykonuje się w pętli `loop()`.
+</Task>
+
+<Expandable title="Przykład rozwiązania: centralka-szkielet.ino" heading="####">
 
 <Code lang="cpp" file="centralka-szkielet.ino">
 ```cpp
@@ -337,13 +355,19 @@ void loop() {
 ```
 </Code>
 
+</Expandable>
+
 <Callout type="note" title="Dlaczego switch-case, a nie if-else?">
 Automat stanów z `switch-case` jest czytelniejszy i łatwiejszy w rozbudowie niż zagnieżdżone bloki `if-else`. Każdy stan jest wyraźnie oddzielony. Zmiana stanu polega tylko na przypisaniu nowej wartości do `stanAlarmu`.
 </Callout>
 
 ## 8. Stan 1 — czuwanie
 
-W stanie czuwania pierwsza dioda linijki świeci na **zielono**. Alarm uzbraja się po naciśnięciu klawisza `A` — przez ~10 sekund diody zapalają się kolejno na niebiesko, potem na czerwono (odliczanie), a następnie system przechodzi do monitorowania:
+<Task title="Zadanie — stan 1: czuwanie" estimate="15 min">
+Proszę spróbować samodzielnie zaimplementować **stan 1 — czuwanie** (`case 1`): pierwsza dioda linijki ma świecić na zielono, a klawisz `A` ma uzbrajać alarm — przez ~10 sekund diody zapalają się kolejno na niebiesko, potem na czerwono, a następnie system przechodzi do monitorowania (`stanAlarmu = 2`).
+</Task>
+
+<Expandable title="Przykład rozwiązania: centralka-stan1.ino" heading="####">
 
 <Code lang="cpp" file="centralka-stan1.ino">
 ```cpp
@@ -397,9 +421,15 @@ void wylaczDiody() {
 ```
 </Code>
 
+</Expandable>
+
 ## 9. Stan 2 — monitorowanie
 
-System sprawdza czujniki w każdej iteracji pętli. Wykrycie ruchu przez PIR uruchamia alarm **natychmiast** (stan 4). Otwarcie okna/drzwi przez kontaktron daje użytkownikowi chwilę na wpisanie PIN (stan 3):
+<Task title="Zadanie — stan 2: monitorowanie" estimate="10 min">
+Proszę spróbować samodzielnie zaimplementować **stan 2 — monitorowanie** (`case 2`): ósma dioda miga na czerwono, a w każdej iteracji pętli sprawdzaj czujniki — wykrycie ruchu przez PIR uruchamia alarm natychmiast (stan 4), otwarcie okna lub drzwi przez kontaktron daje użytkownikowi czas na wpisanie PIN (stan 3).
+</Task>
+
+<Expandable title="Przykład rozwiązania: centralka-stan2.ino" heading="####">
 
 <Code lang="cpp" file="centralka-stan2.ino">
 ```cpp
@@ -421,13 +451,19 @@ break;
 ```
 </Code>
 
+</Expandable>
+
 <Callout type="warning" title="PIR a kontaktron — różny priorytet">
 Czujnik PIR wykrywa ruch wewnątrz pomieszczenia — zakładamy, że to już intruz, więc alarm uruchamia się bez szansy na rozbrojenie. Kontaktron reaguje na otwarcie okna/drzwi — to może być właściciel wracający do domu, dlatego dostaje czas na wpisanie PIN.
 </Callout>
 
 ## 10. Stan 3 — rozbrajanie (wpisywanie PIN)
 
-Stan rozbrajania sprawdza kolejne cyfry kodu PIN. Jeśli wszystkie cztery cyfry są poprawne, system wraca do czuwania. Błędna cyfra lub przekroczenie czasu (50 iteracji × 100 ms = 5 sekund) uruchamia alarm:
+<Task title="Zadanie — stan 3: rozbrajanie" estimate="15 min">
+Proszę spróbować samodzielnie zaimplementować **stan 3 — rozbrajanie** (`case 3`): sprawdzaj kolejne cyfry kodu PIN — jeśli wszystkie cztery są poprawne, system wraca do czuwania; błędna cyfra lub przekroczenie czasu (50 iteracji × 100 ms = 5 sekund) uruchamia alarm.
+</Task>
+
+<Expandable title="Przykład rozwiązania: centralka-stan3.ino" heading="####">
 
 <Code lang="cpp" file="centralka-stan3.ino">
 ```cpp
@@ -459,9 +495,15 @@ break;
 ```
 </Code>
 
+</Expandable>
+
 ## 11. Stan 4 — sygnalizacja alarmu
 
-Alarm sygnalizuje zagrożenie naprzemiennym miganiem **czerwonym i niebieskim** na całej linijce oraz syreną dźwiękową na buzzerze:
+<Task title="Zadanie — stan 4: sygnalizacja alarmu" estimate="10 min">
+Proszę spróbować samodzielnie zaimplementować **stan 4 — sygnalizacja alarmu** (`case 4`): sygnalizuj zagrożenie naprzemiennym miganiem **czerwonym i niebieskim** na całej linijce oraz syreną dźwiękową na buzzerze.
+</Task>
+
+<Expandable title="Przykład rozwiązania: centralka-stan4.ino" heading="####">
 
 <Code lang="cpp" file="centralka-stan4.ino">
 ```cpp
@@ -484,13 +526,7 @@ break;
 ```
 </Code>
 
-<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
-Maszyna stanów i klawiatury to obszar, gdzie AI może pomóc w projektowaniu i rozszerzaniu logiki:
-
-- **Zrozumienie maszyny stanów** — zapytaj AI: „Wytłumacz koncepcję maszyny stanów (state machine) na przykładzie systemu alarmowego z czterema stanami: czuwanie, monitorowanie, rozbrajanie, alarm". AI narysuje diagram przejść i wytłumaczy, dlaczego `switch-case` jest naturalnym narzędziem do implementacji.
-- **Dodawanie nowych stanów** — poproś AI: „Do mojej centralki alarmowej chcę dodać 5. stan: 'testowanie' — w tym stanie wszystkie czujniki są aktywne, ale alarm nie włącza się. Jak rozszerzyć kod o ten stan?". To ćwiczenie pokazuje skalowalność maszyny stanów.
-- **Rozszerzenie logiki PIN** — opisz AI: „Moja centrala sprawdza tylko 4-cyfrowy PIN. Jak dodać blokadę po 3 błędnych próbach i odblokowanie specjalnym kodem?". Takie rozszerzenia uczą programowania defensywnego i obsługi stanów błędu.
-</Callout>
+</Expandable>
 
 ## 12. Kompletny kod centralki alarmowej
 
