@@ -117,6 +117,14 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
   height={300}
 />
 
+<Photo
+  file="14.10.02-dioda-rgb.png"
+  caption="Opis wyprowadzeń diody RGB."
+  alt="Opis wyprowadzeń diody RGB"
+  width={400}
+  height={300}
+/>
+
 Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwonemu, zielonemu i niebieskiemu kanałowi.
 
 <Expandable title="Głębiej: wspólna katoda kontra wspólna anoda — uważaj na zakup!" heading="####">
@@ -295,7 +303,7 @@ void loop() {
 </Code>
 
 <Callout type="note" title="Limity pinów PWM w Arduino UNO">
-Arduino UNO posiada tylko **6 pinów PWM**: 3, 5, 6, 9, 10, 11. Dwie diody RGB zajmują wszystkie sześć — przy trzech tradycyjnych diodach RGB brakowałoby pinów. To jeden z powodów, dla których diody WS2812 są praktyczniejsze przy większych projektach.
+Arduino UNO posiada tylko **6 pinów PWM**: 3, 5, 6, 9, 10, 11. Dwie diody RGB zajmują wszystkie sześć — przy trzech tradycyjnych diodach RGB brakowałoby pinów. To jeden z powodów, dla których diody **WS2812** są praktyczniejsze przy większych projektach.
 </Callout>
 
 ### 3.3 Mieszanie kolorów za pomocą PWM
@@ -401,9 +409,11 @@ void loop() {
 ```
 </Code>
 
-<Expandable title="Wersja z animacją w obu kierunkach" heading="####">
+<Task title="Zadanie — animacja w obu kierunkach" estimate="10 min">
+Dodaj drugą pętlę `for` ze zmniejszającą się zmienną `zmiana`, aby kolory zmieniały się płynnie tam i z powrotem.
+</Task>
 
-Dodanie drugiej pętli `for` ze zmniejszającą się zmienną `zmiana` sprawia, że kolory zmieniają się płynnie tam i z powrotem:
+<Expandable title="Rozwiązanie — animacja w obu kierunkach" heading="####">
 
 <Code lang="cpp" file="rgb-animacja-obu-kierunkach.ino">
 ```cpp
@@ -584,7 +594,7 @@ Najważniejsze jest czytanie oznaczeń bezpośrednio na module. Różne linijki 
     ["GND / -", "Masa układu", "GND Arduino i masa płytki stykowej"],
     ["5V / VCC / VIN / +", "Dodatnia szyna zasilania", "+5V z Arduino lub zewnętrznego zasilacza 5 V"],
     ["DIN / Data IN", "Wejście danych do pierwszej diody", "Pin A0 Arduino przez rezystor 300–500 Ω"],
-    ["DOUT / Data OUT", "Wyjście danych do kolejnego modułu", "Nie podłączamy w tym ćwiczeniu"],
+    ["DOUT / Data OUT", "Wyjście danych do kolejnego modułu. Na górze diody WS2812", "Nie podłączamy w tym ćwiczeniu"],
   ]}
 />
 
@@ -632,7 +642,7 @@ Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy
 
 <Photo
   file="14.24-instalacja-biblioteki-neopixel.png"
-  caption="Menedżer bibliotek Arduino IDE — wyszukaj 'NeoPixel' i zainstaluj bibliotekę Adafruit."
+  caption="Menedżer bibliotek Arduino IDE — wyszukaj 'Adafruit NeoPixel' i zainstaluj bibliotekę Adafruit."
   alt="Zrzut ekranu menedżera bibliotek Arduino IDE z wynikami wyszukiwania NeoPixel"
   width={700}
   height={450}
@@ -641,7 +651,7 @@ Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy
 **W przypadku Arduino IDE pobranego z Arduino.cc (zalecane):**
 
 1. Otwórz **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami…**
-2. Wyszukaj `NeoPixel`.
+2. Wyszukaj `Adafruit NeoPixel`.
 3. Zainstaluj **Adafruit NeoPixel** (autor: Adafruit).
 
 **W przypadku Arduino IDE pobranego z Arduino.org:**
@@ -719,29 +729,7 @@ Podłącz linijkę WS2812 jak na schemacie poniżej i wgraj szkic:
   height={500}
 />
 
-Poniższy szkic próbuje zaświecić pierwszą diodę na zielono — ale uwaga, zawiera **celowy błąd**:
-
-<Code lang="cpp" file="ws2812-pierwszy-test-bledny.ino">
-```cpp
-#include <Adafruit_NeoPixel.h> // Dołączenie biblioteki
-
-Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
-
-void setup() {
-  linijka.begin(); // Inicjalizacja
-  linijka.show();
-
-  linijka.setPixelColor(0, linijka.Color(0, 255, 0)); // Dioda nr 1 świeci na zielono
-  // BŁĄD: brak linijka.show() — dioda nie zaświeci się!
-}
-
-void loop() {
-
-}
-```
-</Code>
-
-Aby dioda faktycznie zaświeciła, musimy wywołać `show()` **po** ustawieniu koloru:
+Poniższy szkic zaświeci pierwszą diodę na zielono:
 
 <Code lang="cpp" file="ws2812-pierwszy-test.ino">
 ```cpp
@@ -771,7 +759,11 @@ W bibliotece NeoPixel (i w C++ ogólnie) tablice i kolekcje numerowane są od **
 
 ## 5. Sygnalizator alarmowy
 
-Mając linijkę WS2812, możemy w kilku linijkach kodu zbudować efektowny sygnalizator. Poniższy szkic zmienia kolor wszystkich 8 diod jednocześnie między czerwonym a niebieskim, naśladując sygnał policyjny:
+<Task title="Zadanie 1: sygnalizator alarmowy" estimate="10 min">
+Zbuduj na linijce WS2812 sygnalizator alarmowy w kilku linijkach kodu. Szkic ma **jednocześnie** zmieniać kolor wszystkich 8 diod między czerwonym a niebieskim, naśladując sygnał policyjny.
+</Task>
+
+<Expandable title="Przykład rozwiązania: sygnalizator alarmowy" heading="####">
 
 <Code lang="cpp" file="sygnalizator-wszystkie.ino">
 ```cpp
@@ -801,10 +793,12 @@ void loop() {
 ```
 </Code>
 
+</Expandable>
+
 ## Sygnalizator — wersja sekwencyjna
 
 <Task title="Zadanie 2: sygnalizator sekwencyjny" estimate="10 min">
-Bardziej realistyczny efekt uzyskamy, zapalając diody kolejno zamiast wszystkich naraz. Zmodyfikuj szkic sygnalizatora tak, aby diody 0–3 zapalały się na czerwono, a diody 4–7 na niebiesko, jedna po drugiej, z krótkim opóźnieniem po każdej diodzie.
+Bardziej realistyczny efekt uzyskamy, **zapalając diody kolejno** zamiast wszystkich naraz. Zmodyfikuj szkic sygnalizatora tak, aby diody 0–3 zapalały się na czerwono, a diody 4–7 na niebiesko, jedna po drugiej, z krótkim opóźnieniem po każdej diodzie.
 </Task>
 
 <Photo
