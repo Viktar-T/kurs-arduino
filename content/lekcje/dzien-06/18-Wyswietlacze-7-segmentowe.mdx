@@ -756,6 +756,12 @@ void wyswietlacz(int cyfra) {
   alt="Animacja GIF multipleksowania z opóźnieniem 10 ms — stabilny obraz"
 />
 
+<Photo
+  file="18.29-sevseg-biblioteka-uklad.jpg"
+  caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
+  alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
+/>
+
 <Callout type="warning">
 Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje cały procesor**. W praktycznych projektach nie możesz używać `delay()` razem z multipleksowaniem — zamiast tego używaj `millis()` (omówione w lekcji o wielozadaniowości) lub skorzystaj z gotowej biblioteki SevSeg.
 </Callout>
@@ -817,6 +823,12 @@ void loop() {
 
 Pierwsza wartość `setNumber()` to wyświetlana liczba; druga to liczba cyfr. Metoda `refreshDisplay()` sama obsługuje multipleksowanie — ale **musi być wywoływana bardzo często**, najlepiej w każdym obrocie pętli `loop()`.
 
+<Photo
+  file="18.34-podsumowanie.jpg"
+  caption="Gotowy układ z biblioteką SevSeg i potencjometrem — wyświetlacze działają płynnie bez delay()."
+  alt="Kompletny układ z dwoma wyświetlaczami 7-segmentowymi i potencjometrem"
+/>
+
 ### 9.3. Wyświetlanie znaków
 
 <Code lang="cpp" file="sevseg_znaki.ino">
@@ -841,15 +853,9 @@ void loop() {
 </Code>
 
 <Photo
-  file="18.29-sevseg-biblioteka-uklad.jpg"
-  caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
-  alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
-/>
-
-<Photo
-  file="18.31-sevseg-licznik-animacja.gif"
-  caption="Animacja licznika zrealizowanego z biblioteką SevSeg — oba wyświetlacze działają płynnie."
-  alt="Animacja GIF licznika z biblioteką SevSeg na dwóch wyświetlaczach 7-segmentowych"
+  file="18.33-potencjometr-wynik.jpg"
+  caption="Wyświetlacz pokazuje wartość odczytaną z potencjometru — obracanie gałki zmienia liczbę."
+  alt="Wyświetlacze 7-segmentowe pokazujące wartość z potencjometru"
 />
 
 ## 10. Ostatni przykład — potencjometr na wyświetlaczu
@@ -891,22 +897,17 @@ void loop() {
 />
 
 <Photo
-  file="18.33-potencjometr-wynik.jpg"
-  caption="Wyświetlacz pokazuje wartość odczytaną z potencjometru — obracanie gałki zmienia liczbę."
-  alt="Wyświetlacze 7-segmentowe pokazujące wartość z potencjometru"
+  file="18.31-sevseg-licznik-animacja.gif"
+  caption="Animacja licznika zrealizowanego z biblioteką SevSeg — oba wyświetlacze działają płynnie."
+  alt="Animacja GIF licznika z biblioteką SevSeg na dwóch wyświetlaczach 7-segmentowych"
 />
+
 
 <Callout type="warning">
 **Ważne ograniczenie biblioteki SevSeg:** biblioteka ułatwia konfigurację, ale **nie eliminuje potrzeby multipleksowania**. Cały proces wymaga ciągłego wywoływania `refreshDisplay()`. Z tego powodu programy korzystające z wyświetlaczy 7-segmentowych **nie mogą używać `delay()`** — wszystkie opóźnienia muszą być realizowane za pomocą `millis()`. Zajmiemy się tym szczegółowo w lekcji o wielozadaniowości.
 
 Jeśli chcesz zobaczyć działający przykład z `millis()`, zajrzyj do przykładów biblioteki: *Plik → Przykłady → SevSeg → SevSeg_Counter*.
 </Callout>
-
-<Photo
-  file="18.34-podsumowanie.jpg"
-  caption="Gotowy układ z biblioteką SevSeg i potencjometrem — wyświetlacze działają płynnie bez delay()."
-  alt="Kompletny układ z dwoma wyświetlaczami 7-segmentowymi i potencjometrem"
-/>
 
 ## Podsumowanie
 
