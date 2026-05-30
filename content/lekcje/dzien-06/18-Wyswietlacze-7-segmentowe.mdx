@@ -46,6 +46,7 @@ hardware:
 tags: [arduino, wyswietlacz, 7-segmentowy, multipleksowanie, tranzystor, bc547, sevseg, biblioteka, switch-case]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-ii-wyswietlacze-7-segmentowe-id18413"
+  - "https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315"
 
 cover: "/img/lekcje/18.01-okladka-wyswietlacze-7seg.png"
 publish: true
@@ -62,6 +63,8 @@ Wyświetlacz 7-segmentowy składa się z siedmiu podłużnych elementów świetl
   file="18.02-budowa-wyswietlacza-7seg.png"
   caption="Standardowe oznaczenie segmentów A–G wyświetlacza 7-segmentowego."
   alt="Schemat wyświetlacza 7-segmentowego z oznaczonymi segmentami A przez G"
+  width={400}
+  height={300}
 />
 
 Wyświetlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentów. Na przykład:
@@ -96,6 +99,8 @@ Wewnątrz wyświetlacza wszystkie diody LED mogą być połączone na dwa sposob
   file="18.05-wspolna-katoda.png"
   caption="Konfiguracja wspólnej katody — wszystkie katody diod połączone razem."
   alt="Schemat wewnętrzny wyświetlacza ze wspólną katodą"
+  width={700}
+  height={500}
 />
 
 **Wspólna anoda** — wszystkie plusy (anody) diod połączone są razem i podłączone do zasilania. Segment zapala się po podaniu stanu **LOW** (masy) na jego pin.
@@ -104,6 +109,8 @@ Wewnątrz wyświetlacza wszystkie diody LED mogą być połączone na dwa sposob
   file="18.06-wspolna-anoda.png"
   caption="Konfiguracja wspólnej anody — wszystkie anody diod połączone razem."
   alt="Schemat wewnętrzny wyświetlacza ze wspólną anodą"
+  width={700}
+  height={500}
 />
 
 <Callout type="note">
@@ -124,9 +131,16 @@ W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** 
   file="18.08-wyswietlacz-LDD040-tyl.png"
   caption="Wyświetlacz LDD040AUE-101A — widok od tyłu. Numery 1 i 16 naniesione przez producenta ułatwiają orientację."
   alt="Tył wyświetlacza LDD040AUE-101A z widocznymi oznaczeniami pinów 1 i 16"
+  width={700}
+  height={500}
 />
 
 Z datasheetu wynika, że w jednej obudowie mieszczą się **dwa niezależne wyświetlacze** (7 wewnętrznych struktur dla każdego). Pin punktu dziesiętnego P nie ma podłączonego LED-a — w tej lekcji go nie używamy.
+
+Każdy z dwóch wyświetlaczy ma własną wspólną katodę (minus):
+
+- **Pin 4** to wspólna katoda (masa) dla **pierwszego** wyświetlacza.
+- **Pin 5** to wspólna katoda (masa) dla **drugiego** wyświetlacza.
 
 Numery pinów łatwo odczytać, bo producent oznacza na spodzie wyświetlacza piny **1** i **16**.
 
@@ -149,7 +163,7 @@ Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3
     ["14", "G", "6"],
     ["15", "A", "7"],
     ["16", "F", "8"],
-    ["Wspólna katoda", "GND", "GND"]
+    ["4", "Wspólna katoda (masa)", "GND"]
   ]}
 />
 
@@ -169,6 +183,40 @@ Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3
   file="18.11-podlaczenie-kompletny-uklad.jpg"
   caption="Kompletny układ z pierwszym wyświetlaczem podłączonym do Arduino — wszystkie 7 segmentów przez rezystory 1 kΩ."
   alt="Zdjęcie kompletnego układu: Arduino UNO, płytka stykowa, wyświetlacz 7-segmentowy"
+/>
+
+<Photo
+  file="18.12-wyswietlacz-wkladanie-plytka.jpg"
+  caption="Wkładanie wyświetlacza w płytkę stykową — segmenty jeszcze niepodświetlone."
+  alt="Wyświetlacz 7-segmentowy wkładany w płytkę stykową, segmenty zgaszone"
+/>
+
+Kolejny krok jest prosty, łączymy każdy rezystor przewodem z Arduino UNO. Kolejność następującą:
+
+- wyprowadzenie nr 1 (segment C), do pinu Arduino nr 2,
+- wyprowadzenie nr 2 (segment E), do pinu Arduino nr 3,
+- wyprowadzenie nr 3 (segment D), do pinu Arduino nr 4,
+- wyprowadzenie nr 13 (segment B), do pinu Arduino nr 5,
+- wyprowadzenie nr 14 (segment G), do pinu Arduino nr 6,
+- wyprowadzenie nr 15 (segment A), do pinu Arduino nr 7,
+- wyprowadzenie nr 16 (segment F), do pinu Arduino nr 8.
+
+<Photo
+  file="18.13-test-segmentow-wszystkie.jpg"
+  caption="Wszystkie segmenty zapalone — wyświetlacz pokazuje cyfrę 8."
+  alt="Wyświetlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
+/>
+
+<Photo
+  file="18.14-wyswietlanie-cyfry-5.jpg"
+  caption="Wyświetlacz pokazuje cyfrę 5 — segmenty A, C, D, F, G zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 5"
+/>
+
+<Photo
+  file="18.15-wyswietlanie-cyfry-8.jpg"
+  caption="Cyfra 8 na wyświetlaczu — wszystkie segmenty zapalone."
+  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 8"
 />
 
 ## 5. Test segmentów
@@ -216,17 +264,7 @@ void loop() {
 ```
 </Code>
 
-<Photo
-  file="18.12-test-segmentow-a.jpg"
-  caption="Wynik testu — zapalony segment A (górna pozioma kreska)."
-  alt="Wyświetlacz 7-segmentowy z zapalonym segmentem A"
-/>
 
-<Photo
-  file="18.13-test-segmentow-wszystkie.jpg"
-  caption="Wszystkie segmenty zapalone — wyświetlacz pokazuje cyfrę 8."
-  alt="Wyświetlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
-/>
 
 ## 6. Wyświetlanie pojedynczych cyfr
 
@@ -366,17 +404,7 @@ void wyswietlacz(int cyfra) {
 ```
 </Code>
 
-<Photo
-  file="18.14-wyswietlanie-cyfry-5.jpg"
-  caption="Wyświetlacz pokazuje cyfrę 5 — segmenty A, C, D, F, G zapalone."
-  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 5"
-/>
 
-<Photo
-  file="18.15-wyswietlanie-cyfry-8.jpg"
-  caption="Cyfra 8 na wyświetlaczu — wszystkie segmenty zapalone."
-  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 8"
-/>
 
 <Expandable heading="##" title="Dlaczego switch/case, a nie if/else?">
 Instrukcja `switch/case` jest tu czytelniejsza niż seria `if/else if`, bo każda cyfra to odrębny, zamknięty przypadek. Kompilator może też wygenerować z niej efektywną tablicę skoków (jump table), co sprawia, że wykonuje się szybciej niż łańcuch warunków.
@@ -490,12 +518,16 @@ void wyswietlacz(int cyfra) {
   file="18.16-licznik-animacja.gif"
   caption="Animacja licznika — wyświetlacz cyklicznie pokazuje cyfry 0–9."
   alt="Animacja GIF przedstawiająca licznik 0–9 na wyświetlaczu 7-segmentowym"
+  width={700}
+  height={500}
 />
 
 <Photo
   file="18.17-licznik-cyfry-gif.gif"
   caption="Kolejne cyfry na wyświetlaczu 7-segmentowym w trakcie działania licznika."
   alt="GIF z kolejnymi cyframi wyświetlanymi na wyświetlaczu 7-segmentowym"
+  width={700}
+  height={500}
 />
 
 ## 8. Drugi wyświetlacz — multipleksowanie
@@ -504,7 +536,7 @@ Teraz robi się trudniej — przynajmniej po stronie połączeń.
 
 **Naiwne podejście** to podłączenie drugiego wyświetlacza do kolejnych 7 pinów Arduino. Problem: skończyłyby się wolne piny, a przy 3 lub 4 wyświetlaczach byłoby to zupełnie niemożliwe.
 
-**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami.
+**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami. Porozmawiamy o tym trochu póżniej w części 8.3. Multipleksowanie w praktyce 
 
 ### 8.1. Połączenie segmentów
 
@@ -525,32 +557,30 @@ Odpowiadające sobie piny segmentów obu wyświetlaczy łączymy razem:
 />
 
 <Photo
-  file="18.18-drugi-wyswietlacz-schemat.png"
-  caption="Schemat podłączenia dwóch wyświetlaczy ze wspólnymi pinami segmentów."
-  alt="Schemat połączeń dwóch wyświetlaczy 7-segmentowych ze wspólnymi segmentami"
+  file="18.18-drugi-wyswietlacz-zblizenie.png"
+  caption="Zbliżenie na dwucyfrowy wyświetlacz — przy wspólnych segmentach obie cyfry pokazują na razie to samo."
+  alt="Zbliżenie na dwucyfrowy wyświetlacz 7-segmentowy ze świecącymi segmentami"
+  width={700}
+  height={500}
 />
 
 <Photo
   file="18.19-drugi-wyswietlacz-polaczenia.jpg"
   caption="Łączenie odpowiadających sobie pinów segmentów obu wyświetlaczy za pomocą zworek."
   alt="Płytka stykowa z dwoma wyświetlaczami połączonymi zworkami"
+
 />
+
+Każdy z dwóch wyświetlaczy ma własną wspólną katodę (minus):
+
+- **Pin 4** to wspólna katoda (masa) dla **pierwszego** wyświetlacza.
+- **Pin 5** to wspólna katoda (masa) dla **drugiego** wyświetlacza.
 
 <Photo
   file="18.20-drugi-wyswietlacz-uklad.jpg"
   caption="Oba wyświetlacze podłączone wspólnymi segmentami — na razie wyświetlają identyczną cyfrę."
   alt="Dwa wyświetlacze 7-segmentowe podłączone do Arduino pokazujące tę samą cyfrę"
 />
-
-### 8.2. Sterowanie przez tranzystory NPN (BC547)
-
-Gdy zapalone są wszystkie segmenty, przez katodę wyświetlacza może płynąć ponad 20 mA — za dużo dla bezpośredniego podłączenia do pinu Arduino. Dlatego każdy wyświetlacz włączamy przez **tranzystor NPN BC547**:
-
-- **Kolektor** tranzystora → katoda wyświetlacza (pin 4 — wyświetlacz 1; pin 5 — wyświetlacz 2)
-- **Baza** przez rezystor 10 kΩ → pin Arduino (pin 10 — wyświetlacz 1; pin 9 — wyświetlacz 2)
-- **Emiter** → GND
-
-Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci.
 
 <Photo
   file="18.21-tranzystor-BC547-uklad.jpg"
@@ -568,6 +598,32 @@ Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci
   file="18.23-tranzystor-kompletny-uklad.jpg"
   caption="Kompletny układ z dwoma wyświetlaczami sterowanymi przez tranzystory NPN."
   alt="Płytka stykowa z dwoma wyświetlaczami i dwoma tranzystorami BC547"
+/>
+
+### 8.2. Sterowanie przez tranzystory NPN (BC547)
+
+Gdy zapalone są wszystkie segmenty, przez katodę wyświetlacza może płynąć ponad 20 mA — za dużo dla bezpośredniego podłączenia do pinu Arduino. Dlatego każdy wyświetlacz włączamy przez [**tranzystor NPN BC547**](https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315):
+
+<Callout type="note">
+Prosimy o **spędzenie kilku minut** na zapoznanie się z [tranzystorem NPN BC547](https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315) — artykuł Forbot wyjaśnia działanie tranzystora bipolarnego w praktyce i ułatwi zrozumienie układu poniżej.
+</Callout>
+
+- **Kolektor** tranzystora → katoda wyświetlacza (pin 4 — wyświetlacz 1; pin 5 — wyświetlacz 2)
+- **Baza** przez rezystor 10 kΩ → pin Arduino (pin 10 — wyświetlacz 1; pin 9 — wyświetlacz 2)
+- **Emiter** → GND
+
+Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci.
+
+<Photo
+  file="18.24-multipleksowanie-uklad.jpg"
+  caption="Kompletny układ multipleksowania — dwa wyświetlacze, dwa tranzystory, wspólne segmenty."
+  alt="Zdjęcie układu multipleksowania dwóch wyświetlaczy 7-segmentowych"
+/>
+
+<Photo
+  file="18.25-multipleksowanie-wynik-statyczny.jpg"
+  caption="Wyświetlacze pokazują różne cyfry dzięki multipleksowaniu."
+  alt="Dwa wyświetlacze 7-segmentowe pokazujące różne cyfry jednocześnie"
 />
 
 ### 8.3. Multipleksowanie w praktyce
@@ -680,18 +736,6 @@ void wyswietlacz(int cyfra) {
 ```
 </Code>
 
-<Photo
-  file="18.24-multipleksowanie-uklad.jpg"
-  caption="Kompletny układ multipleksowania — dwa wyświetlacze, dwa tranzystory, wspólne segmenty."
-  alt="Zdjęcie układu multipleksowania dwóch wyświetlaczy 7-segmentowych"
-/>
-
-<Photo
-  file="18.25-multipleksowanie-wynik-statyczny.jpg"
-  caption="Wyświetlacze pokazują różne cyfry dzięki multipleksowaniu."
-  alt="Dwa wyświetlacze 7-segmentowe pokazujące różne cyfry jednocześnie"
-/>
-
 **Wpływ opóźnienia na jakość obrazu:**
 
 <Photo
@@ -717,7 +761,7 @@ Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje
 </Callout>
 
 <Task title="Zadanie 6.3 — licznik 0–99">
-Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Licznik może działać automatycznie (co sekundę) lub reagować na naciśnięcie przycisku. Prześlij kod, zdjęcia i wideo działającego układu.
+Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Licznik może działać automatycznie (co sekundę) lub reagować na naciśnięcie przycisku.
 
 *Wskazówka:* Dziesiątki wyślij na wyświetlacz 1, jedności na wyświetlacz 2.
 </Task>
@@ -741,6 +785,12 @@ Programowanie multipleksowania ręcznie jest możliwe, ale skomplikowane. Na szc
 3. Skopiuj go do katalogu bibliotek Arduino: `C:\Users\<nazwa_uzytkownika>\Documents\Arduino\libraries\`.
 4. Uruchom ponownie Arduino IDE.
 5. Sprawdź instalację: *Plik → Przykłady* — powinien pojawić się dział **SevSeg**.
+
+<Photo
+  file="18.30-sevseg-github-pobieranie.png"
+  caption="Strona repozytorium SevSeg na GitHubie — bibliotekę pobierzemy przyciskiem „Download ZIP”."
+  alt="Zrzut ekranu repozytorium biblioteki SevSeg na GitHubie z menu Clone or download"
+/>
 
 ### 9.2. Wyświetlanie liczby
 
@@ -794,12 +844,6 @@ void loop() {
   file="18.29-sevseg-biblioteka-uklad.jpg"
   caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
   alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
-/>
-
-<Photo
-  file="18.30-sevseg-dostepne-znaki.png"
-  caption="Znaki obsługiwane przez bibliotekę SevSeg — cyfry 0–9 i litery A–Z (z różną czytelnością na 7 segmentach)."
-  alt="Tabela znaków obsługiwanych przez bibliotekę SevSeg w formacie binarnym"
 />
 
 <Photo
