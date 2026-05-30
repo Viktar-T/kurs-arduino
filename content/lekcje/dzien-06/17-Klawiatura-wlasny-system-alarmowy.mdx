@@ -10,9 +10,9 @@ title: "Klawiatura matrycowa i własny system alarmowy"
 slug: "klawiatura-wlasny-system-alarmowy"
 summary: "Lekcja z kursu Forbot II #5: klawiatura matrycowa 4×4, biblioteka Keypad, odczyt wciśniętych klawiszy, budowa własnej centralki alarmowej — automat stanów (czuwanie, monitorowanie, rozbrajanie, alarm) z linijką WS2812, czujnikiem PIR, kontaktronem i buzzerem."
 
-day: 5
+day: 6
 weekend: 3
-order: 2
+order: 5
 duration: 90
 block: 12
 blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
@@ -28,9 +28,9 @@ objectives:
   - "Dodać odliczanie czasu na wpisanie kodu PIN i blokadę po błędnym wprowadzeniu"
 
 prerequisites:
-  - "dzien-04/przerwania-kontaktron-czujnik-pir"
-  - "dzien-04/syrena-alarmowa-mosfet"
-  - "dzien-04/diody-rgb-tradycyjne-oraz-ws2812"
+  - "dzien-05/przerwania-kontaktron-czujnik-pir"
+  - "dzien-05/syrena-alarmowa-mosfet"
+  - "dzien-05/diody-rgb-tradycyjne-oraz-ws2812"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
@@ -49,7 +49,7 @@ sources:
 
 cover: "/img/lekcje/17.01-klawiatura-numeryczna-przyklad.jpg"
 publish: true
-updated: "2026-05-15"
+updated: "2026-05-30"
 ---
 
 W tej lekcji nauczysz się obsługiwać **klawiaturę matrycową 4×4** za pomocą biblioteki `Keypad`, a następnie wykorzystasz ją do zbudowania własnej **centralki alarmowej**. System będzie składał się z czterech stanów: czuwanie, monitorowanie, rozbrajanie i aktywny alarm. Do jego realizacji połączymy razem elementy poznane w poprzednich lekcjach — linijkę WS2812, czujnik PIR, kontaktron i buzzer.

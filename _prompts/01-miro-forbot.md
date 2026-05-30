@@ -56,7 +56,7 @@ Next, use the guidelines in @lesson-author.md as instructions for how to format 
 
 Please download all the images from https://forbot.pl/blog/kurs-arduino-ii-klawiatura-wlasny-system-alarmowy-id18341 and save them sequentially in the public/img/lekcje directory. Rename the images appropriately based on their context, prefixing them with sequential numbers starting from 17.01 (e.g., 17.01-image-name.jpg, 17.02-another-image.jpg).
 
-Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-04\17-Klawiatura-wlasny-system-alarmowy.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 17.01-..., 17.02-...) in their corresponding places within the MDX text.
+Next, use the guidelines in @lesson-author.md as instructions for how to format the output, and write the lesson content inside content\lekcje\dzien-06\17-Klawiatura-wlasny-system-alarmowy.mdx. Mirror the content directly from the provided URL, making sure to insert the newly downloaded images (using their new names like 17.01-..., 17.02-...) in their corresponding places within the MDX text.
 
 ------
 ------------

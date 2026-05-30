@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Diody RGB — tradycyjne oraz WS2812"
 slug: "diody-rgb-tradycyjne-oraz-ws2812"
-summary: "Sterowanie diodami RGB metodą tradycyjną (3 piny + PWM) oraz programowalnymi diodami WS2812 z biblioteką Adafruit NeoPixel — mieszanie kolorów, animacje świetlne i sygnalizator alarmowy."
+summary: "Sterowanie diodami RGB metodą tradycyjną (3 piny + PWM) — w wariancie ze wspólną katodą i wspólną anodą — oraz programowalnymi diodami WS2812 z biblioteką Adafruit NeoPixel: mieszanie kolorów, animacje świetlne i sygnalizator alarmowy."
 
 day: 5
 weekend: 3
@@ -21,6 +21,7 @@ forbotChapter: 2
 
 objectives:
   - "Podłączyć diodę RGB (tradycyjną) do Arduino i sterować każdym kanałem koloru"
+  - "Rozróżnić diodę RGB ze wspólną katodą i wspólną anodą oraz dostosować podłączenie i kod do każdego typu"
   - "Używać PWM (analogWrite) do mieszania kolorów w diodzie RGB"
   - "Wyjaśnić zasadę działania diody programowalnej WS2812 i różnicę wobec tradycyjnej"
   - "Zainstalować i używać biblioteki Adafruit NeoPixel do sterowania linijką WS2812"
@@ -33,7 +34,8 @@ prerequisites:
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
-  - { name: "Dioda RGB (wspólna katoda)", qty: 2 }
+  - { name: "Dioda RGB (wspólna katoda)", qty: 1 }
+  - { name: "Dioda RGB (wspólna anoda)", qty: 1 }
   - { name: "Rezystor 1000 Ω", qty: 6 }
   - { name: "Moduł WS2812 — linijka 8 LED", qty: 1 }
   - { name: "Płytka stykowa", qty: 1 }
@@ -125,36 +127,38 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
   height={300}
 />
 
-Diody RGB **ze wspólną katodą** mają jedną wspólną nóżkę masy (GND, Ground) — to najdłuższa nóżka. Trzy pozostałe odpowiadają kolejno: czerwonemu, zielonemu i niebieskiemu kanałowi.
+Trzy pozostałe nóżki (poza wspólną) odpowiadają kolejno czerwonemu, zielonemu i niebieskiemu kanałowi. Najdłuższa nóżka jest **wspólna** dla wszystkich trzech kolorów — i właśnie sposób jej połączenia odróżnia dwa typy diody RGB, które masz na stanowisku.
 
-<Expandable title="Głębiej: wspólna katoda kontra wspólna anoda — uważaj na zakup!" heading="####">
-Producenci diod RGB oferują **dwa warianty** wewnętrznego połączenia. Wybór decyduje o tym, jak będziesz pisał kod — a wizualnie diody wyglądają identycznie.
+### 3.1 Dwa typy diody RGB: wspólna katoda i wspólna anoda
 
-**Wspólna katoda (CC, Common Cathode):**
-- Najdłuższa nóżka idzie do **GND**.
-- Każdy kolor zapalasz **stanem HIGH** na pinie.
-- `digitalWrite(R, HIGH)` zapala czerwony.
-- `analogWrite(R, 255)` to pełna jasność, `analogWrite(R, 0)` to wyłączenie.
+To klasyczna pułapka dla początkujących. Wewnątrz diody RGB są trzy osobne struktury świecące (R, G, B), które muszą mieć jedno wspólne wyprowadzenie. Producenci łączą je na **dwa sposoby** — i to decyduje o tym, jak podłączysz diodę oraz jak napiszesz kod. Obie wersje wyglądają **identycznie** (cztery nóżki), więc trzeba wiedzieć, którą masz w ręku.
 
-**Wspólna anoda (CA, Common Anode):**
-- Najdłuższa nóżka idzie do **+5V**.
-- Każdy kolor zapalasz **stanem LOW** na pinie (prąd musi „wpłynąć" do Arduino).
-- `digitalWrite(R, LOW)` zapala czerwony.
-- `analogWrite(R, 0)` to pełna jasność, `analogWrite(R, 255)` to wyłączenie — **logika odwrócona!**
-
-Najprostszy test bez patrzenia na dokumentację: podłącz najdłuższą nóżkę przez rezystor `1 kΩ` do `+5V` i kolejno dotykaj pozostałych nóżek przewodem od GND. Jeśli diody świecą — masz **wspólną anodę**. Jeśli nie — przekładasz wspólną nóżkę do GND i testujesz dotykając do +5V; wtedy to **wspólna katoda**.
-
-W kodzie z lekcji używamy diody **wspólnej katody**. Jeśli kupiłeś przypadkiem wspólną anodę, zamień każde `analogWrite(R, wartosc)` na `analogWrite(R, 255 - wartosc)` i program zadziała poprawnie.
-</Expandable>
+- **Wspólna katoda (CC, *Common Cathode*)** — trzy diody mają połączone katody (minusy). Najdłuższą, wspólną nóżkę podłączasz do **GND (masy)**. Kolor zapalasz, podając na pin **napięcie** (stan `HIGH`). To wariant intuicyjny — logika „wprost".
+- **Wspólna anoda (CA, *Common Anode*)** — trzy diody mają połączone anody (plusy). Najdłuższą nóżkę podłączasz do **+5V**, a Arduino działa jako ujście prądu do masy (tzw. *sink*) i zamyka obwód. Kolor zapalasz, **ściągając** pin do masy (stan `LOW`). Logika jest **odwrócona**.
 
 <Table
-  caption="Wyprowadzenia diody RGB (wspólna katoda)"
-  headers={["Nóżka", "Funkcja", "Pin Arduino"]}
+  caption="Wspólna katoda (CC) vs wspólna anoda (CA) — najważniejsze różnice"
+  headers={["Cecha", "Wspólna katoda (CC)", "Wspólna anoda (CA)"]}
   rows={[
-    ["Najdłuższa (2.)", "GND — masa wspólna", "GND"],
-    ["1.", "Czerwony (R)", "3 (PWM)"],
-    ["3.", "Zielony (G)", "5 (PWM)"],
-    ["4.", "Niebieski (B)", "6 (PWM)"],
+    ["Najdłuższa (wspólna) nóżka", "do masy (GND)", "do zasilania (+5V)"],
+    ["Zapalenie koloru (cyfrowo)", "digitalWrite(pin, HIGH)", "digitalWrite(pin, LOW)"],
+    ["Zgaszenie koloru (cyfrowo)", "digitalWrite(pin, LOW)", "digitalWrite(pin, HIGH)"],
+    ["Pełna jasność (PWM)", "analogWrite(pin, 255)", "analogWrite(pin, 0)"],
+    ["Wyłączenie (PWM)", "analogWrite(pin, 0)", "analogWrite(pin, 255)"],
+    ["Logika działania", "wprost / intuicyjna", "odwrócona"],
+  ]}
+/>
+
+Co ważne, **różnica w samym podłączeniu jest niewielka**: trzy nóżki kolorów zawsze idą do tych samych pinów Arduino (przez rezystory). Zmienia się wyłącznie to, dokąd prowadzi najdłuższa, wspólna nóżka — do `GND` (katoda) albo do `+5V` (anoda).
+
+<Table
+  caption="Wyprowadzenia diody RGB i ich podłączenie"
+  headers={["Nóżka", "Funkcja", "Podłączenie"]}
+  rows={[
+    ["Najdłuższa (2.)", "Wspólne wyprowadzenie", "GND (katoda) lub +5V (anoda)"],
+    ["1.", "Czerwony (R)", "pin 3 (PWM) przez rezystor 1 kΩ"],
+    ["3.", "Zielony (G)", "pin 5 (PWM) przez rezystor 1 kΩ"],
+    ["4.", "Niebieski (B)", "pin 6 (PWM) przez rezystor 1 kΩ"],
   ]}
 />
 
@@ -162,9 +166,22 @@ W kodzie z lekcji używamy diody **wspólnej katody**. Jeśli kupiłeś przypadk
 Każdy z trzech kanałów koloru łącz z Arduino przez rezystor **1 kΩ** (lub 220–470 Ω). Bez rezystora prąd ogranicza jedynie samo złącze Arduino i możesz je uszkodzić.
 </Callout>
 
-### 3.1 Pierwsze użycie diody RGB
+<Expandable title="Szybki test sprzętowy — którą diodę mam w ręku?" heading="####">
+Jeśli diody pomieszały się w szufladkach, możesz rozpoznać typ bez pisania kodu:
 
-Podłącz diodę RGB do pinów 3, 5 i 6 (wszystkie obsługują PWM), każdy przez rezystor 1 kΩ. Masę podłącz do GND.
+1. Podłącz najdłuższą nóżkę przez rezystor `1 kΩ` do `+5V`.
+2. Kolejno dotykaj pozostałych nóżek przewodem podłączonym do `GND`.
+3. Jeśli któryś kolor **zaświeci** — masz diodę ze **wspólną anodą**.
+4. Jeśli nic się nie dzieje, przełóż wspólną nóżkę (z rezystorem) do `GND` i dotykaj krótkich nóżek przewodem od `+5V`. Jeśli teraz świeci — to **wspólna katoda**.
+</Expandable>
+
+<Callout type="note" title="Dwa typy — dwa przykłady kodu">
+W lekcji szkice w treści głównej są napisane dla diody ze **wspólną katodą** (logika wprost: `HIGH` zapala, `analogWrite(255)` to pełna jasność). Pod kluczowymi przykładami znajdziesz rozwijaną sekcję z **osobnym, gotowym szkicem dla wspólnej anody** (logika odwrócona: `LOW` zapala, `analogWrite(0)` to pełna jasność). Jeśli masz diodę ze wspólną anodą, użyj wersji z sekcji „dla wspólnej anody".
+</Callout>
+
+### 3.2 Pierwsze użycie diody RGB
+
+Podłącz diodę RGB do pinów 3, 5 i 6 (wszystkie obsługują PWM), każdy przez rezystor 1 kΩ. Wspólną (najdłuższą) nóżkę podłącz do **GND** dla wspólnej katody albo do **+5V** dla wspólnej anody.
 
 <Schematic
   src="/img/lekcje/14.11-schemat-dioda-rgb.jpg"
@@ -174,9 +191,9 @@ Podłącz diodę RGB do pinów 3, 5 i 6 (wszystkie obsługują PWM), każdy prze
   height={500}
 />
 
-Pierwszy szkic zaświeci każdy kolor po kolei, potem połączy je razem, a na końcu wyłączy wszystkie:
+Pierwszy szkic zaświeci każdy kolor po kolei, potem połączy je razem, a na końcu wyłączy wszystkie. Poniżej wersja dla diody ze **wspólną katodą** — kolor zapala stan `HIGH`:
 
-<Code lang="cpp" file="rgb-pierwsze-kolory.ino">
+<Code lang="cpp" file="rgb-pierwsze-kolory-katoda.ino">
 ```cpp
 const byte czerwona = 3;
 const byte zielona = 5;
@@ -213,6 +230,48 @@ void loop() {
 }
 ```
 </Code>
+
+<Expandable title="Ten sam szkic dla wspólnej anody" heading="####">
+W diodzie ze wspólną anodą logika jest **odwrócona** — kolor zapala stan `LOW`, a gasi `HIGH`. Pamiętaj, że wspólną (najdłuższą) nóżkę podłączasz wtedy do `+5V`, a nie do `GND`. Zmieniają się tylko stany w `digitalWrite()`, reszta szkicu jest identyczna.
+
+<Code lang="cpp" file="rgb-pierwsze-kolory-anoda.ino">
+```cpp
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
+
+void setup() {
+  pinMode(czerwona, OUTPUT); // Piny podłączone do diody jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(czerwona, LOW);   // Świecimy tylko na czerwono (anoda: LOW zapala)
+  delay(2000);
+  digitalWrite(czerwona, HIGH);  // Świecimy tylko na zielono
+  digitalWrite(zielona, LOW);
+  delay(2000);
+  digitalWrite(zielona, HIGH);   // Świecimy tylko na niebiesko
+  digitalWrite(niebieska, LOW);
+  delay(2000);
+  digitalWrite(niebieska, HIGH);
+
+  digitalWrite(czerwona, LOW);   // Świecimy każdą po kolei, bez gaszenia poprzednich
+  delay(2000);
+  digitalWrite(zielona, LOW);
+  delay(2000);
+  digitalWrite(niebieska, LOW);
+  delay(2000);
+
+  digitalWrite(czerwona, HIGH);  // Wyłączamy wszystkie diody
+  digitalWrite(niebieska, HIGH);
+  digitalWrite(zielona, HIGH);
+  delay(2000);
+}
+```
+</Code>
+</Expandable>
 
 Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, żółty (czerwony + zielony), turkusowy (zielony + niebieski) i biały (wszystkie trzy):
 
@@ -254,9 +313,9 @@ Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, �
 Zmodyfikuj szkic, aby uzyskać kolor żółty (czerwony + zielony) i fioletowy (czerwony + niebieski). Jaki kolor daje połączenie wszystkich trzech kanałów?
 </Task>
 
-### 3.2 Podłączanie wielu diod RGB
+### 3.3 Podłączanie wielu diod RGB
 
-Do jednego Arduino możemy podłączyć wiele tradycyjnych diod RGB — każda potrzebuje swoich pinów. Poniżej przykład z dwiema diodami na pinach 3, 5, 6 oraz 9, 10, 11:
+Do jednego Arduino możemy podłączyć wiele tradycyjnych diod RGB — każda potrzebuje swoich pinów. Poniżej przykład z dwiema diodami ze **wspólną katodą** na pinach 3, 5, 6 oraz 9, 10, 11 (przy wspólnej anodzie zamień `HIGH` na `LOW` i odwrotnie):
 
 <Schematic
   src="/img/lekcje/14.16-schemat-dwie-diody-rgb.jpg"
@@ -306,9 +365,9 @@ void loop() {
 Arduino UNO posiada tylko **6 pinów PWM**: 3, 5, 6, 9, 10, 11. Dwie diody RGB zajmują wszystkie sześć — przy trzech tradycyjnych diodach RGB brakowałoby pinów. To jeden z powodów, dla których diody **WS2812** są praktyczniejsze przy większych projektach.
 </Callout>
 
-### 3.3 Mieszanie kolorów za pomocą PWM
+### 3.4 Mieszanie kolorów za pomocą PWM
 
-Funkcja `analogWrite(pin, wartość)` ustawia wypełnienie PWM w zakresie 0–255. Możemy dzięki temu płynnie regulować jasność każdego kanału i mieszać kolory. Poniższy szkic płynnie zmienia kolory obu diod w pętli:
+Funkcja `analogWrite(pin, wartość)` ustawia wypełnienie PWM w zakresie 0–255. Możemy dzięki temu płynnie regulować jasność każdego kanału i mieszać kolory. Poniższy szkic (dla diody ze **wspólną katodą**) płynnie zmienia kolory obu diod w pętli. Przy wspólnej anodzie pełnej jasności odpowiada `0`, a wyłączeniu `255` — gotową wersję anodową znajdziesz w sekcji pod kodem:
 
 <Schematic
   src="/img/lekcje/14.17-schemat-diody-rgb-pwm.jpg"
@@ -318,7 +377,7 @@ Funkcja `analogWrite(pin, wartość)` ustawia wypełnienie PWM w zakresie 0–25
   height={500}
 />
 
-<Code lang="cpp" file="rgb-mieszanie-kolorow.ino">
+<Code lang="cpp" file="rgb-mieszanie-kolorow-katoda.ino">
 ```cpp
 // Definicja wyprowadzeń pierwszej diody
 const byte czerwona = 3;
@@ -356,6 +415,49 @@ void loop() {
 }
 ```
 </Code>
+
+<Expandable title="Ten sam szkic dla wspólnej anody" heading="####">
+Przy wspólnej anodzie każdą wartość jasności odwracamy wzorem `255 − wartość`: tam gdzie katoda dostaje `0`, anoda dostaje `255`, i odwrotnie. Logika mieszania kolorów jest ta sama, zmieniają się tylko liczby przekazane do `analogWrite()`.
+
+<Code lang="cpp" file="rgb-mieszanie-kolorow-anoda.ino">
+```cpp
+// Definicja wyprowadzeń pierwszej diody
+const byte czerwona = 3;
+const byte zielona = 5;
+const byte niebieska = 6;
+
+// Definicja wyprowadzeń drugiej diody
+const byte czerwona2 = 9;
+const byte zielona2 = 10;
+const byte niebieska2 = 11;
+
+void setup() {
+  pinMode(czerwona, OUTPUT);   // Konfiguracja wyprowadzeń jako wyjścia
+  pinMode(zielona, OUTPUT);
+  pinMode(niebieska, OUTPUT);
+  pinMode(czerwona2, OUTPUT);
+  pinMode(zielona2, OUTPUT);
+  pinMode(niebieska2, OUTPUT);
+}
+
+void loop() {
+  int zmiana = 0;
+
+  for (zmiana = 0; zmiana < 255; zmiana++) { // Płynna zmiana kolorów (anoda: 255 - wartość)
+    analogWrite(czerwona, 255 - 0);
+    analogWrite(zielona, 255 - zmiana);
+    analogWrite(niebieska, 255 - (255 - zmiana));
+
+    analogWrite(czerwona2, 255 - zmiana);
+    analogWrite(zielona2, 255 - (255 - zmiana));
+    analogWrite(niebieska2, 255 - 0);
+
+    delay(10); // Krótkie opóźnienie, aby efekt był widoczny dla ludzkiego oka
+  }
+}
+```
+</Code>
+</Expandable>
 
 Możemy wzbogacić efekt o **losową składową** koloru, używając `random()` i `randomSeed()`:
 
@@ -947,4 +1049,4 @@ Bez korekcji gamma efekt płynnej tęczy lub oddychającej diody wygląda „kan
 
 ## Podsumowanie
 
-Tradycyjna dioda RGB wymaga trzech pinów PWM i trzech rezystorów — za to jest prosta i nie wymaga żadnej biblioteki. Przez `analogWrite()` w zakresie 0–255 na każdym kanale R, G, B możemy uzyskać dowolny kolor świetlny. Dioda programowalna WS2812 idzie o krok dalej: wbudowany sterownik pozwala adresować każdą diodę z osobna przez jeden przewód danych i bibliotekę NeoPixel. Kluczowe do zapamiętania: zawsze po `setPixelColor()` wywołuj `show()`, inaczej zmiany nie trafią do diod. Przy intensywnych efektach świetlnych na wielu diodach WS2812 korzystaj z zewnętrznego zasilania 5 V — każda dioda przy pełnej bieli pobiera nawet 60 mA.
+Tradycyjna dioda RGB wymaga trzech pinów PWM i trzech rezystorów — za to jest prosta i nie wymaga żadnej biblioteki. Przez `analogWrite()` w zakresie 0–255 na każdym kanale R, G, B możemy uzyskać dowolny kolor świetlny. Pamiętaj o dwóch wariantach: dioda ze **wspólną katodą** ma wspólną nóżkę przy `GND` i logikę „wprost" (`HIGH`/`255` zapala), a dioda ze **wspólną anodą** ma wspólną nóżkę przy `+5V` i logikę odwróconą (`LOW`/`0` zapala). Dla każdego typu masz w lekcji osobny, gotowy szkic — wersję dla anody znajdziesz w rozwijanych sekcjach pod przykładami. Dioda programowalna WS2812 idzie o krok dalej: wbudowany sterownik pozwala adresować każdą diodę z osobna przez jeden przewód danych i bibliotekę NeoPixel. Kluczowe do zapamiętania: zawsze po `setPixelColor()` wywołuj `show()`, inaczej zmiany nie trafią do diod. Przy intensywnych efektach świetlnych na wielu diodach WS2812 korzystaj z zewnętrznego zasilania 5 V — każda dioda przy pełnej bieli pobiera nawet 60 mA.
