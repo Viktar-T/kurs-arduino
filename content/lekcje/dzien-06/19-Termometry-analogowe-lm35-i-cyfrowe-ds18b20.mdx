@@ -64,6 +64,8 @@ Na rynku dostępna jest ogromna liczba czujników. Można je podzielić na dwie 
   file="19.01-termometr-analogowy-vs-cyfrowy.gif"
   caption="Termometr analogowy (1) — na wyjściu napięcie proporcjonalne (3). Termometr cyfrowy (2) — na wyjściu sygnał binarny (4)."
   alt="Animacja pokazująca różnicę między czujnikiem analogowym a cyfrowym"
+  width={700}
+  height={500}
 />
 
 <Table
@@ -91,12 +93,16 @@ LM35 to popularny czujnik zamknięty w obudowie TO-92 — takiej samej jak wiele
   file="19.02-lm35-zdjecie.jpg"
   caption="Czujnik temperatury LM35 — obudowa TO-92."
   alt="Zdjęcie czujnika temperatury LM35"
+  width={500}
+  height={300}
 />
 
 <Photo
   file="19.03-lm35-pinout.jpg"
   caption="Opis wyprowadzeń LM35: GND, Vout (pomiar), VCC — kolejność odwrotna niż w DS18B20!"
   alt="Diagram wyprowadzeń czujnika LM35 z opisem pinów"
+  width={500}
+  height={300}
 />
 
 Najważniejsze parametry LM35:
@@ -164,6 +170,8 @@ Precyzję można poprawić przez stabilniejsze napięcie odniesienia albo uśred
   file="19.05-lm35-odczyt-uart.gif"
   caption="Zmiana odczytów temperatury w Monitorze portu szeregowego podczas dotykania czujnika palcem."
   alt="Animacja monitora portu szeregowego pokazująca rosnące odczyty temperatury LM35"
+  width={700}
+  height={500}
 />
 
 <Callout type="warning" title="LM35 nie mierzy temperatur ujemnych (w podstawowym podłączeniu)">
@@ -216,6 +224,8 @@ void loop() {
   file="19.06-lm35-max-temperatura.gif"
   caption="Zapamiętywanie wartości maksymalnej — temperatura rośnie po dotknięciu czujnika."
   alt="Animacja monitora portu szeregowego pokazująca śledzenie maksymalnej temperatury"
+  width={700}
+  height={500}
 />
 
 ### Śledzenie minimum i maksimum
@@ -259,6 +269,8 @@ void loop() {
   file="19.07-lm35-min-max-temperatura.gif"
   caption="Zapamiętywanie wartości minimalnej i maksymalnej — ogrzewanie i chłodzenie czujnika."
   alt="Animacja monitora portu szeregowego pokazująca śledzenie minimalnej i maksymalnej temperatury"
+  width={700}
+  height={500}
 />
 
 <Expandable title="Dlaczego inicjalizujemy tempMIN = 150?" heading="###">
@@ -285,12 +297,16 @@ Obudowa TO-92 wygląda identycznie jak LM35 — jednak uwaga: **kolejność zasi
   file="19.08-ds18b20-pinout.png"
   caption="Wyprowadzenia DS18B20 — kolejność pinów odwrotna niż w LM35! GND po lewej, VDD po prawej."
   alt="Diagram wyprowadzeń czujnika DS18B20 z opisem pinów GND, DQ, VDD"
+  width={500}
+  height={300}
 />
 
 <Photo
   file="19.09-ds18b20-zdjecie.jpg"
   caption="Czujnik temperatury DS18B20 — wygląda jak LM35, ale ma inne pinout i cyfrowy interfejs 1-Wire."
   alt="Zdjęcie czujnika temperatury DS18B20"
+  width={500}
+  height={300}
 />
 
 <Table
@@ -321,6 +337,8 @@ Podłączenie wygląda podobnie jak LM35 — dwa skrajne piny to zasilanie, śro
   file="19.11-ds18b20-rezystor-podciagajacy.jpg"
   caption="Koniecznie pamiętaj o rezystorze 4,7 kΩ — bez niego czujnik nie będzie działał poprawnie!"
   alt="Zdjęcie zbliżenia na rezystor pull-up 4,7 kΩ w układzie z DS18B20"
+  width={700}
+  height={500}
 />
 
 <Callout type="warning" title="Rezystor pull-up jest obowiązkowy">
@@ -405,6 +423,8 @@ void loop() {
   file="19.12-ds18b20-odczyt-monitora.gif"
   caption="Temperatura zmierzona przez DS18B20 wyświetlana w Monitorze portu szeregowego."
   alt="Animacja monitora portu szeregowego z odczytem temperatury z DS18B20"
+  width={700}
+  height={500}
 />
 
 Bonus: DS18B20 mierzy też **temperatury ujemne** bez żadnych modyfikacji podłączenia!
@@ -413,12 +433,16 @@ Bonus: DS18B20 mierzy też **temperatury ujemne** bez żadnych modyfikacji podł
   file="19.13-ds18b20-zamrozony.jpg"
   caption="Zamrożony termometr DS18B20 — czujnik schłodzony do temperatur ujemnych."
   alt="Zdjęcie czujnika DS18B20 pokrytego szronem"
+  width={700}
+  height={500}
 />
 
 <Photo
   file="19.14-ds18b20-ujemna-temperatura.png"
   caption="Odczyt ujemnej temperatury w monitorze — DS18B20 bez problemu mierzy wartości poniżej zera."
   alt="Zrzut ekranu monitora portu szeregowego pokazujący ujemną temperaturę zmierzoną przez DS18B20"
+  width={700}
+  height={500}
 />
 
 <Callout type="warning" title="Ostrożnie ze sprężonym powietrzem!">
@@ -481,6 +505,8 @@ void loop() {
   file="19.15-ds18b20-min-max-wynik.png"
   caption="Monitor portu szeregowego — wykrycie nowej wartości minimalnej i maksymalnej."
   alt="Zrzut ekranu monitora portu szeregowego pokazujący rejestrowanie nowych wartości MIN i MAX przez DS18B20"
+  width={700}
+  height={500}
 />
 
 ---
@@ -531,6 +557,8 @@ void loop() {
   file="19.17-ds18b20-wiele-czujnikow-odczyt.gif"
   caption="Odczytywanie informacji z dwóch czujników DS18B20 — dwa różne odczyty temperatury w monitorze."
   alt="Animacja monitora portu szeregowego pokazująca odczyty z dwóch czujników DS18B20"
+  width={700}
+  height={500}
 />
 
 ---
@@ -557,6 +585,8 @@ Po wgraniu i otwarciu monitora zobaczysz adresy w systemie szesnastkowym:
   file="19.18-ds18b20-adres-urzadzenia.png"
   caption="Odczytane adresy czujników w Monitorze portu szeregowego — każdy DS18B20 ma unikalny 8-bajtowy adres."
   alt="Zrzut ekranu monitora portu szeregowego pokazujący adresy czujników DS18B20 w systemie szesnastkowym"
+  width={700}
+  height={500}
 />
 
 ### Korzystanie z adresu w programie
@@ -620,12 +650,16 @@ Zakończymy budując praktyczny projekt: termometr, w którym linijka 8 diod WS2
   file="19.19-termometr-rgb-wizualizacja-dodatnia.png"
   caption="Wizualizacja temperatur dodatnich: kolejno +5 °C, +10 °C, +15 °C, +20 °C — diody świecą od dołu na czerwono."
   alt="Diagram linijki WS2812 pokazujący wizualizację temperatur dodatnich"
+  width={700}
+  height={500}
 />
 
 <Photo
   file="19.20-termometr-rgb-wizualizacja-ujemna.png"
   caption="Wizualizacja temperatur ujemnych: kolejno −5 °C, −10 °C, −15 °C, −20 °C — diody świecą od góry na niebiesko."
   alt="Diagram linijki WS2812 pokazujący wizualizację temperatur ujemnych"
+  width={700}
+  height={500}
 />
 
 Linijkę WS2812 podłączamy standardowo do pinu A0:
@@ -634,12 +668,16 @@ Linijkę WS2812 podłączamy standardowo do pinu A0:
   file="19.21-rgb-linijka-podlaczenie-przod.jpg"
   caption="Podłączenie linijki WS2812 do Arduino — widok od przodu."
   alt="Zdjęcie podłączenia linijki diod WS2812 do Arduino — przód układu"
+  width={700}
+  height={500}
 />
 
 <Photo
   file="19.22-rgb-linijka-podlaczenie-tyl.jpg"
   caption="Podłączenie linijki WS2812 do Arduino — widok od tyłu."
   alt="Zdjęcie podłączenia linijki diod WS2812 do Arduino — tył układu"
+  width={700}
+  height={500}
 />
 
 ### Funkcja `termometrRGB()`
