@@ -53,11 +53,6 @@ updated: "2026-05-15"
 
 W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej obudowie termometr i czujnik wilgotności. Dowiesz się, czym jest wilgotność względna, jak podłączyć czujnik do Arduino i jak w kilku linijkach kodu odczytywać dane za pomocą gotowej biblioteki.
 
-<Photo
-  file="20.01-okladka-kurs-dht11.png"
-  caption="Kurs Arduino II – #8 – cyfrowy czujnik wilgotności DHT-11."
-  alt="Grafika tytułowa lekcji o czujniku DHT-11"
-/>
 
 ## 1. Czym jest wilgotność względna?
 
@@ -65,6 +60,8 @@ W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej
   file="20.02-czym-jest-wilgotnosc.png"
   caption="Wilgotność względna opisuje ilość pary wodnej w powietrzu w stosunku do maksymalnej możliwej przy danej temperaturze."
   alt="Schemat ilustrujący pojęcie wilgotności względnej"
+  width={600}
+  hight={400}
 />
 
 Czujnik DHT-11 mierzy **wilgotność względną**, oznaczaną skrótem **RH** (od ang. *Relative Humidity*). Wartość ta określa, ile wody znajduje się w powietrzu względem maksymalnej ilości, jaką powietrze może pomieścić w danej temperaturze.
@@ -98,6 +95,22 @@ W praktycznych projektach sama wilgotność względna wystarcza do prostych alar
 DHT-11 to popularny, tani czujnik cyfrowy dostępny w niebieskiej obudowie z czterema wyprowadzeniami. Trzy z nich są używane: **VCC**, **DATA** i **GND**. Czwarty pin oznaczony **NC** (*Not Connected*) można zignorować.
 
 Czujnik korzysta z **zmodyfikowanego interfejsu jednoprzewodowego**, który **nie jest zgodny** ze standardem 1-Wire (używanym np. przez DS18B20). Nie próbuj używać biblioteki 1-Wire z DHT-11 — będziesz potrzebować dedykowanej biblioteki.
+
+<Expandable title="Głębiej: dlaczego pin NC w ogóle istnieje, skoro nic nie robi?" heading="####">
+
+Skrót **NC** pochodzi od angielskiego *Not Connected* — to nie funkcja pinu, lecz jego status. Etykieta mówi wprost: „nic tu nie podłączaj". Ten pin nie jest ani zasilaniem, ani linią danych, ani masą.
+
+Skoro nic nie robi, po co go w ogóle umieszczono? Złożyły się na to trzy powody:
+
+- **Wspólna obudowa dla całej rodziny czujników.** DHT-11 i mocniejszy DHT-22 (a także AM2302 czy RHT03) korzystają z tej samej 4-nóżkowej obudowy. Produkcja jednego standardowego korpusu jest tańsza niż dwóch — więc choć DHT-11 wykorzystuje tylko trzy wyprowadzenia, czwarte i tak zostaje.
+- **Stabilność mechaniczna.** Cztery nóżki trzymają czujnik w płytce stykowej pewniej i równiej niż trzy.
+- **Pin zarezerwowany przez producenta.** Wewnątrz obudowy ta nóżka często prowadzi do struktury układu i bywa wykorzystywana fabrycznie (np. do testów lub kalibracji). Dla użytkownika końcowego pozostaje bez funkcji.
+
+W praktyce pin NC zostawiamy wolny (*floating*) — nie łączymy go z `VCC`, `GND` ani `DATA`. Gotowe moduły DHT-11 (na małej płytce z wlutowanym rezystorem) zwykle w ogóle pomijają to wyprowadzenie i mają tylko trzy piny.
+
+Uwaga na podwójne znaczenie skrótu: w pinoutach układów scalonych `NC` oznacza *Not Connected*, ale przy przekaźnikach i przyciskach `NC` to *Normally Closed* (styk normalnie zwarty) — zupełnie co innego.
+
+</Expandable>
 
 ### Parametry techniczne
 

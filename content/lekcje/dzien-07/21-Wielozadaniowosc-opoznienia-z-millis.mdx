@@ -52,12 +52,6 @@ updated: "2026-05-15"
 
 W tej lekcji nauczymy się omijać jedno z największych ograniczeń funkcji `delay()` — **blokowanie całego programu**. Poznasz funkcję `millis()`, która działa jak wbudowany stoper i pozwala Arduino wykonywać kilka zadań „jednocześnie" — bez zatrzymywania pętli `loop()`.
 
-<Photo
-  file="21.00.01-okladka-millis.jpg"
-  caption="Kurs Arduino II – #9 – wielozadaniowość, opóźnienia z millis()."
-  alt="Grafika tytułowa lekcji o wielozadaniowości z millis()"
-/>
-
 ## 1. Problem z delay()
 
 Funkcja `delay()` jest chętnie używana przez początkujących, bo jest prosta i intuicyjna. Jednak ma poważną wadę — **całkowicie wstrzymuje działanie programu** na zadany czas.
@@ -139,6 +133,8 @@ W Arduino znajdziemy funkcję `millis()`. Jej działanie najlepiej przyrównać 
   file="21.00.04-stoper-millis-analogia.jpg"
   caption="millis() działa jak wbudowany stoper — odlicza czas od uruchomienia Arduino."
   alt="Zdjęcie stopera jako analogia do działania funkcji millis()"
+  width={600}
+  hight={400}
 />
 
 Wartość zwracana przez `millis()` jest typu `unsigned long` (32-bitowa, bez znaku) i rośnie do ok. **50 dni**, po czym resetuje się do zera. Najprościej użyć jej tak:
@@ -263,6 +259,8 @@ void loop()
   file="21.00.07-led-miga-millis.gif"
   caption="Dioda LED miga co 1 sekundę przy użyciu millis() — pętla loop() nie jest blokowana."
   alt="Animacja przedstawiająca miganie diody LED z millis() bez blokowania loop()"
+  width={600}
+  hight={400}
 />
 
 Program wygląda bardziej rozbudowanie niż z `delay()`, ale zysk jest ogromny — `loop()` wykonuje się bez przerwy i jest gotowa na kolejne zadania.
@@ -399,102 +397,7 @@ void loop()
 
 Zwróć uwagę: odczyt `digitalRead(PRZYCISK)` dzieje się w **każdej** iteracji `loop()` — natychmiastowa reakcja na naciśnięcie byłaby niemożliwa z `delay()`.
 
-## 7. Projekt praktyczny — oświetlenie schodów
-
-Czas zastosować `millis()` w realnym projekcie. Wyobraź sobie automatyczne oświetlenie korytarza: po zamknięciu drzwi (kontaktron) lub wykryciu ruchu (PIR) światło powinno zapalić się i zgasnąć **automatycznie po 3 minutach**.
-
-<Photo
-  file="21.00.12-smart-home-schemat.png"
-  caption="Koncepcja inteligentnego domu: czujnik PIR i kontaktron sterują oświetleniem schodów z timerem."
-  alt="Schemat blokowy systemu automatycznego oświetlenia schodów"
-/>
-
-<Photo
-  file="21.00.13-schody-uklad-plan.png"
-  caption="Plan rozmieszczenia elementów: kontaktron na drzwiach, czujnik PIR na ścianie, taśma LED na schodach."
-  alt="Widok z góry na rozmieszczenie elementów systemu oświetlenia schodów"
-/>
-
-<Photo
-  file="21.00.16-platforma-testowa-schody.jpg"
-  caption="Platforma testowa z Arduino, kontaktronem i czujnikiem PIR gotowa do programowania."
-  alt="Zdjęcie fizycznej platformy testowej z podłączonymi elementami"
-/>
-
-Logika działania:
-- Jeśli **kontaktron zamknięty** (drzwi zamknięte) → wyłącz oświetlenie.
-- Jeśli **PIR wykryje ruch** → zapal oświetlenie i zapamiętaj czas.
-- Jeśli od ostatniego zapalenia minęło **3 minuty** → wyłącz oświetlenie.
-
-<Code lang="cpp" file="schody-oswietlenie.ino">
-```cpp
-const byte OSWIETLENIE = 4;   // przekaźnik lub MOSFET sterujący światłem
-const byte KONTAKTRON = 3;    // kontaktron na drzwiach (LOW = drzwi otwarte)
-const byte PIR = 5;           // wyjście cyfrowe czujnika PIR (HIGH = ruch)
-
-unsigned long aktualnyCzas = 0;
-unsigned long zapamietanyCzasOswietlenie = 0;
-
-void setup()
-{
-  Serial.begin(9600);
-  pinMode(OSWIETLENIE, OUTPUT);
-  pinMode(KONTAKTRON, INPUT_PULLUP); // kontaktron z rezystorem podciągającym
-  pinMode(PIR, INPUT);
-}
-
-void loop()
-{
-  aktualnyCzas = millis();
-
-  if (digitalRead(KONTAKTRON) == HIGH)
-  {
-    // Drzwi otwarte — natychmiast wyłącz oświetlenie
-    digitalWrite(OSWIETLENIE, LOW);
-  }
-  else if (digitalRead(PIR) == HIGH)
-  {
-    // Wykryto ruch — zapal światło i zapamiętaj czas
-    zapamietanyCzasOswietlenie = aktualnyCzas;
-    digitalWrite(OSWIETLENIE, HIGH);
-  }
-
-  // Automatyczne wyłączenie po 3 minutach (180 000 ms)
-  if (aktualnyCzas - zapamietanyCzasOswietlenie >= 180000UL)
-  {
-    digitalWrite(OSWIETLENIE, LOW);
-  }
-}
-```
-</Code>
-
-<Callout type="note" title="Dlaczego nie delay(180000)?">
-`delay(180000)` zablokowałby Arduino na 3 minuty — kontaktron i PIR stałyby się „niewidoczne" dla procesora przez cały ten czas. Dzięki `millis()` sprawdzamy warunki w każdej iteracji `loop()` i reagujemy natychmiast.
-</Callout>
-
-<Expandable title="Rozszerzenie: dodaj drugi PIR na górze schodów" heading="###">
-Wystarczy zadeklarować `const byte PIR2 = 6;`, skonfigurować pin jako `INPUT` i rozszerzyć warunek:
-
-```cpp
-else if (digitalRead(PIR) == HIGH || digitalRead(PIR2) == HIGH)
-{
-  zapamietanyCzasOswietlenie = aktualnyCzas;
-  digitalWrite(OSWIETLENIE, HIGH);
-}
-```
-
-Każdy czujnik może zapalić światło, a czas 3 minut liczy się od ostatniego wykrytego ruchu.
-</Expandable>
-
-<Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
-`millis()` i wielozadaniowość to jeden z ważniejszych przełomów w nauce Arduino — AI pomoże utrwalić ten wzorzec:
-
-- **Refaktoryzacja kodu z delay()** — masz działający kod z `delay()`? Wklej go do AI i napisz: „Przepisz ten kod tak, żeby nie używał `delay()` — zamiast tego użyj `millis()` i zmiennej `previousMillis`. Wytłumacz każdą zmianę". Porównanie obu wersji to najlepsza lekcja wzorca.
-- **Dlaczego unsigned long?** — zapytaj AI: „Dlaczego zmienna przechowująca wartość `millis()` musi być typu `unsigned long`, a nie `int` lub `long`? Co się stanie po przepełnieniu i jak kod z `millis()` automatycznie to obsługuje?". To precyzyjna lekcja arytmetyki modularnej w praktycznym kontekście.
-- **Projektowanie wielozadaniowości** — opisz AI swój projekt: „Chcę, żeby LED migało co 500 ms, serwo kręciło się co 2 sekundy, a przycisk był sprawdzany co 50 ms — wszystko równocześnie bez `delay()`. Jak zorganizować taki kod z wieloma niezależnymi timerami?". AI zaprojektuje strukturę, którą możesz rozbudowywać do własnych projektów.
-</Callout>
-
-## 8. Ćwiczenia
+## 7. Ćwiczenia
 
 <Task title="Zadanie — trzy niezależne diody LED" estimate="15 min">
 Podłącz trzy diody LED do pinów 3, 4 i 5. Użyj `millis()`, żeby migały z różnymi interwałami:
