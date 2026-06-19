@@ -1,0 +1,269 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Mini-projekt: od specyfikacji do działającego układu z AI"
+slug: "miniprojekt-od-specyfikacji-do-ukladu"
+summary: "Capstone modułu AI: budujemy czujnik cofania, przechodząc pełny dziewięciofazowy przepływ pracy — od specyfikacji, przez kod generowany z pomocą AI, weryfikację i symulację Wokwi, aż po wgranie i test na płytce. Łączy PlatformIO, asystenta AI, Spec-Driven Development i bramki weryfikacji w jednym projekcie."
+
+day: 9
+weekend: 5
+order: 5
+duration: 120
+block: 1
+blockTitle: "Podstawy Arduino i środowisko IDE"
+forbotCourse: 3
+forbotChapter: 5
+
+objectives:
+  - "Przejść pełny dziewięciofazowy przepływ pracy projektu wspieranego przez AI"
+  - "Zamienić własną specyfikację na zweryfikowany kod z pomocą asystenta AI"
+  - "Zastosować bramkę weryfikacji sprzętu i przegląd kodu w realnym projekcie"
+  - "Zbudować i uruchomić czujnik cofania na Arduino UNO w PlatformIO"
+  - "Rozbudować projekt i udokumentować efekt: specyfikacja + działający szkic"
+
+prerequisites:
+  - "dzien-09/weryfikacja-i-bezpieczenstwo-sprzetu"
+
+hardware:
+  - name: "Arduino UNO R3"
+    qty: 1
+  - name: "Czujnik ultradźwiękowy HC-SR04"
+    qty: 1
+  - name: "Brzęczyk aktywny 5 V"
+    qty: 1
+  - name: "Tranzystor NPN (BC547 lub 2N2222)"
+    qty: 1
+  - name: "Rezystor 1 kΩ (baza tranzystora)"
+    qty: 1
+  - name: "Dioda LED + rezystor 220 Ω"
+    qty: 1
+  - name: "Płytka stykowa i przewody połączeniowe"
+    qty: 1
+
+tags: [miniprojekt, czujnik-cofania, hc-sr04, workflow, platformio, wokwi, ai, spec-driven-development, capstone]
+sources:
+  - "https://docs.platformio.org/en/latest/integration/ide/vscode.html"
+  - "https://wokwi.com/"
+  - "https://docs.arduino.cc/language-reference/functions/advanced-io/pulsein/"
+  - "https://github.com/features/copilot"
+  - "https://kurs-arduino.vercel.app/harmonogram"
+
+publish: true
+updated: "2026-06-19"
+---
+
+To jest lekcja, w której wszystko się spina. Mamy profesjonalne środowisko (**PlatformIO**), asystenta AI, metodę **Spec-Driven Development** i nawyk **weryfikacji**. Połączymy je, budując **czujnik cofania** — od specyfikacji aż po działający układ na biurku. Przejdziemy **dziewięciofazowy przepływ pracy**, który możesz powiesić nad biurkiem i stosować do każdego nowego projektu z AI.
+
+<Objectives
+  items={[
+    "Przejść pełny przepływ pracy projektu z AI (9 faz)",
+    "Zamienić specyfikację na zweryfikowany kod z pomocą AI",
+    "Zastosować bramkę weryfikacji i przegląd kodu w praktyce",
+    "Zbudować i uruchomić czujnik cofania na Arduino UNO",
+    "Rozbudować i udokumentować gotowy projekt",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    { label: "Cały moduł AI — lekcje 24–27", href: "/lekcje/dzien-09/27-weryfikacja-i-bezpieczenstwo-sprzetu" },
+    "Specyfikacja czujnika cofania z lekcji o SDD",
+  ]}
+/>
+
+<Hardware
+  items={[
+    { name: "Arduino UNO R3", qty: 1 },
+    { name: "Czujnik ultradźwiękowy HC-SR04", qty: 1 },
+    { name: "Brzęczyk aktywny 5 V", qty: 1 },
+    { name: "Tranzystor NPN (BC547 / 2N2222)", qty: 1 },
+    { name: "Rezystor 1 kΩ (baza tranzystora)", qty: 1 },
+    { name: "Dioda LED + rezystor 220 Ω", qty: 1 },
+    { name: "Płytka stykowa i przewody", qty: 1 },
+  ]}
+/>
+
+<Callout type="note" title="Przepływ pracy w skrócie">
+Faza 0 setup → Faza 1 problem → Faza 2 specyfikacja i połączenia → Faza 3 symulacja → Faza 4 kod z AI → Faza 5 przegląd → Faza 6 kompilacja i wgranie → Faza 7 test → Faza 8 debug i rozbudowa. Sprzęt podłączamy do zasilania **dopiero po** symulacji i przeglądzie.
+</Callout>
+
+## Faza 0 — Setup projektu
+
+Załóż nowy projekt PlatformIO: **New Project → Board: Arduino Uno → Framework: Arduino**. Sprawdź `platformio.ini` (`board = uno`, `framework = arduino`, `monitor_speed = 9600`). Jeśli używasz Gita — zrób pierwszy commit, żeby móc cofnąć zmiany, gdyby AI namieszało.
+
+## Faza 1 — Definicja problemu (bez AI)
+
+Najpierw **Ty** opisujesz problem zwykłym językiem: „kierowca cofa; im bliżej przeszkody, tym szybsze piknięcia i zapalona dioda; po przekroczeniu 30 cm — cisza". Możesz poprosić AI **wyłącznie** o wskazanie przypadków brzegowych: „co, gdy czujnik się odłączy?". Odpowiedź zapisujesz jako kilka zdań — to fundament specyfikacji.
+
+## Faza 2 — Specyfikacja, elementy i połączenia (z weryfikacją)
+
+Korzystamy ze specyfikacji napisanej w lekcji o SDD. Teraz dochodzi **lista elementów** i **tabela połączeń** — a każdą deklarację sprzętową **weryfikujemy**.
+
+<Table
+  caption="Połączenia czujnika cofania"
+  headers={["Element", "Pin Arduino", "Uwaga"]}
+  rows={[
+    ["HC-SR04 TRIG", "D9", "wyjście wyzwalające"],
+    ["HC-SR04 ECHO", "D10", "wejście echa"],
+    ["HC-SR04 VCC / GND", "5 V / GND", "czujnik zasilany 5 V"],
+    ["Brzęczyk (przez tranzystor)", "D5 → baza NPN", "rezystor 1 kΩ na bazie"],
+    ["Dioda LED + 220 Ω", "D6", "aktywna stanem HIGH"],
+  ]}
+/>
+
+Najważniejszy moment weryfikacji dotyczy **brzęczyka**. Zadajemy AI celowe pytanie kontrolne:
+
+<Code lang="text" file="prompt-weryfikujacy.txt">
+```
+Brzęczyk aktywny 5 V pobiera ok. 30 mA, podłączony do pinu D5 Arduino UNO.
+Limit ATmega328P to 40 mA absolutnego maksimum (zalecane 20 mA) na pin.
+Czy mogę sterować nim wprost z pinu, czy potrzebny tranzystor?
+```
+</Code>
+
+Dobra odpowiedź wskaże, że **30 mA przekracza zalecane 20 mA**, więc potrzebny jest **tranzystor NPN** sterowany przez pin (z rezystorem 1 kΩ na bazie). Ale — zgodnie z zasadą z lekcji o weryfikacji — potwierdzamy to w **dokumentacji**, nie w czacie. To właśnie tu metoda chroni sprzęt.
+
+## Faza 3 — Symulacja w Wokwi (przed budową)
+
+Zanim sięgniesz po elementy, złóż układ **wirtualnie** w Wokwi i sprawdź wstępny szkielet kodu. Jeśli logika progów albo czas pomiaru są błędne, zobaczysz to bezpiecznie na ekranie. Dopiero symulacja, która działa zgodnie ze specyfikacją, daje zielone światło na sprzęt.
+
+## Faza 4 — Generowanie kodu z AI
+
+Teraz prompt według schematu **Cel–Kontekst–Format** (z lekcji o SDD): podajesz płytkę (Arduino UNO R3 / ATmega328P), styl PlatformIO, **całą specyfikację** i **konstytucję** (millis zamiast delay, brak String, nazwane stałe). Po kilku iteracjach i poprawkach powstaje czysty, nieblokujący szkic:
+
+<Code lang="cpp" file="src/main.cpp">
+```cpp
+#include <Arduino.h>
+
+// --- Piny ---
+const byte PIN_TRIG   = 9;
+const byte PIN_ECHO   = 10;
+const byte PIN_BUZZER = 5;    // sterowany przez tranzystor NPN
+const byte PIN_LED    = 6;
+
+// --- Progi odległości (cm) ---
+const int PROG_BLISKO = 10;
+const int PROG_DALEKO = 30;
+
+// --- Okresy czasowe (ms) ---
+const unsigned long OKRES_POMIARU = 200;
+const unsigned long PIK_SZYBKI    = 100;
+const unsigned long PIK_WOLNY     = 500;
+
+unsigned long ostatniPomiar = 0;
+unsigned long ostatniPik    = 0;
+bool buzzerStan = false;
+long odleglosc  = 0;
+
+// Pomiar odległości; zwraca cm albo -1 przy braku echa
+long zmierzOdleglosc() {
+  digitalWrite(PIN_TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PIN_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PIN_TRIG, LOW);
+
+  long czas = pulseIn(PIN_ECHO, HIGH, 25000UL); // limit czasu 25 ms
+  if (czas == 0) return -1;                      // brak echa / czujnik odłączony
+  return czas / 58;                              // czas [us] -> odległość [cm]
+}
+
+// Nieblokujące pikanie brzęczyka z zadanym okresem
+void pikaj(unsigned long teraz, unsigned long okres) {
+  if (teraz - ostatniPik >= okres) {
+    ostatniPik = teraz;
+    buzzerStan = !buzzerStan;
+    digitalWrite(PIN_BUZZER, buzzerStan);
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(PIN_TRIG, OUTPUT);
+  pinMode(PIN_ECHO, INPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  unsigned long teraz = millis();
+
+  // Pomiar co OKRES_POMIARU (bez blokowania pętli)
+  if (teraz - ostatniPomiar >= OKRES_POMIARU) {
+    ostatniPomiar = teraz;
+    odleglosc = zmierzOdleglosc();
+    Serial.print("Odleglosc: ");
+    if (odleglosc < 0) Serial.println("brak echa");
+    else { Serial.print(odleglosc); Serial.println(" cm"); }
+  }
+
+  // Sygnalizacja na podstawie progów
+  if (odleglosc > 0 && odleglosc < PROG_BLISKO) {
+    digitalWrite(PIN_LED, HIGH);
+    pikaj(teraz, PIK_SZYBKI);
+  } else if (odleglosc >= PROG_BLISKO && odleglosc <= PROG_DALEKO) {
+    digitalWrite(PIN_LED, LOW);
+    pikaj(teraz, PIK_WOLNY);
+  } else {
+    digitalWrite(PIN_LED, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
+    buzzerStan = false;
+  }
+}
+```
+</Code>
+
+## Faza 5 — Przegląd kodu (bramka)
+
+Zanim wgrasz, przejdź **checklistę z lekcji o weryfikacji**. Dla tego kodu odpowiedzi są dobre: używa `millis()` zamiast `delay()` w pętli, nie ma klasy `String`, stałe są nazwane, jest obsługa braku echa (`-1`), a brzęczyk idzie przez tranzystor (prąd pinu w normie). Gdyby coś nie pasowało — odrzucasz kod i prosisz AI o poprawkę konkretnego punktu.
+
+## Faza 6 — Kompilacja i wgranie
+
+Zbuduj projekt (`pio run`), wgraj (`pio run --target upload`) i otwórz monitor (`pio device monitor`). Jeśli kompilator zgłosi błąd — np. zmyśloną funkcję — to **dobra wiadomość**: złapaliśmy halucynację, zanim trafiła na sprzęt. Skopiuj dokładny komunikat i wklej do AI razem z kodem.
+
+<ExpectedOutput title="Po wgraniu">
+W monitorze portu co 200 ms pojawia się odczyt odległości w cm. Po zbliżeniu ręki do czujnika: poniżej 30 cm brzęczyk pika wolno, poniżej 10 cm pika szybko i zapala się dioda, powyżej 30 cm — cisza i zgaszona LED.
+</ExpectedOutput>
+
+## Faza 7 — Test
+
+Sprawdź wszystkie progi i przypadki brzegowe ze specyfikacji: odłącz na chwilę czujnik — w monitorze powinno pojawić się „brak echa", a układ nie może „zawiesić" pikania. Porównaj zachowanie z **kryteriami akceptacji** — to one mówią, czy projekt jest gotowy.
+
+## Faza 8 — Debug i rozbudowa
+
+Jeśli coś nie gra, użyj **ustrukturyzowanego promptu debugującego**: opisz objaw, oczekiwane zachowanie, fragment kodu i odczyt z monitora, a poproś AI o „trzy najbardziej prawdopodobne przyczyny i jakie `Serial.print()` dodać". Gdy działa — rozbuduj projekt.
+
+<MiniProject title="Czujnik cofania — pełny przepływ z AI" goal="Od specyfikacji do działającego układu, z weryfikacją na każdym etapie">
+Zbuduj i uruchom czujnik cofania, przechodząc wszystkie dziewięć faz. Oddajesz **dwie rzeczy**: (1) swoją **specyfikację** w pliku `.md` oraz (2) **działający, zweryfikowany szkic** w PlatformIO.
+
+Propozycje rozbudowy (wybierz jedną):
+
+- dołóż **trzeci próg** i drugą diodę (np. zielona–żółta–czerwona jak sygnalizacja),
+- pokaż odległość na **wyświetlaczu LCD** zamiast w monitorze portu,
+- uśrednij **kilka pomiarów**, żeby odczyt był stabilniejszy,
+- przenieś projekt na **robota** z poprzednich zajęć jako czujnik antykolizyjny.
+
+Każdą zmianę najpierw dopisz do **specyfikacji**, dopiero potem proś AI o kod — i znów przejdź przez bramkę przeglądu.
+</MiniProject>
+
+<Callout type="tip" title="To jest metoda na całe życie">
+Ten sam dziewięciofazowy przepływ zadziała dla każdego przyszłego projektu — większego robota, stacji pogodowej, własnego pomysłu. Zmienia się specyfikacja, nie metoda. AI pisze, Ty projektujesz i weryfikujesz.
+</Callout>
+
+## Podsumowanie
+
+Zbudowaliśmy realny układ, łącząc cały moduł w jeden **powtarzalny przepływ pracy**.
+
+Kluczowe wnioski:
+
+- Każdy projekt z AI prowadzimy przez **9 faz**: od problemu i specyfikacji, przez symulację i przegląd, po test na sprzęcie.
+- **Specyfikacja** jest źródłem prawdy, a **weryfikacja** (bramka sprzętu + przegląd kodu) chroni sprzęt.
+- **PlatformIO + AI + SDD** to warsztat inżyniera: maszyna pisze kod, człowiek odpowiada za projekt i bezpieczeństwo.
+- Efekt projektu to nie tylko działający układ, ale też **specyfikacja** — dokument, który pokazuje Twoje myślenie.
+
+To zamyka moduł o nowoczesnym, wspieranym przez AI programowaniu systemów wbudowanych. Masz teraz komplet narzędzi i — co ważniejsze — **metodę**, która sprawia, że AI Cię wzmacnia, zamiast wyręczać.

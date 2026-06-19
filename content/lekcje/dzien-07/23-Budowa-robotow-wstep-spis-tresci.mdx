@@ -1,0 +1,169 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Kurs budowy robotów – #1 – wstęp, spis treści"
+slug: "budowa-robotow-wstep-spis-tresci"
+summary: "Lekcja wprowadzająca z kursu Forbot III #1: czego dotyczy kurs budowy robotów, dedykowany shield MSX, uniwersalne podwozie Forbot, przegląd czterech projektów (sterowanie IR, omijanie przeszkód, line follower, światłolub) oraz spis treści 10 artykułów kursu."
+
+day: 7
+weekend: 4
+order: 3
+duration: 45
+block: 13
+blockTitle: "Robot mobilny: line follower / robosumo — sterownik, mechanika, czujniki IR, zdalne IR, ekspander I2C, serwo"
+forbotCourse: 3
+forbotChapter: 1
+
+objectives:
+  - "Opisać zakres tematyczny kursu budowy robotów i typy konstrukcji, które będą realizowane"
+  - "Wymienić podstawowe elementy zestawu: shield MSX, podwozie, silniki, czujniki"
+  - "Rozróżnić cztery projekty kursu: sterowanie IR, omijanie przeszkód, line follower, światłolub"
+  - "Wyjaśnić, jaką wiedzę wstępną (elektronika, Arduino) należy posiadać przed przystąpieniem do kursu"
+  - "Wymienić wszystkie 10 artykułów kursu w kolejności"
+
+prerequisites:
+  - "dzien-07/cyfrowy-czujnik-wilgotnosci-dht11"
+
+hardware: []
+
+tags: [arduino, robot, mobilny, shield, podwozie, line-follower, omijanie-przeszkod, sterowanie-ir, swiatlolub, forbot-kurs-3]
+sources:
+  - "https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935"
+
+cover: "/img/lekcje/23.01-okladka-kurs-budowy-robotow.png"
+publish: true
+updated: "2026-05-15"
+---
+
+Podczas tego kursu wracamy do korzeni Forbota, czyli do **budowy robotów**. Skupimy się na kilku typach konstrukcji, od których zaczyna najwięcej początkujących robotyków! Dla ułatwienia budowy robota przygotowaliśmy gotowe, uniwersalne podwozia, specjalny shield do Arduino oraz niezbędne czujniki.
+
+<Photo
+  file="23.02-robot-forbot-przegladowe.jpg"
+  caption="Gotowy robot mobilny zbudowany na bazie podwozia Forbot i shielda MSX."
+  alt="Zmontowany robot mobilny Forbot z czujnikami i shieldem Arduino"
+/>
+
+## 1. Co omówimy w kursie
+
+Podczas kolejnych artykułów zostaną omówione wszystkie aspekty związane z budową prostych **robotów mobilnych**. Zaczniemy od poznania dedykowanego shielda, złożymy podwozie, a następnie krok po kroku napiszemy programy realizujące coraz ciekawsze zachowania.
+
+### Shield MSX
+
+Kurs rozpocznie się od omówienia **dedykowanego shielda**, który na potrzeby tego kursu przygotowała firma MSX. Dzięki temu nie będziemy tracić czasu na łączenie układów na płytce stykowej — sterownik ten znajdzie też zastosowanie w innych projektach.
+
+<Photo
+  file="23.03-tarcza-sterownika-msx.jpg"
+  caption="Shield dedykowany budowie robotów — nakładka na Arduino UNO przygotowana przez firmę MSX."
+  alt="Shield MSX do Arduino z gniazdami do podłączenia silników i czujników"
+/>
+
+### Podwozie
+
+Następnym krokiem będzie złożenie **uniwersalnego podwozia**. Oryginalny kształt i kilka ukrytych funkcji mechaniki sprawiają, że każdy będzie mógł wybrać konfigurację robota najlepszą do danego zadania.
+
+<Photo
+  file="23.04-podwozie-elementy-mechaniczne.jpg"
+  caption="Elementy mechaniczne zestawu: płyta podwozia, koła, silniki DC."
+  alt="Rozłożone części mechaniczne podwozia robota Forbot — płyta nośna, koła, silniki"
+/>
+
+Podwozie jest kompatybilne z różnymi kontrolerami i silnikami — znajdzie więc zastosowanie również w innych projektach poza tym kursem.
+
+## 2. Przykładowe projekty
+
+Podczas każdego artykułu kursowego, oprócz napisania programu, zdecydujemy o konfiguracji mechanicznej robota — gdzie umieścić napęd, a gdzie czujniki. Oto cztery projekty, które zrealizujemy:
+
+### Zdalne sterowanie IR
+
+Robot sterowany pilotem na podczerwień — takim samym jak do telewizora (protokół RC5).
+
+<Photo
+  file="23.05-robot-sterowanie-ir.jpg"
+  caption="Robot mobilny sterowany za pomocą pilota IR — projekt nr 8 kursu."
+  alt="Robot Forbot z odbiornikiem podczerwieni podczas sterowania pilotem RC5"
+/>
+
+### Omijanie przeszkód
+
+Robot samodzielnie wykrywa przeszkody czujnikiem ultradźwiękowym i omija je bez ingerencji człowieka.
+
+<Photo
+  file="23.06-robot-omijanie-przeszkod.jpg"
+  caption="Robot mobilny omijający przeszkody za pomocą czujnika HC-SR04 — projekt nr 5 kursu."
+  alt="Robot Forbot napotykający przeszkodę i zmieniający kierunek jazdy"
+/>
+
+### Line Follower
+
+Robot podąża wzdłuż czarnej linii na białym tle — klasyczne ćwiczenie startujące w zawodach robotycznych.
+
+<Photo
+  file="23.07-robot-line-follower.jpg"
+  caption="Robot line follower śledzący czarną linię na torze — projekt nr 7 kursu."
+  alt="Robot Forbot na torze z czarną linią gotowy do jazdy po śladzie"
+/>
+
+### Światłolub
+
+Robot podąża za źródłem światła wykrytym przez parę fotorezystorów.
+
+<Photo
+  file="23.08-robot-swiatlolub.jpg"
+  caption="Robot światłolub — podąża za latarką wykrytą przez fotorezystory — projekt nr 6 kursu."
+  alt="Robot Forbot z fotorezystorami wykrywający kierunek źródła światła"
+/>
+
+## 3. Spis treści kursu
+
+<Table
+  caption="Spis treści kursu budowy robotów Forbot (10 artykułów)"
+  headers={["Nr", "Temat"]}
+  rows={[
+    ["1", "Wstęp, spis treści (ten artykuł)"],
+    ["2", <a href="https://forbot.pl/blog/kurs-budowy-robotow-sterownik-robota-arduino-czujniki-id19006" target="_blank" rel="noopener noreferrer">Sterownik robota, czujniki</a>],
+    ["3", <a href="https://forbot.pl/blog/kurs-budowy-robotow-konstrukcja-mechaniczna-id19070" target="_blank" rel="noopener noreferrer">Konstrukcja mechaniczna</a>],
+    ["4", <a href="https://forbot.pl/blog/kurs-budowy-robotow-pierwsze-programowanie-id19235" target="_blank" rel="noopener noreferrer">Pierwsze programowanie robota</a>],
+    ["5", <a href="https://forbot.pl/blog/kurs-budowy-robotow-omijanie-przeszkod-id19361" target="_blank" rel="noopener noreferrer">Omijanie przeszkód</a>],
+    ["6", <a href="https://forbot.pl/blog/kurs-budowy-robotow-swiatlolub-sterowanie-latarka-id19362" target="_blank" rel="noopener noreferrer">Światłolub (sterowanie latarką)</a>],
+    ["7", <a href="https://forbot.pl/blog/kurs-budowy-robotow-line-follower-czyli-bolid-f1-id19363" target="_blank" rel="noopener noreferrer">Line follower — bolid F1</a>],
+    ["8", <a href="https://forbot.pl/blog/kurs-budowy-robotow-zdalne-sterowanie-ir-rc5-id19364" target="_blank" rel="noopener noreferrer">Zdalne sterowanie IR (RC5)</a>],
+    ["9", <a href="https://forbot.pl/blog/kurs-budowy-robotow-ekspander-io-serwo-id19365" target="_blank" rel="noopener noreferrer">Ekspander I/O, serwo (artykuł dodatkowy)</a>],
+    ["10", <a href="https://forbot.pl/blog/kurs-budowy-robotow-podsumowanie-kontynuacja-id20422" target="_blank" rel="noopener noreferrer">Podsumowanie, kontynuacja</a>],
+  ]}
+/>
+
+## 4. Dla kogo jest ten kurs?
+
+Kurs dedykowany jest wszystkim, którzy chcieliby zacząć budować **roboty mobilne**. Wymagane są podstawy elektroniki oraz programowania Arduino — dokładnie to, czego nauczyliśmy się podczas poprzednich modułów.
+
+<Callout type="note">
+Na naszych zajęciach zrealizowaliśmy już kurs podstaw Arduino oraz wybrane tematy z kursu Arduino poziom II — posiadacie pełne przygotowanie, by ruszyć z budową robotów!
+</Callout>
+
+## 5. Zestaw sprzętowy
+
+Do wykonania ćwiczeń z kursu budowy robotów potrzebny będzie zestaw elementów. W kompletnym zestawie Forbot znajdują się:
+
+- elementy mechaniczne (podwozie, koła, silniki DC)
+- baterie
+- shield MSX
+
+<Callout type="warning">
+W zestawach do tego kursu **nie ma** płytki Arduino UNO — używamy tej samej, z którą pracowaliśmy do tej pory.
+</Callout>
+
+## Podsumowanie
+
+W tej lekcji poznaliśmy zakres i strukturę **kursu budowy robotów mobilnych** opartych na Arduino. Kurs składa się z **10 artykułów** prowadzących od montażu mechanicznego po zaawansowane zachowania robota.
+
+Kluczowe wnioski:
+- do budowy używamy **shielda MSX** (brak konieczności lutowania) i **uniwersalnego podwozia Forbot**
+- zrealizujemy cztery projekty: sterowanie IR, omijanie przeszkód, line follower i światłolub
+- każdy projekt łączy programowanie z wyborem konfiguracji mechanicznej
+
+W kolejnej lekcji zajmiemy się szczegółowym omówieniem **shielda robota i dostępnych czujników**.

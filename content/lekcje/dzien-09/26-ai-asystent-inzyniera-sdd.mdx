@@ -1,0 +1,232 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "AI jako asystent inżyniera, nie „ściąga” — Spec-Driven Development"
+slug: "ai-asystent-inzyniera-sdd"
+summary: "Metoda, która zamienia AI w pomocnika inżyniera: najpierw piszesz specyfikację, dopiero potem prosisz AI o kod. Kontrast „vibe coding” vs praca inżyniera, szablon specyfikacji dla Arduino, zasady dobrego promptu (Cel–Kontekst–Format), „konstytucja” projektu i wzmianka o GitHub Spec Kit."
+
+day: 9
+weekend: 5
+order: 3
+duration: 75
+block: 1
+blockTitle: "Podstawy Arduino i środowisko IDE"
+forbotCourse: 3
+forbotChapter: 3
+
+objectives:
+  - "Odróżnić „vibe coding” od pracy z AI jak inżynier"
+  - "Wyjaśnić ideę Spec-Driven Development: specyfikacja jest źródłem prawdy, kod jest wtórny"
+  - "Napisać kompletną specyfikację małego projektu Arduino przed użyciem AI"
+  - "Zbudować dobry prompt według schematu Cel–Kontekst–Format z podaniem mikrokontrolera i liczb"
+  - "Ustalić „konstytucję” projektu — niezmienne zasady, których AI musi przestrzegać"
+
+prerequisites:
+  - "dzien-09/asystenci-ai-w-vs-code"
+
+hardware: []
+
+tags: [ai, spec-driven-development, sdd, prompt-engineering, vibe-coding, konstytucja, metodyka, spec-kit]
+sources:
+  - "https://github.com/github/spec-kit"
+  - "https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open/"
+  - "https://developer.microsoft.com/blog/spec-driven-development-spec-kit"
+  - "https://docs.arduino.cc/language-reference/"
+  - "https://kurs-arduino.vercel.app/harmonogram"
+
+publish: true
+updated: "2026-06-19"
+---
+
+AI potrafi napisać działający kod Arduino w kilka sekund. Problem w tym, że równie łatwo zamienia się w **„ściągę"**, która myśli za Ciebie — a wtedy nie nauczysz się inżynierii i nie poradzisz sobie, gdy AI się pomyli (a myli się przy sprzęcie często, o czym w następnej lekcji). Dziś poznasz metodę, która ustawia właściwą kolejność: **najpierw myślisz Ty, potem pisze AI.** Nazywa się **Spec-Driven Development (SDD)**.
+
+<Objectives
+  items={[
+    "Odróżnić „vibe coding” od pracy z AI jak inżynier",
+    "Zrozumieć zasadę SDD: najpierw specyfikacja, potem kod",
+    "Napisać pełną specyfikację małego projektu Arduino",
+    "Zbudować dobry prompt: Cel–Kontekst–Format + mikrokontroler i liczby",
+    "Ustalić „konstytucję” projektu z niezmiennymi zasadami",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    { label: "Lekcja: Asystenci AI w VS Code", href: "/lekcje/dzien-09/25-asystenci-ai-w-vs-code" },
+    "Cały dotychczasowy kurs — C++, peryferia, czujniki",
+  ]}
+/>
+
+## 1. Dwa style pracy z AI
+
+Wyobraź sobie, że prosisz AI: „napisz program, żeby robot jeździł". To jest **vibe coding** — luźne polecenie, z którego AI zgaduje, co masz na myśli. Efekt bywa losowy, a Ty nie wiesz, dlaczego coś działa (albo nie).
+
+Przeciwieństwo to traktowanie AI jak **młodszego stażysty**, którym kieruje **inżynier (Ty)**. Dajesz precyzyjne instrukcje, dostarczasz dane (np. fragment dokumentacji), a potem **sprawdzasz** pracę stażysty.
+
+<Table
+  caption="„Vibe coding” vs praca inżyniera"
+  headers={["Wymiar", "Vibe coding", "Spec-Driven Development"]}
+  rows={[
+    ["Kolejność", "Najpierw kod od AI", "Najpierw specyfikacja, potem kod"],
+    ["Kto myśli", "AI", "Uczeń (AI tylko wykonuje)"],
+    ["Debugowanie", "Trudne — nie wiesz, co miało być", "Łatwe — masz wzorzec w specyfikacji"],
+    ["Wartość dla nauki", "Niska — omija myślenie", "Wysoka — pisanie specyfikacji TO jest myślenie"],
+  ]}
+/>
+
+<Callout type="warning" title="Pułapka szybkiego kodu">
+AI tworzy gotowy kod tak szybko, że łatwo pominąć etap **projektowania**. To „pułapka implementacji": dostajesz coś, co wygląda na działające, zanim w ogóle przemyślisz, co ma robić. Specyfikacja to celowy „hamulec", który wymusza myślenie.
+</Callout>
+
+## 2. Spec-Driven Development — najpierw specyfikacja
+
+Idea SDD jest prosta: **specyfikacja jest źródłem prawdy, a kod jest tylko jej wykonaniem.** Najpierw zapisujesz dokładnie, co i dlaczego ma powstać, jakie są ograniczenia i jak poznasz, że działa. Dopiero z tak przygotowanego dokumentu AI generuje kod, a Ty oceniasz wynik **względem własnej specyfikacji**.
+
+Dlaczego to takie ważne w nauce? Bo **cała praca inżynierska zostaje przy Tobie**. AI nie wymyśla problemu, nie dobiera czujników i nie ustala progów — robisz to Ty. AI tylko zamienia gotowy projekt w kod. To dokładnie ta część, którą wolno oddać maszynie.
+
+## 3. Z czego składa się dobra specyfikacja
+
+Specyfikacja dla małego projektu Arduino mieści się na pół strony. Powinna zawierać: **cel, wejścia, wyjścia, zachowanie, ograniczenia i kryteria akceptacji**. Oto wzór, którego użyjemy jako przykładu przewodniego przez kolejne lekcje — **czujnik cofania (parking sensor)**:
+
+<Code lang="text" file="spec-czujnik-cofania.md">
+```
+## Specyfikacja: Czujnik cofania (parking sensor)
+
+Cel: Sygnalizować odległość od przeszkody — im bliżej, tym szybsze
+     piknięcia brzęczyka i zapalona dioda.
+
+Wejścia:  czujnik ultradźwiękowy HC-SR04 (TRIG = D9, ECHO = D10)
+Wyjścia:  brzęczyk (D5), dioda LED (D6, aktywna stanem HIGH), log przez Serial
+
+Zachowanie:
+  - GDY odległość mniejsza niż 10 cm:  brzęczyk pika szybko (co 100 ms), LED świeci
+  - GDY odległość 10–30 cm:            brzęczyk pika wolno (co 500 ms)
+  - GDY odległość większa niż 30 cm:   cisza, LED zgaszona
+  - CO 200 ms: pomiar odległości i log w cm przez Serial
+
+Ograniczenia:
+  - Arduino UNO 5 V; HC-SR04 zasilany 5 V
+  - kolejny pomiar nie częściej niż co 60 ms (czas echa)
+  - prąd pojedynczego pinu maks. 20 mA
+  - bez funkcji delay() w pętli głównej — używamy millis()
+
+Kryteria akceptacji:
+  1. Tempo pikania zmienia się na progach 10 cm i 30 cm
+  2. Log w Serial jest czytelny (odległość w cm)
+  3. Kod kompiluje się bez ostrzeżeń i nie używa klasy String
+```
+</Code>
+
+Zwróć uwagę: żeby napisać tę specyfikację, **musisz** zajrzeć do dokumentacji HC-SR04 (czas echa), przypomnieć sobie limit prądu pinu i zdecydować o progach. To wszystko jest myśleniem inżyniera — i dzieje się **zanim** dotkniesz klawiatury z kodem.
+
+## 4. Jak napisać dobry prompt do systemu wbudowanego
+
+Mając specyfikację, prompt do AI buduj według schematu **Cel – Kontekst – Format**. W systemach wbudowanych zawsze podaj **mikrokontroler** i **realne liczby** — inaczej AI zgadnie, a zgadywać przy sprzęcie jest niebezpiecznie.
+
+<Expandable title="Słaby prompt vs prompt inżyniera" heading="####">
+
+**Słaby (vibe):**
+```
+Napisz kod do czujnika odległości z brzęczykiem.
+```
+
+**Prompt inżyniera (Cel–Kontekst–Format + dane):**
+```
+Jesteś inżynierem systemów wbudowanych. Cel: napisz kod dla Arduino
+UNO R3 (ATmega328P) w stylu PlatformIO (z #include <Arduino.h>),
+realizujący poniższą specyfikację czujnika cofania.
+
+[tu wklejasz całą specyfikację z punktu 3]
+
+Wymagania kodu:
+- używaj millis() zamiast delay() w pętli głównej,
+- nie używaj klasy String,
+- nazwane stałe zamiast „magicznych liczb”,
+- komentarze po polsku.
+Na końcu wypisz listę pinów i napięć do sprawdzenia w dokumentacji.
+```
+
+Drugi prompt daje AI cel, kontekst (płytka, framework), format (styl, ograniczenia) i dane (specyfikacja). Wynik jest powtarzalny i łatwy do sprawdzenia.
+
+</Expandable>
+
+## 5. „Konstytucja" projektu
+
+Zanim poprosisz o pierwszą linijkę kodu, ustal **konstytucję** — zestaw niezmiennych zasad, których AI musi trzymać się przez cały projekt. Dla projektów na ATmega328P sensowna konstytucja to:
+
+- **Nigdy** nie przekraczaj **20 mA** na pin GPIO; większe obciążenia steruj przez tranzystor/mostek H.
+- **Zawsze** używaj nieblokującego `millis()` zamiast `delay()` w pętli głównej.
+- Zakładaj, że czujnik **3,3 V** wymaga konwersji poziomów, chyba że napisano inaczej.
+- **Nie** używaj klasy `String` — grozi fragmentacją 2 KB pamięci SRAM.
+- Każdy pin, adres I2C i napięcie **potwierdź w dokumentacji**, nie w czacie AI.
+
+Wklejając konstytucję na początku rozmowy z AI, uczysz się **zarządzania** asystentem — tak jak inżynier pilnuje, by stażysta nie złamał zasad bezpieczeństwa.
+
+<Callout type="note" title="Narzędzie: GitHub Spec Kit">
+Cały proces „specyfikacja → plan → zadania → implementacja" można zautomatyzować darmowym, otwartym narzędziem **GitHub Spec Kit**, które współpracuje z Copilotem. Na naszych zajęciach wystarczy jednak wersja „ręczna" — gdzie dokładnie umieścić te pliki w projekcie i jak je wywołać, pokazuje sekcja 6.
+</Callout>
+
+## 6. Gdzie trzymać te pliki w projekcie PlatformIO — i jak je wywołać
+
+Specyfikację i konstytucję trzymaj **w samym projekcie**, obok kodu — wtedy są wersjonowane razem z nim (Git) i zawsze pod ręką. W projekcie PlatformIO z lekcji 24 najlepiej tak:
+
+<Table
+  caption="Gdzie umieścić pliki i jak działają (GitHub Copilot)"
+  headers={["Plik", "Gdzie", "Jak działa"]}
+  rows={[
+    ["Konstytucja", ".github/copilot-instructions.md (w korzeniu projektu)", "Copilot czyta ją automatycznie przy każdym czacie — nie musisz jej wklejać"],
+    ["Specyfikacja", "docs/spec-NAZWA.md", "Dołączasz ją do czatu jako kontekst znakiem # (patrz niżej)"],
+  ]}
+/>
+
+<Code lang="text" file="struktura-projektu">
+```
+projekt-czujnik-cofania/
+├── .github/
+│   └── copilot-instructions.md   <- KONSTYTUCJA (Copilot czyta automatycznie)
+├── docs/
+│   └── spec-czujnik-cofania.md   <- SPECYFIKACJA
+├── src/
+│   └── main.cpp
+└── platformio.ini
+```
+</Code>
+
+**Konstytucja działa sama.** Plik `.github/copilot-instructions.md` Copilot dołącza do **każdego** zapytania w czacie i w trybie agenta (zobaczysz go w odpowiedzi w sekcji „References"). Wpisujesz tam raz zasady z punktu 5 i masz spokój. Uwaga: wpływa na czat i generowanie w czacie, ale **nie** na podpowiedzi „w locie" (ghost text).
+
+**Specyfikację dołączasz świadomie.** W oknie **Copilot Chat** wpisz `#` i nazwę pliku (np. `#spec-czujnik-cofania.md`) albo przeciągnij plik do czatu przyciskiem dodania kontekstu. Następnie wydaj polecenie:
+
+<Code lang="text" file="polecenie-w-copilot-chat">
+```
+Zaimplementuj src/main.cpp zgodnie z #spec-czujnik-cofania.md.
+Trzymaj sie zasad z konstytucji projektu.
+```
+</Code>
+
+<Callout type="note" title="Wariant automatyczny: GitHub Spec Kit">
+To samo, tylko zautomatyzowane: komenda `specify init` zakłada strukturę projektu, a w czacie polecenia `/speckit.constitution` (tworzy plik `.specify/memory/constitution.md`), `/speckit.specify`, `/speckit.plan`, `/speckit.tasks` i `/speckit.implement` prowadzą cały proces krok po kroku. Inne edytory AI (Cursor, Windsurf) mają własne pliki reguł projektu — zasada jest ta sama: reguły i specyfikacja mieszkają w projekcie.
+</Callout>
+
+<Task title="Napisz specyfikację i porównaj dwa style" estimate="25 min">
+Wybierz mały pomysł (np. termometr z alarmem LED, stoper na przycisk albo własny wariant czujnika cofania). Najpierw poproś AI „na luzie" jednym zdaniem o gotowy kod i zapisz, co dostałeś. Następnie napisz **pełną specyfikację** według wzoru z punktu 3 i poproś AI o kod na jej podstawie, dołączając konstytucję. Porównaj oba wyniki: który łatwiej zrozumieć, sprawdzić i poprawić? Zapisz wniosek w dwóch–trzech zdaniach.
+</Task>
+
+## Podsumowanie
+
+Poznaliśmy metodę, która zamienia AI z „ściągi" w **asystenta inżyniera**: **Spec-Driven Development**.
+
+Kluczowe wnioski:
+
+- **Najpierw specyfikacja, potem kod** — myślenie inżynierskie zostaje przy uczniu.
+- Dobra specyfikacja ma: cel, wejścia, wyjścia, zachowanie, ograniczenia i kryteria akceptacji.
+- Prompt buduj jako **Cel–Kontekst–Format** i zawsze podawaj mikrokontroler oraz realne liczby.
+- **Konstytucja** projektu pilnuje niezmiennych zasad (20 mA, `millis()`, brak `String`, weryfikacja w dokumentacji).
+- Pliki w projekcie: **konstytucja** w `.github/copilot-instructions.md` (Copilot czyta ją automatycznie), **specyfikacja** w `docs/` — dołączasz ją w czacie przez `#`.
+- „Vibe coding" wykorzystujemy tylko jako **negatywny przykład** do porównania.
+
+Mamy projekt na papierze. W następnej lekcji nauczymy się **sprawdzać** to, co AI wygeneruje — bo przy sprzęcie błąd potrafi być nieodwracalny.

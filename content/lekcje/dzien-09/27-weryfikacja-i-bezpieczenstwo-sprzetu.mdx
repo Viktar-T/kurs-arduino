@@ -1,0 +1,198 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Krytyczna weryfikacja i bezpieczeństwo sprzętu — łapanie halucynacji AI"
+slug: "weryfikacja-i-bezpieczenstwo-sprzetu"
+summary: "Najważniejsza umiejętność w pracy z AI przy sprzęcie: sprawdzanie podpowiedzi, zanim podasz zasilanie. Sześć typów halucynacji elektronicznych (5 V do 3,3 V, przekroczony prąd GPIO, zmyślone funkcje, złe piny i adresy, brak elementów ochronnych), bramka weryfikacji sprzętu, checklista przeglądu kodu C++ oraz rola kompilatora i symulatora Wokwi."
+
+day: 9
+weekend: 5
+order: 4
+duration: 75
+block: 1
+blockTitle: "Podstawy Arduino i środowisko IDE"
+forbotCourse: 3
+forbotChapter: 4
+
+objectives:
+  - "Wyjaśnić, dlaczego błąd sprzętowy bywa nieodwracalny i groźniejszy niż błąd programu"
+  - "Wymienić sześć typów halucynacji AI w elektronice i ich skutki dla ATmega328P"
+  - "Zastosować bramkę weryfikacji sprzętu przed podaniem zasilania"
+  - "Przejść checklistę przeglądu kodu C++ wygenerowanego przez AI"
+  - "Wykorzystać kompilator PlatformIO i symulator Wokwi do wyłapania błędów przed montażem"
+
+prerequisites:
+  - "dzien-09/ai-asystent-inzyniera-sdd"
+
+hardware: []
+
+tags: [weryfikacja, bezpieczenstwo, halucynacje-ai, gpio, poziomy-logiczne, wokwi, code-review, atmega328p]
+sources:
+  - "https://docs.arduino.cc/hardware/uno-rev3/"
+  - "https://forum.arduino.cc/t/maximum-current-from-a-data-pin/88830"
+  - "https://wokwi.com/"
+  - "https://resources.altium.com/p/using-flyback-diodes-relays-prevents-electrical-noise-your-circuits"
+  - "https://docs.arduino.cc/language-reference/"
+
+publish: true
+updated: "2026-06-19"
+---
+
+W programowaniu zwykłym błąd kończy się komunikatem — poprawiasz i wgrywasz ponownie. W elektronice błąd bywa **nieodwracalny**: zła podpowiedź AI potrafi w sekundę spalić czujnik za kilkadziesiąt złotych albo cały pin mikrokontrolera. Dlatego każdą radę AI dotyczącą sprzętu traktujemy zasadą: **„winna, dopóki nie zostanie sprawdzona w dokumentacji".** Ta lekcja uczy najważniejszej umiejętności całego modułu — **weryfikacji**.
+
+<Callout type="hazard" title="Nieodwracalność">
+Gdy ustawisz pin jako `OUTPUT` i podłączysz do niego nieodpowiedni element, możesz uszkodzić sprzęt **trwale** — i czasem dzieje się to po cichu albo z opóźnieniem. Uczeń myśli wtedy, że „czujnik był wadliwy", i powtarza ten sam błąd. Dlatego sprawdzamy **przed** podaniem zasilania.
+</Callout>
+
+<Objectives
+  items={[
+    "Zrozumieć nieodwracalność błędów sprzętowych",
+    "Rozpoznać sześć typów halucynacji AI w elektronice",
+    "Stosować bramkę weryfikacji sprzętu przed zasilaniem",
+    "Przejść checklistę przeglądu kodu C++ od AI",
+    "Używać kompilatora i Wokwi do wczesnego wyłapywania błędów",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    { label: "Lekcja: Spec-Driven Development", href: "/lekcje/dzien-09/26-ai-asystent-inzyniera-sdd" },
+    "Wiedza o pinach, prądzie i napięciach z dotychczasowego kursu",
+  ]}
+/>
+
+## 1. Dlaczego AI jest niebezpieczna przy sprzęcie
+
+Model językowy nie „rozumie" fizyki — przewiduje najbardziej prawdopodobne słowa. Dlatego świetnie pisze kod do typowych zadań, ale **myli się przy sprzęcie**, i to pewnym tonem. Niezależne testy pokazują, że jedynym zadaniem elektronicznym, które AI wykonuje w miarę pewnie, jest **streszczanie dokumentacji** — projektowanie układów i dobór elementów zawodzi. Traktuj więc AI jak szybki, ale omylny **indeks do dokumentacji**, a nie jak autorytet.
+
+## 2. Sześć typów halucynacji AI w elektronice
+
+To są pułapki, które realnie niszczą sprzęt na Arduino UNO. Naucz się ich rozpoznawać.
+
+<Table
+  caption="Najczęstsze halucynacje AI i jak im zapobiec"
+  headers={["Typ błędu", "Co AI robi źle", "Skutek", "Zapobieganie"]}
+  rows={[
+    ["Niezgodność poziomów 5 V → 3,3 V", "Podłącza wyjście 5 V wprost do wejścia 3,3 V", "Trwałe zniszczenie czujnika", "Konwerter poziomów lub dzielnik napięcia"],
+    ["Przekroczony prąd GPIO", "Steruje silnikiem/brzęczykiem wprost z pinu", "Spalony pin lub cały układ", "Tranzystor / mostek H; maks. 20 mA na pin"],
+    ["Zmyślone funkcje i biblioteki", "Wywołuje nieistniejącą funkcję lub bibliotekę", "Kod się nie kompiluje (lub działa źle)", "Sprawdź, czy biblioteka/funkcja istnieje i instaluje się"],
+    ["Złe piny, adresy I2C, rejestry", "Myli piny UNO/Mega, podaje zły adres I2C", "Układ nie startuje", "Potwierdź w dokumentacji; adres I2C skanerem"],
+    ["Brak elementów ochronnych", "Pomija diodę gaszącą przy cewce, rezystor podciągający przy przycisku", "Układ działa, potem pada", "Dodaj diodę gaszącą, rezystor pull-up/down"],
+    ["Ogólna niepewność faktów", "Podaje pewnym tonem błędne dane", "Mylące decyzje projektowe", "Każdą liczbę sprawdź u źródła"],
+  ]}
+/>
+
+<Callout type="hardware" title="Twarde liczby ATmega328P">
+Zapamiętaj limity, które AI często ignoruje: **maks. ok. 20 mA zalecane na pin** (40 mA to absolutne maksimum), **ok. 200 mA łącznie** na cały układ. Dziesięć diod po 15 mA na osobnych pinach to 150 mA — każda mieści się w limicie pinu, ale **razem** zbliżają się do limitu układu. Silnik DC (100–500 mA) **nigdy** nie idzie wprost z pinu.
+</Callout>
+
+## 3. Bramka weryfikacji sprzętu
+
+Zanim **jakikolwiek** przewód dostanie zasilanie, przejdź tę bramkę. To rytuał, który chroni sprzęt i Twoje nerwy.
+
+1. Przeczytaj **całą** odpowiedź AI, zanim cokolwiek zrobisz.
+2. Wypisz **każdą** deklarację sprzętową (piny, napięcia, prądy, biblioteki).
+3. Dla każdej znajdź **źródło pierwotne** (dokumentacja elementu / oficjalna dokumentacja / sam element).
+4. Porównaj; przy konflikcie **ufaj źródłu**, a błąd AI zanotuj.
+5. Zasymuluj układ w **Wokwi**.
+6. Sprawdź połączenia **bez zasilania** (miernikiem).
+7. Włączaj zasilanie **stopniowo** — obserwuj temperaturę, zapach, dziwne zachowanie.
+
+## 4. Checklista przeglądu kodu C++
+
+Kod od AI sprawdzaj **przed kompilacją** według tej listy. To „bramka" dla oprogramowania.
+
+<Table
+  caption="Checklista przeglądu kodu Arduino od AI"
+  headers={["Obszar", "Pytanie kontrolne"]}
+  rows={[
+    ["Poprawność", "Czy robi dokładnie to, co mówi moja specyfikacja?"],
+    ["Bezpieczeństwo pinów", "Czy piny i napięcia zgadzają się z dokumentacją?"],
+    ["Prąd", "Czy żaden pin nie przekracza 20 mA, a układ 200 mA?"],
+    ["Biblioteki", "Czy te biblioteki i funkcje naprawdę istnieją i instalują się?"],
+    ["Pamięć", "Czy nie ma dynamicznej alokacji ani klasy String? (2 KB SRAM)"],
+    ["Przypadki brzegowe", "Co, gdy czujnik zwróci 0 albo jest odłączony?"],
+    ["Czas", "Czy w pętli głównej jest delay()? Czy da się to zrobić na millis()?"],
+    ["Logika", "Czy prześledzenie pętli „na sucho” zgadza się z moim pseudokodem?"],
+  ]}
+/>
+
+## 5. Kompilator i symulator — Twoi sojusznicy
+
+Dwa narzędzia łapią dużą część błędów AI za darmo i bez ryzyka.
+
+**Kompilator PlatformIO** wyłapuje **zmyślone funkcje i biblioteki**: jeśli AI wymyśliło nieistniejącą funkcję, kompilacja po prostu się nie powiedzie. To nie porażka — to **cenny moment nauki debugowania**. Skopiuj **dokładny** komunikat błędu i wklej go do czatu AI razem z kodem.
+
+**Symulator Wokwi** pozwala przetestować układ i kod **wirtualnie**, zanim dotkniesz prawdziwych elementów. W VS Code dostępny jako rozszerzenie; opisujesz wirtualne połączenia w pliku `diagram.json` i uruchamiasz symulację. Jeśli AI źle policzyło rezystor albo logika zawiesza silnik — zobaczysz to **bezpiecznie** na ekranie.
+
+<Callout type="tip" title="Zasada żelazna">
+Dopiero gdy kod **kompiluje się** i **przechodzi symulację w Wokwi**, wolno podać zasilanie na prawdziwą płytkę. Symulacja jest siatką bezpieczeństwa, która sprawia, że zmyślone połączenie jest nieszkodliwe.
+</Callout>
+
+## 6. „Biblioteka błędów AI"
+
+Załóżcie wspólną klasową notatkę, do której **zbieracie złapane halucynacje**: zły pin, zmyślona funkcja, przekroczony prąd. Każde takie znalezisko to mały sukces — uczy czujności i pokazuje, że to **wy** kontrolujecie maszynę, a nie odwrotnie.
+
+<Task title="Znajdź błędy w kodzie od AI" estimate="25 min">
+Poniżej „odpowiedź AI" do naszego czujnika cofania. Zawiera kilka celowych błędów. Korzystając z checklisty z punktu 4 i tabeli halucynacji z punktu 2, **wypisz wszystkie usterki** i zaproponuj poprawki. Dopiero potem rozwiń klucz odpowiedzi.
+
+<Code lang="cpp" file="ai-czujnik-cofania-WERSJA-BLEDNA.cpp">
+```cpp
+#include <Arduino.h>
+#include <HCSR04.h>            // czy ta biblioteka istnieje i instaluje sie?
+
+const int BUZZER = 5;          // brzeczyk 5 V, 50 mA - wprost z pinu?
+const int LED = 6;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LED, OUTPUT);
+}
+
+void loop() {
+  float cm = sonar.measureCentimeters();   // skad sie wzial obiekt "sonar"?
+  String log = "Dystans: " + String(cm) + " cm";  // klasa String
+  Serial.println(log);
+
+  if (cm < 10) {
+    digitalWrite(BUZZER, HIGH);
+    delay(100);                 // blokujace opoznienie w petli
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(LED, HIGH);
+  }
+  delay(500);                   // kolejne blokujace opoznienie
+}
+```
+</Code>
+
+<Expandable title="Klucz odpowiedzi" heading="####">
+
+- **Zmyślona biblioteka/obiekt:** `#include <HCSR04.h>` oraz `sonar.measureCentimeters()` — obiekt `sonar` nie został utworzony, a metoda prawdopodobnie nie istnieje. Trzeba sprawdzić realną bibliotekę (np. NewPing) i utworzyć obiekt, albo zmierzyć odległość samodzielnie przez `pulseIn()`.
+- **Przekroczony prąd pinu:** brzęczyk 50 mA wprost z pinu przekracza zalecane 20 mA — potrzebny tranzystor sterujący.
+- **Klasa String:** `String log = ...` grozi fragmentacją 2 KB SRAM — użyć `Serial.print()` po kawałku lub `snprintf` z buforem `char`.
+- **Blokujące `delay()`:** dwa `delay()` w pętli łamią zasadę z konstytucji — logikę pikania przepisać na `millis()`.
+- **Brak przypadku brzegowego:** nie ma reakcji na odczyt 0 / brak echa (czujnik odłączony).
+- **Brak gasnięcia LED:** dioda zapala się, ale nigdy nie gaśnie powyżej progu.
+
+</Expandable>
+</Task>
+
+## Podsumowanie
+
+Nauczyliśmy się **sprawdzać** AI — bo przy sprzęcie zaufanie bez weryfikacji bywa kosztowne.
+
+Kluczowe wnioski:
+
+- Błąd sprzętowy bywa **nieodwracalny** — weryfikuj **przed** podaniem zasilania.
+- Znaj **sześć typów halucynacji** i twarde limity ATmega328P (20 mA na pin, 200 mA na układ).
+- Stosuj **bramkę weryfikacji sprzętu** (7 kroków) i **checklistę przeglądu kodu**.
+- **Kompilator** łapie zmyślone funkcje, a **Wokwi** pozwala testować bezpiecznie — dopiero potem prawdziwa płytka.
+- Prowadźcie **„Bibliotekę błędów AI"** — czujność to umiejętność, którą się ćwiczy.
+
+W ostatniej lekcji modułu połączymy wszystko: przejdziemy **pełny przepływ pracy** od specyfikacji, przez kod z AI i symulację, aż po działający układ na biurku.

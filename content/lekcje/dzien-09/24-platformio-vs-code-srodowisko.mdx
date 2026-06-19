@@ -1,0 +1,240 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "PlatformIO w VS Code — profesjonalne środowisko zamiast Arduino IDE"
+slug: "platformio-vs-code-srodowisko"
+summary: "Przesiadka z Arduino IDE na profesjonalny warsztat: instalacja VS Code i PlatformIO, anatomia projektu (platformio.ini, src/, lib/), budowanie, wgrywanie i monitor portu szeregowego oraz migracja gotowego szkicu z Arduino IDE do PlatformIO."
+
+day: 9
+weekend: 5
+order: 1
+duration: 90
+block: 1
+blockTitle: "Podstawy Arduino i środowisko IDE"
+forbotCourse: 3
+forbotChapter: 1
+
+objectives:
+  - "Wyjaśnić, czym PlatformIO różni się od Arduino IDE i jakie daje korzyści"
+  - "Zainstalować VS Code oraz rozszerzenie PlatformIO IDE"
+  - "Opisać anatomię projektu PlatformIO: plik platformio.ini, foldery src/, lib/, include/"
+  - "Zbudować, wgrać i podejrzeć działanie programu przez monitor portu szeregowego"
+  - "Przenieść gotowy szkic z Arduino IDE do PlatformIO i uruchomić go na płytce"
+
+prerequisites:
+  - "dzien-01/srodowisko-ide"
+
+hardware:
+  - name: "Komputer z systemem Windows / Linux / macOS"
+    qty: 1
+  - name: "Arduino UNO R3"
+    qty: 1
+  - name: "Przewód USB A–B"
+    qty: 1
+  - name: "Dioda LED + rezystor 220 Ω"
+    qty: 1
+    optional: true
+    note: "do testowego programu migowego"
+
+tags: [platformio, vs-code, srodowisko, ide, toolchain, atmega328p, migracja, ai-w-programowaniu]
+sources:
+  - "https://platformio.org/install/ide?install=vscode"
+  - "https://docs.platformio.org/en/latest/integration/ide/vscode.html"
+  - "https://docs.platformio.org/en/latest/projectconf/index.html"
+  - "https://code.visualstudio.com/"
+  - "https://kurs-arduino.vercel.app/harmonogram"
+
+publish: true
+updated: "2026-06-19"
+---
+
+Przez cały kurs pisaliśmy programy w **Arduino IDE** — i bardzo dobrze, bo to najprostszy start. Dziś robimy krok, który robią inżynierowie pracujący zawodowo z systemami wbudowanymi: przesiadamy się na **Visual Studio Code (VS Code)** z rozszerzeniem **PlatformIO**. To ten sam kod w C++ i ta sama płytka — zmienia się tylko **warsztat**: lepszy edytor, lokalne biblioteki w projekcie i fundament pod pracę z asystentami AI w kolejnych lekcjach.
+
+<Objectives
+  items={[
+    "Zrozumieć, po co przesiadać się z Arduino IDE na PlatformIO",
+    "Zainstalować VS Code i rozszerzenie PlatformIO IDE",
+    "Poznać budowę projektu PlatformIO i plik platformio.ini",
+    "Zbudować, wgrać program i otworzyć monitor portu szeregowego",
+    "Przenieść własny szkic z Arduino IDE do PlatformIO",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    "Znajomość Arduino IDE i podstaw C++ (cały dotychczasowy kurs)",
+    { label: "Lekcja: Środowisko Arduino IDE", href: "/lekcje/dzien-01/03-srodowisko-ide" },
+  ]}
+/>
+
+<Hardware
+  items={[
+    { name: "Arduino UNO R3", qty: 1 },
+    { name: "Przewód USB A–B", qty: 1 },
+    { name: "Dioda LED + rezystor 220 Ω", qty: 1, optional: true, note: "do testu migania" },
+  ]}
+/>
+
+<Callout type="note" title="To nadal Arduino">
+PlatformIO nie zastępuje Arduino — pod spodem używa **tego samego frameworka Arduino** i tego samego kompilatora. Twoja wiedza o `pinMode()`, `digitalWrite()` czy `Serial` działa bez zmian. Zmieniamy edytor i sposób organizacji projektu, nie język.
+</Callout>
+
+## 1. Dlaczego wychodzimy poza Arduino IDE
+
+Arduino IDE jest świetne na start, ale ma ograniczenia, które zaczynają przeszkadzać w większych projektach (a do takich należy robot). PlatformIO rozwiązuje większość z nich.
+
+<Table
+  caption="Arduino IDE vs PlatformIO w VS Code"
+  headers={["Cecha", "Arduino IDE", "PlatformIO + VS Code"]}
+  rows={[
+    ["Edytor kodu", "Prosty", "Profesjonalny: podpowiedzi, refaktoryzacja, wyszukiwanie"],
+    ["Biblioteki", "Globalne dla całego komputera", "Lokalne — zapisane w projekcie"],
+    ["Powtarzalność", "Zależy od ustawień komputera", "Projekt buduje się tak samo u każdego"],
+    ["Git / kontrola wersji", "Brak wsparcia", "Wbudowana w VS Code"],
+    ["Asystenci AI", "Brak integracji", "GitHub Copilot i inne rozszerzenia"],
+    ["Obsługa płytek", "Dobra", "1000+ płytek, jeden plik konfiguracyjny"],
+  ]}
+/>
+
+Najważniejsza różnica praktyczna: w Arduino IDE biblioteka zainstalowana raz jest widoczna we **wszystkich** szkicach, a jej wersja zależy od konkretnego komputera. W PlatformIO każdy projekt nosi swoje biblioteki i ich wersje **przy sobie** — dlatego projekt zbudowany u Ciebie zadziała identycznie u kolegi. To się nazywa **powtarzalność** i jest fundamentem inżynierii.
+
+## 2. Instalacja: VS Code + PlatformIO
+
+Instalacja składa się z dwóch kroków.
+
+1. Pobierz i zainstaluj **Visual Studio Code** ze strony [code.visualstudio.com](https://code.visualstudio.com/).
+2. Uruchom VS Code, otwórz panel **Extensions** (ikona klocków po lewej lub `Ctrl+Shift+X`), wpisz **PlatformIO IDE** i kliknij **Install**.
+
+Po instalacji PlatformIO dociągnie własny zestaw narzędzi (kompilator AVR, sterowniki) — pierwsze uruchomienie trwa kilka minut. Gdy w lewym pasku pojawi się ikona **mrówki (PlatformIO Home)**, środowisko jest gotowe.
+
+<Callout type="tip" title="Sterowniki USB">
+Jeśli komputer nie widzi płytki, doinstaluj sterownik układu USB–UART (CH340 dla wielu klonów UNO, FTDI lub oryginalny ATmega16U2). W menedżerze urządzeń płytka powinna pojawić się jako port **COM** (Windows) lub `/dev/ttyUSB*` / `/dev/ttyACM*` (Linux).
+</Callout>
+
+## 3. Anatomia projektu PlatformIO
+
+Załóż nowy projekt: **PlatformIO Home → New Project**, nazwa dowolna, **Board: Arduino Uno**, **Framework: Arduino**. PlatformIO utworzy strukturę folderów:
+
+<Table
+  caption="Struktura projektu PlatformIO"
+  headers={["Element", "Do czego służy"]}
+  rows={[
+    ["platformio.ini", "Plik konfiguracyjny projektu — płytka, framework, biblioteki"],
+    ["src/", "Twój kod źródłowy — tu mieszka main.cpp (odpowiednik szkicu .ino)"],
+    ["lib/", "Twoje własne biblioteki (prywatne dla projektu)"],
+    ["include/", "Pliki nagłówkowe (.h)"],
+    [".pio/", "Pliki tymczasowe kompilacji — nie ruszamy"],
+  ]}
+/>
+
+Serce projektu to **platformio.ini**. Dla Arduino UNO wygląda minimalnie tak:
+
+<Code lang="ini" file="platformio.ini">
+```ini
+[env:uno]
+platform = atmelavr
+board = uno
+framework = arduino
+monitor_speed = 9600
+```
+</Code>
+
+Trzy kluczowe linie: `board = uno` (mówi, że celem jest ATmega328P na płytce UNO), `framework = arduino` (używamy znanych funkcji Arduino) oraz `monitor_speed` (prędkość monitora portu — musi zgadzać się z `Serial.begin()` w kodzie).
+
+## 4. Budowanie, wgrywanie i monitor portu
+
+W PlatformIO te same czynności co w Arduino IDE wykonasz przyciskami na **dolnym pasku** VS Code (ikony ✓, →, wtyczka) lub komendami w terminalu.
+
+<Table
+  caption="Najważniejsze operacje PlatformIO"
+  headers={["Ikona na pasku", "Komenda terminala", "Co robi"]}
+  rows={[
+    ["✓ (Build)", "pio run", "Kompiluje projekt"],
+    ["→ (Upload)", "pio run --target upload", "Kompiluje i wgrywa na płytkę"],
+    ["Wtyczka (Serial Monitor)", "pio device monitor", "Otwiera monitor portu szeregowego"],
+    ["Kosz (Clean)", "pio run --target clean", "Czyści pliki kompilacji"],
+  ]}
+/>
+
+<ExpectedOutput title="Po wgraniu programu migowego">
+Na dolnym pasku pojawi się zielony komunikat **SUCCESS**, a dioda na pinie 13 (lub Twoja własna LED) zacznie migać. Monitor portu otwarty komendą `pio device monitor` pokaże dane, jeśli program coś wysyła przez `Serial`.
+</ExpectedOutput>
+
+## 5. Zarządzanie bibliotekami
+
+Zamiast instalować bibliotekę globalnie, w PlatformIO dopisujesz ją do `platformio.ini` w sekcji `lib_deps`. PlatformIO sam ją pobierze przy najbliższej kompilacji i zapisze w projekcie.
+
+<Code lang="ini" file="platformio.ini">
+```ini
+[env:uno]
+platform = atmelavr
+board = uno
+framework = arduino
+monitor_speed = 9600
+
+lib_deps =
+    adafruit/DHT sensor library@^1.4.6
+    arduino-libraries/Servo@^1.2.1
+```
+</Code>
+
+Zapis `@^1.4.6` oznacza „ta wersja lub nowsza zgodna". Dzięki temu wiadomo dokładnie, na jakiej wersji biblioteki działa projekt — i nikt nie zepsuje go aktualizacją na innym komputerze.
+
+## 6. Migracja szkicu z Arduino IDE
+
+Przeniesienie gotowego programu jest proste, ale jest **jedna różnica**, która zaskakuje początkujących. Arduino IDE samo dokleja na początku szkicu nagłówek `#include <Arduino.h>` i samo „domyśla się" deklaracji funkcji. PlatformIO tego nie robi — dlatego w pliku `src/main.cpp` na samej górze dopisujemy nagłówek ręcznie.
+
+<Code lang="cpp" file="src/main.cpp">
+```cpp
+#include <Arduino.h>   // w PlatformIO dopisujemy ten nagłówek ręcznie
+
+const byte PIN_LED = 13;
+
+void setup() {
+  pinMode(PIN_LED, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(PIN_LED, HIGH);
+  delay(500);
+  digitalWrite(PIN_LED, LOW);
+  delay(500);
+}
+```
+</Code>
+
+Reszta kodu — `setup()`, `loop()`, wszystkie funkcje i biblioteki — przenosi się bez zmian. Jeśli Twój szkic miał własne funkcje wywoływane przed ich definicją, PlatformIO może poprosić o **deklarację** funkcji na górze pliku (np. `void zmierzOdleglosc();`) — Arduino IDE robiło to za Ciebie po cichu.
+
+<Task title="Przenieś swój szkic do PlatformIO" estimate="25 min">
+Wybierz dowolny działający program z wcześniejszych zajęć (np. miganie diodą, odczyt HC-SR04 albo czujnik DHT11). Załóż nowy projekt PlatformIO dla Arduino UNO, wklej kod do `src/main.cpp`, dopisz `#include <Arduino.h>`, w razie potrzeby przenieś biblioteki do `lib_deps`, a następnie zbuduj, wgraj i sprawdź działanie na płytce. Otwórz monitor portu i potwierdź, że dane wyglądają tak samo jak w Arduino IDE.
+</Task>
+
+<Troubleshooting>
+  <Issue title="Błąd: 'xxx' was not declared in this scope">
+  Najczęściej brakuje `#include <Arduino.h>` na górze pliku albo deklaracji własnej funkcji przed jej pierwszym użyciem. Dopisz nagłówek lub deklarację.
+  </Issue>
+  <Issue title="PlatformIO nie widzi płytki przy wgrywaniu">
+  Sprawdź przewód USB (czy nie jest „tylko do ładowania"), zainstaluj sterownik USB–UART i upewnij się, że żaden inny program (np. otwarte Arduino IDE z monitorem) nie blokuje portu COM.
+  </Issue>
+  <Issue title="Biblioteka się nie kompiluje">
+  Upewnij się, że nazwa w `lib_deps` jest dokładna (skopiuj ją z PlatformIO Registry) i że podałeś zgodną wersję.
+  </Issue>
+</Troubleshooting>
+
+## Podsumowanie
+
+Przesiedliśmy się z Arduino IDE na **profesjonalny warsztat: VS Code + PlatformIO**. To nadal ten sam framework Arduino i ten sam ATmega328P — zmienił się tylko sposób pracy.
+
+Kluczowe wnioski:
+
+- PlatformIO trzyma **biblioteki lokalnie w projekcie**, co daje powtarzalność między komputerami.
+- Cały projekt opisuje plik **platformio.ini** (`board`, `framework`, `lib_deps`, `monitor_speed`).
+- Budujesz, wgrywasz i monitorujesz przyciskami na dolnym pasku lub komendami `pio run`, `pio run --target upload`, `pio device monitor`.
+- Przy migracji szkicu pamiętaj o ręcznym `#include <Arduino.h>` i deklaracjach własnych funkcji.
+
+W kolejnej lekcji dołożymy do tego środowiska **asystentów AI** — GitHub Copilot oraz darmowe alternatywy — i nauczymy się ich włączać w VS Code.
