@@ -1,0 +1,285 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Od pomysłu do produktu — realny projekt z agentem AI"
+slug: "od-pomyslu-do-produktu-z-agentem-ai"
+summary: "Capstone modułu AI: prowadzisz własny, większy projekt przez pełny cykl pomysł → produkt, pracując z agentem AI i traktując repozytorium git PlatformIO jako pamięć projektu i kontekst dla AI. Nowe podejście (problem i architektura najpierw), klasyczny vs agentowy cykl życia, mikro-pętla na każdym etapie, struktura repo, gotowe szablony plików, protokół sesji z agentem i kryteria ukończenia."
+
+day: 10
+weekend: 5
+order: 1
+duration: 135
+block: 1
+blockTitle: "Podstawy Arduino i środowisko IDE"
+forbotCourse: 3
+forbotChapter: 6
+
+objectives:
+  - "Zacząć projekt od problemu i ograniczeń fizycznych, a nie od pojedynczego komponentu"
+  - "Porównać architektury i dobrać tech stack oraz komponenty dla układu na ATmega328P"
+  - "Przeprowadzić projekt przez cykl pomysł → produkt z mikro-pętlą: zapis do repo → rozmowa z AI → weryfikacja → decyzja"
+  - "Zorganizować repozytorium git tak, by było pamięcią projektu i kontekstem dla agenta AI"
+  - "Doprowadzić własny, większy projekt do stanu ukończenia według listy kryteriów"
+
+prerequisites:
+  - "dzien-09/miniprojekt-od-specyfikacji-do-ukladu"
+
+hardware:
+  - name: "Arduino UNO R3"
+    qty: 1
+  - name: "Czujnik DHT22 (temperatura + wilgotność)"
+    qty: 1
+    note: "przykładowy projekt — Twój może mieć inne elementy"
+  - name: "Fotorezystor + rezystor 10 kΩ"
+    qty: 1
+  - name: "Wyświetlacz LCD 2×16 I2C"
+    qty: 1
+  - name: "Wentylator 5 V + tranzystor NPN + rezystor 1 kΩ + dioda gasząca"
+    qty: 1
+  - name: "Dioda LED + rezystor 220 Ω, płytka stykowa, przewody"
+    qty: 1
+
+tags: [capstone, projekt, cykl-zycia, ai-agent, platformio, git, architektura, problem-driven-design, repo-kontekst]
+sources:
+  - "https://docs.platformio.org/en/latest/integration/ide/vscode.html"
+  - "https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot"
+  - "https://docs.wokwi.com/vscode/project-config"
+  - "https://github.com/github/spec-kit"
+  - "https://kurs-arduino.vercel.app/harmonogram"
+
+publish: true
+updated: "2026-06-19"
+---
+
+To jest **capstone** całego modułu o pracy z AI. Do tej pory budowaliśmy pojedyncze funkcje po szczegółowym omówieniu komponentów. Teraz odwracamy kolejność i pracujemy jak inżynier: bierzesz **własny, większy projekt**, zaczynasz od **pomysłu i problemu**, a następnie prowadzisz go przez cały cykl **pomysł → produkt** razem z **agentem AI**, traktując repozytorium git jako pamięć projektu i kontekst dla AI.
+
+<Callout type="note" title="Czym to się różni od lekcji 28">
+W lekcji 28 zbudowaliśmy **jedną funkcję** od specyfikacji do działania (mechanika procesu). Tutaj stosujemy **całą metodę** do **większego projektu** Twojego wyboru (min. 2 czujniki + akcja + wyświetlanie/log). Mniej o pojedynczym szkicu, więcej o prowadzeniu projektu.
+</Callout>
+
+<Objectives
+  items={[
+    "Zaczynać od problemu i ograniczeń, nie od komponentu",
+    "Porównywać architektury i dobierać tech stack + komponenty",
+    "Prowadzić projekt mikro-pętlą: zapis do repo → AI → weryfikacja → decyzja",
+    "Ustawić repo git jako pamięć projektu i kontekst dla AI",
+    "Doprowadzić własny projekt do ukończenia wg listy kryteriów",
+  ]}
+/>
+
+<Prerequisites
+  items={[
+    { label: "Cały moduł AI — lekcje 24–28", href: "/lekcje/dzien-09/28-miniprojekt-od-specyfikacji-do-ukladu" },
+    "Git i PlatformIO z lekcji 24; SDD i konstytucja z lekcji 26; bramka weryfikacji z lekcji 27",
+  ]}
+/>
+
+## 1. Nowe podejście — w jednym zdaniu
+
+**Ty jesteś architektem i recenzentem; AI jest stażystą, który pisze; repozytorium jest pamięcią projektu.**
+
+Z tego wynikają cztery zasady, które obowiązują przez całą lekcję:
+
+- **Ty decydujesz i Ty weryfikujesz** (bramka z lekcji 27). AI proponuje — nie rozstrzyga.
+- **„Zapis do repo" znaczy commit.** Każdy etap kończysz commitem — to historia i punkt cofnięcia.
+- **Dokumentacja powstaje PRZED kodem** i mieszka w repo: pomysł, architektura, specyfikacja, decyzje.
+- **Zaczynasz od problemu, nie od komponentu** — odwrotnie niż na zajęciach do tej pory.
+
+## 2. Najpierw problem i architektura
+
+Na zajęciach poznawaliśmy najpierw komponent (PWM, ADC, czujnik), a potem budowaliśmy. W realnym projekcie jest odwrotnie. Front cyklu wygląda tak:
+
+**problem → ograniczenia fizyczne → warianty architektury → tech stack + komponenty → datasheety → (dopiero) kod.**
+
+<Callout type="tip" title="Problem-Driven Design — zacznij od fizyki problemu">
+Zanim napiszesz specyfikację, przeanalizuj **fizyczną rzeczywistość** problemu. Dla „robota, który zatrzymuje się przed ścianą" najpierw policz: droga hamowania, prędkość silników, masa podwozia, pojemność baterii — i **dopiero potem** specyfikacja (częstotliwość pomiaru czujnika, PWM silników). To trzyma AI przy realnym problemie inżynierskim, zamiast pozwalać mu iść na skróty z pominięciem fizyki.
+</Callout>
+
+Co te pojęcia znaczą **konkretnie** na Arduino UNO (8-bit) — bez korpo-żargonu:
+
+- **Architektura** = wybór czujników i wyjść, magistrali (I2C vs analog), zasilania (USB vs bateria vs osobne zasilanie silnika), modelu czasu (`millis()` vs blokująco) i struktury plików. To **nie** są serwery ani mikroserwisy.
+- **Tech stack** = płytka + framework Arduino + biblioteki + narzędzia (PlatformIO, Wokwi, Git).
+
+### Przykład: węzeł monitoringu klimatu (projekt przewodni)
+
+Użyjemy go jako demonstracji. Architektura to seria świadomych decyzji:
+
+<Table
+  caption="Decyzje architektoniczne — węzeł monitoringu klimatu"
+  headers={["Decyzja", "Opcje", "Wybór i dlaczego"]}
+  rows={[
+    ["Czujnik temp./wilg.", "DHT11 / DHT22 / LM35", "DHT22 — temp i wilgotność jednym pinem cyfrowym, dokładniejszy"],
+    ["Wyświetlacz", "LCD równoległy / LCD I2C", "I2C — 2 piny zamiast 6+"],
+    ["Akcja (wentylator)", "wprost z pinu / tranzystor", "tranzystor — pobór > 20 mA; dioda gasząca (obciążenie indukcyjne)"],
+    ["Zasilanie", "5 V z USB / osobne", "USB dla małego wentylatora; osobne przy większym"],
+    ["Model czasu", "delay() / millis()", "millis() — nieblokujące, DHT22 czyta się co 2 s"],
+    ["Struktura kodu", "jeden main.cpp / moduły", "moduły, gdy projekt rośnie"],
+  ]}
+/>
+
+## 3. Cykl życia: klasyczny vs era agentów AI
+
+Ten sam cykl prowadzimy dziś **z agentem**. Różnica: na każdym etapie **zapisujesz stan do repo i rozmawiasz z AI**, więc agent zawsze ma aktualny kontekst.
+
+<Table
+  caption="Cykl życia projektu — klasycznie vs z agentem AI"
+  headers={["Etap", "Klasycznie", "Era agentów AI (artefakt w repo)"]}
+  rows={[
+    ["Pomysł i problem", "przemyślenie w głowie", "docs/00-idea.md → omów z AI (przypadki brzegowe) → commit"],
+    ["Architektura", "szkic na kartce", "docs/01-architektura.md (warianty) → omów → wybór → commit"],
+    ["Tech stack + datasheety", "dobór z doświadczenia", "docs/02-tech-stack.md + 06-datasheety-notatki.md → weryfikacja → commit"],
+    ["Specyfikacja", "często pomijana", "docs/03-spec.md (SDD z lekcji 26) → omów → commit"],
+    ["Symulacja", "Wokwi", "diagram.json w repo → AI diagnozuje → commit"],
+    ["Kod", "piszesz ręcznie", "AI generuje z #03-spec.md → przegląd (lekcja 27) → commit"],
+    ["Prototyp fizyczny", "budujesz i debugujesz", "problemy → 05-dziennik.md → omów z AI → commit"],
+    ["Wersja produktowa", "+ dokumentacja", "repo JEST dokumentacją → tag / release"],
+  ]}
+/>
+
+Na każdym etapie obowiązuje ta sama **mikro-pętla**:
+
+1. **Zapisz / commit do repo** — utrwal stan etapu w pliku `docs/…`.
+2. **Omów z AI** — poproś o warianty, BOM, przypadki brzegowe albo przegląd kodu.
+3. **Zweryfikuj** — sprawdź względem notatek z datasheetów i symulacji Wokwi (bramka z lekcji 27).
+4. **Zdecyduj i zapisz decyzję** — wybór należy do Ciebie; wpis trafia do `05-dziennik.md`.
+
+## 4. Repozytorium jako pamięć projektu i kontekst AI
+
+Żeby agent miał kontekst, repo PlatformIO dostaje kilka dodatkowych folderów. „Pisać do repo" = **commitować** na każdym etapie.
+
+<Code lang="text" file="struktura-repo">
+```
+projekt-wezel-klimatu/             # repo git — commit na każdym etapie
+├── .github/
+│   └── copilot-instructions.md    # KONSTYTUCJA dla Copilota (auto-kontekst)
+├── .windsurfrules                 # to samo dla Windsurf (jeśli go używasz)
+├── .cursor/rules/                 # to samo dla Cursor (pliki .mdc)
+├── docs/
+│   ├── 00-idea.md                 # problem + oczekiwane zachowanie
+│   ├── 01-architektura.md         # warianty + wybór i uzasadnienie
+│   ├── 02-tech-stack.md           # płytka, biblioteki, narzędzia + dlaczego
+│   ├── 03-spec.md                 # specyfikacja (SDD, wzór z lekcji 26)
+│   ├── 04-plan.md                 # podział na zadania
+│   ├── 05-dziennik.md             # log problemów i decyzji
+│   └── 06-datasheety-notatki.md   # PRZEPISANE liczby: piny, V, mA, czasy
+├── datasheets/                    # surowe PDF-y (dla człowieka)
+├── diagram.json                   # symulacja Wokwi — w KORZENIU projektu
+├── wokwi.toml                     # konfiguracja Wokwi — obok diagram.json
+├── src/  lib/  include/           # kod (PlatformIO)
+└── platformio.ini
+```
+</Code>
+
+Dwie ważne zasady, których łatwo nie dopilnować:
+
+<Callout type="warning" title="Datasheety: przepisuj liczby, nie wrzucaj PDF-ów">
+AI **słabo** czyta PDF-y z dokumentacją (lekcja 27). Surowe PDF-y trzymaj w `datasheets/` dla siebie, a **kluczowe liczby** (piny, napięcia, prądy, czasy) **przepisz** do `docs/06-datasheety-notatki.md`. Ten plik AI potrafi wykorzystać przez `#`.
+</Callout>
+
+<Callout type="note" title="Kontekst niezależny od narzędzia">
+`.github/copilot-instructions.md` czyta tylko Copilot. Jeśli pracujesz w **Cursor**, te same zasady wpisz do `.cursor/rules/` (pliki `.mdc`); w **Windsurf** — do `.windsurfrules`. Treść konstytucji jest ta sama, zmienia się tylko nazwa pliku.
+</Callout>
+
+## 5. Gotowe szablony plików (kopiuj-wklej)
+
+Załóż te pliki w repo i wypełniaj je etap po etapie. Specyfikację (`03-spec.md`) tworzysz według wzoru z **lekcji 26**.
+
+<Expandable title="Szablon: .github/copilot-instructions.md (konstytucja)" heading="####">
+```
+# Konstytucja projektu (zasady dla AI)
+
+- Cel: <jedno zdanie o projekcie>.
+- Płytka: Arduino UNO R3 (ATmega328P), 5 V, PlatformIO, naglowek Arduino.h.
+- Prąd: maks. 20 mA na pin GPIO; większe obciążenia przez tranzystor / mostek H.
+- Czas: używaj millis() zamiast delay() w pętli głównej.
+- Pamięć: nie używaj klasy String (2 KB SRAM).
+- Czujniki 3,3 V wymagają konwersji poziomów, chyba że napisano inaczej.
+- Każdy pin, adres I2C i napięcie potwierdzaj w docs/06-datasheety-notatki.md.
+- Komentarze po polsku; nazwane stałe zamiast magicznych liczb.
+```
+</Expandable>
+
+<Expandable title="Szablony: docs/00-idea.md … 06-datasheety-notatki.md" heading="####">
+```
+# 00 — Pomysł
+Problem: <jaki realny problem rozwiązujemy?>
+Użytkownik: <kto i kiedy tego użyje?>
+Oczekiwane zachowanie: <co system robi — 3-5 zdań>
+Ograniczenia fizyczne: <temperatura, odległość, zasilanie, rozmiar>
+Poza zakresem: <czego NIE robimy w tej wersji>
+
+# 01 — Architektura
+Decyzje (opcje → wybór → dlaczego): czujniki, magistrala, zasilanie, czas, pliki.
+Schemat blokowy: <czujniki → Arduino → wyświetlacz / akcja>
+
+# 02 — Tech stack i komponenty
+Płytka, framework, biblioteki (lib_deps), narzędzia, lista komponentów (BOM).
+
+# 04 — Plan (zadania)
+[ ] 1. ...   [ ] 2. ...   [ ] 3. ...
+
+# 05 — Dziennik problemów i decyzji
+## <data> — <tytuł>
+Problem: ...  Sprawdzenie: ...  Decyzja: ...
+
+# 06 — Notatki z dokumentacji (przepisane liczby)
+## <komponent>: zasilanie, piny, maks. prąd, czasy, adres I2C
+```
+</Expandable>
+
+## 6. Protokół sesji z agentem
+
+Tę samą procedurę uruchamiasz w każdej sesji pracy:
+
+1. Otwórz repo; sprawdź, czy konstytucja (`copilot-instructions.md`) jest aktualna.
+2. Dołącz do czatu pliki istotne dla etapu znakiem `#` (np. `#03-spec.md`, `#06-datasheety-notatki.md`).
+3. Powiedz, na którym etapie cyklu jesteś i podaj **jeden** konkretny cel.
+4. Poproś AI o draft lub analizę (warianty, BOM, przypadki brzegowe, przegląd kodu).
+5. **Zweryfikuj** odpowiedź względem notatek z datasheetów i symulacji Wokwi.
+6. **Zdecyduj sam**, zapisz decyzję do `05-dziennik.md`.
+7. Zrób commit, np. `git commit -m "architektura: wybor DHT22 i LCD I2C"`.
+
+<Callout type="hardware" title="Tryb agenta — realia (stan: czerwiec 2026)">
+**Tryb agenta** (samodzielne edytowanie wielu plików, uruchamianie poleceń) działa w VS Code z Copilotem. Na planie **Free** model podstawowy w trybie agenta jest bez limitu, ale modele „premium" (frontier) są ograniczone (~50/mies.) — używaj ich oszczędnie. Cursor i Windsurf mają własne tryby agenta i własne limity.
+</Callout>
+
+## 7. Kryteria ukończenia (definicja „gotowe")
+
+Projekt jest **ukończony**, gdy spełnia całą listę:
+
+- `docs/00–06` wypełnione i spójne z układem
+- kluczowe liczby z datasheetów przepisane do `06-datasheety-notatki.md`
+- symulacja w **Wokwi** przechodzi
+- szkic kompiluje się i działa na **fizycznej** płytce
+- `05-dziennik.md` zawiera log problemów i podjętych decyzji
+- historia **Git**: po jednym commicie na etap cyklu
+- przegląd kodu (checklista z lekcji 27) zaliczony
+
+<Task title="Załóż szkielet repo projektu" estimate="20 min">
+Wybierz temat swojego projektu i w nowym projekcie PlatformIO załóż foldery `docs/` i `datasheets/` oraz plik `.github/copilot-instructions.md`. Wypełnij **konstytucję** (szablon wyżej) i `docs/00-idea.md` dla swojego pomysłu. Zrób pierwszy commit: `git commit -m "start: konstytucja i pomysl"`.
+</Task>
+
+<MiniProject title="Twój projekt od pomysłu do produktu" goal="Przeprowadź własny, większy projekt przez cały cykl z agentem AI">
+Wybierz projekt **większy niż jedna funkcja** — minimum **2 czujniki + 1 akcja + wyświetlanie lub log** (np. stacja pogodowa, inteligentne oświetlenie, system alarmowy, robot z zachowaniem). Przeprowadź go przez cały cykl z **mikro-pętlą** (zapis do repo → omów z AI → zweryfikuj → zdecyduj), wypełniając kolejne pliki `docs/` i commitując każdy etap.
+
+Oddajesz **repozytorium** spełniające wszystkie **kryteria ukończenia** z punktu 7: komplet dokumentów, przepisane datasheety, przechodzącą symulację, działający szkic, dziennik decyzji i historię Git z commitem na każdy etap.
+</MiniProject>
+
+## Podsumowanie
+
+Przeszliśmy od „nauki komponentu" do **prowadzenia realnego projektu** metodą inżyniera wspieranego przez AI.
+
+Kluczowe wnioski:
+
+- **Zaczynaj od problemu i architektury**, nie od komponentu; fizykę analizuj przed specyfikacją.
+- Prowadź projekt **mikro-pętlą**: zapis/commit do repo → omów z AI → zweryfikuj → zdecyduj i zapisz.
+- **Repo git jest pamięcią projektu i kontekstem AI** — dokumenty `docs/`, przepisane datasheety, dziennik decyzji.
+- Kontekst rób **niezależnie od narzędzia** (Copilot / Cursor / Windsurf) i pamiętaj o **bramce weryfikacji** z lekcji 27.
+- Projekt jest „gotowy" dopiero wtedy, gdy spełnia całą **listę kryteriów ukończenia**.
+
+To zamyka kurs: masz komplet narzędzi i — co ważniejsze — **metodę**, dzięki której AI Ci pomaga, a Ty pozostajesz inżynierem odpowiedzialnym za projekt.

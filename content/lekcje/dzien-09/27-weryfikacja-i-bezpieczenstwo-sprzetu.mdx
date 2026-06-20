@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Krytyczna weryfikacja i bezpieczeństwo sprzętu — łapanie halucynacji AI"
 slug: "weryfikacja-i-bezpieczenstwo-sprzetu"
-summary: "Najważniejsza umiejętność w pracy z AI przy sprzęcie: sprawdzanie podpowiedzi, zanim podasz zasilanie. Sześć typów halucynacji elektronicznych (5 V do 3,3 V, przekroczony prąd GPIO, zmyślone funkcje, złe piny i adresy, brak elementów ochronnych), bramka weryfikacji sprzętu, checklista przeglądu kodu C++ oraz rola kompilatora i symulatora Wokwi."
+summary: "Najważniejsza umiejętność w pracy z AI przy sprzęcie: sprawdzanie podpowiedzi, zanim podasz zasilanie. Sześć typów halucynacji elektronicznych (5 V do 3,3 V, przekroczony prąd GPIO, zmyślone funkcje, złe piny i adresy, brak elementów ochronnych), bramka weryfikacji sprzętu, checklista przeglądu kodu C++ oraz jak zacząć z symulatorem Wokwi."
 
 day: 9
 weekend: 5
@@ -24,7 +24,7 @@ objectives:
   - "Wymienić sześć typów halucynacji AI w elektronice i ich skutki dla ATmega328P"
   - "Zastosować bramkę weryfikacji sprzętu przed podaniem zasilania"
   - "Przejść checklistę przeglądu kodu C++ wygenerowanego przez AI"
-  - "Wykorzystać kompilator PlatformIO i symulator Wokwi do wyłapania błędów przed montażem"
+  - "Zacząć korzystać z symulatora Wokwi do wyłapania błędów przed montażem"
 
 prerequisites:
   - "dzien-09/ai-asystent-inzyniera-sdd"
@@ -55,7 +55,7 @@ Gdy ustawisz pin jako `OUTPUT` i podłączysz do niego nieodpowiedni element, mo
     "Rozpoznać sześć typów halucynacji AI w elektronice",
     "Stosować bramkę weryfikacji sprzętu przed zasilaniem",
     "Przejść checklistę przeglądu kodu C++ od AI",
-    "Używać kompilatora i Wokwi do wczesnego wyłapywania błędów",
+    "Zacząć korzystać z Wokwi do wczesnego wyłapywania błędów",
   ]}
 />
 
@@ -128,7 +128,22 @@ Dwa narzędzia łapią dużą część błędów AI za darmo i bez ryzyka.
 
 **Kompilator PlatformIO** wyłapuje **zmyślone funkcje i biblioteki**: jeśli AI wymyśliło nieistniejącą funkcję, kompilacja po prostu się nie powiedzie. To nie porażka — to **cenny moment nauki debugowania**. Skopiuj **dokładny** komunikat błędu i wklej go do czatu AI razem z kodem.
 
-**Symulator Wokwi** pozwala przetestować układ i kod **wirtualnie**, zanim dotkniesz prawdziwych elementów. W VS Code dostępny jako rozszerzenie; opisujesz wirtualne połączenia w pliku `diagram.json` i uruchamiasz symulację. Jeśli AI źle policzyło rezystor albo logika zawiesza silnik — zobaczysz to **bezpiecznie** na ekranie.
+**Symulator [Wokwi](https://wokwi.com)** pozwala przetestować układ i kod **wirtualnie**, zanim dotkniesz prawdziwych elementów. Jeśli AI źle policzyło rezystor albo logika zawiesza silnik — zobaczysz to **bezpiecznie** na ekranie. Wokwi jest **darmowy** do nauki i działa na dwa sposoby:
+
+- **W przeglądarce** na [wokwi.com](https://wokwi.com) — nic nie instalujesz, najszybszy start.
+- **Jako rozszerzenie do VS Code** — symulujesz projekt PlatformIO; połączenia opisuje plik `diagram.json` (obok `wokwi.toml`, oba w korzeniu projektu).
+
+#### Jak zacząć z Wokwi i jak używać (krok po kroku)
+
+1. Wejdź na [wokwi.com](https://wokwi.com), kliknij **New Project** i wybierz **Arduino Uno**.
+2. W zakładce z kodem (`sketch.ino`) wklej swój szkic.
+3. Dodaj elementy przyciskiem **+** (np. dioda LED, czujnik HC-SR04, rezystor, wyświetlacz).
+4. **Połącz nóżki**: kliknij pin jednego elementu i przeciągnij do pinu drugiego — przewody rysują się kliknięciami.
+5. Kliknij zielone **Play**, aby uruchomić symulację.
+6. Otwórz **Serial Monitor** na dole, żeby zobaczyć dane z `Serial.print()`; przydaje się też wirtualny analizator stanów logicznych.
+7. Coś nie gra? Zatrzymaj (**Stop**), popraw kod lub połączenia i uruchom ponownie — **bez ryzyka dla sprzętu**.
+
+Gdy układ działa w symulacji, możesz pobrać `diagram.json` i wsadzić go do projektu PlatformIO (symulacja w VS Code), a dopiero potem zbudować układ fizycznie.
 
 <Callout type="tip" title="Zasada żelazna">
 Dopiero gdy kod **kompiluje się** i **przechodzi symulację w Wokwi**, wolno podać zasilanie na prawdziwą płytkę. Symulacja jest siatką bezpieczeństwa, która sprawia, że zmyślone połączenie jest nieszkodliwe.
