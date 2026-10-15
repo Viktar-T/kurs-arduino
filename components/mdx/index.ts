@@ -19,6 +19,8 @@ import { Photo } from "./Photo";
 import { Expandable } from "./Expandable";
 import { Video } from "./Video";
 import { Table } from "./Table";
+import { Anchor } from "./Anchor";
+import { Pre } from "./Pre";
 
 export {
   Callout,
@@ -37,13 +39,18 @@ export {
   Expandable,
   Video,
   Table,
+  Anchor,
+  Pre,
 };
 
 /**
  * Components available inside MDX without an explicit import.
  * Add new shared components here when registering them globally.
+ * Lowercase keys override the HTML elements Markdown produces.
  */
 export const mdxComponents: MDXComponents = {
+  a: Anchor,
+  pre: Pre,
   Callout,
   Hardware,
   Task,

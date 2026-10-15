@@ -8,7 +8,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { groupByBlock } from "@/lib/content";
-import { Shell } from "@/components/layout/Shell";
 import { Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
@@ -21,9 +20,11 @@ export default function ProgramPage() {
   const blocks = groupByBlock();
 
   return (
-    <Shell>
-      <h1>Program kursu — 13 bloków</h1>
-      <p className="article-summary">
+    <>
+      <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-[#111]">
+        Program kursu — 13 bloków
+      </h1>
+      <p className="article-summary mb-6">
         Mapowanie lekcji na 13 bloków programu wymaganych przez zamawiającego
         (West Pomeranian / TTC Szczecin). Każda lekcja w widoku „dziennym”
         należy do jednego z tych bloków.
@@ -60,6 +61,6 @@ export default function ProgramPage() {
           ))}
         </ol>
       )}
-    </Shell>
+    </>
   );
 }

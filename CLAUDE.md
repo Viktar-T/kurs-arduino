@@ -42,19 +42,26 @@ kurs-arduino/
 ├── app/                   ← Next.js App Router pages
 │   ├── layout.tsx         ← root layout (lang="pl", Polish metadata)
 │   ├── page.tsx           ← course landing
+│   ├── not-found.tsx      ← Polish 404
 │   ├── globals.css        ← Tailwind v4 entry
-│   ├── lekcje/[...slug]/page.tsx   ← dynamic lesson route
-│   ├── program/page.tsx   ← by-block view (client-contract)
-│   └── harmonogram/page.tsx ← by-day view
+│   └── (kurs)/            ← route group (not in URLs): pages sharing the sidebar Shell
+│       ├── layout.tsx     ← renders <Shell> once, so sidebar state survives navigation
+│       ├── lekcje/[...slug]/page.tsx   ← dynamic lesson route
+│       ├── projekty/[...slug]/page.tsx ← project pages: /projekty/<project>[/<file-slug>]
+│       ├── narzedzia/rejestrator-csv/page.tsx ← Web Serial CSV logger (brief §4.6; UI components/tools/, engine lib/serial-logger.ts)
+│       ├── program/page.tsx   ← by-block view (client-contract)
+│       └── harmonogram/page.tsx ← by-day view
 ├── components/
 │   ├── ui/                ← shadcn/ui primitives (added via CLI)
-│   ├── mdx/               ← Callout, Hardware, Task, MiniProject, Schematic, Code
+│   ├── mdx/               ← Callout, Hardware, Task, MiniProject, Schematic, Code; Anchor/Pre override `a`/`pre` (link resolution, copy button)
 │   ├── nav/               ← Sidebar, Breadcrumbs, TOC
 │   └── layout/            ← Shell, Header, Footer
 ├── content/lekcje/dzien-NN/   ← one folder per training day (1..10)
+├── content/projekty/<project>/ ← projects outside the timetable, e.g. monitorowanie (see §6a)
 ├── lib/
-│   ├── frontmatter.ts     ← Zod schema (single source of truth for lesson metadata)
-│   ├── content.ts         ← getAllLessons, getLessonBySlug, buildNav
+│   ├── frontmatter.ts     ← Zod schemas (single source of truth for lesson and project metadata)
+│   ├── content.ts         ← getAllLessons, getLessonBySegments, buildNav, resolveLessonRef/Href
+│   ├── projects.ts        ← getAllProjects, getProjectPageBySegments, buildProjectNav
 │   └── mdx.ts             ← MDX compile pipeline (remark/rehype)
 ├── types/lesson.ts        ← inferred from Zod
 ├── public/img/lekcje/…    ← schematics, photos, GIFs
@@ -128,6 +135,16 @@ When static export is enabled, the build emits to `out/`. Pagefind runs against 
 
 A reference lesson lives at `content/lekcje/dzien-01/01-srodowisko-ide.mdx` — copy it.
 
+### 6a. Projects (`content/projekty/`)
+
+Projects (e.g. "Monitorowanie") are self-contained page series outside the 10-day timetable: own schema (`ProjectPageFrontmatter`), own loader (`lib/projects.ts`), own route and a "Projekty" sidebar group. Full contract: PROJECT_BRIEF.md §4.5.
+
+- One folder per project; pages are `NN-ascii-slug.mdx` with `NN` = `order`. `00-wprowadzenie.mdx` (`part: 0`, with `projectTitle`) is the overview at `/projekty/<project>`; the other pages live at `/projekty/<project>/<file-name>`. External sites link these URLs — don't rename a published file.
+- `prerequisites` are course lesson hrefs (`/lekcje/dzien-NN/<file-slug>`).
+- Images go to `public/img/projekty/<project>/`.
+- A project is not a Forbot chapter: build on the course's own lessons and check facts in datasheets and library docs (the §9 "consult `public/docs/` first" rule does not apply).
+- For Monitorowanie, `00-wprowadzenie.mdx` §4 "Specyfikacja systemu" is the contract every part follows (pins, rhythm, conversions, CSV columns, function names).
+
 ---
 
 ## 7. How to add a new MDX component
@@ -145,6 +162,7 @@ A reference lesson lives at `content/lekcje/dzien-01/01-srodowisko-ide.mdx` — 
 - **Don't introduce `src/app`**. App Router lives at `app/` at the project root.
 - **Don't add `tailwind.config.ts`**. This is Tailwind v4 — config is CSS-first.
 - **Don't put the 13 blocks in folder structure**. Block is metadata on lessons; the only "by-block" UI is the read-only `/program` view.
+- **Don't squeeze projects into the lesson schema** (no "day 11", no loosened `LessonFrontmatter`). Projects live in `content/projekty/` — see §6a.
 - **Don't write Polish identifiers with diacritics**. UI strings yes, identifiers no.
 - **Don't `npm install` new packages without updating the brief's Tech Stack section** if the addition is significant.
 

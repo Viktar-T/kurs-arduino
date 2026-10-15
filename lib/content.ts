@@ -110,6 +110,86 @@ export function getLessonBySegments(segments: string[]): Lesson | undefined {
   );
 }
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/** Strip a leading lesson-number prefix such as `01-` or `06.01-`. */
+function stripOrderPrefix(name: string): string {
+  return name.replace(/^\d+(?:\.\d+)*-/, "");
+}
+
+const warned = new Set<string>();
+function warnOnce(message: string) {
+  if (warned.has(message)) return;
+  warned.add(message);
+  console.warn(`[content] ${message}`);
+}
+
+/**
+ * Resolve a lesson reference (frontmatter `prerequisites` entry or link) to a
+ * published lesson.
+ *
+ * Accepts `dzien-NN/<file-slug>`, `dzien-NN/<frontmatter-slug>` and the full
+ * `/lekcje/dzien-NN/<file-slug>` href. Lessons get renamed and moved between
+ * days, so when the exact path does not exist, the last segment is matched
+ * case-insensitively (with or without its numeric file prefix) against every
+ * lesson, preferring one in the referenced day folder.
+ */
+export function resolveLessonRef(ref: string): Lesson | undefined {
+  const normalized = safeDecode(ref)
+    .trim()
+    .replace(/^\/?(?:lekcje\/)?/, "")
+    .replace(/\/+$/, "");
+  const parts = normalized.split("/");
+  if (parts.length > 2) return undefined;
+  const [dayFolder, name] = parts.length === 2 ? parts : [undefined, parts[0]];
+  if (!name) return undefined;
+
+  const lessons = getAllLessons();
+  const exact = lessons.find(
+    (l) =>
+      l.dayFolder === dayFolder &&
+      (l.fileSlug === name || l.frontmatter.slug === name),
+  );
+  if (exact) return exact;
+
+  const wanted = new Set([
+    name.toLowerCase(),
+    stripOrderPrefix(name).toLowerCase(),
+  ]);
+  const candidates = lessons.filter((l) =>
+    [l.fileSlug, stripOrderPrefix(l.fileSlug), l.frontmatter.slug].some((key) =>
+      wanted.has(key.toLowerCase()),
+    ),
+  );
+  const match =
+    candidates.find((l) => l.dayFolder === dayFolder) ?? candidates[0];
+  if (match) {
+    warnOnce(`Lesson reference "${ref}" is stale; resolved to ${match.href}`);
+  } else {
+    warnOnce(`Lesson reference "${ref}" does not match any published lesson`);
+  }
+  return match;
+}
+
+/**
+ * Rewrite an internal `/lekcje/...` href to the lesson's current URL, keeping
+ * any `#hash` / `?query`. Other hrefs are returned unchanged.
+ */
+export function resolveLessonHref(href: string): string {
+  if (!href.startsWith("/lekcje/")) return href;
+  const suffixStart = href.search(/[?#]/);
+  const path = suffixStart === -1 ? href : href.slice(0, suffixStart);
+  const suffix = suffixStart === -1 ? "" : href.slice(suffixStart);
+  const lesson = resolveLessonRef(path);
+  return lesson ? lesson.href + suffix : href;
+}
+
 /** Sidebar / nav tree: Weekend → Day → Lesson. */
 export interface NavWeekend {
   weekend: number;

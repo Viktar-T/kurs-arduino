@@ -6,45 +6,56 @@
  */
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import "katex/dist/katex.min.css";
 
 import {
   getAllLessons,
   getLessonBySegments,
-  type Lesson,
+  resolveLessonRef,
 } from "@/lib/content";
 import { renderLesson } from "@/lib/mdx";
-import { Shell } from "@/components/layout/Shell";
 import { Hardware, Objectives, Prerequisites } from "@/components/mdx";
-import { Badge, Pagination } from "@/components/ui";
+import { Badge, Breadcrumb, Pagination, Progress } from "@/components/ui";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
 }
 
+/**
+ * The build pre-renders exactly these lessons; any other slug ends in
+ * `notFound()` below. Deliberately no `dynamicParams = false`: `next dev`
+ * caches these params and refreshes them in the background, so with it a
+ * lesson added while the dev server runs 404s until that refresh lands (and
+ * the option must be a literal, so it can't be turned off for dev only).
+ */
 export function generateStaticParams() {
   return getAllLessons().map((l) => ({ slug: l.segments }));
 }
 
-function resolvePrerequisites(
-  prerequisites: string[],
-  lessons: Lesson[],
-) {
+function resolvePrerequisites(prerequisites: string[]) {
   return prerequisites.map((item) => {
-    const normalized = item.replace(/^\/?lekcje\//, "");
-    const match = lessons.find((lesson) => {
-      const frontmatterSlug = `${lesson.dayFolder}/${lesson.frontmatter.slug}`;
-      const fileSlug = `${lesson.dayFolder}/${lesson.fileSlug}`;
-      return (
-        normalized === frontmatterSlug ||
-        normalized === fileSlug ||
-        item === lesson.href
-      );
-    });
-
+    const match = resolveLessonRef(item);
     return match
       ? { label: match.frontmatter.title, href: match.href }
       : { label: item };
   });
+}
+
+/**
+ * True when the lesson body places `<Component …>` itself (outside code
+ * fences). The page then skips rendering the same box from frontmatter,
+ * so it does not appear twice.
+ */
+function bodyRenders(body: string, component: string) {
+  const withoutCode = body.replace(
+    /^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1/gm,
+    "",
+  );
+  return new RegExp(`<${component}[\\s/>]`).test(withoutCode);
+}
+
+function dayAnchor(day: number) {
+  return `dzien-${String(day).padStart(2, "0")}`;
 }
 
 export async function generateMetadata(
@@ -75,21 +86,23 @@ export default async function LessonPage({ params }: PageProps) {
   const fm = lesson.frontmatter;
 
   return (
-    <Shell
-      breadcrumbs={[
-        { label: "Kurs", href: "/" },
-        { label: `Weekend ${fm.weekend}`, href: "/harmonogram" },
-        { label: `Dzień ${fm.day}`, href: "/harmonogram" },
-        { label: fm.title },
-      ]}
-      progress={{
-        current: lessonIndex + 1,
-        total: lessons.length,
-        title: "Postęp w opublikowanych lekcjach",
-      }}
-    >
-      <div className="article-content max-w-none">
-        <header className="not-prose mb-6">
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Kurs", href: "/" },
+          { label: `Weekend ${fm.weekend}`, href: `/harmonogram#weekend-${fm.weekend}` },
+          { label: `Dzień ${fm.day}`, href: `/harmonogram#${dayAnchor(fm.day)}` },
+          { label: fm.title },
+        ]}
+      />
+      <Progress
+        current={lessonIndex + 1}
+        total={lessons.length}
+        title="Postęp w opublikowanych lekcjach"
+      />
+
+      <article className="article-content max-w-none">
+        <header className="mb-6">
           <p className="article-meta text-xs uppercase tracking-wider">
             Dzień {fm.day} · Weekend {fm.weekend} ·{" "}
             <Badge variant="block">B{fm.block}</Badge> · {fm.duration} min
@@ -98,13 +111,18 @@ export default async function LessonPage({ params }: PageProps) {
           <p className="article-summary mt-2 text-base">{fm.summary}</p>
         </header>
 
-        <Objectives items={fm.objectives} />
-
-        {fm.prerequisites.length > 0 && (
-          <Prerequisites items={resolvePrerequisites(fm.prerequisites, lessons)} />
+        {!bodyRenders(lesson.body, "Objectives") && (
+          <Objectives items={fm.objectives} />
         )}
 
-        {fm.hardware.length > 0 && <Hardware items={fm.hardware} />}
+        {fm.prerequisites.length > 0 &&
+          !bodyRenders(lesson.body, "Prerequisites") && (
+            <Prerequisites items={resolvePrerequisites(fm.prerequisites)} />
+          )}
+
+        {fm.hardware.length > 0 && !bodyRenders(lesson.body, "Hardware") && (
+          <Hardware items={fm.hardware} />
+        )}
 
         {content}
 
@@ -126,7 +144,7 @@ export default async function LessonPage({ params }: PageProps) {
               : undefined
           }
         />
-      </div>
-    </Shell>
+      </article>
+    </>
   );
 }

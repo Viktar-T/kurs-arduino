@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { buildNav } from "@/lib/content";
-import { Shell } from "@/components/layout/Shell";
 import { Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
@@ -26,9 +25,11 @@ export default function HarmonogramPage() {
   const weekends = buildNav();
 
   return (
-    <Shell>
-      <h1>Harmonogram — 10 dni szkoleniowych</h1>
-      <p className="article-summary">
+    <>
+      <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-[#111]">
+        Harmonogram — 10 dni szkoleniowych
+      </h1>
+      <p className="article-summary mb-6">
         Plan kursu rozłożony na 5 weekendów szkoleniowych, 10 dni po 8 godzin
         dydaktycznych (łącznie 80 h).
       </p>
@@ -41,7 +42,7 @@ export default function HarmonogramPage() {
       ) : (
         <div className="space-y-8">
           {weekends.map((w) => (
-            <section key={w.weekend}>
+            <section key={w.weekend} id={`weekend-${w.weekend}`}>
               <h2 className="text-lg font-semibold">
                 Weekend {w.weekend}
                 <span className="ml-2 text-sm font-normal opacity-60">
@@ -50,16 +51,26 @@ export default function HarmonogramPage() {
               </h2>
               <div className="mt-2 space-y-3">
                 {w.days.map((d) => (
-                  <article key={d.day} className="forbot-card p-3">
+                  <article
+                    key={d.day}
+                    id={`dzien-${String(d.day).padStart(2, "0")}`}
+                    className="forbot-card p-3"
+                  >
                     <h3 className="text-base font-medium">Dzień {d.day}</h3>
                     <ul className="mt-1 space-y-1 text-sm">
                       {d.lessons.map((l) => (
                         <li key={l.href} className="flex items-baseline gap-2">
                           <Badge variant="block">B{l.block}</Badge>
-                          <Link href={l.href} className="hover:underline">
-                            {l.title}
-                          </Link>
-                          <span className="ml-auto text-xs opacity-60">
+                          {l.publish ? (
+                            <Link href={l.href} className="hover:underline">
+                              {l.title}
+                            </Link>
+                          ) : (
+                            <span className="italic opacity-40">
+                              w przygotowaniu
+                            </span>
+                          )}
+                          <span className="ml-auto shrink-0 text-xs opacity-60">
                             {l.duration} min
                           </span>
                         </li>
@@ -72,6 +83,6 @@ export default function HarmonogramPage() {
           ))}
         </div>
       )}
-    </Shell>
+    </>
   );
 }

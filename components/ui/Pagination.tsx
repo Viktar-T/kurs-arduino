@@ -6,17 +6,36 @@ export interface PaginationLink {
   href: string;
 }
 
+export interface PaginationLabels {
+  /** `aria-label` of the whole navigation. */
+  nav: string;
+  previous: string;
+  next: string;
+}
+
+const LESSON_LABELS: PaginationLabels = {
+  nav: "Nawigacja między lekcjami",
+  previous: "Poprzednia lekcja",
+  next: "Następna lekcja",
+};
+
 interface PaginationProps {
   previous?: PaginationLink;
   next?: PaginationLink;
+  /** Captions above the link titles; lesson wording by default. */
+  labels?: PaginationLabels;
 }
 
-export function Pagination({ previous, next }: PaginationProps) {
+export function Pagination({
+  previous,
+  next,
+  labels = LESSON_LABELS,
+}: PaginationProps) {
   if (!previous && !next) return null;
 
   return (
     <nav
-      aria-label="Nawigacja między lekcjami"
+      aria-label={labels.nav}
       className="not-prose mt-10 grid gap-3 border-t border-[var(--forbot-line)] pt-5 sm:grid-cols-2"
     >
       {previous ? (
@@ -26,7 +45,7 @@ export function Pagination({ previous, next }: PaginationProps) {
         >
           <ArrowLeft aria-hidden className="h-4 w-4 shrink-0" />
           <span>
-            <span className="block text-xs opacity-60">Poprzednia lekcja</span>
+            <span className="block text-xs opacity-60">{labels.previous}</span>
             <span className="font-semibold">{previous.title}</span>
           </span>
         </Link>
@@ -40,7 +59,7 @@ export function Pagination({ previous, next }: PaginationProps) {
           className="forbot-page-link group flex items-center justify-end gap-3 rounded-md border border-[var(--forbot-line)] p-3 text-right text-sm transition-colors hover:border-[var(--forbot-green)]"
         >
           <span>
-            <span className="block text-xs opacity-60">Następna lekcja</span>
+            <span className="block text-xs opacity-60">{labels.next}</span>
             <span className="font-semibold">{next.title}</span>
           </span>
           <ArrowRight aria-hidden className="h-4 w-4 shrink-0" />

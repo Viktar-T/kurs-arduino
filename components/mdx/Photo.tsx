@@ -21,6 +21,7 @@ interface PhotoProps {
   alt?: string;
   width?: number;
   height?: number;
+  /** Preload the image (mapped to next/image `preload`; its `priority` prop is deprecated since Next 16). */
   priority?: boolean;
 }
 
@@ -68,7 +69,7 @@ export function Photo({
         alt={alt ?? caption ?? "Zdjęcie z lekcji"}
         width={intrinsicW}
         height={intrinsicH}
-        priority={priority}
+        preload={priority}
         className="w-full h-auto rounded-lg border border-slate-200 shadow-sm"
       />
       {caption && (

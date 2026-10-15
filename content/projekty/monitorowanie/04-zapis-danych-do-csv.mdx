@@ -213,7 +213,7 @@ Dlatego rejestrator przy każdej odebranej linii zapamiętuje datę i godzinę z
 - To **czas lokalny** komputera, czyli taki, jaki pokazuje zegar na pasku zadań, a nie czas uniwersalny UTC. Sprawdź więc, czy zegar komputera chodzi dobrze.
 - To chwila, w której linia **dotarła do komputera**, z dokładnością do sekundy. Wypada ona niecałą sekundę po początku pomiaru, bo stacja wysyła linię dopiero po odczytaniu wszystkich czujników.
 
-**W tym nagraniu zaznacz pole `czas_pc`.** Pole działa w chwili zapisu pliku: godzinę każdej linii rejestrator zapamiętuje zawsze, a pole decyduje tylko, czy dopisać ją do pliku. Możesz je więc zaznaczyć przed nagraniem albo po nim, byle przed kliknięciem „Zapisz CSV”. Po odświeżeniu albo ponownym otwarciu strony pole jest znowu puste, więc sprawdź je tuż przed zapisem.
+**W tym nagraniu zaznacz pole `czas_pc`.** Pole działa w chwili zapisu pliku: godzinę każdej linii rejestrator zapamiętuje zawsze, a pole decyduje tylko, czy dopisać ją do pliku. Możesz je więc zaznaczyć przed nagraniem albo po nim, byle przed kliknięciem „Zapisz CSV”. Rejestrator pamięta to pole w tej przeglądarce: po odświeżeniu albo ponownym otwarciu strony zostaje zaznaczone. W innej przeglądarce albo na innym komputerze jest odznaczone, więc i tak sprawdź je tuż przed zapisem.
 
 ## 4. Nagranie z dziennikiem zdarzeń
 
@@ -282,8 +282,6 @@ Jeśli odłączysz kabel USB bez klikania „Rozłącz”, nic złego się nie s
 
 **Co robi rejestrator po ponownym „Połącz”.** Płytka się restartuje i wysyła nagłówek. To ten sam nagłówek co na początku nagrania, więc rejestrator **dopisuje nowe pomiary do tego samego zapisu**. Licznik „Zebrane pomiary” rośnie dalej od miejsca, w którym się zatrzymał, „Pierwszy pomiar (czas komputera)” się nie zmienia i nie pojawia się żaden komunikat o odłożonym zapisie. Liczniki w „Kontroli danych” też liczą dalej. Dlatego całe nagranie, razem z przerwami, trafi do jednego pliku. Nowy zapis rejestrator zaczyna tylko wtedy, gdy płytka wyśle nagłówek z innymi kolumnami, jak przy przejściu z wersji 2 na wersję 3 szkicu.
 
-Przez pierwsze 2–3 sekundy po połączeniu możesz zobaczyć ostrzeżenie „Od … s nie przyszła żadna linia”. Rejestrator liczy ten czas od ostatniej linii sprzed przerwy. Ostrzeżenie znika, gdy przyjdzie pierwsza nowa linia.
-
 **Co zobaczysz w danych:**
 
 - **Przerwę w `czas_pc`.** Między ostatnią linią przed „Rozłącz” a pierwszą po „Połącz” mija tyle czasu, ile trwała przerwa, np. minuta zamiast 2 s.
@@ -293,7 +291,7 @@ Przez pierwsze 2–3 sekundy po połączeniu możesz zobaczyć ostrzeżenie „O
 Bez kolumny `czas_pc` przerwa byłaby prawie niewidoczna: `czas_ms` zacząłby po prostu od nowa i nie dałoby się powiedzieć, ile minut minęło.
 
 <Callout type="warning" title="Nie zamykaj karty w czasie nagrania">
-Rejestrator przechowuje pomiary w pamięci tej przeglądarki, a po ponownym otwarciu strony przywraca je z komunikatem „Przywrócono z pamięci tej przeglądarki …”. Ostatnie pomiary sprzed zamknięcia karty mogą jednak nie zdążyć trafić do tej pamięci. Nie zamykaj więc karty, nie odświeżaj jej i nie usypiaj komputera, dopóki nagranie trwa, a zaraz po nagraniu zapisz pliki (rozdział 5).
+Rejestrator przechowuje pomiary w pamięci tej przeglądarki: zapisuje je tam co najmniej co 3 s, a także od razu, gdy przełączasz się na inną kartę albo zamykasz tę. Po ponownym otwarciu strony przywraca je z komunikatem „Przywrócono z pamięci tej przeglądarki …”. Kilka ostatnich sekund pomiarów może przepaść tylko przy awarii przeglądarki albo komputera lub przy zaniku zasilania. Mimo to nie zamykaj karty, nie odświeżaj jej i nie usypiaj komputera, dopóki nagranie trwa: płytka wysyła wtedy linie dalej, ale rejestrator ich nie odbiera, więc w nagraniu powstaje przerwa, której nie ma w dzienniku. Zaraz po nagraniu zapisz pliki (rozdział 5).
 </Callout>
 
 ## 5. Zapis do pliku
@@ -468,7 +466,7 @@ Plik CSV przechowuje tylko wartości: nie zapamięta formuł, wykresu ani szerok
     Rejestrator odrzucił linie, które nie są liniami CSV albo mają inną liczbę kolumn niż nagłówek. Ostatnią odrzuconą linię widać w „Kontroli danych” po słowie „ostatnia”. Najczęściej na płytce wciąż jest program testowy z części 1, 2 albo 3 (napisy „A0 (swiatlo): …”, „Wilgotnosc: …”) albo do szkicu stacji dopisano jakieś `Serial.println()` z napisem. Kliknij „Rozłącz”, wgraj szkic stacji w wersji 3, kliknij „Wyczyść pomiary” i zacznij nagranie od nowa. Gdy odbierane znaki w ogóle nie przypominają CSV, rejestrator ostrzega: „Odbierane znaki nie wyglądają jak linie CSV”. Sprawdź wtedy także prędkość: `9600 baud`.
   </Issue>
   <Issue title="Ostrzeżenie „Od … s nie przyszła żadna linia”">
-    Zaraz po „Połącz” po przerwie to normalne: rejestrator liczy czas od ostatniej linii sprzed przerwy, a ostrzeżenie znika z pierwszą nową linią (rozdział 4). Jeśli trwa dłużej, płytka nie wysyła danych: sprawdź kabel USB i diodę L (czy miga co 2 s) i upewnij się, że na płytce jest szkic stacji.
+    Rejestrator jest połączony, ale od kilku sekund nie dostaje żadnej linii, czyli płytka nie wysyła danych. Sprawdź kabel USB i diodę L (czy miga co 2 s) i upewnij się, że na płytce jest szkic stacji.
   </Issue>
   <Issue title="W Excelu wszystkie wartości są w jednej kolumnie">
     To plik oryginalny (z przecinkami). Polski Excel oddziela kolumny średnikami, więc całą linię wkłada do jednej komórki. Zamknij plik bez zapisywania i otwórz plik `…_excel.csv`. W LibreOffice Calc wybierz w oknie „Import tekstu” separator pasujący do pliku (rozdział 6.2).
@@ -477,7 +475,7 @@ Plik CSV przechowuje tylko wartości: nie zapamięta formuł, wykresu ani szerok
     Arkusz odczytał plik z innym znakiem dziesiętnym, niż jest w pliku. Polski arkusz traktuje kropkę jako znak daty: gdy podzielisz plik oryginalny na kolumny z polskimi ustawieniami (np. *Dane → Tekst jako kolumny* w Excelu), `4.3` zamienia się w datę „4.mar”, `23.4` w „23.kwi”, a `41.0` zostaje tekstem. Nie poprawiaj takich komórek ręcznie. W Excelu otwórz plik `…_excel.csv`, a w LibreOffice Calc otwórz plik jeszcze raz i ustaw „Język” pasujący do pliku: Angielski (USA) dla pliku oryginalnego, Polski dla pliku `_excel`. Liczba, którą arkusz uznał za tekst, stoi przy lewej krawędzi komórki, a prawdziwa liczba przy prawej.
   </Issue>
   <Issue title="Nagranie „zniknęło” po zamknięciu karty">
-    Otwórz stronę [Rejestratora CSV](/narzedzia/rejestrator-csv) jeszcze raz, w tej samej przeglądarce na tym samym komputerze. Rejestrator przywróci pomiary z pamięci przeglądarki i pokaże komunikat „Przywrócono z pamięci tej przeglądarki …”. Od razu zapisz oba pliki. Ostatnie pomiary sprzed zamknięcia karty mogą nie zostać przywrócone. W innej przeglądarce, na innym komputerze ani po zamknięciu okna prywatnego (incognito) pomiarów nie będzie. Pole `czas_pc` po ponownym otwarciu strony jest znowu odznaczone: zaznacz je przed zapisem.
+    Otwórz stronę [Rejestratora CSV](/narzedzia/rejestrator-csv) jeszcze raz, w tej samej przeglądarce na tym samym komputerze. Rejestrator przywróci pomiary z pamięci przeglądarki i pokaże komunikat „Przywrócono z pamięci tej przeglądarki …”. Od razu zapisz oba pliki. Po zwykłym zamknięciu karty niczego nie brakuje; kilku ostatnich sekund pomiarów może brakować tylko po awarii przeglądarki albo komputera lub po zaniku zasilania. W innej przeglądarce, na innym komputerze ani po zamknięciu okna prywatnego (incognito) pomiarów nie będzie. Zaznaczenie pola `czas_pc` rejestrator też pamięta w tej przeglądarce, ale i tak sprawdź je przed zapisem.
   </Issue>
   <Issue title="„Przeglądarka nie może już przechowywać pomiarów (brak miejsca albo zablokowana pamięć strony)”">
     Pamięć przeglądarki dla strony kursu się zapełniła. Rejestracja trwa, ale nowe pomiary nie trafiają już do tej pamięci. Od razu zapisz bieżące nagranie do obu plików (rozdział 5). Potem zapisz do plików i odrzuć („Odrzuć”) odłożone zapisy, których już nie potrzebujesz, bo one też zajmują miejsce.

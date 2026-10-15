@@ -4,9 +4,11 @@
 import Link from "next/link";
 
 import { getAllLessons } from "@/lib/content";
+import { getProjectPageBySegments } from "@/lib/projects";
 
 export default function Home() {
   const total = getAllLessons().length;
+  const monitoring = getProjectPageBySegments(["monitorowanie"]);
 
   return (
     <main className="site-shell mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
@@ -23,7 +25,7 @@ export default function Home() {
         </p>
       </header>
 
-      <section className="grid gap-4">
+      <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Link
           href="/harmonogram"
           className="landing-card p-5 transition-colors"
@@ -31,6 +33,21 @@ export default function Home() {
           <h2 className="text-lg font-semibold">Harmonogram</h2>
           <p className="mt-1 text-sm opacity-70">
             10 dni szkoleniowych w 5 weekendach. Lekcje uporządkowane chronologicznie.
+          </p>
+        </Link>
+        {monitoring && (
+          <Link href={monitoring.href} className="landing-card p-5 transition-colors">
+            <h2 className="text-lg font-semibold">Projekt: Monitorowanie</h2>
+            <p className="mt-1 text-sm opacity-70">
+              Projekt na koniec kursu: czujniki, Arduino UNO i zapis pomiarów
+              do pliku CSV.
+            </p>
+          </Link>
+        )}
+        <Link href="/program" className="landing-card p-5 transition-colors">
+          <h2 className="text-lg font-semibold">Program kursu</h2>
+          <p className="mt-1 text-sm opacity-70">
+            Lekcje przypisane do 13 bloków programu kursu.
           </p>
         </Link>
       </section>

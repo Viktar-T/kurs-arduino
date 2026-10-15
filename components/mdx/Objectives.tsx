@@ -27,8 +27,8 @@ export function Objectives({
       </p>
       {items ? (
         <ul className="list-disc space-y-1 pl-5 text-sm">
-          {items.map((item) => (
-            <li key={item}>{item}</li>
+          {items.map((item, index) => (
+            <li key={`${item}-${index}`}>{item}</li>
           ))}
         </ul>
       ) : (

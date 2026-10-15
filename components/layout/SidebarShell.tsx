@@ -1,79 +1,91 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+/**
+ * Client part of the course chrome.
+ *
+ * - Desktop (≥ 64rem): the sidebar is a sticky grid column that scrolls
+ *   independently of the page and can be collapsed.
+ * - Mobile (< 64rem): the sidebar is an off-canvas drawer, closed by default,
+ *   opened from the sticky top bar.
+ *
+ * The page itself scrolls the window, so browser scroll restoration,
+ * `#hash` links and Next.js scroll-to-top on navigation work natively.
+ * A hidden sidebar is `visibility: hidden`, so its links leave the tab order.
+ */
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 interface SidebarShellProps {
   sidebar: ReactNode;
   children: ReactNode;
 }
 
+const SIDEBAR_ID = "course-sidebar";
+
 export function SidebarShell({ sidebar, children }: SidebarShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const mainRef = useRef<HTMLElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const asideRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
 
+  // Close the mobile drawer after navigation (state adjusted during render
+  // instead of in an effect — see react.dev "You Might Not Need an Effect").
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setDrawerOpen(false);
+  }
+
   useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const key = `scroll:${pathname}`;
+    if (!drawerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen]);
 
-    const saved = sessionStorage.getItem(key);
-    if (saved !== null) {
-      requestAnimationFrame(() => {
-        el.scrollTop = Number(saved);
-      });
+  // Keep the current lesson visible inside the sidebar's own scroll area.
+  useEffect(() => {
+    const aside = asideRef.current;
+    const active = aside?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!aside || !active) return;
+    const asideRect = aside.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    if (activeRect.top < asideRect.top || activeRect.bottom > asideRect.bottom) {
+      aside.scrollTop += activeRect.top - asideRect.top - asideRect.height / 3;
     }
-
-    const onScroll = () => sessionStorage.setItem(key, String(el.scrollTop));
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
   }, [pathname]);
 
   return (
     <div
-      className="site-shell"
-      style={{
-        display: "grid",
-        gridTemplateColumns: sidebarOpen ? "16rem 1fr" : "0px 1fr",
-        transition: "grid-template-columns 0.3s ease",
-        height: "100dvh",
-        overflow: "hidden",
-        width: "100%",
-      }}
+      className="course-shell site-shell"
+      data-collapsed={collapsed}
+      data-drawer-open={drawerOpen}
     >
-      <aside
-        style={{
-          overflowX: "hidden",
-          overflowY: sidebarOpen ? "auto" : "hidden",
-          opacity: sidebarOpen ? 1 : 0,
-          transition: "opacity 0.3s ease",
-          height: "100%",
-          scrollbarGutter: "stable",
-        }}
-      >
-        <div className="course-sidebar mx-3 my-4 px-4 py-4">
-          {sidebar}
-        </div>
+      <aside id={SIDEBAR_ID} ref={asideRef} className="course-shell-sidebar">
+        <div className="course-sidebar mx-3 my-4 px-4 py-4">{sidebar}</div>
       </aside>
 
-      <main
-        ref={mainRef}
-        style={{
-          overflowY: "auto",
-          height: "100%",
-          minWidth: 0,
-          scrollbarGutter: "stable",
-        }}
-      >
-        <div className="px-6 py-8">
+      <div
+        className="course-shell-backdrop"
+        aria-hidden="true"
+        onClick={() => setDrawerOpen(false)}
+      />
+
+      <div className="course-shell-main">
+        <header className="course-topbar">
           <button
             type="button"
-            onClick={() => setSidebarOpen((o) => !o)}
-            aria-label={sidebarOpen ? "Zwiń panel nawigacji" : "Rozwiń panel nawigacji"}
-            className="sidebar-toggle-btn"
-            title={sidebarOpen ? "Zwiń sidebar" : "Rozwiń sidebar"}
+            onClick={() => setCollapsed((c) => !c)}
+            aria-controls={SIDEBAR_ID}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Rozwiń panel nawigacji" : "Zwiń panel nawigacji"}
+            title={collapsed ? "Rozwiń panel nawigacji" : "Zwiń panel nawigacji"}
+            className="sidebar-toggle-btn course-toggle-desktop"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -87,7 +99,7 @@ export function SidebarShell({ sidebar, children }: SidebarShellProps) {
               strokeLinejoin="round"
               aria-hidden="true"
               style={{
-                transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
+                transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.3s ease",
               }}
             >
@@ -96,9 +108,32 @@ export function SidebarShell({ sidebar, children }: SidebarShellProps) {
               <polyline points="15 9 19 12 15 15" />
             </svg>
           </button>
-          {children}
-        </div>
-      </main>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen((o) => !o)}
+            aria-controls={SIDEBAR_ID}
+            aria-expanded={drawerOpen}
+            aria-label={drawerOpen ? "Zamknij spis treści" : "Otwórz spis treści"}
+            className="sidebar-toggle-btn course-toggle-mobile"
+          >
+            {drawerOpen ? (
+              <X aria-hidden className="h-4 w-4" />
+            ) : (
+              <Menu aria-hidden className="h-4 w-4" />
+            )}
+          </button>
+
+          <Link href="/" className="course-topbar-title">
+            Kurs Arduino
+          </Link>
+          <nav aria-label="Widoki kursu" className="course-topbar-nav">
+            <Link href="/harmonogram">Harmonogram</Link>
+            <Link href="/program">Program</Link>
+          </nav>
+        </header>
+
+        <main className="course-shell-content">{children}</main>
+      </div>
     </div>
   );
 }

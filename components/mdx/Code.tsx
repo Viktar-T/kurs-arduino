@@ -12,8 +12,8 @@
  * <Code lang="cpp" file="blink.ino">…</Code>
  *
  * Wraps a pre-highlighted code block (from rehype-pretty-code) with
- * a file-name header. The copy-to-clipboard button is a separate
- * client component if/when added — keep this Server-Component-only.
+ * a file-name header. The copy-to-clipboard button comes from the `pre`
+ * override (`Pre.tsx` + `CopyButton.tsx`), so this stays a Server Component.
  */
 import type { ReactNode } from "react";
 

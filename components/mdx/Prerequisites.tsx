@@ -8,6 +8,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { resolveLessonHref } from "@/lib/content";
+
 export interface PrerequisiteItem {
   label: string;
   href?: string;
@@ -39,7 +41,9 @@ export function Prerequisites({
             return (
               <li key={`${normalized.label}-${index}`}>
                 {normalized.href ? (
-                  <Link href={normalized.href}>{normalized.label}</Link>
+                  <Link href={resolveLessonHref(normalized.href)}>
+                    {normalized.label}
+                  </Link>
                 ) : (
                   normalized.label
                 )}

@@ -68,26 +68,42 @@ kurs-arduino/
 │   ├── layout.tsx
 │   ├── page.tsx                  ← landing / course overview
 │   ├── globals.css
-│   └── lekcje/
-│       └── [...slug]/page.tsx    ← dynamic lesson page (catch-all)
+│   ├── not-found.tsx             ← Polish 404
+│   └── (kurs)/                   ← route group (not in URLs): pages sharing the sidebar Shell
+│       ├── layout.tsx            ← renders the Shell once for all pages below
+│       ├── lekcje/
+│       │   └── [...slug]/page.tsx    ← dynamic lesson page (catch-all)
+│       ├── projekty/
+│       │   └── [...slug]/page.tsx    ← project pages: overview + parts (§4.5)
+│       ├── narzedzia/
+│       │   └── rejestrator-csv/page.tsx ← Rejestrator CSV tool (§4.6)
+│       ├── harmonogram/page.tsx  ← by-day view
+│       └── program/page.tsx      ← by-block view
 ├── components/
 │   ├── ui/                       ← shadcn/ui primitives
 │   ├── mdx/                      ← MDX components (Callout, Hardware, CodeBlock, Task)
 │   ├── nav/                      ← Sidebar, Breadcrumbs, TOC
+│   ├── tools/                    ← UI of the browser tools (§4.6)
 │   └── layout/                   ← Shell, Header, Footer
 ├── content/
-│   └── lekcje/                   ← single source of truth for lesson MDX
-│       ├── dzien-01/             ← organized by training day (1..10)
-│       │   ├── 01-srodowisko-ide.mdx
-│       │   └── 02-pierwszy-szkic.mdx
-│       ├── dzien-02/
-│       └── …
+│   ├── lekcje/                   ← single source of truth for lesson MDX
+│   │   ├── dzien-01/             ← organized by training day (1..10)
+│   │   │   ├── 01-srodowisko-ide.mdx
+│   │   │   └── 02-pierwszy-szkic.mdx
+│   │   ├── dzien-02/
+│   │   └── …
+│   └── projekty/                 ← projects outside the timetable (§4.5)
+│       └── monitorowanie/        ← one folder per project
+│           ├── 00-wprowadzenie.mdx
+│           └── 01-szkielet-systemu.mdx
 ├── lib/
 │   ├── content.ts                ← getAllLessons, getLessonBySlug, buildNav
-│   ├── frontmatter.ts            ← Zod schema for lesson frontmatter
+│   ├── projects.ts               ← project loader: getAllProjects, buildProjectNav
+│   ├── frontmatter.ts            ← Zod schemas for lesson and project frontmatter
+│   ├── serial-logger.ts          ← Rejestrator CSV engine (Web Serial, storage, CSV)
 │   └── mdx.ts                    ← MDX compile pipeline (remark/rehype)
 ├── public/
-│   └── img/lekcje/...            ← schematics, photos
+│   └── img/lekcje/...            ← schematics, photos (projects: img/projekty/<project>/)
 ├── PROJECT_BRIEF.md              ← this file
 ├── package.json
 ├── tsconfig.json                 ← @/* → ./* (already configured)
@@ -164,6 +180,10 @@ A **Zod schema** in `lib/frontmatter.ts` validates every file at build time. Bui
 /harmonogram                                            → 10 days timeline (primary delivery view)
 /lekcje/<day-folder>/<file-slug>                        → individual lesson
 e.g. /lekcje/dzien-01/01-srodowisko-ide
+/projekty/<project>                                     → project overview (part 0)
+/projekty/<project>/<file-slug>                         → project part
+e.g. /projekty/monitorowanie/01-szkielet-systemu
+/narzedzia/rejestrator-csv                              → Rejestrator CSV tool (§4.6)
 ```
 
 `generateStaticParams` walks `content/lekcje/**/*.mdx`, validates frontmatter via Zod, and emits a route per file where `publish: true`.
@@ -180,6 +200,54 @@ The sidebar is built from frontmatter at build time, **ordered by `weekend → d
 - `<MiniProject title="…">…</MiniProject>`
 - `<Schematic src="…" caption="…" />`
 - `<Code lang="cpp" file="blink.ino">…</Code>` — wraps Shiki with file label + copy button
+
+### 4.5 Projects (`content/projekty/`)
+
+A **project** is a self-contained series of pages outside the 10-day timetable — e.g. **"Monitorowanie"**, the end-of-course project (sensors → Arduino UNO → UART over USB → computer → CSV file). It does not fit the day/weekend/block/Forbot axes, so it has its own folder, schema, route and sidebar group instead of a loosened lesson schema or a "day 11". A project explains its own context and builds only on lessons of this course, because students of other courses are pointed to it too. It is not a Forbot chapter: the "consult `public/docs/` first" rule (CLAUDE.md §9) does not apply; facts are checked in datasheets and library docs.
+
+- **Files:** one folder per project, `content/projekty/<project>/` (lowercase ASCII slug). Pages are `NN-slug.mdx`: a two-digit prefix equal to `order` and a lowercase ASCII slug. `00-wprowadzenie.mdx` (`part: 0`) is the overview. More projects = more sibling folders; the loader (`lib/projects.ts`) picks them up.
+- **URLs** (linked from external sites — never rename a published file): the overview is `/projekty/<project>`, every other page `/projekty/<project>/<file-name-without-.mdx>`. One catch-all route, `app/(kurs)/projekty/[...slug]/page.tsx`, pre-renders every published page with `generateStaticParams` (`dynamicParams = false`).
+- **Frontmatter** (`ProjectPageFrontmatter` in `lib/frontmatter.ts`; the Life-OS fields are allowed and ignored, as in lessons):
+
+```yaml
+title: "Projekt Monitorowanie: budujemy system monitoringu na Arduino"
+slug: "wprowadzenie"
+summary: "…"
+project: "monitorowanie"       # = folder name
+projectTitle: "Monitorowanie"  # short name for sidebar/breadcrumbs; required on part 0
+part: 0                        # 0 = overview, 1..N = parts
+order: 0                       # = two-digit file prefix
+duration: 45                   # optional, minutes
+objectives: ["…"]
+prerequisites:                 # lesson hrefs and project page hrefs
+  - "/lekcje/dzien-02/07-Przetwornik-ADC"
+  - "/projekty/monitorowanie/01-szkielet-systemu"
+hardware: [{ name: "Arduino UNO R3", qty: 1 }]
+tags: [projekt, monitoring]
+sources: ["https://…"]
+publish: true
+updated: "2026-10-14"
+```
+
+- **Validation:** the build fails on any invalid page — published or not — on a bad file or folder name, on `project` ≠ folder, on a duplicate `part` or `order`, on `order` ≠ file prefix, and on a project without a part 0.
+- **Navigation:** sidebar group **"Projekty"** after the weekends (one accordion per project, pages in `order`; the overview is listed as "Wprowadzenie"). An unpublished page behaves like an unpublished lesson: no route, listed as "Część N — w przygotowaniu". The landing page has a card for the Monitorowanie overview. Breadcrumbs: Kurs / Projekty / <projectTitle> / <page title>.
+- **Page layout:** same as a lesson page (title, summary, objectives, prerequisites, hardware, MDX body, previous/next within the project); the meta line shows the project name and the part instead of day/weekend/block.
+- **Prerequisites:** entries are course lesson hrefs (`/lekcje/dzien-NN/<file-slug>`) or project page hrefs (`/projekty/<project>`, `/projekty/<project>/<file-slug>`); each resolves to a link labelled with the page title, anything unresolved shows as plain text. A page whose body renders its own `<Prerequisites>` box (e.g. "Zanim zaczniesz", which says what each item must be done for) skips the frontmatter box.
+- **Images:** `public/img/projekty/<project>/NN.MM-name.ext`, where `NN` is the page's `order`.
+
+### 4.6 Tools (`/narzedzia/…`)
+
+Browser-only helpers listed in the sidebar group **"Narzędzia"** (`components/nav/Sidebar.tsx`, `TOOLS`). No backend: they run entirely in the student's browser.
+
+- **Rejestrator CSV** (`/narzedzia/rejestrator-csv`; page `app/(kurs)/narzedzia/rejestrator-csv/page.tsx`, UI `components/tools/SerialLogger.tsx`, engine `lib/serial-logger.ts`). Reads the CSV lines an Arduino sends over USB with the **Web Serial API** (Chrome / Edge on a desktop; other browsers get a Polish "unsupported" message), shows them live (value tiles with sparklines, data checks, last-rows table, raw lines) and saves a `.csv` file. It exists because installing a terminal program in school labs needs an administrator. Behaviour:
+  - Port picker without filters; baud rate 9600 by default (selectable). Opening the port restarts an UNO, so the header arrives first.
+  - Header = a line of identifiers; a repeated identical header (board reset) continues the current recording, a header with different columns sets the current recording aside and starts a new one. Set-aside recordings form a list (oldest first, no limit), each with its own notice: measurement count, columns, both downloads and "Odrzuć"; only that button removes one. Data before any header gets the Monitorowanie column names (3, 6 or 8 columns) or `kolumna_N`.
+  - Lines that are not CSV numbers/empty fields, or have the wrong column count, are rejected and counted, never saved. The count belongs to the current recording: it restarts whenever a recording starts (first header, header with other columns, data without a header), so lines rejected before the header are not counted against it; a set-aside recording does not keep its count.
+  - "Wyczyść pomiary" deletes only the current recording (enabled when it has rows) and its count.
+  - Everything is kept in `localStorage` (key `…:v2`; restored after a reload): the current recording with its count and the set-aside list. While lines arrive it is written at least every 3 s, and at once on `pagehide` and when the tab becomes hidden (`visibilitychange`), so closing or reloading the tab loses nothing; only a crash or power cut can lose the last few seconds. Version-1 data (one `previous` recording) is migrated once, then the `…:v1` key is removed. The `czas_pc` checkbox is remembered per browser under `…:czas-pc`.
+  - The "no line for N s" warning counts from the later of the last line and the moment of connecting (`connectedAt`), so it does not appear right after "Połącz".
+  - Export: "Zapisz CSV" = the lines exactly as received (`,` separator, `.` decimals, CRLF, no BOM); "dla polskiego Excela" = `;` separator and decimal commas. Optional first column `czas_pc` = local computer time `YYYY-MM-DD HH:MM:SS`. File name `pomiary_YYYY-MM-DD_HH-MM[_excel].csv` (time of the first row).
+  - Data checks follow the Monitorowanie spec: counts empty fields, `nan`/`inf`/`ovf` values and `-127`/`85` in `T_*` columns.
 
 ---
 

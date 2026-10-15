@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="540" viewBox="0 0 420 540" role="img" aria-labelledby="tytul opis">
+  <title id="tytul">Droga danych w systemie monitoringu</title>
+  <desc id="opis">Czujniki, Arduino UNO, komputer z Monitorem portu szeregowego i Serial Plotterem oraz plik CSV, połączone strzałkami; przy każdym bloku jego odpowiednik w instalacji OZE.</desc>
+  <defs>
+    <marker id="grot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#00735d"/>
+    </marker>
+    <style>
+      .ramka { fill: #f7faf9; stroke: #009879; stroke-width: 1.5; }
+      .tytul { font: 700 17px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; fill: #111111; }
+      .opis { font: 400 14px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; fill: #465157; }
+      .oze { font: italic 400 13px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; fill: #00735d; }
+      .strzalka { stroke: #00735d; stroke-width: 2; fill: none; }
+      .podpis { font: 400 13px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; fill: #31535c; }
+    </style>
+  </defs>
+
+  <rect width="420" height="540" fill="#ffffff"/>
+
+  <!-- 1. Czujniki -->
+  <rect class="ramka" x="16" y="16" width="388" height="88" rx="8"/>
+  <text class="tytul" x="32" y="46">Czujniki</text>
+  <text class="opis" x="32" y="70">światło, wiatr, temperatury, wilgotność</text>
+  <text class="oze" x="32" y="91">w OZE: pyranometr, czujnik wiatru, termometry</text>
+
+  <line class="strzalka" x1="56" y1="104" x2="56" y2="154" marker-end="url(#grot)"/>
+  <text class="podpis" x="72" y="135">napięcie albo sygnał cyfrowy</text>
+
+  <!-- 2. Arduino UNO -->
+  <rect class="ramka" x="16" y="156" width="388" height="88" rx="8"/>
+  <text class="tytul" x="32" y="186">Arduino UNO</text>
+  <text class="opis" x="32" y="210">co 2 s mierzy i składa linię danych</text>
+  <text class="oze" x="32" y="231">w OZE: sterownik PLC lub rejestrator danych</text>
+
+  <line class="strzalka" x1="56" y1="244" x2="56" y2="294" marker-end="url(#grot)"/>
+  <text class="podpis" x="72" y="275">linia CSV przez UART i kabel USB</text>
+
+  <!-- 3. Komputer -->
+  <rect class="ramka" x="16" y="296" width="388" height="88" rx="8"/>
+  <text class="tytul" x="32" y="326">Komputer</text>
+  <text class="opis" x="32" y="350">Monitor portu szeregowego i Serial Plotter</text>
+  <text class="oze" x="32" y="371">w OZE: ekran SCADA w dyspozytorni</text>
+
+  <line class="strzalka" x1="56" y1="384" x2="56" y2="434" marker-end="url(#grot)"/>
+  <text class="podpis" x="72" y="415">zapis do pliku</text>
+
+  <!-- 4. Plik CSV -->
+  <rect class="ramka" x="16" y="436" width="388" height="88" rx="8"/>
+  <text class="tytul" x="32" y="466">Plik CSV</text>
+  <text class="opis" x="32" y="490">pomiary do analizy w arkuszu kalkulacyjnym</text>
+  <text class="oze" x="32" y="511">w OZE: archiwum danych</text>
+</svg>

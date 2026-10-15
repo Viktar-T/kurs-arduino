@@ -1,0 +1,613 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Część 1. Szkielet systemu monitoringu i pierwsze czujniki"
+slug: "szkielet-systemu"
+summary: "Pierwsza działająca wersja stacji monitoringu: fotorezystor („światło”) na A0 i potencjometr („wiatr”) na A1, pomiar co 2 s odmierzany funkcją millis() oraz linie danych czas_ms,swiatlo,wiatr_m_s, które oglądasz w Monitorze portu szeregowego i na wykresie w Serial Plotterze."
+
+project: "monitorowanie"
+part: 1
+order: 1
+duration: 120
+
+objectives:
+  - "Podłączyć fotorezystor w dzielniku napięcia do A0 i potencjometr do A1 zgodnie ze specyfikacją systemu"
+  - "Sprawdzić połączenia programem testowym, zanim powstanie program stacji"
+  - "Napisać pierwszą wersję szkicu stacja_monitoringu.ino: rytm pomiarów co 2 s, funkcje pomiarowe i funkcje wysyłające"
+  - "Przeliczyć odczyt z A1 na napięcie i prędkość wiatru i porównać wynik z linią danych"
+  - "Odczytać linie danych w Monitorze portu szeregowego i pokazać światło i wiatr na wykresie w Serial Plotterze"
+  - "Sprawdzić działanie stacji według listy kontrolnej części 1"
+
+prerequisites:
+  - "/lekcje/dzien-01/03-srodowisko-ide"
+  - "/lekcje/dzien-01/04-podstawy-prog-porty-io"
+  - "/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne"
+  - "/lekcje/dzien-02/06.02-UART-zmienne"
+  - "/lekcje/dzien-02/07-Przetwornik-ADC"
+  - "/lekcje/dzien-03/09-Kontynuacja-uart-serwomechanizmy"
+  - "/lekcje/dzien-04/12.01-funkcje-wlasne"
+  - "/lekcje/dzien-04/13.01-miniProject"
+  - "/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 8 }
+  - { name: "Fotorezystor", qty: 1 }
+  - { name: "Rezystor 10 kΩ", qty: 1, note: "do dzielnika napięcia z fotorezystorem" }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+
+tags: [projekt, monitoring, oze, adc, fotorezystor, potencjometr, uart, csv, millis, serial-plotter]
+sources:
+  - "https://docs.arduino.cc/language-reference/en/functions/analog-io/analogRead/"
+  - "https://docs.arduino.cc/language-reference/en/functions/time/millis/"
+  - "https://docs.arduino.cc/language-reference/en/functions/communication/serial/print/"
+  - "https://docs.arduino.cc/language-reference/en/functions/digital-io/pinMode/"
+  - "https://docs.arduino.cc/language-reference/en/functions/digital-io/digitalwrite/"
+  - "https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/Print.cpp"
+  - "https://docs.arduino.cc/software/ide-v2/tutorials/ide-v2-serial-plotter/"
+  - "https://github.com/arduino/arduino-serial-plotter-webapp/blob/main/src/msgAggregatorWorker.ts"
+  - "https://github.com/arduino/arduino-serial-plotter-webapp/blob/main/src/utils.ts"
+  - "https://github.com/arduino/arduino-serial-plotter-webapp/blob/main/src/ChartPlotter.tsx"
+
+publish: true
+updated: "2026-10-15"
+---
+
+To pierwsza część [projektu Monitorowanie](/projekty/monitorowanie). We wprowadzeniu jest [plan czterech części](/projekty/monitorowanie#5-plan-projektu) i [specyfikacja systemu](/projekty/monitorowanie#4-specyfikacja-systemu), czyli ustalenia, których trzyma się cały projekt. Teraz zbudujesz pierwszą działającą wersję stacji monitoringu: podłączysz dwa czujniki, napiszesz szkielet programu i obejrzysz dane na komputerze.
+
+Pierwsze dwa czujniki to fotorezystor, który udaje czujnik nasłonecznienia, i potencjometr, który udaje czujnik wiatru z wyjściem napięciowym 0–5 V. Ich odpowiedniki w prawdziwej instalacji opisuje [tabela we wprowadzeniu](/projekty/monitorowanie#1-co-budujemy-i-po-co).
+
+<Callout type="note" title="Co masz na końcu tej części">
+Stację, która co 2 sekundy mierzy jasność i „wiatr” i wysyła kablem USB jedną linię danych w formacie CSV: `czas_ms,swiatlo,wiatr_m_s`. Dane czytasz w Monitorze portu szeregowego i oglądasz na wykresie w Serial Plotterze, a dioda na płytce przy każdym pomiarze pokazuje, że stacja pracuje. Szkic `stacja_monitoringu.ino` z tej części jest szkieletem całego projektu: części 2 i 3 tylko go rozbudują.
+</Callout>
+
+## 1. Połączenia
+
+Układ składasz według [punktu 4.1 specyfikacji](/projekty/monitorowanie#41-piny-i-połączenia). W tej części potrzebujesz tylko kroków „Zawsze na początku” i „Część 1”:
+
+1. Odłącz kabel USB.
+2. Połącz pin `5V` Arduino z szyną „+” płytki stykowej (czerwona linia), a pin `GND` z szyną „−” (niebieska linia).
+3. **Fotorezystor:** jedną nóżkę wepnij w szynę „+”, drugą w wolny rząd płytki. Z tego samego rzędu poprowadź przewód do `A0` i wepnij rezystor 10 kΩ do szyny „−”. Fotorezystor nie ma biegunowości: obojętne, którą stroną go wepniesz.
+4. **Potencjometr:** skrajne nóżki do szyn „+” i „−”, środkową nóżkę (suwak) do `A1`.
+
+Fotorezystor i rezystor 10 kΩ tworzą **dzielnik napięcia**: dwa elementy połączone szeregowo między 5 V a GND, a z punktu między nimi odbieramy część napięcia ([lekcja 07](/lekcje/dzien-02/07-Przetwornik-ADC)). Im więcej światła, tym mniejszą rezystancję ma fotorezystor i tym wyższe napięcie trafia na `A0`. Potencjometr działa podobnie, tylko podział napięcia ustawiasz pokrętłem.
+
+<Pinout
+  board="Arduino UNO — część 1"
+  pins={[
+    { pin: "A0", function: "Światło: dzielnik napięcia z fotorezystorem", note: "5V → fotorezystor → A0 → rezystor 10 kΩ → GND" },
+    { pin: "A1", function: "Wiatr: środkowa nóżka (suwak) potencjometru", note: "skrajne nóżki do 5V i GND" },
+    { pin: "D13", function: "Sygnał życia: wbudowana dioda L", note: "jest już na płytce, nic nie podłączasz" },
+  ]}
+/>
+
+{/* SCHEMAT (01.01-polaczenia-czesc-1.png): dzielnik napięcia z fotorezystorem na A0 (5V, fotorezystor, A0, rezystor 10 kΩ, GND) i potencjometr na A1 */}
+
+{/* SCHEMAT (01.02-uklad-czesc-1.jpg): zdjęcie gotowego układu części 1 na płytce stykowej; widoczne przewody 5V i GND do szyn, fotorezystor z rezystorem 10 kΩ i przewodem do A0, potencjometr z przewodem do A1 */}
+
+<Callout type="hazard" title="Zanim podłączysz USB">
+Przejdź [zasady bezpieczeństwa z rozdziału 6 wprowadzenia](/projekty/monitorowanie#6-zasady-bezpieczeństwa). W tej części najłatwiej o jeden błąd: środkowa nóżka potencjometru wpięta w szynę „+” albo „−” zamiast do `A1`. Po skręceniu pokrętła do końca powstaje wtedy **zwarcie**, czyli bezpośrednie połączenie 5V z GND. Środkowa nóżka idzie tylko do `A1`.
+</Callout>
+
+## 2. Test kanałów
+
+Zanim napiszesz program stacji, sprawdź połączenia krótkim programem testowym. Dwa razy na sekundę wypisuje on surowe odczyty z `A0` i `A1`, czyli liczby od 0 do 1023 prosto z `analogRead()` ([lekcja 07](/lekcje/dzien-02/07-Przetwornik-ADC)). Gdy coś jest źle podłączone, zobaczysz to od razu, zamiast szukać błędu w dłuższym programie.
+
+<Callout type="note" title="To program tymczasowy">
+Program testowy służy tylko do sprawdzenia połączeń. Utwórz go jako osobny szkic (*Plik → Nowy szkic*), np. `test_kanalow`. Wysyła on dodatkowe napisy, więc nie jest jeszcze stacją monitoringu: szkic stacji zaczniesz w rozdziale 3, w nowym pliku, a po jego wgraniu program testowy zniknie z płytki.
+</Callout>
+
+<Code lang="cpp" file="test_kanalow.ino">
+```cpp
+// Test kanałów: program tymczasowy, tylko do sprawdzenia połączeń.
+// Dwa razy na sekundę wypisuje surowe odczyty z A0 i A1 (0–1023).
+
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Test kanalow A0 i A1");
+}
+
+void loop() {
+  Serial.print("A0 (swiatlo): ");
+  Serial.print(analogRead(PIN_FOTOREZYSTOR));
+  Serial.print("   A1 (wiatr): ");
+  Serial.println(analogRead(PIN_POTENCJOMETR));
+  delay(500);  // dwa odczyty na sekundę
+}
+```
+</Code>
+
+Wgraj program, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud. Wynik wygląda mniej więcej tak (liczby zależą od oświetlenia i położenia pokrętła):
+
+```text
+Test kanalow A0 i A1
+A0 (swiatlo): 655   A1 (wiatr): 0
+A0 (swiatlo): 652   A1 (wiatr): 0
+A0 (swiatlo): 121   A1 (wiatr): 0
+A0 (swiatlo): 649   A1 (wiatr): 498
+```
+
+Sprawdź po kolei:
+
+- **Zasłoń fotorezystor dłonią.** Odczyt `A0` wyraźnie maleje, a po odsłonięciu wraca. Latarka telefonu skierowana na fotorezystor go zwiększa.
+- **Kręć potencjometrem od jednego końca do drugiego.** Odczyt `A1` zmienia się od około 0 do około 1023. Nie musi dojść dokładnie do skrajnych liczb (lekcja 07). Kręcąc w prawo, zwiększasz odczyt; jeśli jest odwrotnie, odłącz USB i zamień skrajne nóżki potencjometru miejscami.
+- **Kanały nie wpływają na siebie.** Kręcenie pokrętłem nie zmienia `A0`, a zasłanianie fotorezystora nie zmienia `A1`.
+
+{/* SCHEMAT (01.03-test-kanalow-monitor.png): Monitor portu szeregowego z wynikiem programu test_kanalow; kilka linii przed zasłonięciem fotorezystora i po zasłonięciu, potem przy kręceniu pokrętłem */}
+
+Jeśli któryś punkt się nie zgadza, zajrzyj do [typowych problemów](#7-typowe-problemy). Gdy wszystko działa, przejdź do programu stacji.
+
+## 3. Program stacji krok po kroku
+
+Teraz piszesz właściwy program: pierwszą wersję szkicu `stacja_monitoringu.ino`. Utwórz nowy szkic (*Plik → Nowy szkic*) i od razu zapisz go pod nazwą `stacja_monitoringu` (*Plik → Zapisz jako…*). Arduino IDE utworzy folder `stacja_monitoringu` z plikiem `stacja_monitoringu.ino`.
+
+Poniżej omawiamy program kawałek po kawałku, od góry pliku. Przy każdym nowym elemencie podajemy lekcję, z której go znasz. Cały szkic do skopiowania jest na końcu rozdziału, w punkcie 3.7.
+
+### 3.1. Stałe i zmienne globalne
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+```
+</Code>
+
+- **Stałe** (`const`) nadają liczbom nazwy, tak jak w [lekcji 06.01](/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne). W programie piszesz `PIN_POTENCJOMETR` zamiast „magicznego” `A1`, więc od razu widać, co jest podłączone do pinu. Typ `byte` (liczba od 0 do 255) wystarcza na numer pinu ([lekcja 06.02](/lekcje/dzien-02/06.02-UART-zmienne)).
+- `PIN_LED = 13` to pin wbudowanej diody **L**, tej samej, którą migał pierwszy szkic Blink ([lekcja 03](/lekcje/dzien-01/03-srodowisko-ide)).
+- `INTERWAL_MS` to odstęp między pomiarami w milisekundach. Przyrostek `UL` mówi kompilatorowi, że liczba jest typu `unsigned long`, tak jak wynik `millis()` ([lekcja 21](/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis)).
+- Dwie **zmienne globalne** (zadeklarowane poza funkcjami) pamiętają swoją wartość przez cały czas działania programu (lekcja 06.02): `nastepnyPomiar` to termin kolejnego pomiaru, a `stanLED` to aktualny stan diody.
+
+Nazwy i wartości stałych ustala [punkt 4.5 specyfikacji](/projekty/monitorowanie#45-program). W tej części są tylko stałe czujników podłączonych w rozdziale 1; kolejne części dopiszą swoje, ale tych nie zmieniają.
+
+### 3.2. `setup()`: przygotowanie stacji
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+```
+</Code>
+
+`setup()` wykonuje się raz, po każdym uruchomieniu albo resecie płytki ([lekcja 03](/lekcje/dzien-01/03-srodowisko-ide)):
+
+- `Serial.begin(9600)` uruchamia UART z prędkością 9600 baud. Monitor portu szeregowego musi mieć ustawioną tę samą prędkość ([lekcja 06.01](/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne)).
+- `pinMode(PIN_LED, OUTPUT)` ustawia pin diody jako wyjście ([lekcja 04](/lekcje/dzien-01/04-podstawy-prog-porty-io)).
+- `wyslijNaglowek()` to nasza własna funkcja. Wysyła linię z nazwami kolumn. Wywołujemy ją w `setup()`, więc nagłówek pojawia się raz, na początku transmisji. Samą funkcję zdefiniujemy niżej, za `loop()`: Arduino IDE na to pozwala ([lekcja 12.01](/lekcje/dzien-04/12.01-funkcje-wlasne)).
+
+### 3.3. `loop()`: rytm pomiarów
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+void loop() {
+  // Czy nadszedł termin pomiaru? (działa także po przepełnieniu millis())
+  if ((long)(millis() - nastepnyPomiar) >= 0) {
+    nastepnyPomiar += INTERWAL_MS;          // termin następnego pomiaru: +2 s
+    wyslijWiersz();                         // zmierz czujniki i wyślij linię danych
+  }
+}
+```
+</Code>
+
+To dokładnie kod z [punktu 4.2 specyfikacji](/projekty/monitorowanie#42-rytm-pomiarów), który szczegółowo omawia każdą linię. W skrócie: `loop()` w kółko sprawdza zegar `millis()` ([lekcja 21](/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis)). Gdy termin pomiaru minie, przesuwa go o 2 s i wywołuje `wyslijWiersz()`. Terminy leżą na stałej siatce 2000, 4000, 6000 ms… Między pomiarami program nie stoi w `delay()`, tylko tysiące razy na sekundę sprawdza, czy już pora. Dzięki temu w kolejnych częściach zmieszczą się w nim następne zadania.
+
+`loop()` nic więcej nie robi i tak zostanie do końca projektu: pomiary i wysyłanie siedzą w osobnych funkcjach.
+
+### 3.4. Funkcje pomiarowe
+
+Każdy czujnik ma własną funkcję, która mierzy i **zwraca wynik** ([lekcja 12.01](/lekcje/dzien-04/12.01-funkcje-wlasne)). Typ przed nazwą funkcji mówi, jaki wynik zwraca, a słowo `return` oddaje go do miejsca wywołania.
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Światło: surowy odczyt z dzielnika z fotorezystorem (0–1023, bez jednostki)
+int zmierzSwiatlo() {
+  return analogRead(PIN_FOTOREZYSTOR);
+}
+
+// Wiatr: napięcie z suwaka potencjometru przeliczone na m/s
+float zmierzWiatr() {
+  int odczyt = analogRead(PIN_POTENCJOMETR);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;            // napięcie w woltach (0–5 V)
+  return U * 6.0;                             // 1 V to 6 m/s, więc 5 V to 30 m/s
+}
+```
+</Code>
+
+- `zmierzSwiatlo()` zwraca liczbę całkowitą (`int`): surowy odczyt z `A0`. Jasności nie przeliczamy na żadną jednostkę, bo fotorezystor nie jest skalibrowany ([punkt 4.3 specyfikacji](/projekty/monitorowanie#43-przeliczenia)).
+- `zmierzWiatr()` zwraca liczbę z częścią ułamkową (`float`). Najpierw zamienia odczyt na napięcie, jak woltomierz z [lekcji 07](/lekcje/dzien-02/07-Przetwornik-ADC), a potem napięcie na prędkość wiatru: według założenia projektu 1 V oznacza 6 m/s.
+- Zapis `5.0` i `1024.0` z kropką jest ważny. Gdyby wszystkie liczby w działaniu były całkowite, C++ wykonałby **dzielenie całkowite** i odrzucił część ułamkową ([lekcja 06.02](/lekcje/dzien-02/06.02-UART-zmienne)). Co by się wtedy stało, sprawdzisz w zadaniu 3.
+- Zmienne `odczyt` i `U` są **lokalne**: istnieją tylko w czasie wykonywania funkcji (lekcja 06.02). Inna funkcja może mieć własne zmienne o tych samych nazwach.
+
+### 3.5. Funkcje wysyłające: nagłówek i linia danych
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+Obie funkcje mają typ `void`: niczego nie zwracają, tylko wysyłają tekst. Linię składamy z kawałków: `Serial.print()` wysyła kawałek bez końca linii, a pusty `Serial.println()` kończy linię ([lekcja 09](/lekcje/dzien-03/09-Kontynuacja-uart-serwomechanizmy)). Format linii ustala [punkt 4.4 specyfikacji](/projekty/monitorowanie#44-linia-danych-csv):
+
+- Między wartościami stoi przecinek, bez spacji.
+- `czas_ms` i `swiatlo` to liczby całkowite, więc `Serial.print()` wypisuje je bez części ułamkowej.
+- `Serial.print(wiatr_m_s, 1)` wypisuje wiatr z jednym miejscem po przecinku (drugi argument z lekcji 09). Część ułamkową oddziela kropka, np. `15.0`.
+- Zmienne w `wyslijWiersz()` nazywają się tak samo jak kolumny w nagłówku. Łatwo wtedy sprawdzić, czy wartości idą w tej samej kolejności co nazwy.
+
+`czas_ms` to chwila, w której pomiar naprawdę się zaczął: `millis()` czytamy na samym początku funkcji. Zwykle wypada dokładnie na siatce 2000, 4000, 6000 ms, ale czasem o 1 ms później, bo `loop()` zauważa termin z małym opóźnieniem, a licznik `millis()` co jakiś czas przeskakuje o 2 ms naraz. Dlatego w danych zobaczysz czasem np. `6001` zamiast `6000`: to prawdziwy czas pomiaru, a kolejne terminy i tak wracają na siatkę.
+
+Koniec linii wysyłamy osobnym `Serial.println()`, także w nagłówku. W częściach 2 i 3 dopiszesz nowe kolumny tuż przed tym `Serial.println()` i niczego, co już działa, nie trzeba będzie przerabiać.
+
+<Callout type="warning" title="Stacja wysyła tylko nagłówek i linie danych">
+Nie dopisuj do szkicu stacji żadnych innych napisów: ani „Start”, ani komunikatów do sprawdzania programu. Dane trafią w części 4 do pliku CSV, a każdy dodatkowy napis zepsułby ten plik ([punkt 4.4 specyfikacji](/projekty/monitorowanie#44-linia-danych-csv), zasada 9). Jeśli chcesz coś sprawdzić, zrób to osobnym programem testowym, tak jak w rozdziale 2.
+</Callout>
+
+### 3.6. Sygnał życia
+
+Dwie ostatnie linie `wyslijWiersz()` obsługują **sygnał życia**, czyli regularny znak, że stacja pracuje:
+
+```cpp
+stanLED = !stanLED;              // zmień stan na przeciwny
+digitalWrite(PIN_LED, stanLED);  // zapal albo zgaś diodę L
+```
+
+Operator `!` zamienia stan na przeciwny: `LOW` na `HIGH` i odwrotnie. Ten sam zapis migał diodą w [lekcji 21](/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis). Przy każdym pomiarze dioda zmienia stan: przez jeden takt (2 s) świeci, przez następny nie świeci.
+
+To najprostsze miganie, które nie potrzebuje `delay()`. Krótki błysk (zapal, odczekaj, zgaś) wymagałby albo `delay()`, który zatrzymałby cały program, albo drugiego licznika czasu z `millis()`. Zmiana stanu nie potrzebuje żadnego z nich: wystarczy jedno polecenie w każdym takcie. Diodę widać także przy zamkniętym Monitorze portu szeregowego.
+
+### 3.7. Cały szkic
+
+Tak wygląda pierwsza wersja stacji w całości. Skopiuj ją przyciskiem kopiowania w prawym górnym rogu ramki, wklej do szkicu `stacja_monitoringu` w miejsce tego, co tam było, i zapisz (`Ctrl+S`).
+
+<Code lang="cpp" file="stacja_monitoringu.ino">
+```cpp
+// Stacja monitoringu, wersja 1 (projekt Monitorowanie, część 1)
+// Co 2 s mierzy światło (A0) i wiatr (A1) i wysyła jedną linię CSV:
+// czas_ms,swiatlo,wiatr_m_s
+
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+
+void loop() {
+  // Czy nadszedł termin pomiaru? (działa także po przepełnieniu millis())
+  if ((long)(millis() - nastepnyPomiar) >= 0) {
+    nastepnyPomiar += INTERWAL_MS;          // termin następnego pomiaru: +2 s
+    wyslijWiersz();                         // zmierz czujniki i wyślij linię danych
+  }
+}
+
+// ----- Funkcje pomiarowe -----
+
+// Światło: surowy odczyt z dzielnika z fotorezystorem (0–1023, bez jednostki)
+int zmierzSwiatlo() {
+  return analogRead(PIN_FOTOREZYSTOR);
+}
+
+// Wiatr: napięcie z suwaka potencjometru przeliczone na m/s
+float zmierzWiatr() {
+  int odczyt = analogRead(PIN_POTENCJOMETR);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;            // napięcie w woltach (0–5 V)
+  return U * 6.0;                             // 1 V to 6 m/s, więc 5 V to 30 m/s
+}
+
+// ----- Funkcje wysyłające -----
+
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+W częściach 2 i 3 nic z tego szkicu nie usuniesz ani nie przerobisz: dopiszesz nowe stałe, nowe funkcje pomiarowe i nowe kolumny w `wyslijNaglowek()` i `wyslijWiersz()`.
+
+## 4. Uruchomienie i Monitor portu szeregowego
+
+Kliknij **Weryfikuj** (✓), a potem **Wgraj** (→). Gdy wgrywanie się skończy, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud.
+
+<ExpectedOutput title="W Monitorze portu szeregowego">
+
+Najpierw pojawia się nagłówek, a potem co 2 sekundy jedna linia danych. Wartości poniżej są przykładowe:
+
+```text
+czas_ms,swiatlo,wiatr_m_s
+2000,655,0.0
+4000,651,0.0
+6001,124,0.0
+8000,120,8.3
+10000,648,15.1
+12000,650,30.0
+```
+
+Dioda L na płytce zapala się przy jednym pomiarze i gaśnie przy następnym.
+
+</ExpectedOutput>
+
+{/* SCHEMAT (01.04-monitor-stacja-v1.png): Monitor portu szeregowego ustawiony na 9600 baud; nagłówek czas_ms,swiatlo,wiatr_m_s i kilkanaście linii danych podczas zasłaniania fotorezystora i kręcenia pokrętłem */}
+
+Przyjrzyj się danym:
+
+- **Nagłówek jest pierwszy.** Na Arduino UNO otwarcie Monitora restartuje płytkę, więc program zaczyna od nowa: `setup()` wysyła nagłówek, a `czas_ms` liczy od zera. Pierwsza linia danych ma więc `czas_ms` około 2000. To samo stanie się po każdym ponownym otwarciu Monitora.
+- **`czas_ms` rośnie o około 2000** w każdej linii: tyle wynosi takt pomiarowy.
+- **`swiatlo` zależy od sali.** Nie ma jednej poprawnej liczby. W oświetlonej sali odczyt wynosi zwykle kilkaset, po zasłonięciu fotorezystora wyraźnie spada, a w świetle latarki rośnie. Sprawdzasz kierunek zmian, nie konkretną wartość.
+- **`wiatr_m_s` możesz policzyć.** Na stronie piszemy liczby po polsku, z przecinkiem (29,97), a stacja wysyła je z kropką (`30.0`), zgodnie ze specyfikacją.
+
+<Table
+  caption="Wiatr: rachunek a linia danych"
+  headers={["Położenie pokrętła", "Odczyt A1", "Napięcie U = odczyt × 5 / 1024", "Wiatr = U × 6", "W linii danych"]}
+  rows={[
+    ["skręcone do końca w stronę „−”", "0", "0 V", "0 m/s", "0.0"],
+    ["mniej więcej w połowie", "około 512", "2,5 V", "15,0 m/s", "około 15.0"],
+    ["skręcone do końca w stronę „+”", "1023", "≈ 4,995 V", "≈ 29,97 m/s", "30.0"],
+  ]}
+/>
+
+Największa możliwa prędkość to 29,97 m/s, a nie 30: odczyt ADC kończy się na 1023, nie na 1024. W linii danych widzisz jednak `30.0`, bo `Serial.print(x, 1)` zaokrągla do jednego miejsca po przecinku.
+
+<Expandable title="Głębiej: jak Serial.print(x, 1) zaokrągla" heading="####">
+
+Funkcja `Serial.print()` dla liczb `float` korzysta z funkcji `printFloat()` w pliku `Print.cpp` biblioteki Arduino. Przy jednym miejscu po przecinku najpierw dodaje do liczby 0,05 (połowę ostatniej wypisywanej cyfry), a potem wypisuje część całkowitą i jedną cyfrę po kropce, a resztę odcina. Dla 29,97 daje to 29,97 + 0,05 = 30,02, czyli `30.0`. Dla 8,99 (odczyt 307) wychodzi 9,04, czyli `9.0`. To zwykłe zaokrąglanie „do najbliższej”: liczba kończąca się na 5 i więcej idzie w górę.
+
+Jeden krok ADC to w kolumnie wiatru około 0,03 m/s (6 × 5 / 1024). Dlatego ostatnia cyfra może czasem przeskoczyć o 0.1, nawet gdy nie dotykasz pokrętła.
+
+</Expandable>
+
+## 5. Wykres w Serial Plotterze
+
+Monitor pokazuje liczby, a wykres pokazuje zmiany. Otwórz Serial Plotter (*Narzędzia → Serial Plotter*). W Arduino IDE 2 Plotter i Monitor mogą być otwarte jednocześnie ([lekcja 13.01](/lekcje/dzien-04/13.01-miniProject)).
+
+Na początku wykres wygląda dziwnie: jedna linia rośnie bez przerwy, a dwie pozostałe leżą płasko przy dole. Wynika to z tego, jak Plotter czyta linie:
+
+- Dzieli każdą linię na liczby w miejscach przecinków i rysuje je jako osobne **serie**, czyli osobne linie wykresu, w tej samej kolejności co kolumny.
+- Nazw kolumn nie zna. Serie nazywa po kolei `value 1`, `value 2`, `value 3`. Z nagłówka nie korzysta: to sam tekst, bez liczb, a w dodatku Plotter pomija pierwszą linię, którą odbierze po otwarciu okna.
+- Oś pionowa sama dopasowuje się do najmniejszej i największej wartości na wykresie. Po minucie pracy `czas_ms` przekracza 60 000, więc przy nim światło (najwyżej 1023) i wiatr (najwyżej 30) wyglądają jak płaskie linie przy zerze.
+
+<Table
+  caption="Serie na wykresie a kolumny linii danych"
+  headers={["Seria w Plotterze", "Kolumna", "Co pokazuje"]}
+  rows={[
+    ["value 1", "czas_ms", "czas od startu programu; rośnie o 2000 w każdym takcie, bez końca"],
+    ["value 2", "swiatlo", "jasność, od 0 do 1023"],
+    ["value 3", "wiatr_m_s", "prędkość wiatru, od 0 do 30"],
+  ]}
+/>
+
+{/* SCHEMAT (01.05-plotter-wszystkie-serie.png): Serial Plotter tuż po otwarciu; value 1 (czas_ms) rośnie ukośnie, value 2 i value 3 leżą płasko przy zerze */}
+
+**Rozwiązanie: ukryj serię czasu.** Nad wykresem, przy nazwie każdej serii, jest kwadratowe pole wyboru. Kliknij pole przy `value 1`: seria czasu zniknie, a oś pionowa dopasuje się do światła i wiatru. Teraz zasłoń fotorezystor i pokręć pokrętłem: obie zmiany od razu widać na wykresie.
+
+Wiatr (do 30) nadal jest mały w porównaniu ze światłem (do 1023). Żeby obejrzeć go dokładniej, odznacz też `value 2`: zostanie sam wiatr, a oś dopasuje się do niego. Ponowne kliknięcie pola przywraca serię.
+
+{/* SCHEMAT (01.06-plotter-bez-czasu.png): Serial Plotter z odznaczonym polem przy value 1; widoczne value 2 (światło, spadek przy zasłonięciu fotorezystora) i value 3 (wiatr, rośnie przy kręceniu pokrętłem) */}
+
+Dwie rzeczy, o których warto pamiętać:
+
+- **Oś pozioma to nie czas, tylko numer kolejnej linii.** Plotter pokazuje ostatnie 50 linii, czyli przy naszym takcie około 100 sekund pomiarów. Czas pomiaru jest w kolumnie `czas_ms`, którą widzisz w Monitorze.
+- **Plotter nie pamięta ukrytych serii.** Po zamknięciu i ponownym otwarciu okna kliknij pole przy `value 1` jeszcze raz.
+
+<Callout type="note" title="Dlaczego nie zmieniamy programu pod wykres?">
+Plotter umie czytać etykiety w formie `nazwa:wartość` (lekcja 13.01), więc legenda mogłaby pokazywać `swiatlo` i `wiatr_m_s`. Nie robimy tego, bo stacja ma jedno zadanie: wysyłać czyste linie CSV. Linia z etykietami nie jest linią CSV: rejestrator z części 4 by ją odrzucił, a plik z pomiarami byłby nieczytelny. Prościej dopasować wykres do danych jednym kliknięciem niż zmieniać dane pod wykres.
+</Callout>
+
+<Expandable title="Głębiej: jak Serial Plotter czyta linie" heading="####">
+
+Serial Plotter w Arduino IDE 2 to osobny mały program. Jego zasady widać w kodzie źródłowym i w dokumentacji Arduino:
+
+- Wartości w linii oddziela przecinek, spacja albo tabulator. Kilka takich znaków obok siebie liczy się jak jeden.
+- Jeśli linia zawiera dwukropek, Plotter czyta pary `nazwa:wartość` i nazywa serie tymi nazwami. W przeciwnym razie nadaje im nazwy `value 1`, `value 2` i tak dalej.
+- Pierwszą linię po otwarciu okna pomija, bo mogła dotrzeć ucięta.
+- Każda seria ma najwyżej 50 ostatnich punktów, a serii może być najwyżej 8.
+
+Z drugiego punktu wynika pułapka na później. W częściach 2 i 3 nieudany pomiar zapisujemy jako puste pole: dwa przecinki obok siebie ([punkt 4.4 specyfikacji](/projekty/monitorowanie#44-linia-danych-csv), zasada 7). Dla Plottera to jeden separator, więc wartości za pustym polem przesuwają się o jedną serię wcześniej. Gdy któryś czujnik zawiedzie, wykres może przez chwilę pokazać wartość w złej serii. Dane w Monitorze i w pliku CSV są wtedy poprawne: myli się tylko wykres.
+
+</Expandable>
+
+## 6. Zadania
+
+Zadania nie zmieniają specyfikacji: pinów, rytmu pomiarów ani nazw kolumn nie ruszasz. Najpierw przewiduj albo licz, potem sprawdzaj na układzie.
+
+<Task title="Zadanie 1 — policz, zanim sprawdzisz" estimate="10 min">
+Odczyt z `A1` wynosi 400. Policz napięcie `U` i wartość, którą stacja wyśle w kolumnie `wiatr_m_s` (z jednym miejscem po przecinku). Potem policz to samo dla odczytu 512, czyli pokrętła mniej więcej w połowie obrotu. Drugi wynik sprawdź na układzie: ustaw pokrętło w połowie i odczytaj kolumnę `wiatr_m_s` w Monitorze.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 1">
+
+- Odczyt 400: U = 400 × 5 / 1024 ≈ 1,953 V, wiatr = 1,953 × 6 ≈ 11,72 m/s. Stacja wyśle `11.7`.
+- Odczyt 512: U = 512 × 5 / 1024 = 2,5 V, wiatr = 2,5 × 6 = 15,0 m/s. Stacja wyśle `15.0`.
+
+Na układzie zobaczysz wartość w pobliżu 15, np. `14.6` albo `15.3`. Połowa obrotu ustawiona „na oko” rzadko daje dokładnie 512, a potencjometr nie dzieli napięcia idealnie równo.
+
+</Expandable>
+
+<Task title="Zadanie 2 — zasłoń fotorezystor" estimate="5 min">
+Zanim zasłonisz fotorezystor dłonią, zapisz przewidywanie: czy `swiatlo` wzrośnie, czy spadnie? Czy zmieni się `wiatr_m_s`? Sprawdź w Monitorze i na wykresie (`value 2`). Na koniec poświeć na fotorezystor latarką telefonu i opisz, co widać w danych.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 2">
+
+`swiatlo` spada. Mniej światła oznacza większą rezystancję fotorezystora, a fotorezystor jest w dzielniku od strony 5 V, więc na `A0` trafia niższe napięcie. W świetle latarki odczyt rośnie. `wiatr_m_s` się nie zmienia, bo to osobny kanał; jeśli też się zmienia, sprawdź, czy przewody do `A0` i `A1` się nie stykają.
+
+Zmiana pojawia się w danych z opóźnieniem do 2 s: stacja mierzy tylko raz na takt. Krótkie mignięcie cienia między pomiarami może w ogóle nie trafić do danych.
+
+</Expandable>
+
+<Task title="Zadanie 3 — znajdź błąd" estimate="10 min">
+Ktoś przepisał funkcję `zmierzWiatr()` tak:
+
+```cpp
+float zmierzWiatr() {
+  int odczyt = analogRead(PIN_POTENCJOMETR);
+  float U = odczyt * 5 / 1024;
+  return U * 6.0;
+}
+```
+
+Program się kompiluje i działa, ale wyniki są złe. Przewidź, co pokaże kolumna `wiatr_m_s` przy pokrętle skręconym do końca w stronę „+” i jak będzie wyglądał wykres wiatru podczas powolnego kręcenia. Znajdź błąd i popraw go.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 3">
+
+W działaniu `odczyt * 5 / 1024` wszystkie liczby są całkowite, więc C++ wykonuje dzielenie całkowite i odrzuca część ułamkową ([lekcja 06.02](/lekcje/dzien-02/06.02-UART-zmienne)). Dla odczytu 1023: 1023 × 5 = 5115, a 5115 / 1024 daje 4 zamiast 4,995. Kolumna pokaże `24.0` zamiast `30.0`.
+
+Podczas kręcenia `U` może przyjąć tylko wartości 0, 1, 2, 3 i 4, więc wiatr skacze między `0.0`, `6.0`, `12.0`, `18.0` i `24.0`. Wykres wygląda jak schodki. Poprawka to zapis ze specyfikacji: `float U = odczyt * 5.0 / 1024.0;`.
+
+</Expandable>
+
+<Task title="Zadanie 4 — skąd ten restart?" estimate="5 min">
+Obserwuj w Monitorze kolumnę `czas_ms` przez kilka linii. Zamknij Monitor, odczekaj kilkanaście sekund i otwórz go ponownie. Przewidź, od jakiej wartości zacznie się `czas_ms` i czy pojawi się nagłówek. Wyjaśnij, dlaczego tak jest.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 4">
+
+Gdy komputer otwiera port szeregowy, Arduino UNO dostaje sygnał resetu. Ten mechanizm pozwala wgrywać programy bez wciskania przycisku RESET. Program zaczyna więc od nowa: `setup()` wysyła nagłówek, a `millis()` liczy od zera, dlatego pierwsza linia danych ma `czas_ms` około 2000.
+
+Gdy Monitor był zamknięty, stacja normalnie mierzyła i wysyłała linie (dioda L migała), ale żaden program ich nie odbierał, więc przepadły. Wniosek: `czas_ms` liczy czas od ostatniego startu programu, a nie godzinę zegarową.
+
+</Expandable>
+
+<Task title="Zadanie 5 — stacja bez Monitora" estimate="5 min">
+Zamknij Monitor i Plotter. Po czym poznasz, że stacja wciąż pracuje? Ile razy dioda L zmieni stan w ciągu minuty? Ile linii danych wyśle stacja w ciągu godziny? Czego sygnał życia nie powie Ci o czujnikach?
+</Task>
+
+<Expandable title="Rozwiązanie zadania 5">
+
+Dioda L zmienia stan przy każdym pomiarze, czyli co 2 s: 30 razy na minutę (15 razy świeci, 15 razy nie świeci). W ciągu godziny stacja wyśle 3600 / 2 = 1800 linii danych.
+
+Sygnał życia mówi tylko, że program działa i wykonuje kolejne takty. Nie mówi, czy czujniki są dobrze podłączone: przy odłączonym fotorezystorze dioda miga tak samo. Wartości trzeba sprawdzić w danych.
+
+</Expandable>
+
+## 7. Typowe problemy
+
+<Troubleshooting>
+  <Issue title="Nie da się wgrać programu albo otworzyć portu (port zajęty)">
+    Port szeregowy może mieć otwarty tylko jeden program naraz. Arduino IDE 2 na czas wgrywania sam zamyka swój Monitor i Plotter, ale nie zamknie portu otwartego przez inny program. Najczęściej jest to [Rejestrator CSV](/narzedzia/rejestrator-csv) w przeglądarce (kliknij w nim „Rozłącz” albo zamknij kartę) albo inny program do portu szeregowego. Komunikat o błędzie wygląda wtedy mniej więcej tak: `can't open device "\\.\COM3"` z dopiskiem „Access is denied” albo „Odmowa dostępu”. Zamknij ten program i wgraj szkic jeszcze raz.
+  </Issue>
+  <Issue title="Zamiast liczb widać przypadkowe znaki">
+    Prędkość w Monitorze nie zgadza się z programem. Wybierz w Monitorze `9600 baud`, tak jak w `Serial.begin(9600)` ([lekcja 06.01](/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne)).
+  </Issue>
+  <Issue title="Nie widać nagłówka">
+    Płytka wysyła nagłówek raz, zaraz po starcie programu. Jeśli Monitor był otwarty już wcześniej albo nagłówek przewinął się poza okno, naciśnij przycisk RESET na płytce: program zacznie od nowa i wyśle nagłówek, a `czas_ms` znów zacznie od zera.
+  </Issue>
+  <Issue title="Światło działa odwrotnie: zasłonięcie zwiększa odczyt">
+    Fotorezystor i rezystor 10 kΩ są zamienione miejscami. Fotorezystor ma być między szyną „+” a rzędem z przewodem do `A0`, a rezystor między tym rzędem a szyną „−”. Odłącz USB i zamień je. Programu nie zmieniaj: specyfikacja ustala, że więcej światła to większy odczyt.
+  </Issue>
+  <Issue title="Kręcąc w prawo, zmniejszasz wiatr">
+    Odłącz USB i zamień miejscami skrajne nóżki potencjometru. Środkowej nóżki (do `A1`) nie ruszaj.
+  </Issue>
+  <Issue title="Odczyty skaczą przypadkowo">
+    Najczęściej przewód albo nóżka elementu nie trzyma się w styku. Niepodłączone wejście „pływa”: jego odczyt zależy od zakłóceń, a nawet od tego, jak blisko jest Twoja ręka ([lekcja 07](/lekcje/dzien-02/07-Przetwornik-ADC), zadanie 4). Odłącz USB, dociśnij przewody i sprawdź, czy każdy jest we właściwym rzędzie płytki. Zmiana `wiatr_m_s` o 0.1 bez dotykania pokrętła jest normalna: to jeden krok ADC.
+  </Issue>
+  <Issue title="Wiatr przyjmuje tylko wartości 0.0, 6.0, 12.0, 18.0 i 24.0">
+    W przeliczeniu napięcia zabrakło `.0` i C++ wykonał dzielenie całkowite. Porównaj swoją funkcję `zmierzWiatr()` ze szkicem z punktu 3.7 i zobacz rozwiązanie zadania 3.
+  </Issue>
+  <Issue title="W danych pojawia się tekst, np. „A0 (swiatlo): …”, „Start” albo „nan”">
+    Stacja może wysyłać tylko nagłówek i linie danych. Jeśli widzisz napisy z rozdziału 2, na płytce wciąż jest program testowy: wgraj szkic stacji. Jeśli dopisano do szkicu stacji jakieś `Serial.println()` do sprawdzania programu, usuń je. Tekst `nan` (ang. *not a number*) wypisuje `Serial.print()` dla liczby, która nie jest liczbą; w części 1 nie powinien się pojawić, więc sprawdź obliczenia w `zmierzWiatr()`. [Rejestrator CSV](/narzedzia/rejestrator-csv) odrzuca każdą linię z tekstem, a wartości `nan` przyjmuje, ale oznacza je jako błąd, bo specyfikacja wymaga w takim miejscu pustego pola.
+  </Issue>
+  <Issue title="Wykres w Serial Plotterze jest płaski">
+    Seria `value 1` to `czas_ms`, który rośnie bez końca. Odznacz pole przy `value 1` nad wykresem (rozdział 5).
+  </Issue>
+</Troubleshooting>
+
+## 8. Lista kontrolna części 1
+
+Przejdź listę punkt po punkcie, zanim zaczniesz część 2. Jeśli któryś punkt się nie zgadza, wróć do [typowych problemów](#7-typowe-problemy).
+
+- [ ] Pierwsza linia w Monitorze to dokładnie `czas_ms,swiatlo,wiatr_m_s`: bez spacji i bez innych napisów.
+- [ ] Nowa linia danych pojawia się mniej więcej co 2 s, a `czas_ms` rośnie za każdym razem o około 2000.
+- [ ] Zasłonięcie fotorezystora zmniejsza `swiatlo`, a odsłonięcie przywraca poprzednią wartość.
+- [ ] `wiatr_m_s` zmienia się od `0.0` do około `30.0`, gdy kręcisz pokrętłem od końca do końca, i rośnie, gdy kręcisz w prawo.
+- [ ] Poza nagłówkiem i liniami danych w Monitorze nie pojawia się żaden inny tekst.
+- [ ] Dioda L zmienia stan przy każdym pomiarze, także przy zamkniętym Monitorze.
+- [ ] W Serial Plotterze, po odznaczeniu `value 1`, widać zmiany światła i wiatru.
+- [ ] Szkic jest zapisany jako `stacja_monitoringu`, a cały jego folder skopiowany do folderu `kopia-czesc-1` ([rozdział 7 wprowadzenia](/projekty/monitorowanie#7-jak-pracować-z-projektem)).
+
+## 9. Dla chętnych: Rejestrator CSV już teraz
+
+[Rejestrator CSV](/narzedzia/rejestrator-csv) to narzędzie z części 4, ale działa już z pierwszą wersją stacji. Zamknij Monitor portu szeregowego i Serial Plotter, bo port może mieć otwarty tylko jeden program naraz. Otwórz rejestrator w przeglądarce Chrome albo Edge, kliknij „Połącz” i wybierz port płytki. Płytka się zrestartuje, a rejestrator odbierze nagłówek i zacznie pokazywać pomiary: kafelki z bieżącymi wartościami i małymi wykresami, tabelę „Ostatnie pomiary” i panel „Kontrola danych”. Zanim znowu wgrasz program z Arduino IDE, kliknij „Rozłącz”.
+
+To dobry sprawdzian stacji. Rejestrator przyjmuje tylko czyste linie CSV z właściwą liczbą kolumn, a każdą inną linię odrzuca i liczy w „Kontroli danych” jako „Odrzucone linie”. Każdy dodatkowy napis wysłany przez szkic od razu tam widać; w poprawnej stacji ta liczba wynosi 0. Jeśli płytka wysyła same napisy (np. wciąż jest na niej program testowy), rejestrator nie przyjmie żadnego pomiaru i po kilku liniach ostrzeże, że odbierane znaki nie wyglądają jak linie CSV.
+
+Zapisywaniem pomiarów do pliku zajmiemy się w części 4. Rejestrator zapamiętuje pomiary w przeglądarce, więc jeśli nie są Ci potrzebne, usuń je przyciskiem „Wyczyść pomiary”.
+
+## Podsumowanie
+
+Masz pierwszą działającą wersję stacji monitoringu. Fotorezystor i potencjometr są podłączone zgodnie ze specyfikacją, a szkic `stacja_monitoringu.ino` ma już cały szkielet systemu: stałe, rytm pomiarów co 2 s bez `delay()`, funkcje pomiarowe, nagłówek, linię danych i sygnał życia. Stacja wysyła wyłącznie czyste linie CSV. Czytasz je w Monitorze portu szeregowego, a na wykresie w Serial Plotterze oglądasz po ukryciu serii czasu.
+
+W kolejnych częściach szkielet się nie zmieni: dopiszesz do niego nowe czujniki i nowe kolumny.
+
+Następna część: [Część 2. Dodajemy pomiar temperatury do systemu](/projekty/monitorowanie/02-pomiar-temperatury).
