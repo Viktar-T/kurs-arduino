@@ -330,7 +330,7 @@ W trzeciej linii ktoś przekręcił potencjometr (wiatr 9,0 m/s), a dwa pomiary 
 
 **Dlaczego puste pole, a nie zero?** Zero to prawdziwa, możliwa wartość: 0 °C zimą albo 0 m/s przy ciszy. Gdyby błąd zapisać jako `0`, na wykresie pojawiłby się fałszywy spadek, średnia by się zaniżyła, a operator mógłby uznać awarię czujnika za mróz. Puste pole mówi uczciwie: „tu nie ma pomiaru”. Arkusz kalkulacyjny pomija puste komórki, gdy liczy średnią.
 
-Polski arkusz kalkulacyjny zapisuje ułamki z przecinkiem, a my wysyłamy kropkę. Dlatego rejestrator zapisuje plik w dwóch wersjach: dokładnie taki, jak wysłała płytka, i taki, który polski Excel otworzy poprawnie podwójnym kliknięciem. Szczegóły pokażemy w części 4.
+Polski arkusz kalkulacyjny zapisuje ułamki z przecinkiem, a my wysyłamy kropkę. Dlatego rejestrator zapisuje plik w dwóch wersjach: dokładnie taki, jak wysłała płytka, i taki, który polski Excel otworzy poprawnie podwójnym kliknięciem. Szczegóły pokażemy w [części 4](/projekty/monitorowanie/04-zapis-danych-do-csv#5-zapis-do-pliku).
 
 ### 4.5. Program
 
@@ -422,9 +422,9 @@ Projekt ma cztery części. Każda dokłada nowe elementy do tego samego układu
 
   Dokładasz DHT11, który mierzy wilgotność i temperaturę. Najważniejsza zasada tej części: nieudany odczyt nie może zamienić się w fałszywe zero, tylko zostaje pustym polem. Linia danych ma już wszystkie osiem kolumn.
 
-- **Część 4. Od czujnika do pliku CSV** (w przygotowaniu)
+- **[Część 4. Od czujnika do pliku CSV](/projekty/monitorowanie/04-zapis-danych-do-csv)**
 
-  Projekt końcowy. Najpierw krótko podsumowujesz cały system i przeprowadzasz jego **odbiór**, czyli sprawdzasz punkt po punkcie, czy spełnia specyfikację. Potem zapisujesz dane płynące przez UART do pliku `.csv` na komputerze za pomocą [Rejestratora CSV](/narzedzia/rejestrator-csv) i otwierasz go w arkuszu kalkulacyjnym.
+  Projekt końcowy. Najpierw krótko podsumowujesz cały system i przeprowadzasz jego **odbiór**, czyli sprawdzasz punkt po punkcie, czy spełnia specyfikację. Potem nagrywasz dane płynące przez UART za pomocą [Rejestratora CSV](/narzedzia/rejestrator-csv), razem z dziennikiem zdarzeń, zapisujesz je do pliku `.csv` na komputerze i otwierasz go w arkuszu kalkulacyjnym.
 
 ## 6. Zasady bezpieczeństwa
 

@@ -1,0 +1,514 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Część 4. Od czujnika do pliku CSV"
+slug: "zapis-danych-do-csv"
+summary: "Projekt końcowy. Przeprowadzasz odbiór stacji monitoringu, czyli sprawdzasz punkt po punkcie, czy spełnia specyfikację. Potem nagrywasz pomiary Rejestratorem CSV razem z dziennikiem zdarzeń i planowaną przerwą, zapisujesz je do dwóch plików CSV i otwierasz archiwum w arkuszu kalkulacyjnym. Bez nowych czujników i bez zmian w programie płytki."
+
+project: "monitorowanie"
+part: 4
+order: 4
+duration: 120
+
+objectives:
+  - "Przeprowadzić odbiór stacji: sprawdzić punkt po punkcie, czy spełnia specyfikację, i wypełnić protokół odbioru"
+  - "Nagrać pomiary Rejestratorem CSV i prowadzić dziennik zdarzeń, łącznie z planowaną przerwą w pracy czujnika"
+  - "Zapisać nagranie do dwóch plików CSV i wyjaśnić, czym różnią się ich separatory i znaki dziesiętne"
+  - "Otworzyć plik CSV w Excelu albo w LibreOffice Calc tak, żeby każda wartość trafiła do osobnej komórki"
+  - "Sprawdzić plik trzema formułami: liczba wierszy, odstępy czas_ms i puste komórki"
+  - "Narysować wykres temperatur i wskazać na nim zdarzenia zapisane w dzienniku"
+
+prerequisites:
+  - "/projekty/monitorowanie/03-pomiar-wilgotnosci"
+
+hardware:
+  - { name: "Kompletny układ z części 1–3", qty: 1, note: "bez zmian; ta część nie dokłada żadnych elementów" }
+  - { name: "Komputer z przeglądarką Chrome albo Edge", qty: 1, note: "do Rejestratora CSV; na tym samym komputerze arkusz kalkulacyjny: Excel albo LibreOffice Calc" }
+
+tags: [projekt, monitoring, oze, csv, rejestrator, web-serial, odbior, archiwum, excel, libreoffice]
+sources:
+  - "https://help.libreoffice.org/latest/pl/text/shared/00/00000208.html"
+  - "https://help.libreoffice.org/latest/pl/text/scalc/guide/csv_files.html"
+  - "https://help.libreoffice.org/latest/pl/text/scalc/01/04060181.html"
+  - "https://help.libreoffice.org/latest/pl/text/scalc/01/04060184.html"
+  - "https://support.microsoft.com/pl-pl/office/importowanie-lub-eksportowanie-plik%C3%B3w-tekstowych-txt-lub-csv-5250ac4c-663c-47ce-937b-339e391393ba"
+  - "https://support.microsoft.com/pl-pl/office/ile-liczb-funkcja-ile-liczb-a59cd7fc-b623-4d93-87a4-d23bf411294c"
+  - "https://support.microsoft.com/pl-pl/office/%C5%9Brednia-funkcja-%C5%9Brednia-047bac88-d466-426c-a32b-8f33eb960cf6"
+  - "https://support.microsoft.com/pl-pl/office/licz-je%C5%BCeli-funkcja-licz-je%C5%BCeli-e0de10c6-f885-4e71-abb4-1f464816df34"
+  - "https://caniuse.com/web-serial"
+
+publish: true
+updated: "2026-10-15"
+---
+
+To czwarta, ostatnia część [projektu Monitorowanie](/projekty/monitorowanie). Stacja z [części 3](/projekty/monitorowanie/03-pomiar-wilgotnosci) jest kompletna: co 2 sekundy wysyła linię z ośmioma wartościami. Ta część nie dokłada żadnego czujnika i nie zmienia programu na płytce. Zgodnie z [planem projektu](/projekty/monitorowanie#5-plan-projektu) ma trzy zadania: krótko podsumować cały system, przeprowadzić jego **odbiór** i zapisać pomiary do pliku CSV, który otworzysz w arkuszu kalkulacyjnym.
+
+Plik CSV to **archiwum** stacji i koniec drogi, którą przechodzą dane: czujnik → Arduino → UART → komputer → plik. Dzięki archiwum można po tygodniu albo po roku sprawdzić, co działo się w instalacji i kiedy.
+
+<Callout type="note" title="Co masz na końcu tej części">
+Wypełniony protokół odbioru stacji, dwa pliki CSV z kilkunastominutowym nagraniem i dziennik zdarzeń, który mówi, co się w tym nagraniu działo. Każda linia pliku ma godzinę z zegara komputera. Plik otwierasz w arkuszu kalkulacyjnym, sprawdzasz go trzema formułami i rysujesz wykres temperatur. Układ i szkic `stacja_monitoringu.ino` zostają bez zmian.
+</Callout>
+
+<Prerequisites title="Zanim zaczniesz">
+
+- [Część 3. Dodajemy pomiar wilgotności do systemu](/projekty/monitorowanie/03-pomiar-wilgotnosci) — stacja przechodzi całą listę kontrolną części 3, a jej folder jest skopiowany do `kopia-czesc-3`. Na płytce jest szkic w wersji 3, z adresami **Twoich** czujników DS18B20.
+- [Rejestrator CSV](/narzedzia/rejestrator-csv) — otwierasz go w przeglądarce **Chrome albo Edge na komputerze**. Jeśli korzystasz z niego od części 1, znasz już przyciski „Połącz” i „Rozłącz”.
+- Arkusz kalkulacyjny: Microsoft Excel albo LibreOffice Calc.
+
+</Prerequisites>
+
+## 1. Twój system w jednym miejscu
+
+W częściach 1–3 powstał, kawałek po kawałku, biurkowy model systemu monitoringu instalacji OZE. Tak płyną w nim dane:
+
+<Schematic
+  src="/img/projekty/monitorowanie/00.01-przeplyw-danych.svg"
+  caption="Droga danych w naszym systemie. W każdym bloku, kursywą: jego odpowiednik w instalacji OZE."
+  alt="Schemat blokowy: czujniki, Arduino UNO, komputer z Monitorem portu szeregowego i Serial Plotterem, plik CSV, połączone strzałkami; przy każdym bloku jego odpowiednik w instalacji OZE"
+  width={420}
+  height={540}
+/>
+
+Każda kolumna linii danych pochodzi z jednego czujnika i jednego pinu. Co każdy czujnik udaje w prawdziwej instalacji, dokładniej opisuje [tabela we wprowadzeniu](/projekty/monitorowanie#1-co-budujemy-i-po-co).
+
+<Table
+  caption="Czujniki, piny i kolumny stacji"
+  headers={["Czujnik", "Pin", "Kolumna", "Jednostka", "W instalacji OZE"]}
+  rows={[
+    ["licznik millis() na płytce", "—", "czas_ms", "ms", "czas od startu sterownika"],
+    ["Fotorezystor w dzielniku napięcia", "A0", "swiatlo", "brak (0–1023)", "nasłonecznienie (pyranometr)"],
+    ["Potencjometr", "A1", "wiatr_m_s", "m/s", "prędkość wiatru (anemometr)"],
+    ["LM35", "A2", "T_szafa_C", "°C", "temperatura w szafie falownika"],
+    ["DS18B20 „modułu” (oznaczony M)", "D3", "T_modul_C", "°C", "temperatura tylnej strony modułu PV"],
+    ["DS18B20 otoczenia", "D3", "T_otoczenie_C", "°C", "temperatura otoczenia"],
+    ["DHT11", "D2", "wilgotnosc_proc", "%RH", "wilgotność w szafie albo w kontenerze magazynu energii"],
+    ["DHT11", "D2", "T_dht_C", "°C", "drugi termometr w szafie"],
+    ["Dioda L", "D13", "—", "—", "sygnał życia sterownika"],
+  ]}
+/>
+
+{/* SCHEMAT (04.01-stacja-kompletna.jpg): zdjęcie kompletnej stacji z góry — fotorezystor z rezystorem 10 kΩ, potencjometr, LM35, dwa DS18B20 (jeden oznaczony „M”), DHT11, oba rezystory 4,7 kΩ, przewody do A0, A1, A2, D2, D3; kabel USB podłączony do komputera */}
+
+Najważniejsze ustalenia [specyfikacji](/projekty/monitorowanie#4-specyfikacja-systemu), których trzyma się cała stacja:
+
+- **Rytm:** jeden pomiar wszystkich czujników co 2 s, odmierzany funkcją `millis()` na stałej siatce 2000, 4000, 6000 ms…
+- **Nagłówek:** wysyłany raz, w `setup()`, w ostatecznym układzie ośmiu kolumn:
+  ```text
+  czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+  ```
+- **Linia danych:** osiem wartości, przecinek między kolumnami, kropka w liczbach, jedno miejsce po przecinku w temperaturach, wietrze i wilgotności.
+- **Brak pomiaru to puste pole,** nigdy `0`, `-127`, `85` ani `nan`.
+- **Nic poza nagłówkiem i liniami danych:** każdy inny napis zepsułby plik CSV.
+
+Co dodała każda część:
+
+- [Część 1](/projekty/monitorowanie/01-szkielet-systemu): szkielet systemu, czyli rytm 2 s bez `delay()`, nagłówek, linia danych, światło, wiatr i sygnał życia.
+- [Część 2](/projekty/monitorowanie/02-pomiar-temperatury): trzy termometry, role czujników DS18B20 po adresach i funkcja `wyslijPole()`, która zamienia `NAN` w puste pole.
+- [Część 3](/projekty/monitorowanie/03-pomiar-wilgotnosci): DHT11, ostateczne osiem kolumn i zasada „nieudany odczyt to puste pole, a nie zero”.
+- Część 4, ta strona: odbiór, nagranie, plik CSV i arkusz. Układ i program zostają bez zmian.
+
+## 2. Odbiór stacji
+
+W prawdziwej instalacji nowy system monitoringu nie zaczyna pracy zaraz po zamontowaniu. Najpierw przechodzi **odbiór**: instalator razem z właścicielem instalacji sprawdza punkt po punkcie, czy system mierzy to, co obiecuje specyfikacja, i zapisuje wyniki w **protokole odbioru**. Dopiero wtedy system zostaje przekazany do pracy.
+
+Teraz zrobisz to samo ze swoją stacją. Większość punktów znasz z list kontrolnych części 1–3: tu sprawdzasz je razem, na gotowym systemie. Pracujesz w Monitorze portu szeregowego (`9600` baud), tak jak w częściach 1–3. Tylko punkt 15 sprawdzisz w Rejestratorze CSV, w rozdziale 3.
+
+<Callout type="hazard" title="Testy brakującego czujnika: tylko przy odłączonym USB">
+W punktach 13 i 14 wyjmujesz czujnik albo przewód. Zawsze najpierw odłącz kabel USB, potem zmieniaj połączenia, a na koniec sprawdź je i dopiero wtedy podłącz USB ([zasady bezpieczeństwa, punkty 2 i 3](/projekty/monitorowanie#6-zasady-bezpieczeństwa)). Wkładając czujnik z powrotem, sprawdź kolejność nóżek: czujnik wpięty odwrotnie grzeje się i może się zniszczyć.
+</Callout>
+
+<Table
+  caption="Protokół odbioru stacji monitoringu"
+  headers={["Punkt", "Jak sprawdzić", "Oczekiwany wynik", "Wynik / OK?"]}
+  rows={[
+    ["1. Połączenia", "Przy odłączonym USB porównaj każdy przewód z tabelą pinów w punkcie 4.1 specyfikacji.", "Światło A0, wiatr A1, LM35 A2, DHT11 D2, oba DS18B20 D3; rezystor 4,7 kΩ na linii D3 i na linii D2 (albo moduł DHT11 z rezystorem); nigdzie połączenia 5V z GND.", "☐"],
+    ["2. Nagłówek", "Otwórz Monitor portu szeregowego (płytka się zrestartuje) i przeczytaj pierwszą linię.", "Dokładnie: czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C — bez spacji.", "☐"],
+    ["3. Osiem kolumn", "Policz przecinki w kilku liniach danych.", "Siedem przecinków w każdej linii, także gdy któreś pole jest puste.", "☐"],
+    ["4. Rytm", "Obserwuj kolumnę czas_ms w dziesięciu kolejnych liniach.", "Nowa linia mniej więcej co 2 s; czas_ms rośnie za każdym razem o około 2000 (czasem 1999 albo 2001).", "☐"],
+    ["5. Tylko dane", "Obserwuj Monitor przez minutę.", "Tylko nagłówek i linie z liczbami; żadnych napisów ani wartości nan, -127, 85.", "☐"],
+    ["6. Sygnał życia", "Patrz na diodę L na płytce, także przy zamkniętym Monitorze.", "Dioda zmienia stan przy każdym pomiarze: 2 s świeci, 2 s nie świeci.", "☐"],
+    ["7. Światło", "Zasłoń fotorezystor dłonią, potem odsłoń.", "swiatlo wyraźnie spada, a po odsłonięciu wraca do poprzedniej wartości.", "☐"],
+    ["8. Wiatr", "Przekręć pokrętło od jednego końca do drugiego.", "wiatr_m_s zmienia się od 0.0 do około 30.0 i rośnie, gdy kręcisz w prawo.", "☐"],
+    ["9. Trzy temperatury", "Nie dotykaj czujników przez 5 minut, potem odczytaj T_szafa_C, T_modul_C, T_otoczenie_C.", "Dwa DS18B20 różnią się najwyżej o około 1 °C, a LM35 od nich najwyżej o około 3 °C (część 2, rozdział 3).", "☐"],
+    ["10. Czwarty termometr", "W tej samej chwili odczytaj T_dht_C.", "T_dht_C różni się od DS18B20 najwyżej o około 3 °C, a od LM35 najwyżej o około 5 °C (część 3, rozdział 3).", "☐"],
+    ["11. Role DS18B20", "Ogrzej palcami czujnik oznaczony M przez około 15 s.", "Rośnie tylko T_modul_C; T_otoczenie_C się nie zmienia.", "☐"],
+    ["12. Wilgotność", "Chuchnij na DHT11 raz albo dwa razy.", "W spoczynku kilkadziesiąt %RH; po chuchnięciu wilgotnosc_proc rośnie w ciągu jednego lub dwóch taktów, potem powoli spada.", "☐"],
+    ["13. Brak DS18B20", "Test brakującego czujnika z części 2 (rozdział 6): przy odłączonym USB wyjmij czujnik M, podłącz USB, potem przywróć czujnik.", "Pole T_modul_C puste (dwa przecinki obok siebie), reszta linii działa; nigdzie -127, 85 ani nan.", "☐"],
+    ["14. Brak DHT11", "Test brakującego czujnika z części 3 (rozdział 5): przy odłączonym USB wyjmij przewód DATA–D2, podłącz USB, potem przywróć przewód.", "Dwa ostatnie pola puste (linia kończy się dwoma przecinkami), reszta działa; nigdzie 0, 0.0 ani nan.", "☐"],
+    ["15. Rejestrator CSV", "Rozdział 3 tej części: panel „Kontrola danych” po minucie pracy.", "0 odrzuconych linii, 0 wartości nan, inf lub ovf, 0 temperatur -127 lub 85.", "☐"],
+  ]}
+/>
+
+Punkty 13 i 14 to te same testy co w częściach 2 i 3. Tam znajdziesz dokładny opis kroków i przykładowe linie danych: [test brakującego DS18B20](/projekty/monitorowanie/02-pomiar-temperatury#6-uruchomienie-i-monitor-portu-szeregowego) i [test brakującego DHT11](/projekty/monitorowanie/03-pomiar-wilgotnosci#5-uruchomienie-i-monitor-portu-szeregowego). Po każdym teście wszystkie kolumny muszą znów mieć wartości.
+
+**Gdy punkt się nie zgadza.** Zapisz w protokole, co widzisz, i poszukaj przyczyny w typowych problemach tej części projektu, której dotyczy punkt: [część 1](/projekty/monitorowanie/01-szkielet-systemu#7-typowe-problemy) (punkty 2–8), [część 2](/projekty/monitorowanie/02-pomiar-temperatury#9-typowe-problemy) (9, 11, 13), [część 3](/projekty/monitorowanie/03-pomiar-wilgotnosci#9-typowe-problemy) (10, 12, 14). Po poprawce sprawdź punkt jeszcze raz i dopisz, co zostało zmienione, np. „poprawiono: przewód DATA był w D3”. Tak samo robi się przy prawdziwym odbiorze: usterka opisana i usunięta jest w porządku, usterka przemilczana nie.
+
+<Expandable title="Protokół odbioru do skopiowania">
+
+Skopiuj tabelę przyciskiem kopiowania w prawym górnym rogu ramki i wklej ją do pliku tekstowego albo do notatek. To zwykła tabela w formacie Markdown: kolumny oddzielają pionowe kreski. Wyniki wpisuj w ostatniej kolumnie, np. „OK” albo krótki opis usterki.
+
+```markdown
+# Protokół odbioru stacji monitoringu
+
+Data: ............  Wykonał(a): ............................
+
+| Punkt | Jak sprawdzić | Oczekiwany wynik | Wynik / OK? |
+|---|---|---|---|
+| 1. Połączenia | USB odłączony; porównaj przewody z tabelą pinów (specyfikacja 4.1) | A0 światło, A1 wiatr, A2 LM35, D2 DHT11, D3 oba DS18B20; 4,7 kΩ na D3 i D2; brak zwarcia 5V–GND | |
+| 2. Nagłówek | Monitor 9600 baud, pierwsza linia | czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C | |
+| 3. Osiem kolumn | Policz przecinki w kilku liniach | 7 przecinków w każdej linii | |
+| 4. Rytm | czas_ms w 10 kolejnych liniach | linia co ok. 2 s, czas_ms rośnie o ok. 2000 | |
+| 5. Tylko dane | Monitor przez minutę | tylko nagłówek i liczby; brak napisów, nan, -127, 85 | |
+| 6. Sygnał życia | Dioda L, także przy zamkniętym Monitorze | zmienia stan co pomiar (2 s świeci, 2 s nie) | |
+| 7. Światło | Zasłoń i odsłoń fotorezystor | swiatlo spada i wraca | |
+| 8. Wiatr | Pokrętło od końca do końca | wiatr_m_s od 0.0 do ok. 30.0, rośnie w prawo | |
+| 9. Trzy temperatury | 5 min bez dotykania | DS18B20 różnią się o ≤ ok. 1 °C, LM35 od nich o ≤ ok. 3 °C | |
+| 10. Czwarty termometr | T_dht_C w tej samej chwili | od DS18B20 ≤ ok. 3 °C, od LM35 ≤ ok. 5 °C | |
+| 11. Role DS18B20 | Ogrzej palcami czujnik M | rośnie tylko T_modul_C | |
+| 12. Wilgotność | Chuchnij na DHT11 | kilkadziesiąt %RH; po chuchnięciu szybki wzrost, powolny spadek | |
+| 13. Brak DS18B20 | USB odłączony, wyjmij czujnik M (część 2, rozdz. 6) | T_modul_C puste, reszta działa; brak -127, 85, nan | |
+| 14. Brak DHT11 | USB odłączony, wyjmij przewód DATA–D2 (część 3, rozdz. 5) | dwa ostatnie pola puste, reszta działa; brak 0, 0.0, nan | |
+| 15. Rejestrator CSV | Panel „Kontrola danych” (część 4, rozdz. 3) | 0 odrzuconych linii, 0 nan/inf/ovf, 0 temperatur -127 lub 85 | |
+
+Uwagi i poprawki:
+```
+
+</Expandable>
+
+## 3. Rejestrator CSV krok po kroku
+
+[Rejestrator CSV](/narzedzia/rejestrator-csv) to strona kursu, która odbiera linie danych z płytki, pokazuje je na żywo i zapisuje do pliku. Rozmawia z płytką przez funkcję przeglądarki o nazwie **Web Serial**. Nic nie instalujesz, a dane nie opuszczają Twojego komputera.
+
+1. **Zamknij Monitor portu szeregowego i Serial Plotter** w Arduino IDE. Port szeregowy może mieć otwarty tylko jeden program naraz.
+2. **Otwórz [Rejestrator CSV](/narzedzia/rejestrator-csv) w Chrome albo Edge** na komputerze.
+3. **Zacznij od pustego rejestratora.** Jeśli zostały w nim pomiary z części 1–3, zobaczysz komunikat „Przywrócono z pamięci tej przeglądarki …” albo komunikaty „Poprzedni zapis … czeka na pobranie”. Zapisz je do pliku, jeśli są Ci potrzebne (rozdział 5), a potem kliknij „Wyczyść pomiary” (i potwierdź) oraz „Odrzuć” przy każdym odłożonym zapisie. Inaczej nowe pomiary dopiszą się do starego zapisu z tym samym nagłówkiem.
+4. **Sprawdź prędkość:** pole „Prędkość” ma pokazywać `9600 baud`, tak jak `Serial.begin(9600)` w szkicu. To ustawienie domyślne.
+5. **Kliknij „Połącz”.** Przeglądarka pokaże okno z listą portów. Wybierz port płytki (np. „COM3” albo nazwę z „Arduino” lub „USB”) i kliknij w tym oknie „Połącz”.
+6. **Płytka się restartuje.** Otwarcie portu restartuje Arduino UNO, tak jak otwarcie Monitora (część 1, zadanie 4). Program zaczyna od nowa i najpierw wysyła nagłówek. Status przy przyciskach zmienia się na „Połączono — odbieram dane”, a po około 2 s pojawia się pierwszy pomiar.
+
+{/* SCHEMAT (04.02-wybor-portu.png): okno przeglądarki Chrome z listą portów szeregowych po kliknięciu „Połącz”; zaznaczony port płytki (np. COM3) i przycisk „Połącz” w oknie */}
+
+Co widzisz przy poprawnie działającej stacji:
+
+- **Licznik „Zebrane pomiary”** rośnie o 1 co 2 s, czyli o 30 na minutę. Obok: „Pierwszy pomiar (czas komputera)”, „Czas płytki (czas_ms)” jako minuty i sekundy od startu programu oraz „Ostatnia linia … s temu”.
+- **Kafelki „Bieżące wartości”:** siedem kafelków, po jednym na każdą kolumnę z pomiarem (wszystkie poza `czas_ms`), z polskimi nazwami, np. „Temperatura modułu PV”, „Wilgotność”, i małym wykresem ostatnich pomiarów.
+- **Tabela „Ostatnie pomiary”:** dziesięć najnowszych linii, najnowsza na górze. Pierwsza kolumna, „czas komputera”, to godzina, o której linia dotarła do komputera.
+- **Panel „Kontrola danych”** (pojawia się po pierwszym pomiarze): w wierszu „Kolumny” dokładnie nagłówek stacji, a w pozostałych wierszach zera: „Puste pola (brak pomiaru): 0”, „Wartości „nan”, „inf” lub „ovf”: 0”, „Temperatury -127 lub 85 (kody błędów DS18B20): 0” i „Odrzucone linie w tym zapisie (zła liczba kolumn albo nie-CSV): 0”. Po minucie pracy wpisz wynik do punktu 15 protokołu.
+
+{/* SCHEMAT (04.03-rejestrator-polaczony.png): Rejestrator CSV po minucie pracy poprawnej stacji — status „Połączono — odbieram dane”, licznik „Zebrane pomiary” około 30, siedem kafelków z wartościami i wykresami, panel „Kontrola danych” z samymi zerami */}
+
+Pojedyncze puste pole DHT11 (np. po błędzie `CHECKSUM`, część 3, typowe problemy) może się zdarzyć i nie oznacza usterki. Jeśli puste pola przybywają z każdą linią, któryś czujnik nie odpowiada: wróć do protokołu.
+
+### Kolumna czas_pc: godzina z zegara komputera
+
+`czas_ms` to czas od startu programu na płytce. Arduino UNO nie ma zegara z datą i godziną, a `czas_ms` zaczyna od zera po każdym restarcie, czyli także po każdym kliknięciu „Połącz”. Z samego `czas_ms` nie da się więc powiedzieć, **kiedy** coś się stało. Archiwum potrzebuje prawdziwej godziny: „temperatura w szafie zaczęła rosnąć 15 października o 12:07”.
+
+Dlatego rejestrator przy każdej odebranej linii zapamiętuje datę i godzinę z zegara komputera. W sekcji „Zapis do pliku CSV” jest pole wyboru „Dodaj na początku kolumnę `czas_pc` z datą i godziną komputera”. Gdy jest zaznaczone, plik dostaje na początku dodatkową kolumnę `czas_pc`, np. `2026-10-15 12:07:41`:
+
+- To **czas lokalny** komputera, czyli taki, jaki pokazuje zegar na pasku zadań, a nie czas uniwersalny UTC. Sprawdź więc, czy zegar komputera chodzi dobrze.
+- To chwila, w której linia **dotarła do komputera**, z dokładnością do sekundy. Wypada ona niecałą sekundę po początku pomiaru, bo stacja wysyła linię dopiero po odczytaniu wszystkich czujników.
+
+**W tym nagraniu zaznacz pole `czas_pc`.** Pole działa w chwili zapisu pliku: godzinę każdej linii rejestrator zapamiętuje zawsze, a pole decyduje tylko, czy dopisać ją do pliku. Możesz je więc zaznaczyć przed nagraniem albo po nim, byle przed kliknięciem „Zapisz CSV”. Po odświeżeniu albo ponownym otwarciu strony pole jest znowu puste, więc sprawdź je tuż przed zapisem.
+
+## 4. Nagranie z dziennikiem zdarzeń
+
+Teraz nagrasz około 13 minut pracy stacji. W tym czasie wywołasz kilka zdarzeń i każde zapiszesz w **dzienniku zdarzeń**: tabeli z godziną, opisem tego, co robisz, i tym, czego spodziewasz się w danych.
+
+Po co dziennik? Analiza danych z monitoringu polega w dużej części na wyjaśnianiu zdarzeń: skąd spadek mocy we wtorek o 14:10, dlaczego przez godzinę brakuje pomiarów z jednego czujnika. Na prawdziwej farmie obsługa zapisuje prace serwisowe w dzienniku, bo inaczej planowane wyłączenie falownika wyglądałoby w danych jak awaria. Twój dziennik jest **kluczem odpowiedzi**: w rozdziale 6 odnajdziesz każde zdarzenie w pliku i sprawdzisz, czy dane mówią to samo co dziennik.
+
+**Godzinę** zdarzenia odczytuj z kolumny „czas komputera” w tabeli „Ostatnie pomiary” (najnowsza linia na górze) albo z zegara komputera. To ten sam zegar, który trafi do kolumny `czas_pc`, więc godziny z dziennika znajdziesz potem w pliku.
+
+<Table
+  caption="Scenariusz nagrania i dziennik zdarzeń"
+  headers={["Plan", "Godzina", "Co robię", "Czego spodziewam się w danych"]}
+  rows={[
+    ["0 min", "____", "Klikam „Połącz”. Przez 2 minuty niczego nie dotykam.", "Nagłówek, potem linia co 2 s; czas_ms od około 2000; wartości spokojne."],
+    ["2 min", "____", "Zasłaniam fotorezystor dłonią na 30 s.", "swiatlo wyraźnie spada przez około 15 linii, potem wraca."],
+    ["3 min", "____", "Kręcę pokrętłem do końca w prawo, trzymam 30 s, wracam do położenia początkowego.", "wiatr_m_s rośnie do około 30.0, potem wraca."],
+    ["4 min", "____", "Trzymam palcami czujnik M (moduł) przez 1 minutę.", "T_modul_C rośnie o kilka °C, po puszczeniu powoli spada; T_otoczenie_C bez zmian."],
+    ["6 min", "____", "Chucham na DHT11 raz albo dwa razy.", "wilgotnosc_proc skacze w górę, potem przez kilkadziesiąt sekund wraca; T_dht_C może wzrosnąć o 1."],
+    ["8 min", "____", "Planowana przerwa: „Rozłącz”, odłączam USB, wyjmuję czujnik M, podłączam USB, „Połącz”.", "Przerwa w czas_pc; czas_ms znów od około 2000; T_modul_C puste."],
+    ["8–9 min", "____", "Nagrywam 1 minutę bez czujnika M.", "Około 30 linii z pustym T_modul_C; pozostałe kolumny działają."],
+    ["10 min", "____", "Koniec przerwy: „Rozłącz”, odłączam USB, wpinam czujnik M (kolejność nóżek!), podłączam USB, „Połącz”.", "Druga przerwa w czas_pc; czas_ms znów od około 2000; T_modul_C znów ma wartości."],
+    ["11–13 min", "____", "2 minuty spokoju, potem klikam „Rozłącz”.", "Wartości wracają do spoczynku; koniec nagrania."],
+  ]}
+/>
+
+<Expandable title="Dziennik zdarzeń do skopiowania">
+
+Skopiuj szablon i wpisuj godziny na bieżąco. Ostatnią kolumnę, „Wiersz w pliku”, uzupełnisz w rozdziale 6, gdy otworzysz plik w arkuszu.
+
+```markdown
+# Dziennik zdarzeń — nagranie stacji monitoringu
+
+Data: ............  Plik: pomiary_....................csv
+
+| Godzina | Co robię | Czego spodziewam się w danych | Wiersz w pliku |
+|---|---|---|---|
+| | „Połącz”, 2 min spokoju | nagłówek, linia co 2 s, czas_ms od ok. 2000 | |
+| | Zasłaniam fotorezystor na 30 s | swiatlo spada przez ok. 15 linii, potem wraca | |
+| | Pokrętło do końca w prawo na 30 s, potem z powrotem | wiatr_m_s do ok. 30.0, potem wraca | |
+| | Trzymam czujnik M palcami przez 1 min | T_modul_C rośnie o kilka °C, potem powoli spada | |
+| | Chucham na DHT11 | wilgotnosc_proc skacze w górę, wraca w ciągu kilkudziesięciu s | |
+| | Przerwa: Rozłącz, USB out, wyjmuję czujnik M, USB in, Połącz | przerwa w czas_pc, czas_ms od ok. 2000, T_modul_C puste | |
+| | 1 min bez czujnika M | ok. 30 linii z pustym T_modul_C | |
+| | Koniec przerwy: Rozłącz, USB out, wpinam czujnik M, USB in, Połącz | druga przerwa w czas_pc, czas_ms od ok. 2000, T_modul_C wraca | |
+| | 2 min spokoju, Rozłącz | koniec nagrania | |
+
+Uwagi (co jeszcze się wydarzyło, np. ktoś otworzył okno):
+```
+
+</Expandable>
+
+### Planowana przerwa krok po kroku
+
+Planowana przerwa to ten sam test brakującego czujnika co w [części 2](/projekty/monitorowanie/02-pomiar-temperatury#6-uruchomienie-i-monitor-portu-szeregowego), tyle że w trakcie nagrania:
+
+1. Kliknij w rejestratorze **„Rozłącz”**. Status zmienia się na „Nie połączono”. Zebrane pomiary zostają w rejestratorze.
+2. **Odłącz kabel USB.**
+3. Wyjmij z płytki czujnik M. Rezystor i czujnik otoczenia zostają na miejscu.
+4. Sprawdź połączenia, podłącz USB i kliknij **„Połącz”**. Wybierz ten sam port co wcześniej.
+5. Nagrywaj przez minutę i zapisz w dzienniku godzinę.
+6. Koniec przerwy: znowu „Rozłącz”, odłącz USB i wepnij czujnik M w te same rzędy, płaską stroną z napisem do siebie. Kolejność nóżek pokazuje [rozdział 1 części 2](/projekty/monitorowanie/02-pomiar-temperatury#1-połączenia). Sprawdź połączenia, podłącz USB i kliknij „Połącz”.
+
+Jeśli odłączysz kabel USB bez klikania „Rozłącz”, nic złego się nie stanie. Rejestrator pokaże komunikat „Połączenie z płytką zostało przerwane (np. odłączony kabel USB). Zebrane pomiary są zachowane — możesz je zapisać albo połączyć się ponownie.” Kliknij „Zamknij” przy komunikacie i pracuj dalej.
+
+{/* SCHEMAT (04.04-rejestrator-przerwa.png): Rejestrator CSV w czasie planowanej przerwy, po ponownym „Połącz” bez czujnika M — kafelek „Temperatura modułu PV” z napisem „brak pomiaru” i przerwą na małym wykresie, w „Kontroli danych” rosnąca liczba „Puste pola (brak pomiaru)” */}
+
+**Co robi rejestrator po ponownym „Połącz”.** Płytka się restartuje i wysyła nagłówek. To ten sam nagłówek co na początku nagrania, więc rejestrator **dopisuje nowe pomiary do tego samego zapisu**. Licznik „Zebrane pomiary” rośnie dalej od miejsca, w którym się zatrzymał, „Pierwszy pomiar (czas komputera)” się nie zmienia i nie pojawia się żaden komunikat o odłożonym zapisie. Liczniki w „Kontroli danych” też liczą dalej. Dlatego całe nagranie, razem z przerwami, trafi do jednego pliku. Nowy zapis rejestrator zaczyna tylko wtedy, gdy płytka wyśle nagłówek z innymi kolumnami, jak przy przejściu z wersji 2 na wersję 3 szkicu.
+
+Przez pierwsze 2–3 sekundy po połączeniu możesz zobaczyć ostrzeżenie „Od … s nie przyszła żadna linia”. Rejestrator liczy ten czas od ostatniej linii sprzed przerwy. Ostrzeżenie znika, gdy przyjdzie pierwsza nowa linia.
+
+**Co zobaczysz w danych:**
+
+- **Przerwę w `czas_pc`.** Między ostatnią linią przed „Rozłącz” a pierwszą po „Połącz” mija tyle czasu, ile trwała przerwa, np. minuta zamiast 2 s.
+- **`czas_ms` od nowa.** Pierwsza linia po każdym „Połącz” ma `czas_ms` około 2000, bo płytka się zrestartowała. W kolumnie `czas_ms` widać to jako skok w dół, np. z 480000 na 2000.
+- **Puste pola `T_modul_C`** w każdej linii nagranej bez czujnika. Kafelek „Temperatura modułu PV” pokazuje wtedy „brak pomiaru”, a licznik „Puste pola (brak pomiaru)” rośnie o 1 z każdą linią.
+
+Bez kolumny `czas_pc` przerwa byłaby prawie niewidoczna: `czas_ms` zacząłby po prostu od nowa i nie dałoby się powiedzieć, ile minut minęło.
+
+<Callout type="warning" title="Nie zamykaj karty w czasie nagrania">
+Rejestrator przechowuje pomiary w pamięci tej przeglądarki, a po ponownym otwarciu strony przywraca je z komunikatem „Przywrócono z pamięci tej przeglądarki …”. Ostatnie pomiary sprzed zamknięcia karty mogą jednak nie zdążyć trafić do tej pamięci. Nie zamykaj więc karty, nie odświeżaj jej i nie usypiaj komputera, dopóki nagranie trwa, a zaraz po nagraniu zapisz pliki (rozdział 5).
+</Callout>
+
+## 5. Zapis do pliku
+
+Nagranie skończone, rejestrator rozłączony. Sprawdź, czy pole `czas_pc` jest zaznaczone, i kliknij po kolei oba przyciski w sekcji „Zapis do pliku CSV”:
+
+<Table
+  caption="Dwa pliki z jednego nagrania"
+  headers={["", "„Zapisz CSV”", "„Zapisz CSV dla polskiego Excela”"]}
+  rows={[
+    ["Nazwa pliku (przykład)", "pomiary_2026-10-15_12-05.csv", "pomiary_2026-10-15_12-05_excel.csv"],
+    ["Separator kolumn", "przecinek ,", "średnik ;"],
+    ["Znak dziesiętny", "kropka: 23.4", "przecinek: 23,4"],
+    ["Linie danych", "dokładnie tak, jak wysłała je stacja", "te same wartości, inne separatory"],
+    ["Puste pole", "dwa przecinki obok siebie: 23.4,,22.8", "dwa średniki obok siebie: 23,4;;22,8"],
+    ["Do czego", "archiwum i programy do analizy danych", "arkusz kalkulacyjny z polskimi ustawieniami"],
+  ]}
+/>
+
+- **Gdzie są pliki.** Przeglądarka zapisuje je w folderze pobranych plików, zwykle **Pobrane** (ang. *Downloads*). Jeśli przeglądarka pyta, gdzie zapisać plik, wskaż folder, w którym łatwo go potem znajdziesz.
+- **Skąd nazwa.** Data i godzina w nazwie, z dokładnością do minuty, to chwila **pierwszego pomiaru** w nagraniu, a nie chwila zapisu. Oba pliki z jednego nagrania mają więc tę samą datę i godzinę w nazwie. Gdy zapiszesz ten sam plik drugi raz, przeglądarka sama dopisze do nazwy numer, np. „(1)”.
+- **Który plik do czego.** Plik oryginalny (bez `_excel`) to archiwum: linie dokładnie takie, jakie wysłała stacja, z dopisaną kolumną `czas_pc`. Odczyta go każdy program do analizy danych, a za rok nikt nie będzie musiał zgadywać, co zmienił arkusz. Plik `_excel` jest dla arkusza: polski Excel otworzy go poprawnie podwójnym kliknięciem. Przechowuj oba.
+- **Uporządkuj pliki.** Przenieś oba pliki z folderu Pobrane do jednego folderu projektu, np. `Dokumenty/monitorowanie-dane`, razem z protokołem odbioru i dziennikiem zdarzeń.
+
+{/* SCHEMAT (04.05-zapis-plikow.png): sekcja „Zapis do pliku CSV” w Rejestratorze z zaznaczonym polem czas_pc i przyciskami „Zapisz CSV” i „Zapisz CSV dla polskiego Excela”; obok folder Pobrane z dwoma plikami pomiary_…csv i pomiary_…_excel.csv */}
+
+**Odłożone zapisy.** Jeśli w rejestratorze czekają jeszcze zapisy z części 1–3 (komunikaty „Poprzedni zapis … czeka na pobranie”), każdy ma własne przyciski „Zapisz CSV”, „Zapisz CSV dla polskiego Excela” i „Odrzuć”. Zapisujesz je tak samo jak bieżące nagranie, a niepotrzebne odrzucasz.
+
+**Pomiary zostają w przeglądarce, dopóki ich nie usuniesz.** Zapis do pliku niczego z rejestratora nie usuwa. Bieżące nagranie usuwa dopiero przycisk „Wyczyść pomiary”, a odłożony zapis przycisk „Odrzuć”. Pomiary, których nie zapisano do pliku, przepadają wtedy na zawsze. Dlatego kolejność jest zawsze ta sama: najpierw zapis obu plików, sprawdzenie, że są w folderze, dopiero potem czyszczenie.
+
+<Expandable title="Głębiej: co dokładnie jest w plikach" heading="####">
+
+Początek pliku oryginalnego (wartości przykładowe):
+
+```text
+czas_pc,czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+2026-10-15 12:05:03,2000,612,4.3,23.4,24.1,22.8,41.0,23.0
+2026-10-15 12:05:05,4000,610,4.3,23.4,24.1,22.8,41.0,23.0
+```
+
+Ten sam fragment w pliku `_excel`:
+
+```text
+czas_pc;czas_ms;swiatlo;wiatr_m_s;T_szafa_C;T_modul_C;T_otoczenie_C;wilgotnosc_proc;T_dht_C
+2026-10-15 12:05:03;2000;612;4,3;23,4;24,1;22,8;41,0;23,0
+2026-10-15 12:05:05;4000;610;4,3;23,4;24,1;22,8;41,0;23,0
+```
+
+- Rejestrator dzieli każdą linię stacji na pola w miejscach przecinków. Do pliku oryginalnego składa je z powrotem przecinkami, a do pliku `_excel` średnikami, zamieniając przy tym w każdym polu kropkę na przecinek. Nic poza tym się nie zmienia: puste pole zostaje puste.
+- `czas_pc` ma zawsze postać `RRRR-MM-DD GG:MM:SS` (rok, miesiąc, dzień, godzina w zapisie 24-godzinnym, minuty, sekundy). Arkusze rozpoznają taki zapis jako datę z godziną.
+- Każda linia, także ostatnia, kończy się dwoma znakami końca linii, tak jak w plikach tekstowych Windows: CR i LF.
+- Plik zawiera wyłącznie zwykłe znaki bez polskich liter, a rejestrator nie dodaje na jego początku znacznika BOM (niewidocznego znaku, którym niektóre programy oznaczają kodowanie tekstu). Każdy program odczyta więc litery i cyfry tak samo.
+- Czas lokalny ma jedną pułapkę: w noc zmiany czasu z letniego na zimowy jedna godzina w `czas_pc` się powtórzy. Dlatego prawdziwe systemy monitoringu często zapisują w archiwum czas **UTC** (uniwersalny czas koordynowany), który jest taki sam na całym świecie i nie zna czasu letniego.
+
+</Expandable>
+
+## 6. Otwieramy plik w arkuszu
+
+Arkusz kalkulacyjny musi wiedzieć dwie rzeczy: co oddziela kolumny i co oddziela część ułamkową liczby. Polski Excel zakłada średnik i przecinek, bo tak mówią polskie ustawienia regionalne Windows. Właśnie dlatego rejestrator zapisuje plik `_excel`.
+
+### 6.1. Microsoft Excel
+
+Kliknij dwukrotnie plik **`…_excel.csv`**. Excel otworzy go od razu, a każda wartość trafi do osobnej komórki: `czas_pc` w kolumnie A, `czas_ms` w kolumnie B i tak dalej, do `T_dht_C` w kolumnie I. Liczby są liczbami (stoją przy prawej krawędzi komórki), a puste pola to puste komórki.
+
+- Jeśli w kolumnie A widzisz `########`, kolumna jest za wąska na datę z godziną. Kliknij dwukrotnie krawędź między nagłówkami kolumn A i B, a kolumna się poszerzy.
+- Excel pokazuje `czas_pc` w swoim formacie daty, np. `15.10.2026 12:05`, bez sekund. Sekundy są w komórce, tylko ich nie widać.
+- Wartości z `.0` na końcu, np. wilgotność `41,0`, Excel pokazuje jako `41`. To ta sama liczba.
+
+{/* SCHEMAT (04.06-excel-kolumny.png): polski Excel z otwartym plikiem pomiary_…_excel.csv — kolumny A–I z nagłówkami czas_pc … T_dht_C, liczby wyrównane do prawej, puste komórki T_modul_C w czasie przerwy */}
+
+**Plik oryginalny w polskim Excelu.** Gdy klikniesz dwukrotnie plik bez `_excel` w nazwie, cała linia trafi do jednej komórki w kolumnie A, np. `2026-10-15 12:05:03,2000,612,4.3,23.4,…`. Excel szuka średników, a w tym pliku ich nie ma. Zamknij go bez zapisywania i otwórz plik `_excel`.
+
+{/* SCHEMAT (04.07-excel-jedna-kolumna.png): polski Excel z plikiem oryginalnym otwartym podwójnym kliknięciem — wszystkie linie w kolumnie A, kolumny B–I puste */}
+
+### 6.2. LibreOffice Calc
+
+LibreOffice Calc przy otwieraniu pliku CSV pokazuje okno **„Import tekstu”**, w którym sam wybierasz separator i język liczb. Otwórz plik poleceniem *Plik → Otwórz*. Jeśli okno „Import tekstu” się nie pojawi, zaznacz w oknie otwierania pliku pole „Edycja ustawień filtra” ([pomoc LibreOffice: import i eksport plików CSV](https://help.libreoffice.org/latest/pl/text/scalc/guide/csv_files.html)). Ustawienia zależą od pliku:
+
+<Table
+  caption="LibreOffice Calc: ustawienia w oknie „Import tekstu”"
+  headers={["Ustawienie", "Plik oryginalny (pomiary_….csv)", "Plik pomiary_…_excel.csv"]}
+  rows={[
+    ["Język", "Angielski (USA): kropka oddziela część ułamkową", "Polski: przecinek oddziela część ułamkową"],
+    ["Opcje separatora", "Rozdzielony, zaznaczony tylko Przecinek", "Rozdzielony, zaznaczony tylko Średnik"],
+    ["Tab, Spacja, Inny", "odznaczone: w czas_pc między datą a godziną stoi spacja", "odznaczone"],
+    ["Wykryj liczby specjalne", "zaznaczone: czas_pc zostanie datą z godziną", "zaznaczone"],
+    ["Zestaw znaków, Od wiersza", "bez zmian (wiersz 1)", "bez zmian (wiersz 1)"],
+  ]}
+/>
+
+Opcja „Język” decyduje, jak Calc czyta liczby, a „Wykryj liczby specjalne” pozwala mu rozpoznać datę i godzinę. Gdy ta druga opcja jest wyłączona, Calc zamienia na liczby tylko zwykłe liczby dziesiętne, a resztę, w tym `czas_pc`, zostawia jako tekst. Opis wszystkich opcji znajdziesz w [pomocy LibreOffice: Import tekstu](https://help.libreoffice.org/latest/pl/text/shared/00/00000208.html). Zanim klikniesz „OK”, sprawdź w podglądzie na dole okna, że widzisz dziewięć kolumn, a liczby są w osobnych kolumnach.
+
+{/* SCHEMAT (04.08-libreoffice-import.png): okno „Import tekstu” w LibreOffice Calc dla pliku oryginalnego — Język: Angielski (USA), zaznaczony tylko Przecinek, zaznaczone „Wykryj liczby specjalne”, w podglądzie dziewięć kolumn */}
+
+### 6.3. Trzy szybkie kontrole pliku
+
+Zanim zaczniesz oglądać wykresy, sprawdź, czy plik jest kompletny. To pierwszy krok każdej analizy danych z monitoringu. Poniżej zakładamy, że plik ma kolumnę `czas_pc`, więc kolumny w arkuszu są takie:
+
+<Table
+  caption="Kolumny w arkuszu (plik z kolumną czas_pc)"
+  headers={["A", "B", "C", "D", "E", "F", "G", "H", "I"]}
+  rows={[
+    ["czas_pc", "czas_ms", "swiatlo", "wiatr_m_s", "T_szafa_C", "T_modul_C", "T_otoczenie_C", "wilgotnosc_proc", "T_dht_C"],
+  ]}
+/>
+
+Jeśli plik nie ma kolumny `czas_pc`, wszystkie kolumny są przesunięte o jedną w lewo i w formułach trzeba zmienić litery.
+
+Nazwy funkcji zależą od programu i od języka. Polski Excel i polski LibreOffice Calc nie zawsze nazywają je tak samo:
+
+<Table
+  caption="Funkcje użyte w kontrolach"
+  headers={["Co robi funkcja", "Excel po polsku", "LibreOffice Calc po polsku", "Po angielsku (Excel i Calc)"]}
+  rows={[
+    ["liczy komórki z liczbami (puste i tekst pomija)", "ILE.LICZB", "LICZBA", "COUNT"],
+    ["liczy komórki spełniające warunek", "LICZ.JEŻELI", "LICZ.JEŻELI", "COUNTIF"],
+    ["średnia (puste komórki i tekst pomija)", "ŚREDNIA", "ŚREDNIA", "AVERAGE"],
+  ]}
+/>
+
+W polskich wersjach obu programów argumenty funkcji oddziela średnik, np. `=LICZ.JEŻELI(J:J;"<0")`. W angielskim Excelu ta sama formuła ma przecinek: `=COUNTIF(J:J,"<0")`. Zapis `B:B` oznacza całą kolumnę B. Wyniki kontroli wpisuj w kolumnie L, z dala od danych, a obok, w kolumnie K, krótki opis.
+
+**Kontrola 1: liczba wierszy.** W komórce L1 wpisz `=ILE.LICZB(B:B)` (w LibreOffice Calc: `=LICZBA(B:B)`). Formuła liczy wiersze z pomiarem, bo `czas_ms` jest w każdej linii, a nagłówek to tekst. Wynik musi być równy licznikowi „Zebrane pomiary” w rejestratorze. Sprawdź też, czy pasuje do czasu nagrania: stacja wysyła linię co 2 s, czyli 30 linii na minutę. Przy 13 minutach nagrania, z których przez około półtorej minuty trwały przerwy, wychodzi około (13 − 1,5) × 30 ≈ 345 wierszy. Dużo mniej oznacza, że części linii brakuje.
+
+**Kontrola 2: odstępy `czas_ms`.** W komórce J1 wpisz nazwę `odstep_ms`, a w J3 formułę `=B3-B2`: różnicę `czas_ms` między wierszem a wierszem poprzednim. Skopiuj ją w dół, do ostatniego wiersza z danymi (przeciągnij za mały kwadrat w prawym dolnym rogu komórki). Prawie wszędzie wychodzi 2000, czasem 1999 albo 2001. W miejscu każdego „Połącz” po przerwie wynik jest duży i ujemny, np. −478000: to restart płytki, po którym `czas_ms` liczy od nowa. W komórce L2 wpisz `=LICZ.JEŻELI(J:J;"<0")`: liczba restartów musi być równa liczbie „Połącz” po przerwach w dzienniku, czyli w naszym scenariuszu 2. Odstęp 4000 oznaczałby, że jedna linia nie dotarła albo rejestrator ją odrzucił.
+
+**Kontrola 3: puste komórki.** W komórce L3 wpisz `=ILE.LICZB(B:B)-ILE.LICZB(F:F)` (w LibreOffice Calc: `=LICZBA(B:B)-LICZBA(F:F)`). Każdy wiersz ma `czas_ms`, ale nie każdy ma `T_modul_C`, więc różnica to liczba pustych komórek w kolumnie F. Powinno ich być około 30, tyle co linii nagranych w ciągu minuty bez czujnika M, i wszystkie powinny leżeć między dwoma restartami z kontroli 2. Tę samą formułę z literą H albo I zamiast F sprawdzisz dla kolumn DHT11: tam spodziewasz się 0 albo pojedynczych pustych komórek po rzadkim błędzie odczytu. Puste komórki w innym miejscu niż przerwa z dziennika to zdarzenie spoza planu: znajdź je, sprawdź `czas_pc` i dopisz do dziennika.
+
+Teraz uzupełnij w dzienniku kolumnę „Wiersz w pliku”: znajdź w kolumnie A godzinę każdego zdarzenia i zapisz numer wiersza arkusza.
+
+{/* SCHEMAT (04.09-kontrole-formuly.png): arkusz z plikiem pomiarów — kolumna J „odstep_ms” z wartościami 2000 i jedną dużą liczbą ujemną w miejscu restartu, w kolumnach K i L opisy i wyniki trzech kontroli */}
+
+### 6.4. Puste pole a zero
+
+Teraz widać w praktyce, dlaczego stacja zapisuje brak pomiaru jako puste pole ([„Dlaczego puste pole, a nie zero?” w punkcie 4.4 specyfikacji](/projekty/monitorowanie#44-linia-danych-csv)). W komórce L4 wpisz `=ŚREDNIA(F:F)`, czyli średnią temperatur modułu z całego nagrania. Funkcja `ŚREDNIA` pomija puste komórki, ale komórki z zerem liczy jak każdą inną liczbę (tak opisują ją pomoce Excela i LibreOffice).
+
+Przykład: plik ma 300 wierszy, z czego 270 ma `T_modul_C`, średnio 24,0 °C, a 30 jest pustych. `ŚREDNIA` daje 24,0 °C, czyli prawdę o module. Gdyby stacja zapisała te 30 braków jako `0`, wynik wyniósłby (270 × 24,0 + 30 × 0) / 300 = 21,6 °C. Moduł wyglądałby na o 2,4 °C chłodniejszy, choć przez cały czas był ciepły, a przez minutę po prostu nie był mierzony.
+
+### 6.5. Wykres temperatur
+
+1. Kliknij komórkę E1 (`T_szafa_C`).
+2. Naciśnij `Ctrl+Shift+↓`: zaznaczenie sięgnie do ostatniego wiersza z danymi.
+3. Naciśnij dwa razy `Shift+→`: zaznaczenie obejmie kolumny E, F i G, czyli trzy temperatury.
+4. Wstaw wykres liniowy. W Excelu: karta **Wstawianie** → przycisk „Wstaw wykres liniowy lub warstwowy” → pierwszy wykres liniowy. W LibreOffice Calc: *Wstaw → Wykres…*, w kreatorze wykresów wybierz wykres liniowy w wariancie „Tylko linie” i kliknij „Zakończ”.
+
+Na wykresie są trzy linie, a legenda ma nazwy kolumn z nagłówka. Oś pozioma to, tak jak w Serial Plotterze, numer kolejnego pomiaru: pomiar numer 1 to wiersz 2 arkusza. Znajdź na wykresie zdarzenia z dziennika, po numerach wierszy:
+
+- **Ogrzewanie czujnika M:** „górka” na linii `T_modul_C`, która rośnie przez minutę i powoli opada. Pozostałe linie stoją w miejscu.
+- **Planowana przerwa:** przerwa w linii `T_modul_C` na około 30 pomiarów. Excel domyślnie zostawia przerwę w miejscu pustych komórek. W LibreOffice Calc, jeśli zamiast przerwy linia spada do zera albo łączy oba brzegi, kliknij dwukrotnie wykres, potem linię `T_modul_C` i w jej opcjach wybierz pozostawianie przerwy przy brakujących wartościach.
+
+{/* SCHEMAT (04.10-wykres-temperatur.png): wykres liniowy trzech temperatur z nagrania — górka T_modul_C po ogrzaniu palcami, przerwa w linii T_modul_C w czasie planowanej przerwy; strzałki z podpisami zdarzeń z dziennika */}
+
+Zasłonięcie fotorezystora, kręcenie pokrętłem i chuchanie nie zmieniają temperatur (chuchnięcie może podnieść `T_dht_C` o stopień). Jeśli chcesz je zobaczyć, narysuj tak samo wykres kolumny C (`swiatlo`), D (`wiatr_m_s`) albo H (`wilgotnosc_proc`).
+
+<Callout type="warning" title="Swoją pracę zapisz jako skoroszyt, a nie jako CSV">
+Plik CSV przechowuje tylko wartości: nie zapamięta formuł, wykresu ani szerokości kolumn. Gdy skończysz, wybierz *Plik → Zapisz jako* i format skoroszytu: w Excelu „Skoroszyt programu Excel” (plik `.xlsx`), w LibreOffice Calc format ODF (plik `.ods`). Pliki CSV z rejestratora zostaw bez zmian: to archiwum.
+</Callout>
+
+## 7. Typowe problemy
+
+<Troubleshooting>
+  <Issue title="Rejestrator pokazuje „Ta przeglądarka nie obsługuje połączenia z płytką”">
+    Rejestrator potrzebuje funkcji Web Serial. Otwórz go w przeglądarce Google Chrome albo Microsoft Edge na komputerze. Safari tej funkcji nie ma wcale, a w innych przeglądarkach i w telefonach bywa niedostępna ([zestawienie obsługi Web Serial w przeglądarkach](https://caniuse.com/web-serial)).
+  </Issue>
+  <Issue title="„Nie udało się otworzyć portu. Najczęściej jest zajęty…”">
+    Port może mieć otwarty tylko jeden program. Zamknij Monitor portu szeregowego i Serial Plotter w Arduino IDE oraz inne karty z rejestratorem i kliknij „Połącz” jeszcze raz. Jeśli Arduino IDE właśnie wgrywa program, poczekaj, aż skończy. Pamiętaj też o odwrotnej sytuacji: zanim wgrasz program z Arduino IDE, kliknij w rejestratorze „Rozłącz”.
+  </Issue>
+  <Issue title="„Nie odebrano nagłówka, więc nazwy kolumn przyjęto ze specyfikacji projektu Monitorowanie”">
+    Linie danych dotarły, zanim rejestrator odebrał nagłówek, np. gdy płytka nie zrestartowała się po kliknięciu „Połącz”. Rejestrator nazywa wtedy kolumny sam: przy 3, 6 albo 8 kolumnach nazwami ze specyfikacji, a przy innej liczbie `kolumna_1`, `kolumna_2`… Żeby dostać prawdziwy nagłówek, kliknij „Rozłącz” i „Połącz” jeszcze raz (płytka się zrestartuje) albo naciśnij przycisk RESET na płytce. Gdy nagłówek stacji zgadza się z nazwami ze specyfikacji, rejestrator pisze dalej ten sam zapis, a komunikat znika.
+  </Issue>
+  <Issue title="„Odrzucone linie w tym zapisie” większe od 0">
+    Rejestrator odrzucił linie, które nie są liniami CSV albo mają inną liczbę kolumn niż nagłówek. Ostatnią odrzuconą linię widać w „Kontroli danych” po słowie „ostatnia”. Najczęściej na płytce wciąż jest program testowy z części 1, 2 albo 3 (napisy „A0 (swiatlo): …”, „Wilgotnosc: …”) albo do szkicu stacji dopisano jakieś `Serial.println()` z napisem. Kliknij „Rozłącz”, wgraj szkic stacji w wersji 3, kliknij „Wyczyść pomiary” i zacznij nagranie od nowa. Gdy odbierane znaki w ogóle nie przypominają CSV, rejestrator ostrzega: „Odbierane znaki nie wyglądają jak linie CSV”. Sprawdź wtedy także prędkość: `9600 baud`.
+  </Issue>
+  <Issue title="Ostrzeżenie „Od … s nie przyszła żadna linia”">
+    Zaraz po „Połącz” po przerwie to normalne: rejestrator liczy czas od ostatniej linii sprzed przerwy, a ostrzeżenie znika z pierwszą nową linią (rozdział 4). Jeśli trwa dłużej, płytka nie wysyła danych: sprawdź kabel USB i diodę L (czy miga co 2 s) i upewnij się, że na płytce jest szkic stacji.
+  </Issue>
+  <Issue title="W Excelu wszystkie wartości są w jednej kolumnie">
+    To plik oryginalny (z przecinkami). Polski Excel oddziela kolumny średnikami, więc całą linię wkłada do jednej komórki. Zamknij plik bez zapisywania i otwórz plik `…_excel.csv`. W LibreOffice Calc wybierz w oknie „Import tekstu” separator pasujący do pliku (rozdział 6.2).
+  </Issue>
+  <Issue title="Liczby wyglądają jak daty („4.mar”, „23.kwi”) albo zniknęła część ułamkowa">
+    Arkusz odczytał plik z innym znakiem dziesiętnym, niż jest w pliku. Polski arkusz traktuje kropkę jako znak daty: gdy podzielisz plik oryginalny na kolumny z polskimi ustawieniami (np. *Dane → Tekst jako kolumny* w Excelu), `4.3` zamienia się w datę „4.mar”, `23.4` w „23.kwi”, a `41.0` zostaje tekstem. Nie poprawiaj takich komórek ręcznie. W Excelu otwórz plik `…_excel.csv`, a w LibreOffice Calc otwórz plik jeszcze raz i ustaw „Język” pasujący do pliku: Angielski (USA) dla pliku oryginalnego, Polski dla pliku `_excel`. Liczba, którą arkusz uznał za tekst, stoi przy lewej krawędzi komórki, a prawdziwa liczba przy prawej.
+  </Issue>
+  <Issue title="Nagranie „zniknęło” po zamknięciu karty">
+    Otwórz stronę [Rejestratora CSV](/narzedzia/rejestrator-csv) jeszcze raz, w tej samej przeglądarce na tym samym komputerze. Rejestrator przywróci pomiary z pamięci przeglądarki i pokaże komunikat „Przywrócono z pamięci tej przeglądarki …”. Od razu zapisz oba pliki. Ostatnie pomiary sprzed zamknięcia karty mogą nie zostać przywrócone. W innej przeglądarce, na innym komputerze ani po zamknięciu okna prywatnego (incognito) pomiarów nie będzie. Pole `czas_pc` po ponownym otwarciu strony jest znowu odznaczone: zaznacz je przed zapisem.
+  </Issue>
+  <Issue title="„Przeglądarka nie może już przechowywać pomiarów (brak miejsca albo zablokowana pamięć strony)”">
+    Pamięć przeglądarki dla strony kursu się zapełniła. Rejestracja trwa, ale nowe pomiary nie trafiają już do tej pamięci. Od razu zapisz bieżące nagranie do obu plików (rozdział 5). Potem zapisz do plików i odrzuć („Odrzuć”) odłożone zapisy, których już nie potrzebujesz, bo one też zajmują miejsce.
+  </Issue>
+</Troubleshooting>
+
+## 8. Lista kontrolna projektu
+
+To ostatnia lista kontrolna projektu Monitorowanie. Gdy wszystkie punkty się zgadzają, projekt jest skończony.
+
+- [ ] Protokół odbioru jest wypełniony: wszystkie 15 punktów ma wynik „OK” albo opis usterki i tego, jak ją usunięto.
+- [ ] Nagranie trwało co najmniej 10 minut, a dziennik zdarzeń ma godzinę każdego zdarzenia, także obu „Połącz” w planowanej przerwie.
+- [ ] Zapisane są dwa pliki CSV z tego nagrania: `pomiary_….csv` i `pomiary_…_excel.csv`. Każdy ma kolumnę `czas_pc` i osiem kolumn stacji.
+- [ ] Plik otwiera się w arkuszu tak, że każda wartość stoi w osobnej komórce, a liczby są liczbami.
+- [ ] Trzy kontrole się zgadzają: liczba wierszy równa licznikowi „Zebrane pomiary”, odstępy `czas_ms` około 2000 i tyle restartów, ile „Połącz” po przerwach, puste komórki `T_modul_C` tylko w czasie przerwy z dziennika.
+- [ ] Jest wykres trzech temperatur, a na nim widać ogrzewanie czujnika M i przerwę.
+- [ ] Praca w arkuszu jest zapisana jako skoroszyt (`.xlsx` albo `.ods`), a pliki CSV zostały bez zmian.
+- [ ] Pliki CSV, protokół i dziennik leżą w jednym folderze, a foldery `kopia-czesc-1`, `kopia-czesc-2` i `kopia-czesc-3` są zachowane.
+
+## 9. Co dalej
+
+Plik CSV to punkt wyjścia do **analizy danych z monitoringu**. Na prawdziwej farmie z archiwum rysuje się wykresy, liczy średnie i najwyższe wartości z dnia, szuka zdarzeń i wyjaśnia je (dokładnie tak, jak Ty z dziennikiem), a przede wszystkim sprawdza **jakość danych**: czy nie brakuje linii, gdzie są puste pola i czy któryś czujnik nie pokazuje dziwnych wartości. Masz już do tego wszystko: plik, formuły i wykres.
+
+Dla chętnych, bez nowych elementów:
+
+- **Dłuższe nagranie**, np. godzina pracy przy biurku. Sprawdź tymi samymi formułami, czy liczba wierszy zgadza się z czasem nagrania (1800 na godzinę) i czy temperatury zmieniają się razem z temperaturą w sali.
+- **Stacja przy oknie** przez kilka godzin w dzień. Kolumna `swiatlo` pokaże chmury i przebieg dnia, a jeśli czujnik M ma przyklejony ciemny karton (część 2, rozdział 4), zobaczysz, że w słońcu „moduł” nagrzewa się bardziej niż powietrze, jak prawdziwy panel.
+- **Nagranie przez noc.** Komputer nie może się wtedy uśpić: ustaw w opcjach zasilania, żeby przy podłączonym zasilaczu nie przechodził w stan uśpienia, i nie zamykaj karty rejestratora. Rano od razu zapisz pliki.
+
+## Podsumowanie
+
+Twój biurkowy system monitoringu instalacji OZE jest kompletny i przeszedł cały cykl: od czujnika do archiwum. Fotorezystor, potencjometr, LM35, dwa DS18B20 i DHT11 udają czujniki nasłonecznienia, wiatru, temperatur i wilgotności. Arduino UNO, które co 2 s mierzy wszystkie czujniki i wysyła czyste linie CSV, pełni rolę sterownika PLC albo rejestratora danych. Linie CSV płynące przez UART i kabel USB zastępują przesył danych do dyspozytorni. Monitor portu szeregowego, Serial Plotter i Rejestrator CSV to ekran operatora, a plik CSV to archiwum. Protokół odbioru odpowiada temu, co podpisuje się przy przekazaniu prawdziwego systemu do pracy, a dziennik zdarzeń temu, co zapisuje obsługa farmy. Jak te elementy łączą się w prawdziwej instalacji, przypomina [wprowadzenie do projektu](/projekty/monitorowanie#1-co-budujemy-i-po-co).
+
+Najważniejsze zasady, które wyniesiesz z projektu: pomiary w równym rytmie, jeden czytelny format danych, uczciwe puste pole zamiast fałszywego zera, prawdziwa godzina przy każdym pomiarze i sprawdzenie danych, zanim zacznie się z nich wyciągać wnioski.
