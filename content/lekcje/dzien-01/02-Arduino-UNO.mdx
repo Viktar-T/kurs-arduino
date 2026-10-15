@@ -27,7 +27,7 @@ objectives:
   - "Zinterpretować, co sygnalizują diody ON, L oraz TX/RX"
 
 prerequisites:
-  - "dzien-01/01-arduino-raspberry-pi-logo"
+  - "dzien-01/arduino-raspberry-pi-logo"
 
 hardware:
   - { name: "Arduino UNO R3 (do oględzin w rękach uczniów)", qty: 1 }
@@ -39,10 +39,10 @@ tags: [arduino, arduino-uno, hardware, atmega328p, piny, pwm, adc, zasilanie]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
   - "https://forbot.pl/blog/leksykon/arduino-uno"
-  - "[[../../40_materialy/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s.|Książka B, r. 1]]"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=17 (Książka B, r. 1)"
 
 publish: true
-updated: "2026-05-12"
+updated: "2026-10-15"
 ---
 
 ## Czego się dziś nauczymy
@@ -53,10 +53,9 @@ napiszemy pierwszą linię kodu, każdy uczeń musi wiedzieć, gdzie na płytce
 znajduje się mikrokontroler, gdzie podłączamy zasilanie, którymi pinami
 „rozmawiamy ze światem” i co oznaczają migające diody.
 
-{/* TODO: dodać plik graficzny `02.01-arduino_layobut_uno_plytka-1536x1024.webp` w public/img/lekcje/ — zdjęcie płytki UNO R3 z góry */}
 <Photo
   file="02.01-arduino_layobut_uno_plytka-1536x1024.webp"
-  caption="Arduino UNO R3 — wersja, którą będziemy używać przez całe 80 godzin kursu."
+  caption="Arduino UNO R3 — wersja, której będziemy używać przez całe 80 godzin kursu."
   alt="Płytka Arduino UNO R3 widziana z góry, z widocznymi złączami goldpin, gniazdem USB-B i mikrokontrolerem ATmega328P."
 />
 
@@ -72,7 +71,7 @@ znajduje się mikrokontroler, gdzie podłączamy zasilanie, którymi pinami
 
 <Prerequisites
   items={[
-    { label: "Lekcja 1 — Czym jest Arduino", href: "/lekcje/dzien-01/01-arduino-raspberry-pi-logo" },
+    { label: "Lekcja 1 — Czym jest Arduino", href: "/lekcje/dzien-01/01-Arduino-RasberyPi-Logo" },
   ]}
 />
 
@@ -94,7 +93,7 @@ i pierwszy szkic*.
 
 [**Arduino UNO**](https://store.arduino.cc/products/arduino-uno-rev3) to
 „standardowa” płytka z całej rodziny Arduino — najlepiej udokumentowana, mająca
-najwięcej tutoriali i bibliotek, idealna do nauki. Płytka, którą będziemy
+najwięcej tutoriali i bibliotek, idealna do nauki. Płytka, której będziemy
 używać na kursie, to **Arduino UNO R3** (wersja 3).
 
 Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od razu:
@@ -128,7 +127,7 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
     <tr>
       <td>Logika i sygnalizacja</td>
       <td>Środek płytki</td>
-      <td>ATmega328P, kwarc 16 MHz, regulator napięcia, przycisk RESET, diody ON, L, TX, RX</td>
+      <td>ATmega328P, rezonator 16 MHz, regulator napięcia, przycisk RESET, diody ON, L, TX, RX</td>
     </tr>
   </tbody>
 </Table>
@@ -137,21 +136,21 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
 <Photo file="02.02-Arduino_UNO_pinout_2_numery.webp" caption="Szczegółowy rysunek z numeracją pinów Arduino UNO" alt="Arduino UNO z numeracją pinów" />
 
 1. **Złącze USB** - wykorzystywane do zasilania, programowania oraz komunikacji z komputerem
-2. **Złącze zasilania** (optymalnie 7V - 12V)
-3. **Stabilizator napięcia** - napięcie wejściowe ze złącza nr 2 obniżane jest do 5V dzięki temu układowi
+2. **Złącze zasilania** (optymalnie 7-12 V)
+3. **Stabilizator napięcia** - napięcie wejściowe ze złącza nr 2 obniżane jest do 5 V dzięki temu układowi
 4. **Przycisk resetu** - resetuje płytkę Arduino
 5. **Mikrokontroler** odpowiedzialny za komunikację z komputerem przez USB
 6. **Złącze programowania** do mikrokontrolera z punktu 5.
-7. Złącze sygnałowe*
-8. Złącze sygnałowe*
+7. Złącze sygnałowe (piny cyfrowe — opis w sekcji 3)
+8. Złącze sygnałowe (piny cyfrowe — opis w sekcji 3)
 9. Dioda LED (Light Emitting Diode, dioda elektroluminescencyjna) sygnalizująca podłączenie napięcia do Arduino
 10. Wyjście programatora dla mikrokontrolera z punktu 13.
-11. Złącze sygnałowe*
-12. Złącze zasilania*
-13. **Serce Arduino**, główny mikrokontroler AVR ATmega328
+11. Złącze sygnałowe (wejścia analogowe — opis w sekcji 3)
+12. Złącze zasilania (piny zasilania — opis w sekcji 3)
+13. **Serce Arduino**, główny mikrokontroler AVR ATmega328P
 14. **Diody LED** sygnalizujące transmisję do/z komputera
 15. **Dioda LED** do dyspozycji użytkownika
-16. **Rezonator ceramiczny** taktujący mikrokontroler (punkt 13) z częstotliwością 16MHz
+16. **Rezonator ceramiczny** taktujący mikrokontroler (punkt 13) z częstotliwością 16 MHz
 17. **Zworka**, której przecięcie wyłącza automatyczne resetowanie Arduino.
 18. **Pola lutownicze** z wyprowadzonymi sygnałami mikrokontrolera z punktu 5, używane ekstremalnie rzadko w bardzo specyficznych i niestandardowych sytuacjach.
 
@@ -160,7 +159,7 @@ Płytkę można podzielić na cztery „strefy”, które warto zlokalizować od
 Najważniejszy element znajduje się dokładnie pośrodku płytki — to **prostokątny
 układ scalony z napisem `ATMEGA328P`** w obudowie DIP (Dual Inline Package — 28 nóżek wpiętych w
 podstawkę). To właśnie *on* wykonuje Twój program. Pozostała elektronika płytki
-istnieje tylko po to, żeby tego mikrokontrolera nakarmić zasilaniem,
+istnieje tylko po to, żeby ten mikrokontroler nakarmić zasilaniem,
 podłączyć do USB i wyprowadzić jego nóżki na wygodne złącza goldpin.
 
 <Table
@@ -173,21 +172,22 @@ podłączyć do USB i wyprowadzić jego nóżki na wygodne złącza goldpin.
     ["Pamięć SRAM (Static Random-Access Memory)", "2 kB", "Tu żyją zmienne podczas pracy programu — znika po wyłączeniu zasilania"],
     ["Pamięć EEPROM (Electrically Erasable Programmable Read-Only Memory)", "1 kB", "Pamięć trwała na ustawienia, statystyki — przeżywa wyłączenie zasilania"],
     ["Napięcie pracy", "5 V", "Wszystkie piny mówią językiem 0 V / 5 V — to bardzo ważne przy podłączaniu czujników"],
-    ["Maksymalny prąd z pinu", "20 mA (zalecane), 40 mA (absolutne maksimum)", "Diodę LED zasilisz bezpośrednio, ale silnika DC już nie — potrzebny tranzystor / mostek H"],
+    ["Maksymalny prąd z pinu", "20 mA (zalecane), 40 mA (absolutne maksimum)", "Diodę LED (przez rezystor) zasilisz bezpośrednio z pinu, ale silnika DC już nie — potrzebny tranzystor / mostek H"],
   ]}
 />
 
 <Callout type="warning" title="2 kB SRAM to bardzo mało">
 Dwa kilobajty pamięci operacyjnej oznaczają, że nie wczytasz do zmiennej całego
 zdjęcia ani długiego napisu. Stąd na Arduino często widujemy makro `F(...)`,
-które trzyma stałe teksty we Flashu zamiast w SRAM. Wrócimy do tego, kiedy
-zaczniemy używać `Serial.print`.
+które trzyma stałe teksty we Flashu zamiast w SRAM. Używa się go razem
+z `Serial.print`, np. `Serial.println(F("Start"));`.
 </Callout>
 
-<Expandable title="Skąd liczba 16 MHz i po co kwarc obok mikrokontrolera" heading="####">
-Obok ATmega328P widzisz mały, **prostokątny srebrny element z napisem `16.000`**.
-To **rezonator kwarcowy** — drga z precyzyjną częstotliwością 16 MHz i podaje
-mikrokontrolerowi „takt”. Jeden takt zegara to **jedna prosta operacja procesora**
+<Expandable title="Skąd liczba 16 MHz i po co rezonator obok mikrokontrolera" heading="####">
+Obok ATmega328P znajduje się maleńki **rezonator ceramiczny 16 MHz** (element nr 16
+na rysunku powyżej) — drga z częstotliwością 16 MHz i podaje mikrokontrolerowi
+„takt”. (Większy, srebrny element z napisem `16.000` to kwarc taktujący drugi
+mikrokontroler — ATmega16U2 od USB.) Jeden takt zegara to **jedna prosta operacja procesora**
 (np. dodanie dwóch liczb). 16 milionów taktów na sekundę wystarczy, żeby:
 
 - migać diodą setki tysięcy razy na sekundę (tylko po co?),
@@ -195,7 +195,7 @@ mikrokontrolerowi „takt”. Jeden takt zegara to **jedna prosta operacja proce
 - obsługiwać UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit) i SPI (Serial Peripheral Interface) równocześnie,
 - mierzyć czas z dokładnością do mikrosekund (`micros()`).
 
-Dla porównania: nowoczesny laptop ma zegar około **2-4 GHz** — czyli ~150-250
+Dla porównania: nowoczesny laptop ma zegar około **2-4 GHz** — czyli ~125-250
 razy szybszy. Arduino nie konkuruje z nim wydajnością — konkuruje
 **przewidywalnością** i **brakiem warstwy systemu operacyjnego między Twoim
 kodem a pinem**.
@@ -246,8 +246,10 @@ mamy **6 pinów PWM**. Łatwo zapamiętać: parzyste 6, 10 + nieparzyste 3, 5, 9
 
 Pin cyfrowy zna **tylko dwa stany**:
 
-- **HIGH** = 5 V (logiczna jedynka), dioda się świeci, przycisk wciśnięty,
-- **LOW** = 0 V (logiczne zero), dioda gaśnie, przycisk puszczony.
+- **HIGH** = 5 V (logiczna jedynka), np. dioda się świeci,
+- **LOW** = 0 V (logiczne zero), np. dioda gaśnie.
+
+Stan przycisku zależy od sposobu podłączenia — w układzie z `INPUT_PULLUP`, którego użyjemy w lekcji o portach I/O, wciśnięty przycisk daje **LOW**, a puszczony **HIGH**.
 
 Każdy z 14 pinów cyfrowych może być wejściem albo wyjściem — decydujemy o tym
 w `setup()` przez `pinMode()` (zobaczymy to w następnej lekcji).
@@ -256,8 +258,8 @@ w `setup()` przez `pinMode()` (zobaczymy to w następnej lekcji).
 
 Mikrokontroler nie umie wystawić na pin napięcia 2,7 V. Umie tylko 0 V albo
 5 V. **PWM (*Pulse Width Modulation*)** to sprytna sztuczka: pin przełącza się
-między 0 V a 5 V tak szybko (ok. 500 Hz), że dioda LED widzi „średnią” — i my
-widzimy jasność. Tego użyjemy do regulacji jasności diody, prędkości silnika
+między 0 V a 5 V tak szybko (ok. 500 Hz), że oko nie nadąża za miganiem diody
+LED i widzi „średnią” jasność. Tego użyjemy do regulacji jasności diody, prędkości silnika
 DC i pozycji serwa.
 
 ### 3.3 Analogowe (A0-A5) — pomiar napięcia
@@ -282,19 +284,20 @@ zasilanie:
   caption="Piny zasilania na Arduino UNO."
   headers={["Pin", "Co dostarcza", "Typowe użycie"]}
   rows={[
-    ["5V", "Stabilizowane 5 V (do 500 mA łącznie z całą płytką, gdy zasilanie z USB)", "Zasilanie czujników, modułów, serwa SG90, wyświetlacza LCD"],
+    ["5V", "Stabilizowane 5 V (do 500 mA łącznie z całą płytką, gdy zasilanie z USB)", "Zasilanie czujników, modułów, wyświetlacza LCD"],
     ["3.3V", "Stabilizowane 3,3 V (do ok. 50 mA)", "Czujniki niskonapięciowe (np. niektóre moduły radiowe)"],
     ["GND (3 sztuki)", "Masa układu — wspólne 0 V", "Każdy obwód musi mieć wspólny GND z Arduino"],
     ["Vin", "Napięcie wejściowe sprzed regulatora (czyli to, co podajesz na DC)", "Zasilanie zewnętrznego obwodu z tego samego źródła co Arduino"],
     ["IOREF", "Napięcie logiki Arduino (5 V na UNO)", "Używane przez shieldy, żeby dopasować poziomy"],
-    ["RESET", "Wyprowadzony przycisk reset", "Zwarcie do GND restartuje płytkę"],
+    ["RESET", "Wyprowadzona linia RESET (ta sama, którą zwiera przycisk RESET)", "Zwarcie do GND restartuje płytkę"],
   ]}
 />
 
 ## 4. Zasilanie — trzy drogi, którymi prąd wchodzi do Arduino
 
-UNO można zasilić na trzy sposoby, ale **w danej chwili wybierasz tylko jeden**.
-Na płytce jest automatyczny przełącznik źródła zasilania.
+UNO można zasilić na trzy sposoby, ale **w danej chwili płytka korzysta tylko z jednego**.
+Na płytce jest automatyczny przełącznik źródła zasilania: gdy podłączysz jednocześnie
+USB i zasilacz (ok. 7 V lub więcej), płytka sama przełączy się na zasilacz.
 
 <Table
   caption="Trzy sposoby zasilania Arduino UNO."
@@ -316,7 +319,7 @@ podłącz ją do **Vin** lub do **gniazda DC**, nigdy do 5V.
 <Callout type="warning" title="Limit prądu z całej płytki">
 Jeśli zasilasz UNO z USB, masz do dyspozycji łącznie **około 500 mA** dla całej
 płytki *i* wszystkich peryferiów razem wziętych. Jedno serwo SG90 potrafi w
-ruchu pobrać 400 mA. Wniosek: silniki i mocniejsze serwa zasilamy z osobnego
+ruchu pobrać 400 mA. Wniosek: silniki i serwomechanizmy zasilamy z osobnego
 źródła, ze wspólnym GND z Arduino.
 </Callout>
 
@@ -423,7 +426,7 @@ void setup() {
 }
 
 void loop() {
-  // nic - przez chwilę tylko zaświecamy diode i tyle
+  // nic - przez chwilę tylko zaświecamy diodę i tyle
 }
 ```
 </Code>
@@ -435,12 +438,12 @@ o której była mowa w tabeli diod.
 ## 9. Zadanie praktyczne
 
 <Task title="Anatomia płytki — w parach" estimate="15 min">
-Pracujcie w parach. Każda para dostaje **jedną płytkę Arduino UNO**.
+Pracujcie w parach. Każda para ogląda **jedną płytkę Arduino UNO**.
 
 1. Połóżcie płytkę przed sobą, gniazdem USB w lewo (tak jak na zdjęciach).
 2. **Wskażcie palcem i nazwijcie głośno** — kolejno:
    - mikrokontroler ATmega328P,
-   - kwarc 16 MHz,
+   - rezonator 16 MHz,
    - regulator napięcia,
    - gniazdo USB-B,
    - gniazdo DC,
@@ -469,7 +472,7 @@ Gotowe? Zgłoście się — sprawdzimy razem.
 
 **Sposób zakazany:**
 
-- Podanie 9 V na pin **5V**. To wejście stabilizatora po stronie *wyjścia* —
+- Podanie 9 V na pin **5V**. Ten pin jest połączony z *wyjściem* stabilizatora —
   spalisz regulator napięcia i prawdopodobnie cały mikrokontroler.
 </Expandable>
 
@@ -497,7 +500,7 @@ Prowadzący zadaje, uczniowie odpowiadają z głowy:
 - **Trzy źródła zasilania:** USB (5 V), gniazdo DC (7-12 V), pin Vin (7-12 V). **Nigdy** 9 V na pin 5V.
 - **Diody:** ON (zasilanie), L (D13), TX/RX (komunikacja USB-UART).
 - **Przycisk RESET** restartuje program; **ICSP** to złącze, którego my nie używamy.
-- W tle wszystko spina **kwarc 16 MHz**, **regulator napięcia** i drugi mikrokontroler **ATmega16U2** (lub CH340 w klonach), który zamienia USB na UART.
+- W tle wszystko spina **rezonator 16 MHz**, **regulator napięcia** i drugi mikrokontroler **ATmega16U2** (lub CH340 w klonach), który zamienia USB na UART.
 
 W następnej lekcji włączamy **Arduino IDE**, podłączamy płytkę kablem USB i
 wgrywamy nasz pierwszy szkic — *Blink*. Dioda **L** z dzisiejszej lekcji

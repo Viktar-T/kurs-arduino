@@ -39,13 +39,13 @@ sources:
   - "https://docs.arduino.cc/language-reference/"
 
 publish: true
-updated: "2026-05-14"
+updated: "2026-10-15"
 ---
 
 ## Po co ta lekcja?
 
-Kurs trwa 80 godzin — a Arduino można zgłębiać latami. Zanim przejdziemy do
-prawdziwej płytki, nauczymy się najpierw budować obwody wirtualnie, żeby nie
+Kurs trwa 80 godzin — a Arduino można zgłębiać latami. Zanim zbudujemy kolejne
+układy na prawdziwej płytce, nauczymy się budować obwody wirtualnie, żeby nie
 spalić komponentów podczas nauki. A potem pokażemy, gdzie szukać pomocy, gdy
 utkniesz przy projekcie o północy. Ta lekcja to mapa skarbów.
 
@@ -81,7 +81,7 @@ Jak to wygląda w praktyce na naszym kursie:
 
 <Callout type="tip" title="Dlaczego nie od razu na płytce?">
 Rzeczywiste komponenty można uszkodzić błędnym podłączeniem zasilania lub zbyt
-dużym prądem. Tinkercad nie popełnia takich błędów na zawsze — po prostu
+dużym prądem. W Tinkercad takie błędy nie są nieodwracalne — po prostu
 zresetujesz symulację i spróbujesz ponownie.
 </Callout>
 
@@ -121,9 +121,9 @@ których używamy na tym szkoleniu jako szkielet materiału:
 <Table
   headers={["Kurs", "Adres", "Co obejmuje"]}
   rows={[
-    ["Kurs podstaw Arduino", <><a href="https://forbot.pl/blog/kurs-arduino-podstawy-programowania-spis-tresci-kursu-id5290">forbot.pl → Kurs Arduino poziom I</a></>, "Środowisko, C++, I/O (Input/Output, wejścia/wyjścia), czujniki — Dni 1–6"],
-    ["Kurs Arduino poziom II", <><a href="https://forbot.pl/blog/kurs-arduino-ii-wstep-spis-tresci-id15494">forbot.pl → Kurs Arduino poziom II</a></>, "UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit), SPI, LCD (Liquid Crystal Display), silniki — Dni 3–8"],
-    ["Kurs budowy robotów", <><a href="https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935">forbot.pl → Kurs budowy robotów</a></>, "Line follower, czujniki IR — Dni 9–10"],
+    ["Kurs podstaw Arduino", <><a href="https://forbot.pl/blog/kurs-arduino-podstawy-programowania-spis-tresci-kursu-id5290">forbot.pl → Kurs Arduino poziom I</a></>, "Środowisko, C++, I/O (Input/Output, wejścia/wyjścia), UART (Universal Asynchronous Receiver-Transmitter), ADC, PWM, serwa, LCD (Liquid Crystal Display), silniki DC, HC-SR04 — Dni 1–4"],
+    ["Kurs Arduino poziom II", <><a href="https://forbot.pl/blog/kurs-arduino-ii-wstep-spis-tresci-id15494">forbot.pl → Kurs Arduino poziom II</a></>, "Diody RGB i WS2812, MOSFET, przerwania, klawiatura, wyświetlacze 7-segmentowe, termometry, DHT11, millis() — Dni 5–7"],
+    ["Kurs budowy robotów", <><a href="https://forbot.pl/blog/kurs-budowy-robotow-arduino-wstep-spis-tresci-id18935">forbot.pl → Kurs budowy robotów</a></>, "Line follower, czujniki IR — Dzień 8"],
   ]}
 />
 
@@ -134,10 +134,10 @@ coś umknęło — wróć do Forbot i przeczytaj jeszcze raz ze zdjęciami i ani
 
 Na kursie korzystamy z dwóch ebooków polskiego Helionu autorstwa Simona Monka:
 
-- **[„Arduino dla początkujących: podstawy i szkice" (wyd. 2)](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf)** — główna lektura
+- **[„Arduino dla początkujących: podstawy i szkice” (wyd. 2)](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf)** — główna lektura
   na Dni 1–4. Szczególnie dobre wyjaśnienia C++ i schematy montażowe.
-- **[„Arduino dla początkujących: kolejny krok"](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-kolejny-krok-2-239s..pdf)** — rozszerza wiedzę o biblioteki,
-  silniki, wyświetlacze, komunikację I2C — Dni 4–8.
+- **[„Arduino dla początkujących: kolejny krok”](/docs/Ebooki%20Arduino%20-%20Helion/ksiazki/arduino-dla-poczatkujacych-kolejny-krok-2-239s..pdf)** — rozszerza wiedzę o przerwania,
+  komunikację I²C, SPI, 1-Wire i UART, wielozadaniowość oraz tworzenie bibliotek — Dni 4–8.
 
 Pliki PDF (Portable Document Format) masz na serwerze kursu lub na pendrivie od prowadzącego.
 
@@ -152,7 +152,7 @@ Gdy tekst nie wystarczy i wolisz zobaczyć, jak coś działa — YouTube:
 
 - **[Kanał Arduino](https://www.youtube.com/@Arduino)** — oficjalne projekty i tutoriale.
 - **[Forbot (po polsku)](https://www.youtube.com/@forbot)** — wiele lekcji ma odpowiedniki wideo.
-- **[Paul McWhorter](https://www.youtube.com/@paulmcwhorter)** — seria „Arduino for Beginners" po angielsku, jeden z
+- **[Paul McWhorter](https://www.youtube.com/@paulmcwhorter)** — seria „Arduino for Beginners” po angielsku, jeden z
   najlepiej wytłumaczonych kursów wideo.
 - **[DroneBot Workshop](https://www.youtube.com/@dronebotworkshop)** — elektronika i Arduino, świetna jakość nagrań.
 

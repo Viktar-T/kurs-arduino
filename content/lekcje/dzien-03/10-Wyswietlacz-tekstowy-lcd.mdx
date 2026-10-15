@@ -35,7 +35,8 @@ hardware:
   - { name: "Potencjometr 10 kΩ", qty: 1, note: "regulacja kontrastu LCD" }
   - { name: "Fotorezystor", qty: 1 }
   - { name: "Rezystor 10 kΩ", qty: 1 }
-  - { name: "Rezystor 1000 Ω", qty: 1, optional: true, note: "podświetlenie LCD, zależnie od modułu" }
+  - { name: "Rezystor 220 Ω", qty: 1, optional: true, note: "podświetlenie LCD (150–470 Ω), zależnie od modułu" }
+  - { name: "Przycisk tact-switch", qty: 2, optional: true, note: "do zadania 4 (stoper)" }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 18 }
 
@@ -45,7 +46,7 @@ sources:
 
 cover: "/img/lekcje/10.01-lcd-tekstowy-przykladowy-napis.jpg"
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 Do tej pory Arduino komunikowało się z nami głównie przez diody LED (Light Emitting Diode, dioda elektroluminescencyjna) i Monitor portu szeregowego. Diody są proste, ale pokazują niewiele. UART (Universal Asynchronous Receiver-Transmitter, uniwersalny asynchroniczny nadajnik-odbiornik) daje dużo informacji, ale wymaga komputera. Wyświetlacz tekstowy LCD (Liquid Crystal Display, wyświetlacz ciekłokrystaliczny) pozwala zbudować urządzenie, które pokazuje dane samodzielnie, bez podłączonego terminala.
@@ -87,8 +88,8 @@ Typowy moduł LCD ma 16-pinowe złącze. Część pinów odpowiada za zasilanie,
   src="/img/lekcje/10.02.02-lcd-2x16-piny.png"
   caption="Wyświetlacz LCD 2×16 ma zwykle 16 wyprowadzeń."
   alt="Wyświetlacz tekstowy LCD 2x16 z opisem pinów"
-  width={936}
-  height={475}
+  width={1431}
+  height={647}
 />
 
 LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 8-bitowym potrzeba więcej przewodów. W kursie używamy trybu 4-bitowego, bo oszczędza piny Arduino i nadal pozwala korzystać z najważniejszych funkcji.
@@ -103,8 +104,8 @@ LCD zgodny z HD44780 może pracować w trybie 8-bitowym lub 4-bitowym. W trybie 
     ["4", "RS (Register Select, wybór rejestru)", "Wybór komendy albo danych"],
     ["5", "RW (Read/Write, odczyt/zapis)", "Tryb odczytu/zapisu, zwykle podłączony do GND"],
     ["6", "E (Enable, zezwolenie)", "Sygnał zatwierdzający przesłanie danych"],
-    ["11-14", "D4-D7", "Cztery linie danych w trybie 4-bitowym"],
-    ["15-16", "(Anoda) LED+/ (Katoda) LED-", "Podświetlenie wyświetlacza"],
+    ["11–14", "D4–D7", "Cztery linie danych w trybie 4-bitowym"],
+    ["15–16", "(Anoda) LED+ / (Katoda) LED−", "Podświetlenie wyświetlacza"],
   ]}
 />
 
@@ -139,25 +140,25 @@ Złącze LCD ma 16 wyprowadzeń. Poniżej opis każdego z nich — co robi, jaki
 | 13 | D6 | Data bit 6 | dowolny pin cyfrowy Arduino |
 | 14 | D7 | Data bit 7 (MSB) | dowolny pin cyfrowy Arduino |
 | 15 | A / LED+ | Anode (anoda podświetlenia) | 5 V przez rezystor ~150–470 Ω |
-| 16 | K / LED− | Kathode (katoda podświetlenia) | GND Arduino |
+| 16 | K / LED− | Cathode (katoda podświetlenia) | GND Arduino |
 
 **Pin 3 — V0 (kontrast)**
-Napięcie między 0 V a 5 V decyduje, jak ciemne są pola pikseli. Przy 0 V kontekst jest zbyt wysoki (same czarne prostokąty), przy 5 V zbyt niski (niewidoczny tekst). Potencjometr daje płynną regulację. Jeśli nie masz potencjometru, możesz spróbować stałego napięcia ok. 0,5–1 V z dzielnika, ale ustaw to empirycznie.
+Napięcie między 0 V a 5 V decyduje, jak ciemne są pola pikseli. Przy 0 V kontrast jest zbyt wysoki (same czarne prostokąty), przy 5 V zbyt niski (niewidoczny tekst). Potencjometr daje płynną regulację. Jeśli nie masz potencjometru, możesz spróbować stałego napięcia ok. 0,5–1 V z dzielnika, ale ustaw to empirycznie.
 
 **Pin 4 — RS (Register Select)**
 Sterownik HD44780 ma dwa rejestry wewnętrzne. Gdy RS = LOW (0), wysyłasz **komendę** (np. wyczyść ekran, przesuń kursor). Gdy RS = HIGH (1), wysyłasz **dane** — kod znaku do wyświetlenia. Biblioteka `LiquidCrystal` steruje tym pinem automatycznie.
 
 **Pin 5 — R/W (Read/Write)**
-LOW = zapis do LCD, HIGH = odczyt z LCD (np. odczyt flagi zajętości). W praktyce prawie zawsze piszemy do wyświetlacza i nigdy nie czytamy — dlatego R/W łączymy na stałe do GND. Zwolnienie tego pinu pozwoli zaoszczędzić jedno wyprowadzenie Arduino.
+LOW = zapis do LCD, HIGH = odczyt z LCD (np. odczyt flagi zajętości). W praktyce prawie zawsze piszemy do wyświetlacza i nigdy nie czytamy — dlatego R/W łączymy na stałe z GND. Dzięki temu oszczędzamy jedno wyprowadzenie Arduino.
 
 **Pin 6 — E (Enable)**
-Opadające zbocze (HIGH → LOW) na tym pinie mówi sterownikowi: „odczytaj teraz dane z linii D4–D7". Biblioteka generuje ten sygnał automatycznie przy każdym zapisie znaku lub komendy.
+Opadające zbocze (HIGH → LOW) na tym pinie mówi sterownikowi: „odczytaj teraz dane z linii D4–D7”. Biblioteka generuje ten sygnał automatycznie przy każdym zapisie znaku lub komendy.
 
 **Piny 7–10 (D0–D3) — nieużywane w trybie 4-bitowym**
-W trybie 8-bitowym wszystkie osiem linii danych jest aktywnych i jeden bajt wysyłany jest jednym impulsem E. W trybie 4-bitowym D0–D3 pozostają niepodłączone — możesz je zostawić w powietrzu lub podciągnąć do GND (oba sposoby działają, bo sterownik ignoruje te linie po inicjalizacji 4-bitowej).
+W trybie 8-bitowym wszystkie osiem linii danych jest aktywnych i jeden bajt wysyłany jest jednym impulsem E. W trybie 4-bitowym D0–D3 pozostają niepodłączone — możesz je zostawić w powietrzu lub podłączyć do GND (oba sposoby działają, bo sterownik ignoruje te linie po inicjalizacji 4-bitowej).
 
 **Piny 15–16 — podświetlenie (LED+ / LED−)**
-To zwykła dioda LED wbudowana w ekran. Typowy prąd to 15–25 mA przy napięciu 3,2–4,2 V. Rezystor szeregowy 150–470 Ω chroni pin Arduino przed przekroczeniem dopuszczalnego prądu wyjściowego (40 mA max). Niektóre moduły mają rezystor wlutowany na płytce — przed podłączeniem sprawdź schemat modułu.
+To zwykła dioda LED wbudowana w ekran. Typowy prąd to 15–25 mA przy napięciu 3,2–4,2 V. Rezystor szeregowy 150–470 Ω chroni pin Arduino przed przekroczeniem dopuszczalnego prądu wyjściowego (zalecane do 20 mA, absolutne maksimum 40 mA). Niektóre moduły mają rezystor wlutowany na płytce — przed podłączeniem sprawdź schemat modułu.
 
 </Expandable>
 
@@ -175,8 +176,8 @@ Do pierwszego uruchomienia potrzebujemy Arduino, płytki stykowej, LCD, potencjo
 
 <Schematic
   src="/img/lekcje/10.03.02-podlaczenie-lcd-do-arduino.png"
-  caption="Podłączenie LCD do Arduino "
-  alt="Schemat połączenia"
+  caption="Podłączenie LCD do Arduino — zdjęcie gotowego układu."
+  alt="Zdjęcie Arduino UNO połączonego z wyświetlaczem LCD 2x16 na płytce stykowej"
   width={450}
   height={652}
 />
@@ -232,14 +233,14 @@ void loop() {
 <Expandable title="Głębiej: jak HD44780 pamięta tekst — DDRAM i CGROM" heading="####">
 Sterownik **HD44780** ma w środku dwa rodzaje pamięci, których zrozumienie wyjaśnia wiele dziwnych zachowań LCD:
 
-- **DDRAM (Display Data RAM)** — tu trzymane są kody znaków aktualnie wyświetlanych. Ma **80 bajtów**, ale wyświetlacz 2×16 pokazuje tylko 32. Pozostałe 48 bajtów istnieje „poza widokiem" — możesz je zapisać i potem przewinąć ekran funkcją `lcd.scrollDisplayLeft()`/`scrollDisplayRight()`, aby je zobaczyć.
+- **DDRAM (Display Data RAM)** — tu trzymane są kody znaków aktualnie wyświetlanych. Ma **80 bajtów**, ale wyświetlacz 2×16 pokazuje tylko 32. Pozostałe 48 bajtów istnieje „poza widokiem” — możesz je zapisać i potem przewinąć ekran funkcją `lcd.scrollDisplayLeft()`/`scrollDisplayRight()`, aby je zobaczyć.
 - **CGROM (Character Generator ROM)** — stała tablica wzorów pikseli dla około 240 standardowych znaków (litery A–Z, cyfry, podstawowe symbole, znaki japońskie kana). To dlatego polskie znaki diakrytyczne (ą, ć, ę) zwykle się nie wyświetlają — nie ma ich w CGROM.
 
 Adresy DDRAM w wyświetlaczu 2×16 są nieoczywiste:
 - Wiersz 1: `0x00`–`0x0F`
 - Wiersz 2: `0x40`–`0x4F`
 
-Między wierszami jest „dziura" `0x10`–`0x3F`. Biblioteka `LiquidCrystal` ukrywa to za funkcją `setCursor(kolumna, wiersz)`, ale gdybyś kiedyś zobaczył wyświetlacz 4×20, „logiczna" kolejność wierszy w pamięci to 1, 3, 2, 4 — efekt tego samego mapowania.
+Adresy `0x10`–`0x27` to niewidoczna dalsza część pierwszego wiersza (każdy wiersz ma w DDRAM 40 pozycji), a między wierszami jest „dziura” `0x28`–`0x3F`. Biblioteka `LiquidCrystal` ukrywa to za funkcją `setCursor(kolumna, wiersz)`, ale gdybyś kiedyś zobaczył wyświetlacz 4×20, „logiczna” kolejność wierszy w pamięci to 1, 3, 2, 4 — efekt tego samego mapowania.
 </Expandable>
 
 <Photo
@@ -260,7 +261,7 @@ Sterownik HD44780 ma pamięć na **8 własnych znaków** w slotach 0–7. Każdy
 
 Każdy znak jest tablicą 8 bajtów — jeden bajt to jeden wiersz siatki. Bity 0–4 każdego bajtu odpowiadają kolumnom (bit 4 to lewa kolumna, bit 0 to prawa). Wypełniony prostokąt wyglądałby tak: `{0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F}`.
 
-Znak wgrywasz przez `lcd.createChar(numer, tablica)` w `setup()`, a wyświetlasz przez `lcd.write(numer)`. Projektowanie wzorów ułatwiają generatory online — wystarczy wyszukać „HD44780 custom char generator".
+Znak wgrywasz przez `lcd.createChar(numer, tablica)` w `setup()`, a wyświetlasz przez `lcd.write(numer)`. Projektowanie wzorów ułatwiają generatory online — wystarczy wyszukać „HD44780 custom char generator”.
 
 </Expandable>
 
@@ -316,6 +317,8 @@ Drugi wariant to migający blok kursora. Włączamy go funkcją `lcd.blink()`, a
   width={550}
   height={401}
 />
+
+Miganie podkreślenia można też uzyskać programowo — wystarczy w pętli na zmianę wywoływać `lcd.noCursor()` i `lcd.cursor()`:
 
 <Code lang="cpp" file="lcd-miganie-kursora.ino">
 ```cpp
@@ -501,18 +504,18 @@ void loop() {
 
 Zwróć uwagę, że stały tekst pierwszej linii wpisujemy tylko raz w `setup()`. W pętli aktualizujemy tylko fragment z wynikiem. To ogranicza miganie i sprawia, że ekran jest czytelniejszy.
 
-<Expandable title="Głębiej: dlaczego po wyniku piszemy `V ` (V ze spacją)" heading="####">
+<Expandable title="Głębiej: dlaczego po wyniku piszemy V ze spacją" heading="####">
 Spójrz na linię: `lcd.print("V ");` — to nie literówka, lecz **technika maskowania starszych znaków**.
 
-LCD nie czyści automatycznie tego, co już wyświetlił. Jeśli najpierw wyświetlimy `4.85V`, a potem zmiana napięcia da krótszą wartość `4.8V`, na ekranie zobaczymy `4.8V` + ostatnią cyfrę `5` ze starego odczytu, czyli `4.8V5`. Spacja po `V` „zamiata" tę jedną pozycję — i błąd znika.
+LCD nie czyści automatycznie tego, co już wyświetlił. Jeśli najpierw wyświetlimy `4.85V`, a potem krótszy napis, np. `4.8V`, na ekranie zobaczymy `4.8V` + ostatni znak `V` ze starego napisu, czyli `4.8VV`. Spacja po `V` „zamiata” tę jedną pozycję — i błąd znika. (Samo `lcd.print(odczyt)` zawsze wypisuje dwa miejsca po przecinku, więc w tym programie spacja jest zabezpieczeniem na wypadek zmiany formatu liczby.)
 
 Inne sposoby radzenia sobie z tym problemem:
 
 - **`lcd.clear()` w pętli** — działa, ale powoduje migotanie, bo wyświetlacz na chwilę gaśnie.
-- **Stała szerokość pola** — sformatuj liczbę funkcją `sprintf(bufor, "%5.2fV", odczyt)`, żeby zawsze zajmowała 5 znaków (np. ` 4.85V`).
+- **Stała szerokość pola** — sformatuj liczbę funkcją `dtostrf(odczyt, 5, 2, bufor)`, żeby zawsze zajmowała 5 znaków (np. ` 4.85`). Uwaga: na Arduino UNO `sprintf()` nie obsługuje formatu `%f`.
 - **Wymazywanie tylko zmienianego pola** — `lcd.setCursor(0, 1); lcd.print("        ");` przed nowym `print()` (8 spacji = 8 wyczyszczonych pozycji).
 
-W praktyce: **doklejanie spacji** to najprostszy trik dla małych pól (1–2 znaki), `sprintf()` lepiej sprawdza się przy pełnych liniach z liczbami zmiennej długości.
+W praktyce: **doklejanie spacji** to najprostszy trik dla małych pól (1–2 znaki); stała szerokość pola (`dtostrf()`, a dla liczb całkowitych `sprintf()`) lepiej sprawdza się przy pełnych liniach z liczbami zmiennej długości.
 </Expandable>
 
 <Task title="Zadanie 3" estimate="15 min">
@@ -521,7 +524,7 @@ Zmień program tak, aby oprócz napięcia pokazywał też surową wartość ADC.
 
 <Expandable title="Rozwiązanie i wyjaśnienie — Zadanie 3" heading="####">
 
-Kluczowa zmiana to wypisanie surowej wartości `analogRead()` w pierwszej linii i przeliczonego napięcia w drugiej. Każde pole odświeżamy z powrotem do tej samej pozycji kursora, żeby uniknąć migotania.
+Kluczowa zmiana to wypisanie surowej wartości `analogRead()` w pierwszej linii i przeliczonego napięcia w drugiej. Każde pole odświeżamy, ustawiając kursor z powrotem na tę samą pozycję, żeby uniknąć migotania.
 
 <Code lang="cpp" file="lcd-adc-i-napiecie.ino">
 ```cpp
@@ -541,10 +544,10 @@ void setup() {
   lcd.clear();
 
   lcd.setCursor(0, 0);
-  lcd.print("ADC:");
+  lcd.print("ADC: ");
 
   lcd.setCursor(0, 1);
-  lcd.print("U:");
+  lcd.print("U: ");
 }
 
 void loop() {
@@ -552,12 +555,12 @@ void loop() {
   double napiecie = surowy * 5.0 / 1024.0;
 
   // wiersz 1: ADC: XXXX
-  lcd.setCursor(4, 0);
+  lcd.setCursor(5, 0);
   lcd.print(surowy);
   lcd.print("    ");   // spacje zamiatają resztki starszej liczby
 
   // wiersz 2: U: X.XXV
-  lcd.setCursor(2, 1);
+  lcd.setCursor(3, 1);
   lcd.print(napiecie, 2);
   lcd.print("V ");
 
@@ -571,7 +574,7 @@ void loop() {
 - Etykiety `ADC:` i `U:` są wpisane raz w `setup()` — nie zmieniają się, więc nie ma sensu ich odświeżać w każdym obiegu pętli.
 - `lcd.print(surowy)` wypisuje liczbę całkowitą 0–1023. Doklejone spacje (`"    "`) gwarantują, że jeśli liczba się skróci (np. z 1023 na 987), nie zostanie cyfra z poprzedniego odczytu.
 - `lcd.print(napiecie, 2)` wypisuje liczbę zmiennoprzecinkową z dokładnością do 2 miejsc po przecinku — format `X.XX`.
-- `lcd.setCursor(4, 0)` ustawia kursor za etykietą `ADC:` (4 znaki). Analogicznie `lcd.setCursor(2, 1)` ustawia za `U:` (2 znaki). Dzięki temu etykieta i wartość nie nachodzą na siebie.
+- `lcd.setCursor(5, 0)` ustawia kursor za etykietą `ADC: ` (4 znaki i spacja). Analogicznie `lcd.setCursor(3, 1)` ustawia za `U: ` (2 znaki i spacja). Dzięki temu etykieta i wartość nie nachodzą na siebie.
 
 </Expandable>
 
@@ -619,7 +622,7 @@ void loop() {
     lcd.setCursor(0, 0);
     lcd.print("Czas: 0 s");
 
-    // licz sekundy az STOP zostanie wcisniety
+    // licz sekundy, aż STOP zostanie wciśnięty
     while (digitalRead(PIN_STOP) == HIGH) {
       delay(1000);
       sekundy++;
@@ -628,7 +631,7 @@ void loop() {
       lcd.print(" s  ");
     }
 
-    // STOP wcisniety — pokaz wynik
+    // STOP wciśnięty — pokaż wynik
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Koniec!");
@@ -636,7 +639,7 @@ void loop() {
     lcd.print(sekundy);
     lcd.print(" s");
 
-    // czekaj az przycisk STOP zostanie zwolniony
+    // czekaj, aż przycisk STOP zostanie zwolniony
     while (digitalRead(PIN_STOP) == LOW) {}
     delay(100);
   }
@@ -647,9 +650,9 @@ void loop() {
 **Co i dlaczego:**
 
 - `INPUT_PULLUP` włącza wewnętrzny rezystor podciągający Arduino — przycisk zwiera pin do GND i daje stan `LOW`. Nie potrzebujemy zewnętrznych rezystorów.
-- Po wykryciu START program wchodzi w pętlę `while`, która trwa tak długo, jak STOP jest niewciśnięty (`HIGH`). Wewnątrz pętli `delay(1000)` odmierza jedną sekundę, a `sekundy++` zwiększa licznik.
+- Po wykryciu START program wchodzi w pętlę `while`, która trwa tak długo, jak STOP jest niewciśnięty (`HIGH`). Wewnątrz pętli `delay(1000)` odmierza jedną sekundę, a `sekundy++` zwiększa licznik. Stan STOP jest sprawdzany tylko raz na sekundę, więc przycisk trzeba przytrzymać do ok. 1 s — dokładniejszy stoper zbudujemy później z `millis()`.
 - Po wyjściu z `while` (STOP wciśnięty) ekran jest czyszczony i pokazywany wynik.
-- Druga pętla `while (digitalRead(PIN_STOP) == LOW) {}` czeka, aż przycisk zostanie fizycznie zwolniony — bez tego kolejny obieg `loop()` natychmiast wykryłby START i zrestartował stoper.
+- Druga pętla `while (digitalRead(PIN_STOP) == LOW) {}` czeka, aż przycisk zostanie fizycznie zwolniony — bez tego, gdyby STOP był jeszcze trzymany w chwili ponownego wciśnięcia START, nowy pomiar zakończyłby się natychmiast z wynikiem `0 s`.
 - `lcd.print(" s  ")` — spacje po jednostce zamazują resztki starszej, dłuższej liczby, tak jak w poprzednich przykładach.
 
 </Expandable>
@@ -660,17 +663,17 @@ Podświetlenie LCD to dioda LED wbudowana w moduł. W wielu wyświetlaczach jest
 
 <Schematic
   src="/img/lekcje/10.11-lcd-sterowanie-podswietleniem-pwm.png"
-  caption="Podświetlenie LCD można sterować z pinu PWM, ale trzeba pilnować prądu."
-  alt="Schemat sterowania podświetleniem LCD z Arduino przez pin PWM"
-  width={492}
-  height={662}
+  caption="Rezystor ograniczający prąd podświetlenia (zaznaczony na czerwono). Uwaga: ten schemat z Tinkercad ma inne piny niż nasz kod (RS = 12, E = 11, D4–D7 = 5–2), a podświetlenie idzie przez rezystor do 5 V. W programie poniżej LCD jest na pinach 2–7, a rezystor podświetlenia łączymy z pinem PWM 11."
+  alt="Schemat Tinkercad: LCD 2×16 podłączony do Arduino, anoda podświetlenia przez rezystor do szyny 5 V"
+  width={1785}
+  height={1132}
 />
 
 <Callout type="hazard" title="Sprawdź prąd podświetlenia">
 Pin Arduino nie jest zasilaczem dużej mocy. Jeśli nie wiesz, ile prądu pobiera podświetlenie LCD, użyj rezystora ograniczającego prąd (220–470 Ω) albo tranzystora sterującego.
 </Callout>
 
-Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Modulation, modulacja szerokości impulsu) — pin 15 LCD (LED+) łączymy z pinem **11** Arduino (lub innym pinem PWM oznaczonym `~`), a pin 16 LCD (LED−) do GND — możemy płynnie zmieniać jasność przez `analogWrite()`.
+Jeśli podświetlenie jest bezpiecznie podłączone do pinu PWM (Pulse Width Modulation, modulacja szerokości impulsu) — pin 15 LCD (LED+) łączymy przez rezystor z pinem **11** Arduino (lub innym wolnym pinem PWM: `9` albo `10`), a pin 16 LCD (LED−) z GND — możemy płynnie zmieniać jasność przez `analogWrite()`.
 
 <Code lang="cpp" file="lcd-pwm-podswietlenie.ino">
 ```cpp
@@ -715,7 +718,7 @@ void loop() {
 
 <Expandable title="Moduł I2C do LCD — ten sam wyświetlacz, dużo mniej przewodów" heading="####">
 
-Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa) do LCD** — małej płytki z ekspanderem portów PCF8574, którą przykręca się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA (Serial Data, linia danych) i SCL (Serial Clock, linia zegara)** (plus zasilanie i masę).
+Zamiast 6–10 przewodów sygnałowych można użyć **modułu I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa) do LCD** — małej płytki z ekspanderem portów PCF8574, którą przylutowuje się bezpośrednio do złącza LCD. Taki moduł komunikuje się z Arduino przez tylko **dwie linie: SDA (Serial Data, linia danych) i SCL (Serial Clock, linia zegara)** (plus zasilanie i masę). W Arduino UNO SDA to pin `A4`, a SCL — `A5`.
 
 Biblioteka `LiquidCrystal_I2C` (dostępna w Menedżerze bibliotek Arduino IDE) działa niemal identycznie jak `LiquidCrystal`. Zamiast `LiquidCrystal lcd(2,3,4,5,6,7)` piszesz `LiquidCrystal_I2C lcd(0x27, 16, 2)`, gdzie `0x27` to domyślny adres I2C modułu (może być też `0x3F` — sprawdzasz skanerem I2C).
 
@@ -726,9 +729,9 @@ Moduł I2C jest szczególnie przydatny, gdy brakuje Ci wolnych pinów cyfrowych.
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Wyświetlacz LCD to jeden z tych modułów, przy których AI potrafi zaoszczędzić godziny szukania błędów:
 
-- **Układ współrzędnych LCD** — jeśli nie jesteś pewien, skąd zaczynają się kolumny i wiersze, zapytaj AI: „Wytłumacz mi układ współrzędnych `lcd.setCursor(kolumna, wiersz)` dla wyświetlacza 2×16. Którego indeksu używa — od 0 czy od 1?". AI da jasną odpowiedź z przykładem.
-- **Diagnostyka kontrastu i braku obrazu** — gdy wyświetlacz nie pokazuje nic (lub same kwadraty), wklej schemat połączeń do AI i napisz: „Sprawdź, czy kontrast jest poprawnie podłączony i dlaczego wyświetlacz może nie wyświetlać znaków". Często chodzi o potencjometr V0.
-- **Własne znaki lcd.createChar()** — poproś AI: „Zaprojektuj bitmapę 5×8 dla znaku stopnia Celsjusza (°C) do użycia z `lcd.createChar()` w Arduino". AI wygeneruje tablicę bajtów gotową do wklejenia w kod.
+- **Układ współrzędnych LCD** — jeśli nie jesteś pewien, skąd zaczynają się kolumny i wiersze, zapytaj AI: „Wytłumacz mi układ współrzędnych `lcd.setCursor(kolumna, wiersz)` dla wyświetlacza 2×16. Którego indeksu używa — od 0 czy od 1?”. AI da jasną odpowiedź z przykładem.
+- **Diagnostyka kontrastu i braku obrazu** — gdy wyświetlacz nie pokazuje nic (lub same kwadraty), wklej schemat połączeń do AI i napisz: „Sprawdź, czy kontrast jest poprawnie podłączony i dlaczego wyświetlacz może nie wyświetlać znaków”. Często chodzi o potencjometr V0.
+- **Własne znaki lcd.createChar()** — poproś AI: „Zaprojektuj bitmapę 5×8 dla znaku stopnia Celsjusza (°C) do użycia z `lcd.createChar()` w Arduino”. AI wygeneruje tablicę bajtów gotową do wklejenia w kod.
 </Callout>
 
 ## Podsumowanie

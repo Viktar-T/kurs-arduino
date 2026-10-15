@@ -15,7 +15,7 @@ weekend: 5
 order: 3
 duration: 75
 block: 1
-blockTitle: "Podstawy Arduino i środowisko IDE"
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
 forbotCourse: 3
 forbotChapter: 3
 
@@ -40,10 +40,10 @@ sources:
   - "https://kurs-arduino.vercel.app/harmonogram"
 
 publish: true
-updated: "2026-06-19"
+updated: "2026-10-15"
 ---
 
-AI potrafi napisać działający kod Arduino w kilka sekund. Problem w tym, że równie łatwo zamienia się w **„ściągę"**, która myśli za Ciebie — a wtedy nie nauczysz się inżynierii i nie poradzisz sobie, gdy AI się pomyli (a myli się przy sprzęcie często, o czym w następnej lekcji). Dziś poznasz metodę, która ustawia właściwą kolejność: **najpierw myślisz Ty, potem pisze AI.** Nazywa się **Spec-Driven Development (SDD)**.
+AI potrafi napisać działający kod Arduino w kilka sekund. Problem w tym, że równie łatwo zamienia się w **„ściągę”**, która myśli za Ciebie — a wtedy nie nauczysz się inżynierii i nie poradzisz sobie, gdy AI się pomyli (a myli się przy sprzęcie często, o czym w następnej lekcji). Dziś poznasz metodę, która ustawia właściwą kolejność: **najpierw myślisz Ty, potem pisze AI.** Nazywa się **Spec-Driven Development (SDD)**.
 
 <Objectives
   items={[
@@ -64,7 +64,7 @@ AI potrafi napisać działający kod Arduino w kilka sekund. Problem w tym, że 
 
 ## 1. Dwa style pracy z AI
 
-Wyobraź sobie, że prosisz AI: „napisz program, żeby robot jeździł". To jest **vibe coding** — luźne polecenie, z którego AI zgaduje, co masz na myśli. Efekt bywa losowy, a Ty nie wiesz, dlaczego coś działa (albo nie).
+Wyobraź sobie, że prosisz AI: „napisz program, żeby robot jeździł”. To jest **vibe coding** — luźne polecenie, z którego AI zgaduje, co masz na myśli. Efekt bywa losowy, a Ty nie wiesz, dlaczego coś działa (albo nie).
 
 Przeciwieństwo to traktowanie AI jak **młodszego stażysty**, którym kieruje **inżynier (Ty)**. Dajesz precyzyjne instrukcje, dostarczasz dane (np. fragment dokumentacji), a potem **sprawdzasz** pracę stażysty.
 
@@ -80,7 +80,7 @@ Przeciwieństwo to traktowanie AI jak **młodszego stażysty**, którym kieruje 
 />
 
 <Callout type="warning" title="Pułapka szybkiego kodu">
-AI tworzy gotowy kod tak szybko, że łatwo pominąć etap **projektowania**. To „pułapka implementacji": dostajesz coś, co wygląda na działające, zanim w ogóle przemyślisz, co ma robić. Specyfikacja to celowy „hamulec", który wymusza myślenie.
+AI tworzy gotowy kod tak szybko, że łatwo pominąć etap **projektowania**. To „pułapka implementacji”: dostajesz coś, co wygląda na działające, zanim w ogóle przemyślisz, co ma robić. Specyfikacja to celowy „hamulec”, który wymusza myślenie.
 </Callout>
 
 ## 2. Spec-Driven Development — najpierw specyfikacja
@@ -94,7 +94,7 @@ Dlaczego to takie ważne w nauce? Bo **cała praca inżynierska zostaje przy Tob
 Specyfikacja dla małego projektu Arduino mieści się na pół strony. Powinna zawierać: **cel, wejścia, wyjścia, zachowanie, ograniczenia i kryteria akceptacji**. Oto wzór, którego użyjemy jako przykładu przewodniego przez kolejne lekcje — **czujnik cofania (parking sensor)**:
 
 <Code lang="text" file="spec-czujnik-cofania.md">
-```
+```text
 ## Specyfikacja: Czujnik cofania (parking sensor)
 
 Cel: Sygnalizować odległość od przeszkody — im bliżej, tym szybsze
@@ -131,12 +131,12 @@ Mając specyfikację, prompt do AI buduj według schematu **Cel – Kontekst –
 <Expandable title="Słaby prompt vs prompt inżyniera" heading="####">
 
 **Słaby (vibe):**
-```
+```text
 Napisz kod do czujnika odległości z brzęczykiem.
 ```
 
 **Prompt inżyniera (Cel–Kontekst–Format + dane):**
-```
+```text
 Jesteś inżynierem systemów wbudowanych. Cel: napisz kod dla Arduino
 UNO R3 (ATmega328P) w stylu PlatformIO (z #include <Arduino.h>),
 realizujący poniższą specyfikację czujnika cofania.
@@ -155,7 +155,7 @@ Drugi prompt daje AI cel, kontekst (płytka, framework), format (styl, ogranicze
 
 </Expandable>
 
-## 5. „Konstytucja" projektu
+## 5. „Konstytucja” projektu
 
 Zanim poprosisz o pierwszą linijkę kodu, ustal **konstytucję** — zestaw niezmiennych zasad, których AI musi trzymać się przez cały projekt. Dla projektów na ATmega328P sensowna konstytucja to:
 
@@ -168,7 +168,7 @@ Zanim poprosisz o pierwszą linijkę kodu, ustal **konstytucję** — zestaw nie
 Wklejając konstytucję na początku rozmowy z AI, uczysz się **zarządzania** asystentem — tak jak inżynier pilnuje, by stażysta nie złamał zasad bezpieczeństwa.
 
 <Callout type="note" title="Narzędzie: GitHub Spec Kit">
-Cały proces „specyfikacja → plan → zadania → implementacja" można zautomatyzować darmowym, otwartym narzędziem **GitHub Spec Kit**, które współpracuje z Copilotem. Na naszych zajęciach wystarczy jednak wersja „ręczna" — gdzie dokładnie umieścić te pliki w projekcie i jak je wywołać, pokazuje sekcja 6.
+Cały proces „specyfikacja → plan → zadania → implementacja” można zautomatyzować darmowym, otwartym narzędziem **GitHub Spec Kit**, które współpracuje z Copilotem. Na naszych zajęciach wystarczy jednak wersja „ręczna” — gdzie dokładnie umieścić te pliki w projekcie i jak je wywołać, pokazuje sekcja 6.
 </Callout>
 
 ## 6. Gdzie trzymać te pliki w projekcie PlatformIO — i jak je wywołać
@@ -185,7 +185,7 @@ Specyfikację i konstytucję trzymaj **w samym projekcie**, obok kodu — wtedy 
 />
 
 <Code lang="text" file="struktura-projektu">
-```
+```text
 projekt-czujnik-cofania/
 ├── .github/
 │   └── copilot-instructions.md   <- KONSTYTUCJA (Copilot czyta automatycznie)
@@ -197,14 +197,14 @@ projekt-czujnik-cofania/
 ```
 </Code>
 
-**Konstytucja działa sama.** Plik `.github/copilot-instructions.md` Copilot dołącza do **każdego** zapytania w czacie i w trybie agenta (zobaczysz go w odpowiedzi w sekcji „References"). Wpisujesz tam raz zasady z punktu 5 i masz spokój. Uwaga: wpływa na czat i generowanie w czacie, ale **nie** na podpowiedzi „w locie" (ghost text).
+**Konstytucja działa sama.** Plik `.github/copilot-instructions.md` Copilot dołącza do **każdego** zapytania w czacie i w trybie agenta (zobaczysz go w odpowiedzi w sekcji „References”). Wpisujesz tam raz zasady z punktu 5 i masz spokój. Uwaga: wpływa na czat i generowanie w czacie, ale **nie** na podpowiedzi „w locie” (ghost text).
 
-**Specyfikację dołączasz świadomie.** W oknie **Copilot Chat** wpisz `#` i nazwę pliku (np. `#spec-czujnik-cofania.md`) albo przeciągnij plik do czatu przyciskiem dodania kontekstu. Następnie wydaj polecenie:
+**Specyfikację dołączasz świadomie.** W oknie **Copilot Chat** wpisz `#` i nazwę pliku (np. `#spec-czujnik-cofania.md`) albo dodaj go przyciskiem dodawania kontekstu (możesz też przeciągnąć plik do okna czatu). Następnie wydaj polecenie:
 
 <Code lang="text" file="polecenie-w-copilot-chat">
-```
+```text
 Zaimplementuj src/main.cpp zgodnie z #spec-czujnik-cofania.md.
-Trzymaj sie zasad z konstytucji projektu.
+Trzymaj się zasad z konstytucji projektu.
 ```
 </Code>
 
@@ -213,12 +213,12 @@ To samo, tylko zautomatyzowane: komenda `specify init` zakłada strukturę proje
 </Callout>
 
 <Task title="Napisz specyfikację i porównaj dwa style" estimate="25 min">
-Wybierz mały pomysł (np. termometr z alarmem LED, stoper na przycisk albo własny wariant czujnika cofania). Najpierw poproś AI „na luzie" jednym zdaniem o gotowy kod i zapisz, co dostałeś. Następnie napisz **pełną specyfikację** według wzoru z punktu 3 i poproś AI o kod na jej podstawie, dołączając konstytucję. Porównaj oba wyniki: który łatwiej zrozumieć, sprawdzić i poprawić? Zapisz wniosek w dwóch–trzech zdaniach.
+Wybierz mały pomysł (np. termometr z alarmem LED, stoper na przycisk albo własny wariant czujnika cofania). Najpierw poproś AI „na luzie” jednym zdaniem o gotowy kod i zapisz, co dostałeś. Następnie napisz **pełną specyfikację** według wzoru z punktu 3 i poproś AI o kod na jej podstawie, dołączając konstytucję. Porównaj oba wyniki: który łatwiej zrozumieć, sprawdzić i poprawić? Zapisz wniosek w dwóch–trzech zdaniach.
 </Task>
 
 ## Podsumowanie
 
-Poznaliśmy metodę, która zamienia AI z „ściągi" w **asystenta inżyniera**: **Spec-Driven Development**.
+Poznaliśmy metodę, która zamienia AI ze „ściągi” w **asystenta inżyniera**: **Spec-Driven Development**.
 
 Kluczowe wnioski:
 
@@ -227,6 +227,6 @@ Kluczowe wnioski:
 - Prompt buduj jako **Cel–Kontekst–Format** i zawsze podawaj mikrokontroler oraz realne liczby.
 - **Konstytucja** projektu pilnuje niezmiennych zasad (20 mA, `millis()`, brak `String`, weryfikacja w dokumentacji).
 - Pliki w projekcie: **konstytucja** w `.github/copilot-instructions.md` (Copilot czyta ją automatycznie), **specyfikacja** w `docs/` — dołączasz ją w czacie przez `#`.
-- „Vibe coding" wykorzystujemy tylko jako **negatywny przykład** do porównania.
+- „Vibe coding” wykorzystujemy tylko jako **negatywny przykład** do porównania.
 
 Mamy projekt na papierze. W następnej lekcji nauczymy się **sprawdzać** to, co AI wygeneruje — bo przy sprzęcie błąd potrafi być nieodwracalny.

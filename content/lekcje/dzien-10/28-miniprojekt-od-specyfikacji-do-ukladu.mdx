@@ -8,14 +8,14 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Mini-projekt: od specyfikacji do działającego układu z AI"
 slug: "miniprojekt-od-specyfikacji-do-ukladu"
-summary: "Capstone modułu AI: budujemy czujnik cofania, przechodząc pełny dziewięciofazowy przepływ pracy — od specyfikacji, przez kod generowany z pomocą AI, weryfikację i symulację Wokwi, aż po wgranie i test na płytce. Łączy PlatformIO, asystenta AI, Spec-Driven Development i bramki weryfikacji w jednym projekcie."
+summary: "Mini-projekt modułu AI: budujemy czujnik cofania, przechodząc pełny dziewięciofazowy przepływ pracy — od specyfikacji, przez kod generowany z pomocą AI, weryfikację i symulację Wokwi, aż po wgranie i test na płytce. Łączy PlatformIO, asystenta AI, Spec-Driven Development i bramki weryfikacji w jednym projekcie."
 
-day: 9
+day: 10
 weekend: 5
-order: 5
+order: 1
 duration: 120
 block: 1
-blockTitle: "Podstawy Arduino i środowisko IDE"
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
 forbotCourse: 3
 forbotChapter: 5
 
@@ -45,7 +45,7 @@ hardware:
   - name: "Płytka stykowa i przewody połączeniowe"
     qty: 1
 
-tags: [miniprojekt, czujnik-cofania, hc-sr04, workflow, platformio, wokwi, ai, spec-driven-development, capstone]
+tags: [miniprojekt, czujnik-cofania, hc-sr04, workflow, platformio, wokwi, ai, spec-driven-development]
 sources:
   - "https://docs.platformio.org/en/latest/integration/ide/vscode.html"
   - "https://wokwi.com/"
@@ -54,7 +54,7 @@ sources:
   - "https://kurs-arduino.vercel.app/harmonogram"
 
 publish: true
-updated: "2026-06-19"
+updated: "2026-10-15"
 ---
 
 To jest lekcja, w której wszystko się spina. Mamy profesjonalne środowisko (**PlatformIO**), asystenta AI, metodę **Spec-Driven Development** i nawyk **weryfikacji**. Połączymy je, budując **czujnik cofania** — od specyfikacji aż po działający układ na biurku. Przejdziemy **dziewięciofazowy przepływ pracy**, który możesz powiesić nad biurkiem i stosować do każdego nowego projektu z AI.
@@ -98,7 +98,7 @@ Załóż nowy projekt PlatformIO: **New Project → Board: Arduino Uno → Frame
 
 ## Faza 1 — Definicja problemu (bez AI)
 
-Najpierw **Ty** opisujesz problem zwykłym językiem: „kierowca cofa; im bliżej przeszkody, tym szybsze piknięcia i zapalona dioda; po przekroczeniu 30 cm — cisza". Możesz poprosić AI **wyłącznie** o wskazanie przypadków brzegowych: „co, gdy czujnik się odłączy?". Odpowiedź zapisujesz jako kilka zdań — to fundament specyfikacji.
+Najpierw **Ty** opisujesz problem zwykłym językiem: „kierowca cofa; im bliżej przeszkody, tym szybsze piknięcia i zapalona dioda; po przekroczeniu 30 cm — cisza”. Możesz poprosić AI **wyłącznie** o wskazanie przypadków brzegowych: „co, gdy czujnik się odłączy?”. Odpowiedź zapisujesz jako kilka zdań — to fundament specyfikacji.
 
 ## Faza 2 — Specyfikacja, elementy i połączenia (z weryfikacją)
 
@@ -119,7 +119,7 @@ Korzystamy ze specyfikacji napisanej w lekcji o SDD. Teraz dochodzi **lista elem
 Najważniejszy moment weryfikacji dotyczy **brzęczyka**. Zadajemy AI celowe pytanie kontrolne:
 
 <Code lang="text" file="prompt-weryfikujacy.txt">
-```
+```text
 Brzęczyk aktywny 5 V pobiera ok. 30 mA, podłączony do pinu D5 Arduino UNO.
 Limit ATmega328P to 40 mA absolutnego maksimum (zalecane 20 mA) na pin.
 Czy mogę sterować nim wprost z pinu, czy potrzebny tranzystor?
@@ -232,11 +232,11 @@ W monitorze portu co 200 ms pojawia się odczyt odległości w cm. Po zbliżeniu
 
 ## Faza 7 — Test
 
-Sprawdź wszystkie progi i przypadki brzegowe ze specyfikacji: odłącz na chwilę czujnik — w monitorze powinno pojawić się „brak echa", a układ nie może „zawiesić" pikania. Porównaj zachowanie z **kryteriami akceptacji** — to one mówią, czy projekt jest gotowy.
+Sprawdź wszystkie progi i przypadki brzegowe ze specyfikacji: odłącz na chwilę czujnik — w monitorze powinno pojawić się „brak echa”, a układ nie może „zawiesić” pikania. Porównaj zachowanie z **kryteriami akceptacji** — to one mówią, czy projekt jest gotowy.
 
 ## Faza 8 — Debug i rozbudowa
 
-Jeśli coś nie gra, użyj **ustrukturyzowanego promptu debugującego**: opisz objaw, oczekiwane zachowanie, fragment kodu i odczyt z monitora, a poproś AI o „trzy najbardziej prawdopodobne przyczyny i jakie `Serial.print()` dodać". Gdy działa — rozbuduj projekt.
+Jeśli coś nie gra, użyj **ustrukturyzowanego promptu debugującego**: opisz objaw, oczekiwane zachowanie, fragment kodu i odczyt z monitora, a poproś AI o „trzy najbardziej prawdopodobne przyczyny i jakie `Serial.print()` dodać”. Gdy działa — rozbuduj projekt.
 
 <MiniProject title="Czujnik cofania — pełny przepływ z AI" goal="Od specyfikacji do działającego układu, z weryfikacją na każdym etapie">
 Zbuduj i uruchom czujnik cofania, przechodząc wszystkie dziewięć faz. Oddajesz **dwie rzeczy**: (1) swoją **specyfikację** w pliku `.md` oraz (2) **działający, zweryfikowany szkic** w PlatformIO.
@@ -246,7 +246,7 @@ Propozycje rozbudowy (wybierz jedną):
 - dołóż **trzeci próg** i drugą diodę (np. zielona–żółta–czerwona jak sygnalizacja),
 - pokaż odległość na **wyświetlaczu LCD** zamiast w monitorze portu,
 - uśrednij **kilka pomiarów**, żeby odczyt był stabilniejszy,
-- przenieś projekt na **robota** z poprzednich zajęć jako czujnik antykolizyjny.
+- przenieś projekt na **robota** z zajęć o budowie robotów jako czujnik antykolizyjny.
 
 Każdą zmianę najpierw dopisz do **specyfikacji**, dopiero potem proś AI o kod — i znów przejdź przez bramkę przeglądu.
 </MiniProject>

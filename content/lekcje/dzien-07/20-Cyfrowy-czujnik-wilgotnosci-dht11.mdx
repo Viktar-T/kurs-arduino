@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Cyfrowy czujnik wilgotności DHT11"
 slug: "cyfrowy-czujnik-wilgotnosci-dht11"
-summary: "Lekcja z kursu Forbot II #8: pojęcie wilgotności względnej (%RH), parametry czujnika DHT-11 (zakres, dokładność, interfejs jednoprzewodowy), podłączenie z rezystorem 4,7 kΩ, biblioteka Mark Ruysa — getHumidity(), getTemperature(), getStatusString(), getMinimumSamplingPeriod(), toFahrenheit()."
+summary: "Lekcja z kursu Forbot II #8: pojęcie wilgotności względnej (%RH), parametry czujnika DHT-11 (zakres, dokładność, interfejs jednoprzewodowy), podłączenie z rezystorem 4,7 kΩ, biblioteka Marka Ruysa — getHumidity(), getTemperature(), getStatusString(), getMinimumSamplingPeriod(), toFahrenheit()."
 
 day: 7
 weekend: 4
@@ -22,9 +22,9 @@ forbotChapter: 8
 objectives:
   - "Wyjaśnić pojęcie wilgotności względnej (%RH) i podać jej zakres oraz jednostkę"
   - "Opisać parametry czujnika DHT-11: zakres temperaturowy, zakres wilgotności, dokładność pomiaru"
-  - "Odróżnić interfejs DHT od standardowego 1-wire i wyjaśnić, dlaczego są niekompatybilne"
+  - "Odróżnić interfejs DHT od standardowego 1-Wire i wyjaśnić, dlaczego są niekompatybilne"
   - "Podłączyć czujnik DHT-11 do Arduino z rezystorem podciągającym 4,7 kΩ"
-  - "Zainstalować bibliotekę Mark Ruysa i skonfigurować obiekt DHT w programie"
+  - "Zainstalować bibliotekę Marka Ruysa i skonfigurować obiekt DHT w programie"
   - "Odczytać wilgotność i temperaturę za pomocą getHumidity() i getTemperature()"
   - "Obsłużyć błędy odczytu funkcją getStatusString() i pobrać minimalny czas próbkowania"
   - "Przeliczyć temperaturę na skalę Fahrenheita funkcją toFahrenheit()"
@@ -48,7 +48,7 @@ sources:
 
 cover: "/img/lekcje/20.01-okladka-kurs-dht11.png"
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
 W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej obudowie termometr i czujnik wilgotności. Dowiesz się, czym jest wilgotność względna, jak podłączyć czujnik do Arduino i jak w kilku linijkach kodu odczytywać dane za pomocą gotowej biblioteki.
@@ -61,7 +61,7 @@ W tej lekcji poznasz czujnik **DHT-11** — niewielki moduł łączący w jednej
   caption="Wilgotność względna opisuje ilość pary wodnej w powietrzu w stosunku do maksymalnej możliwej przy danej temperaturze."
   alt="Schemat ilustrujący pojęcie wilgotności względnej"
   width={600}
-  hight={400}
+  height={400}
 />
 
 Czujnik DHT-11 mierzy **wilgotność względną**, oznaczaną skrótem **RH** (od ang. *Relative Humidity*). Wartość ta określa, ile wody znajduje się w powietrzu względem maksymalnej ilości, jaką powietrze może pomieścić w danej temperaturze.
@@ -94,15 +94,15 @@ W praktycznych projektach sama wilgotność względna wystarcza do prostych alar
 
 DHT-11 to popularny, tani czujnik cyfrowy dostępny w niebieskiej obudowie z czterema wyprowadzeniami. Trzy z nich są używane: **VCC**, **DATA** i **GND**. Czwarty pin oznaczony **NC** (*Not Connected*) można zignorować.
 
-Czujnik korzysta z **zmodyfikowanego interfejsu jednoprzewodowego**, który **nie jest zgodny** ze standardem 1-Wire (używanym np. przez DS18B20). Nie próbuj używać biblioteki 1-Wire z DHT-11 — będziesz potrzebować dedykowanej biblioteki.
+Czujnik korzysta z **zmodyfikowanego interfejsu jednoprzewodowego**, który **nie jest zgodny** ze standardem 1-Wire (używanym np. przez DS18B20). W 1-Wire każde urządzenie ma unikalny 64-bitowy adres, więc kilka czujników może dzielić jedną linię, a transmisję rozpoczyna impuls resetu o ściśle określonym czasie. DHT-11 nie ma adresu (na jednej linii pracuje tylko jeden czujnik), transmisję zaczyna innym sygnałem startu, a bity koduje długością impulsu wysokiego (ok. 26–28 µs to `0`, ok. 70 µs to `1`). Nie próbuj używać biblioteki 1-Wire z DHT-11 — będziesz potrzebować dedykowanej biblioteki.
 
 <Expandable title="Głębiej: dlaczego pin NC w ogóle istnieje, skoro nic nie robi?" heading="####">
 
-Skrót **NC** pochodzi od angielskiego *Not Connected* — to nie funkcja pinu, lecz jego status. Etykieta mówi wprost: „nic tu nie podłączaj". Ten pin nie jest ani zasilaniem, ani linią danych, ani masą.
+Skrót **NC** pochodzi od angielskiego *Not Connected* — to nie funkcja pinu, lecz jego status. Etykieta mówi wprost: „nic tu nie podłączaj”. Ten pin nie jest ani zasilaniem, ani linią danych, ani masą.
 
 Skoro nic nie robi, po co go w ogóle umieszczono? Złożyły się na to trzy powody:
 
-- **Wspólna obudowa dla całej rodziny czujników.** DHT-11 i mocniejszy DHT-22 (a także AM2302 czy RHT03) korzystają z tej samej 4-nóżkowej obudowy. Produkcja jednego standardowego korpusu jest tańsza niż dwóch — więc choć DHT-11 wykorzystuje tylko trzy wyprowadzenia, czwarte i tak zostaje.
+- **Wspólny układ wyprowadzeń dla całej rodziny czujników.** DHT-11 i mocniejszy DHT-22 (a także AM2302 czy RHT03) mają taki sam, 4-nóżkowy układ wyprowadzeń (VCC, DATA, NC, GND), choć obudowa DHT-22 jest większa. Jeden wspólny standard jest tańszy niż dwa różne — więc choć DHT-11 wykorzystuje tylko trzy wyprowadzenia, czwarte i tak zostaje.
 - **Stabilność mechaniczna.** Cztery nóżki trzymają czujnik w płytce stykowej pewniej i równiej niż trzy.
 - **Pin zarezerwowany przez producenta.** Wewnątrz obudowy ta nóżka często prowadzi do struktury układu i bywa wykorzystywana fabrycznie (np. do testów lub kalibracji). Dla użytkownika końcowego pozostaje bez funkcji.
 
@@ -119,11 +119,11 @@ Uwaga na podwójne znaczenie skrótu: w pinoutach układów scalonych `NC` oznac
   headers={["Parametr", "Wartość"]}
   rows={[
     ["Napięcie zasilania", "3–5,5 V"],
-    ["Pobór prądu", "0,2 mA"],
-    ["Częstotliwość próbkowania", "1 Hz (nowy odczyt co 1 s)"],
+    ["Pobór prądu", "0,5–2,5 mA podczas pomiaru, 100–150 µA w spoczynku"],
+    ["Częstotliwość próbkowania", "maks. 1 Hz (odczyt nie częściej niż co 1 s)"],
     ["Zakres temperaturowy", "0–50 °C"],
     ["Dokładność temperatury", "±2 °C"],
-    ["Zakres wilgotności", "20–95 %RH"],
+    ["Zakres wilgotności", "20–90 %RH"],
     ["Dokładność wilgotności", "±5 %RH"],
   ]}
 />
@@ -146,7 +146,7 @@ Na tylnej ściance obudowy DHT-11 producent często drukuje najważniejsze param
 
 <Photo
   file="20.06-dht11-wnetrze.jpg"
-  caption="Wnętrze obudowy DHT-11 — element pojemnościowy mierzący wilgotność i termometr NTC."
+  caption="Wnętrze obudowy DHT-11 — rezystancyjny element mierzący wilgotność i termometr NTC."
   alt="Wnętrze obudowy czujnika DHT-11"
 />
 
@@ -156,7 +156,7 @@ W sprzedaży można trafić na różne warianty DHT-11 o nieznacznie różniący
 
 ## 3. Podłączenie DHT-11 do Arduino
 
-Podłączenie jest bardzo proste — czujnik ma tylko jeden pin danych. Konieczny jest jednak **rezystor podciągający 4,7 kΩ** łączący linię DATA z szyną zasilania VCC.
+Podłączenie jest bardzo proste — czujnik ma tylko jeden pin danych. Konieczny jest jednak **rezystor podciągający 4,7 kΩ** (sprawdzi się wartość ok. 4,7–10 kΩ) łączący linię DATA z szyną zasilania VCC. Gotowe moduły 3-pinowe mają taki rezystor zwykle już wlutowany — wtedy podłączasz tylko VCC, DATA i GND zgodnie z opisem na płytce modułu (kolejność pinów bywa różna).
 
 <Photo
   file="20.07-dht11-podlaczenie.jpg"
@@ -176,9 +176,9 @@ Połączenia:
 - **NC** → niepodłączony
 - **GND** → **GND** Arduino
 
-## 4. Komunikacja z DHT-11 — biblioteka Mark Ruysa
+## 4. Komunikacja z DHT-11 — biblioteka Marka Ruysa
 
-Do obsługi DHT-11 użyjemy prostej biblioteki **arduino-DHT** autorstwa **Mark Ruysa**, dostępnej na GitHubie. Biblioteka automatycznie rozpoznaje typ czujnika (DHT-11, DHT-22, AM2302, RHT03) i obsługuje je identycznie.
+Do obsługi DHT-11 użyjemy prostej biblioteki **arduino-DHT** autorstwa **Marka Ruysa**, dostępnej na GitHubie. Biblioteka automatycznie rozpoznaje typ czujnika (DHT-11, DHT-22, AM2302, RHT03) i obsługuje je identycznie.
 
 ### Instalacja biblioteki
 
@@ -313,7 +313,8 @@ void loop()
   int temperatura = dht.getTemperature();
 
   // Wyświetl tylko gdy odczyt jest poprawny
-  if (dht.getStatusString() == "OK") {
+  // (strcmp porównuje treść napisów; == porównałoby tylko adresy w pamięci)
+  if (strcmp(dht.getStatusString(), "OK") == 0) {
     Serial.print(wilgotnosc);
     Serial.print("%RH | ");
     Serial.print(temperatura);
@@ -357,9 +358,9 @@ Biblioteka wykonuje standardowe przeliczenie: **F = (C × 9/5) + 32**. Przykład
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Czujnik DHT11 i wilgotność względna to temat, przy którym AI otworzy nieoczekiwane połączenia z fizyką i projektami:
 
-- **Wilgotność względna i punkt rosy** — zapytaj AI: „Wytłumacz, czym jest wilgotność względna (%RH) i jak obliczyć punkt rosy (dew point) z temperatury i wilgotności. Podaj wzór Magnus". Zrozumiesz, co tak naprawdę mierzysz tym czujnikiem.
-- **DHT11 z wyświetlaczem LCD** — poproś AI: „Napisz szkic Arduino, który odczytuje temperaturę i wilgotność z DHT11 i wyświetla je na LCD 2×16. Wyświetl °C i %RH na osobnych wierszach". To klasyczny projekt stacji pogodowej, który łączy materiał z kilku lekcji.
-- **Stacja pogodowa z wieloma czujnikami** — gdy opanujesz DHT11, zapytaj AI: „Jak połączyć DHT11, DS18B20 i czujnik ciśnienia BMP280, żeby zbudować mini-stację pogodową z Arduino? Jakie biblioteki będą potrzebne?". AI zaprojektuje architekturę systemu i pokaże, jak integrować wiele czujników.
+- **Wilgotność względna i punkt rosy** — zapytaj AI: „Wytłumacz, czym jest wilgotność względna (%RH) i jak obliczyć punkt rosy (dew point) z temperatury i wilgotności. Podaj wzór Magnusa”. Zrozumiesz, co tak naprawdę mierzysz tym czujnikiem.
+- **DHT11 z wyświetlaczem LCD** — poproś AI: „Napisz szkic Arduino, który odczytuje temperaturę i wilgotność z DHT11 i wyświetla je na LCD 2×16. Wyświetl °C i %RH na osobnych wierszach”. To klasyczny projekt stacji pogodowej, który łączy materiał z kilku lekcji.
+- **Stacja pogodowa z wieloma czujnikami** — gdy opanujesz DHT11, zapytaj AI: „Jak połączyć DHT11, DS18B20 i czujnik ciśnienia BMP280, żeby zbudować mini-stację pogodową z Arduino? Jakie biblioteki będą potrzebne?”. AI zaprojektuje architekturę systemu i pokaże, jak integrować wiele czujników.
 </Callout>
 
 ## 8. Ćwiczenia
@@ -371,7 +372,7 @@ Napisz program, który:
 3. Poniżej 70 %RH dioda jest wyłączona.
 4. W Monitorze portu szeregowego wyświetla aktualny stan w formacie: `45%RH | 22*C | LED: OFF`.
 
-Wskazówka: użyj `dht.getStatusString() == "OK"`, żeby nie reagować na błędne odczyty.
+Wskazówka: użyj `strcmp(dht.getStatusString(), "OK") == 0`, żeby nie reagować na błędne odczyty.
 </Task>
 
 <Task title="Zadanie rozszerzone — prosta stacja pogodowa" estimate="20 min">
@@ -380,9 +381,9 @@ Zbuduj prostą stację pogodową wyświetlającą w Monitorze portu co 2 sekundy
 - temperaturę w °C **i** °F,
 - słowny opis wilgotności: `"sucho"` (< 40 %RH), `"komfortowo"` (40–70 %RH), `"wilgotno"` (> 70 %RH).
 
-Pamiętaj o obsłudze błędów — wypisuj dane tylko gdy `getStatusString() == "OK"`.
+Pamiętaj o obsłudze błędów — wypisuj dane tylko gdy `strcmp(dht.getStatusString(), "OK") == 0`.
 </Task>
 
 ## Podsumowanie
 
-Czujnik **DHT-11** mierzy **wilgotność względną** (0–100 %RH) i **temperaturę** (0–50 °C) przez jeden pin danych z rezystorem podciągającym 4,7 kΩ. Jego interfejs jest **niekompatybilny** ze standardem 1-Wire — wymaga dedykowanej biblioteki, np. **arduino-DHT** Mark Ruysa. Kluczowe funkcje biblioteki: `dht.setup(pin)`, `dht.getHumidity()`, `dht.getTemperature()`, `dht.getStatusString()` (obsługa błędów), `dht.getMinimumSamplingPeriod()` (automatyczne opóźnienie), `dht.toFahrenheit()`. Czujnik reaguje wolno — zmiana wilgotności jest widoczna po **6–15 sekundach**. Łącząc DHT-11 z wiedzą z poprzednich lekcji (termometry, fotorezystor, diody programowalne), możesz zbudować kompletną **stację pogodową** na Arduino.
+Czujnik **DHT-11** mierzy **wilgotność względną** (20–90 %RH) i **temperaturę** (0–50 °C) przez jeden pin danych z rezystorem podciągającym 4,7 kΩ. Jego interfejs jest **niekompatybilny** ze standardem 1-Wire — wymaga dedykowanej biblioteki, np. **arduino-DHT** Marka Ruysa. Kluczowe funkcje biblioteki: `dht.setup(pin)`, `dht.getHumidity()`, `dht.getTemperature()`, `dht.getStatusString()` (obsługa błędów), `dht.getMinimumSamplingPeriod()` (automatyczne opóźnienie), `dht.toFahrenheit()`. Czujnik reaguje wolno — zmiana wilgotności jest widoczna po **6–15 sekundach**. Łącząc DHT-11 z wiedzą z poprzednich lekcji (termometry, fotorezystor, diody programowalne), możesz zbudować kompletną **stację pogodową** na Arduino.

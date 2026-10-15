@@ -6,9 +6,9 @@ status: draft
 sensitivity: low
 
 # --- Site-driving fields ---
-title: "Kurs budowy robotów – #1 – wstęp, spis treści"
+title: "Kurs budowy robotów — wstęp i spis treści"
 slug: "budowa-robotow-wstep-spis-tresci"
-summary: "Lekcja wprowadzająca z kursu Forbot III #1: czego dotyczy kurs budowy robotów, dedykowany shield MSX, uniwersalne podwozie Forbot, przegląd czterech projektów (sterowanie IR, omijanie przeszkód, line follower, światłolub) oraz spis treści 10 artykułów kursu."
+summary: "Lekcja wprowadzająca z kursu Forbot III #1: czego dotyczy kurs budowy robotów, dedykowany shield MSX, uniwersalne podwozie Forbot, przegląd czterech projektów (sterowanie IR, omijanie przeszkód, line follower, światłolub) oraz spis treści 10 artykułów kursu Forbota."
 
 day: 8
 weekend: 4
@@ -21,13 +21,13 @@ forbotChapter: 1
 
 objectives:
   - "Opisać zakres tematyczny kursu budowy robotów i typy konstrukcji, które będą realizowane"
-  - "Wymienić podstawowe elementy zestawu: shield MSX, podwozie, silniki, czujniki"
+  - "Wymienić podstawowe elementy zestawu Forbota: shield MSX, podwozie, silniki, czujniki"
   - "Rozróżnić cztery projekty kursu: sterowanie IR, omijanie przeszkód, line follower, światłolub"
   - "Wyjaśnić, jaką wiedzę wstępną (elektronika, Arduino) należy posiadać przed przystąpieniem do kursu"
-  - "Wymienić wszystkie 10 artykułów kursu w kolejności"
+  - "Wymienić w kolejności tematy 10 artykułów kursu budowy robotów Forbota"
 
 prerequisites:
-  - "dzien-07/cyfrowy-czujnik-wilgotnosci-dht11"
+  - "dzien-07/wielozadaniowosc-opoznienia-z-millis"
 
 hardware: []
 
@@ -37,10 +37,10 @@ sources:
 
 cover: "/img/lekcje/23.01-okladka-kurs-budowy-robotow.png"
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
-Podczas tego kursu wracamy do korzeni Forbota, czyli do **budowy robotów**. Skupimy się na kilku typach konstrukcji, od których zaczyna najwięcej początkujących robotyków! Dla ułatwienia budowy robota przygotowaliśmy gotowe, uniwersalne podwozia, specjalny shield do Arduino oraz niezbędne czujniki.
+W tej części kursu przechodzimy do **budowy robotów** — opieramy się na *Kursie budowy robotów* Forbota. Skupimy się na kilku typach konstrukcji, od których zaczyna najwięcej początkujących robotyków! Na potrzeby swojego kursu Forbot przygotował gotowe, uniwersalne podwozie, specjalny shield do Arduino oraz niezbędne czujniki.
 
 <Photo
   file="23.02-robot-forbot-przegladowe.jpg"
@@ -50,11 +50,11 @@ Podczas tego kursu wracamy do korzeni Forbota, czyli do **budowy robotów**. Sku
 
 ## 1. Co omówimy w kursie
 
-Podczas kolejnych artykułów zostaną omówione wszystkie aspekty związane z budową prostych **robotów mobilnych**. Zaczniemy od poznania dedykowanego shielda, złożymy podwozie, a następnie krok po kroku napiszemy programy realizujące coraz ciekawsze zachowania.
+W kolejnych artykułach kursu Forbota omówione są wszystkie aspekty związane z budową prostych **robotów mobilnych**. Kurs zaczyna się od poznania dedykowanego shielda i złożenia podwozia, a następnie krok po kroku prowadzi przez programy realizujące coraz ciekawsze zachowania.
 
 ### Shield MSX
 
-Kurs rozpocznie się od omówienia **dedykowanego shielda**, który na potrzeby tego kursu przygotowała firma MSX. Dzięki temu nie będziemy tracić czasu na łączenie układów na płytce stykowej — sterownik ten znajdzie też zastosowanie w innych projektach.
+Kurs Forbota rozpoczyna się od omówienia **dedykowanego shielda**, który na potrzeby tego kursu przygotowała firma MSX. Dzięki niemu nie trzeba tracić czasu na łączenie układów na płytce stykowej — sterownik ten znajdzie też zastosowanie w innych projektach.
 
 <Photo
   file="23.03-tarcza-sterownika-msx.jpg"
@@ -64,7 +64,7 @@ Kurs rozpocznie się od omówienia **dedykowanego shielda**, który na potrzeby 
 
 ### Podwozie
 
-Następnym krokiem będzie złożenie **uniwersalnego podwozia**. Oryginalny kształt i kilka ukrytych funkcji mechaniki sprawiają, że każdy będzie mógł wybrać konfigurację robota najlepszą do danego zadania.
+Następnym krokiem w kursie Forbota jest złożenie **uniwersalnego podwozia**. Oryginalny kształt i kilka ukrytych funkcji mechaniki sprawiają, że każdy będzie mógł wybrać konfigurację robota najlepszą do danego zadania.
 
 <Photo
   file="23.04-podwozie-elementy-mechaniczne.jpg"
@@ -76,7 +76,7 @@ Podwozie jest kompatybilne z różnymi kontrolerami i silnikami — znajdzie wi�
 
 ## 2. Przykładowe projekty
 
-Podczas każdego artykułu kursowego, oprócz napisania programu, zdecydujemy o konfiguracji mechanicznej robota — gdzie umieścić napęd, a gdzie czujniki. Oto cztery projekty, które zrealizujemy:
+W każdym artykule kursu Forbota, oprócz napisania programu, decyduje się o konfiguracji mechanicznej robota — gdzie umieścić napęd, a gdzie czujniki. Oto cztery przykładowe projekty z tego kursu:
 
 ### Zdalne sterowanie IR
 
@@ -84,27 +84,27 @@ Robot sterowany pilotem na podczerwień — takim samym jak do telewizora (proto
 
 <Photo
   file="23.05-robot-sterowanie-ir.jpg"
-  caption="Robot mobilny sterowany za pomocą pilota IR — projekt nr 8 kursu."
+  caption="Robot mobilny sterowany za pomocą pilota IR — artykuł nr 8 kursu Forbota."
   alt="Robot Forbot z odbiornikiem podczerwieni podczas sterowania pilotem RC5"
 />
 
 ### Omijanie przeszkód
 
-Robot samodzielnie wykrywa przeszkody czujnikiem ultradźwiękowym i omija je bez ingerencji człowieka.
+Robot samodzielnie wykrywa przeszkody i omija je bez ingerencji człowieka — w artykule nr 5 za pomocą mechanicznych krańcówek („wąsów”), a w artykule nr 9 za pomocą czujnika ultradźwiękowego HC-SR04 na serwie.
 
 <Photo
   file="23.06-robot-omijanie-przeszkod.jpg"
-  caption="Robot mobilny omijający przeszkody za pomocą czujnika HC-SR04 — projekt nr 5 kursu."
-  alt="Robot Forbot napotykający przeszkodę i zmieniający kierunek jazdy"
+  caption="Robot mobilny wykrywający przeszkody mechanicznymi krańcówkami („wąsami”) — artykuł nr 5 kursu Forbota."
+  alt="Robot Forbot z dwoma wąsami-krańcówkami z przodu do wykrywania przeszkód"
 />
 
 ### Line Follower
 
-Robot podąża wzdłuż czarnej linii na białym tle — klasyczne ćwiczenie startujące w zawodach robotycznych.
+Robot podąża wzdłuż czarnej linii na białym tle — klasyczna konstrukcja startująca w zawodach robotycznych.
 
 <Photo
   file="23.07-robot-line-follower.jpg"
-  caption="Robot line follower śledzący czarną linię na torze — projekt nr 7 kursu."
+  caption="Robot line follower śledzący czarną linię na torze — artykuł nr 7 kursu Forbota."
   alt="Robot Forbot na torze z czarną linią gotowy do jazdy po śladzie"
 />
 
@@ -114,7 +114,7 @@ Robot podąża za źródłem światła wykrytym przez parę fotorezystorów.
 
 <Photo
   file="23.08-robot-swiatlolub.jpg"
-  caption="Robot światłolub — podąża za latarką wykrytą przez fotorezystory — projekt nr 6 kursu."
+  caption="Robot światłolub — podąża za latarką wykrytą przez fotorezystory — artykuł nr 6 kursu Forbota."
   alt="Robot Forbot z fotorezystorami wykrywający kierunek źródła światła"
 />
 
@@ -124,7 +124,7 @@ Robot podąża za źródłem światła wykrytym przez parę fotorezystorów.
   caption="Spis treści kursu budowy robotów Forbot (10 artykułów)"
   headers={["Nr", "Temat"]}
   rows={[
-    ["1", "Wstęp, spis treści (ten artykuł)"],
+    ["1", "Wstęp, spis treści (na nim opiera się ta lekcja)"],
     ["2", <a href="https://forbot.pl/blog/kurs-budowy-robotow-sterownik-robota-arduino-czujniki-id19006" target="_blank" rel="noopener noreferrer">Sterownik robota, czujniki</a>],
     ["3", <a href="https://forbot.pl/blog/kurs-budowy-robotow-konstrukcja-mechaniczna-id19070" target="_blank" rel="noopener noreferrer">Konstrukcja mechaniczna</a>],
     ["4", <a href="https://forbot.pl/blog/kurs-budowy-robotow-pierwsze-programowanie-id19235" target="_blank" rel="noopener noreferrer">Pierwsze programowanie robota</a>],
@@ -147,23 +147,23 @@ Na naszych zajęciach zrealizowaliśmy już kurs podstaw Arduino oraz wybrane te
 
 ## 5. Zestaw sprzętowy
 
-Do wykonania ćwiczeń z kursu budowy robotów potrzebny będzie zestaw elementów. W kompletnym zestawie Forbot znajdują się:
+Do wykonania ćwiczeń z kursu budowy robotów Forbota potrzebny jest zestaw elementów. W kompletnym zestawie Forbota znajdują się:
 
 - elementy mechaniczne (podwozie, koła, silniki DC)
 - baterie
 - shield MSX
 
 <Callout type="warning">
-W zestawach do tego kursu **nie ma** płytki Arduino UNO — używamy tej samej, z którą pracowaliśmy do tej pory.
+W zestawach Forbota do tego kursu **nie ma** płytki Arduino UNO — należy użyć tej samej, z którą pracowaliśmy do tej pory.
 </Callout>
 
 ## Podsumowanie
 
-W tej lekcji poznaliśmy zakres i strukturę **kursu budowy robotów mobilnych** opartych na Arduino. Kurs składa się z **10 artykułów** prowadzących od montażu mechanicznego po zaawansowane zachowania robota.
+W tej lekcji poznaliśmy zakres i strukturę **kursu budowy robotów mobilnych** opartych na Arduino. Kurs Forbota składa się z **10 artykułów** prowadzących od montażu mechanicznego po zaawansowane zachowania robota.
 
 Kluczowe wnioski:
-- do budowy używamy **shielda MSX** (brak konieczności lutowania) i **uniwersalnego podwozia Forbot**
-- zrealizujemy cztery projekty: sterowanie IR, omijanie przeszkód, line follower i światłolub
+- w kursie Forbota do budowy używa się **shielda MSX** (brak konieczności lutowania) i **uniwersalnego podwozia Forbota**
+- kurs obejmuje cztery projekty: sterowanie IR, omijanie przeszkód, line follower i światłolub
 - każdy projekt łączy programowanie z wyborem konfiguracji mechanicznej
 
-W kolejnej lekcji zajmiemy się szczegółowym omówieniem **shielda robota i dostępnych czujników**.
+Kolejny artykuł kursu Forbota ([#2 — Sterownik robota, czujniki](https://forbot.pl/blog/kurs-budowy-robotow-sterownik-robota-arduino-czujniki-id19006)) szczegółowo omawia **shield robota i dostępne czujniki**.

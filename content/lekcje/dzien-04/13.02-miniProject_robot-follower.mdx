@@ -33,25 +33,28 @@ hardware:
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
   - { name: "Potencjometr", qty: 1 }
   - { name: "Silnik DC lub serwomechanizm", qty: 1 }
-  - { name: "Mostek H (L298N lub TB6612)", qty: 1 }
+  - { name: "Mostek H L293D", qty: 1, note: "jak w lekcji o silnikach DC; ewentualnie moduł L298N lub TB6612" }
+  - { name: "Bateria 9 V z klipsem", qty: 1, note: "osobne zasilanie silnika DC przez mostek H" }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 12 }
 
 tags: [arduino, hc-sr04, serial-plotter, silnik-dc, robot-follower, mini-projekt, map]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
 
 publish: true
-updated: "2026-05-24"
+updated: "2026-10-15"
 ---
 
 Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
 
 <MiniProject title="Symulacja robota follower" estimate="30 min">
 
-Zasymuluj działanie robota follower, który utrzymuje stałą odległość od obiektu przed sobą.
+**Sprzęt:** HC-SR04 + potencjometr (pin A0) + silnik DC (lub serwomechanizm jako zamiennik) + mostek H.
 
-**Sprzęt:** HC-SR04 + potencjometr (pin A0) + silnik DC (lub serwomechanizm jako zastępnik) + mostek H.
+<Callout type="warning" title="Zasilanie silnika">
+Silnik DC podłącz wyłącznie przez mostek H i zasilaj go z osobnego źródła (np. bateria 9 V na pin `8` układu `L293D`), łącząc masy wszystkich układów — tak jak w [lekcji o silnikach DC](/lekcje/dzien-04/11-Sterowanie-silnikami-DC#5-zasilanie-i-pierwsze-podłączenie-l293d). Nigdy nie zasilaj silnika bezpośrednio z pinu ani z wyjścia `5 V` Arduino.
+</Callout>
 
 **Logika sterowania:**
 
@@ -64,24 +67,22 @@ Zasymuluj działanie robota follower, który utrzymuje stałą odległość od o
   ]}
 />
 
-**Potencjometr przesuwa cały zakres:** szerokość okna (np. 5 cm) pozostaje stała, a potencjometr ustawia jego środek — od 10 cm (pokrętło w lewo) do 40 cm (pokrętło w prawo). Wzór:
+**Potencjometr przesuwa cały zakres:** szerokość okna (np. 4 cm) pozostaje stała, a potencjometr ustawia jego środek — od 10 cm (pokrętło w lewo) do 40 cm (pokrętło w prawo). Wzór:
 
 ```cpp
 int srodek  = map(analogRead(A0), 0, 1023, 10, 40); // środek zakresu w cm
 int DIST_MIN = srodek - 2;  // dolna granica
-int DIST_MAX = srodek + 2;  // górna granica (zakres = 5 cm)
+int DIST_MAX = srodek + 2;  // górna granica (okno szerokości 4 cm)
 ```
 
 **Wymagania:**
 
 1. Odczytuj potencjometr w każdej iteracji pętli i przeliczaj `DIST_MIN` / `DIST_MAX`.
-2. Wyświetlaj przez `Serial.print("\t")` trzy wartości w jednej linii: odległość, `DIST_MIN`, `DIST_MAX` — w Serial Plotter zobaczysz ruchome „widełki" wokół rzeczywistego dystansu.
+2. Wyświetlaj przez `Serial.print("\t")` trzy wartości w jednej linii: odległość, `DIST_MIN`, `DIST_MAX` — w Serial Plotter zobaczysz ruchome „widełki” wokół rzeczywistego dystansu.
 3. Użyj co najmniej jednego złożonego warunku (`&&` lub `||`).
 
 **Wskazówka:** Prędkość silnika możesz zakodować jako wartość PWM (0–255) i dopisać ją jako czwartą kolumnę wykresu.
 
 </MiniProject>
 
-## Projekty finałowe — integracja wiedzy z lekcji 04–13
-
-Poniższe cztery projekty sprawdzają, czy potrafisz samodzielnie połączyć zagadnienia z pierwszych czterech dni kursu. Wracaj do poprzednich lekcji, gdy potrzebujesz przypomnienia schematu lub składni.
+{/* DO UZUPEŁNIENIA (niewidoczne dla uczniów): sekcja „Projekty finałowe — integracja wiedzy z lekcji 04–13” — zapowiadała cztery projekty łączące zagadnienia z pierwszych czterech dni kursu, ale treść projektów nigdy nie została dopisana. */}

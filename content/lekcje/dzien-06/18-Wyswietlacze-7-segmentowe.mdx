@@ -12,7 +12,7 @@ summary: "Lekcja z kursu Forbot II #6: budowa wyświetlacza 7-segmentowego, konf
 
 day: 6
 weekend: 3
-order: 6
+order: 2
 duration: 90
 block: 12
 blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
@@ -22,7 +22,7 @@ forbotChapter: 6
 objectives:
   - "Opisać budowę wyświetlacza 7-segmentowego i oznaczyć segmenty A–G"
   - "Wyjaśnić różnicę między konfiguracją wspólnej katody a wspólnej anody"
-  - "Odczytać pinout dwucyfrowego wyświetlacza na podstawie datasheet"
+  - "Odczytać pinout dwucyfrowego wyświetlacza na podstawie datasheetu"
   - "Podłączyć wyświetlacz do Arduino z rezystorami ochronnymi"
   - "Napisać funkcję wyświetlającą cyfry 0–9 przy użyciu switch/case"
   - "Zrealizować multipleksowanie dwóch wyświetlaczy przez tranzystory NPN BC547"
@@ -40,8 +40,9 @@ hardware:
   - { name: "Rezystor 10 kΩ", qty: 2 }
   - { name: "Tranzystor NPN BC547", qty: 2 }
   - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Przycisk tact-switch", qty: 3, optional: true, note: "do zadania 6.2" }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 25, note: "w tym 7 krótkich zworek łączących segmenty obu cyfr" }
 
 tags: [arduino, wyswietlacz, 7-segmentowy, multipleksowanie, tranzystor, bc547, sevseg, biblioteka, switch-case]
 sources:
@@ -50,7 +51,7 @@ sources:
 
 cover: "/img/lekcje/18.01-okladka-wyswietlacze-7seg.png"
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
 W projektach Arduino najczęściej spotykanym wyświetlaczem jest LCD z tekstem, rzadziej graficzny. Wiele osób zupełnie pomija jednak **wyświetlacze 7-segmentowe** — a szkoda, bo widzieliśmy je setki razy: na zegarkach cyfrowych, multimetrach czy kasach fiskalnych. W tej lekcji poznasz ich budowę, nauczysz się podłączać je do Arduino i sterować nimi — najpierw ręcznie, a potem za pomocą gotowej biblioteki.
@@ -75,8 +76,8 @@ Wyświetlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentów. Na p
 
 <Photo
   file="18.03-cyfry-segmenty-schemat.png"
-  caption="Mapowanie cyfr 0–9 na segmenty wyświetlacza — które segmenty trzeba zapalić dla każdej cyfry."
-  alt="Tabela pokazująca, które segmenty A–G należy zapalić dla cyfr 0 do 9"
+  caption="Przykładowe cyfry 1, 2, 5 i 9 — jasne segmenty są zapalone, ciemne zgaszone."
+  alt="Cztery wyświetlacze 7-segmentowe z oznaczonymi segmentami A–G i P, pokazujące cyfry 1, 2, 5 i 9"
 />
 
 <Photo
@@ -87,7 +88,7 @@ Wyświetlenie konkretnej cyfry polega na zapaleniu odpowiednich segmentów. Na p
 
 Niektóre wyświetlacze mają dodatkowo **punkt dziesiętny (P)** — niezależną diodę LED, która może służyć jako przecinek lub pełnić inną rolę. Uwaga: czasem mimo fizycznej obecności kropki nie ma za nią LED-a i sterowanie nie jest możliwe.
 
-Dostępne są wyświetlacze w różnych rozmiarach, kolorach i konfiguracjach — jednoliczbowe i wieloliczbowe (2, 4 cyfry w jednej obudowie).
+Dostępne są wyświetlacze w różnych rozmiarach, kolorach i konfiguracjach — jednocyfrowe i wielocyfrowe (2, 4 cyfry w jednej obudowie).
 
 ## 2. Konfiguracje — wspólna katoda i wspólna anoda
 
@@ -114,12 +115,12 @@ Wewnątrz wyświetlacza wszystkie diody LED mogą być połączone na dwa sposob
 />
 
 <Callout type="note">
-Przed podłączeniem wyświetlacza **zawsze sprawdzaj w datasheet**, czy masz do czynienia ze wspólną katodą, czy anodą. Pomyłka spowoduje, że wyświetlacz nie będzie działał lub zaświecą się odwrotne segmenty.
+Przed podłączeniem wyświetlacza **zawsze sprawdzaj w datasheecie**, czy masz do czynienia ze wspólną katodą, czy anodą. Pomyłka spowoduje, że wyświetlacz nie będzie działał lub zaświecą się odwrotne segmenty.
 </Callout>
 
 ## 3. Testowany wyświetlacz — LDD040AUE-101A
 
-W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** oznaczony jako `LDD040AUE-101A` lub `LDD040AAG-101`. Obie wersje są identyczne — różnią się tylko kolorem podświetlenia.
+W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** oznaczony jako `LDD040AUE-101A` lub `LDD040AAG-101`. Obie wersje są identyczne — różnią się tylko kolorem świecenia segmentów.
 
 <Photo
   file="18.07-wyswietlacz-LDD040-przod.png"
@@ -135,7 +136,7 @@ W zestawie kursowym znajdziesz **dwucyfrowy wyświetlacz ze wspólną katodą** 
   height={500}
 />
 
-Z datasheetu wynika, że w jednej obudowie mieszczą się **dwa niezależne wyświetlacze** (7 wewnętrznych struktur dla każdego). Pin punktu dziesiętnego P nie ma podłączonego LED-a — w tej lekcji go nie używamy.
+Z datasheetu wynika, że w jednej obudowie mieszczą się **dwa niezależne wyświetlacze** (7 wewnętrznych struktur dla każdego). Punkt dziesiętny P nie ma wyprowadzonego pinu, więc nie da się nim sterować — w tej lekcji go nie używamy.
 
 Każdy z dwóch wyświetlaczy ma własną wspólną katodę (minus):
 
@@ -181,8 +182,8 @@ Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3
 
 <Photo
   file="18.11-podlaczenie-kompletny-uklad.jpg"
-  caption="Kompletny układ z pierwszym wyświetlaczem podłączonym do Arduino — wszystkie 7 segmentów przez rezystory 1 kΩ."
-  alt="Zdjęcie kompletnego układu: Arduino UNO, płytka stykowa, wyświetlacz 7-segmentowy"
+  caption="Wyświetlacz wpięty w płytkę stykową — każdy z 7 segmentów ma własny rezystor 1 kΩ (przewody do Arduino dołożymy w kolejnym kroku)."
+  alt="Wyświetlacz 7-segmentowy i rezystory 1 kΩ na płytce stykowej obok Arduino UNO"
 />
 
 <Photo
@@ -191,32 +192,32 @@ Zaczynamy od podłączenia pierwszego wyświetlacza. Korzystamy z pinów 1, 2, 3
   alt="Wyświetlacz 7-segmentowy wkładany w płytkę stykową, segmenty zgaszone"
 />
 
-Kolejny krok jest prosty, łączymy każdy rezystor przewodem z Arduino UNO. Kolejność następującą:
+Kolejny krok jest prosty — łączymy każdy rezystor przewodem z Arduino UNO. Kolejność jest następująca:
 
-- wyprowadzenie nr 1 (segment C), do pinu Arduino nr 2,
-- wyprowadzenie nr 2 (segment E), do pinu Arduino nr 3,
-- wyprowadzenie nr 3 (segment D), do pinu Arduino nr 4,
-- wyprowadzenie nr 13 (segment B), do pinu Arduino nr 5,
-- wyprowadzenie nr 14 (segment G), do pinu Arduino nr 6,
-- wyprowadzenie nr 15 (segment A), do pinu Arduino nr 7,
-- wyprowadzenie nr 16 (segment F), do pinu Arduino nr 8.
+- wyprowadzenie nr 1 (segment C) do pinu Arduino nr 2,
+- wyprowadzenie nr 2 (segment E) do pinu Arduino nr 3,
+- wyprowadzenie nr 3 (segment D) do pinu Arduino nr 4,
+- wyprowadzenie nr 13 (segment B) do pinu Arduino nr 5,
+- wyprowadzenie nr 14 (segment G) do pinu Arduino nr 6,
+- wyprowadzenie nr 15 (segment A) do pinu Arduino nr 7,
+- wyprowadzenie nr 16 (segment F) do pinu Arduino nr 8.
 
 <Photo
   file="18.13-test-segmentow-wszystkie.jpg"
-  caption="Wszystkie segmenty zapalone — wyświetlacz pokazuje cyfrę 8."
-  alt="Wyświetlacz 7-segmentowy ze wszystkimi segmentami zapalonymi (cyfra 8)"
+  caption="Pierwsze przewody łączą rezystory segmentów z pinami cyfrowymi Arduino — wyświetlacz jest jeszcze zgaszony."
+  alt="Arduino UNO połączone trzema przewodami z płytką stykową, na której jest wyświetlacz 7-segmentowy"
 />
 
 <Photo
   file="18.14-wyswietlanie-cyfry-5.jpg"
-  caption="Wyświetlacz pokazuje cyfrę 5 — segmenty A, C, D, F, G zapalone."
-  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 5"
+  caption="Wszystkie siedem segmentów połączonych przez rezystory z pinami 2–8 Arduino."
+  alt="Arduino UNO połączone siedmioma przewodami z wyświetlaczem 7-segmentowym na płytce stykowej"
 />
 
 <Photo
   file="18.15-wyswietlanie-cyfry-8.jpg"
-  caption="Cyfra 8 na wyświetlaczu — wszystkie segmenty zapalone."
-  alt="Wyświetlacz 7-segmentowy pokazujący cyfrę 8"
+  caption="Kompletny układ — dodatkowo wspólna katoda (pin 4 wyświetlacza) połączona z GND Arduino."
+  alt="Arduino UNO połączone z wyświetlaczem 7-segmentowym siedmioma przewodami sygnałowymi i przewodem masy"
 />
 
 ## 5. Test segmentów
@@ -234,7 +235,7 @@ const byte SEG_A = 7;
 const byte SEG_F = 8;
 
 void setup() {
-  // Konfiguracja pinow jako wyjscia
+  // Konfiguracja pinów jako wyjścia
   pinMode(SEG_A, OUTPUT);
   pinMode(SEG_B, OUTPUT);
   pinMode(SEG_C, OUTPUT);
@@ -243,7 +244,7 @@ void setup() {
   pinMode(SEG_F, OUTPUT);
   pinMode(SEG_G, OUTPUT);
 
-  // Test segmentow — zapalamy kolejno A do G
+  // Test segmentów — zapalamy kolejno A do G
   digitalWrite(SEG_A, HIGH);
   delay(800);
   digitalWrite(SEG_B, HIGH);
@@ -264,7 +265,13 @@ void loop() {
 ```
 </Code>
 
-
+<Photo
+  file="18.16-licznik-animacja.gif"
+  caption="Efekt programu testowego — segmenty zapalają się kolejno od A do G."
+  alt="Animacja GIF: segmenty wyświetlacza 7-segmentowego zapalają się kolejno od A do G"
+  width={700}
+  height={500}
+/>
 
 ## 6. Wyświetlanie pojedynczych cyfr
 
@@ -281,7 +288,7 @@ const byte SEG_A = 7;
 const byte SEG_F = 8;
 
 void setup() {
-  // Konfiguracja pinow jako wyjscia
+  // Konfiguracja pinów jako wyjścia
   pinMode(SEG_A, OUTPUT);
   pinMode(SEG_B, OUTPUT);
   pinMode(SEG_C, OUTPUT);
@@ -290,15 +297,15 @@ void setup() {
   pinMode(SEG_F, OUTPUT);
   pinMode(SEG_G, OUTPUT);
 
-  wyswietlacz(5); // Wyswietl cyfre 5
+  wyswietlacz(5); // Wyświetl cyfrę 5
 }
 
 void loop() {
 }
 
 void wyswietlacz(int cyfra) {
-  // Instrukcja switch ustawia odpowiednie stany na wyjsciach
-  // w zaleznosci od podanej cyfry
+  // Instrukcja switch ustawia odpowiednie stany na wyjściach
+  // w zależności od podanej cyfry
   switch (cyfra) {
     case 0:
       digitalWrite(SEG_A, HIGH);
@@ -438,7 +445,7 @@ const byte SEG_A = 7;
 const byte SEG_F = 8;
 
 void setup() {
-  // Konfiguracja pinow jako wyjscia
+  // Konfiguracja pinów jako wyjścia
   pinMode(SEG_A, OUTPUT);
   pinMode(SEG_B, OUTPUT);
   pinMode(SEG_C, OUTPUT);
@@ -450,9 +457,9 @@ void setup() {
 
 void loop() {
   int i = 0;
-  // Petla od 0 do 9
+  // Pętla od 0 do 9
   for (i = 0; i < 10; i++) {
-    wyswietlacz(i); // Wyswietl wartosc na wyswietlaczu
+    wyswietlacz(i); // Wyświetl wartość na wyświetlaczu
     delay(500);     // Poczekaj 500 ms
   }
 }
@@ -515,14 +522,6 @@ void wyswietlacz(int cyfra) {
 </Code>
 
 <Photo
-  file="18.16-licznik-animacja.gif"
-  caption="Animacja licznika — wyświetlacz cyklicznie pokazuje cyfry 0–9."
-  alt="Animacja GIF przedstawiająca licznik 0–9 na wyświetlaczu 7-segmentowym"
-  width={700}
-  height={500}
-/>
-
-<Photo
   file="18.17-licznik-cyfry-gif.gif"
   caption="Kolejne cyfry na wyświetlaczu 7-segmentowym w trakcie działania licznika."
   alt="GIF z kolejnymi cyframi wyświetlanymi na wyświetlaczu 7-segmentowym"
@@ -536,7 +535,7 @@ Teraz robi się trudniej — przynajmniej po stronie połączeń.
 
 **Naiwne podejście** to podłączenie drugiego wyświetlacza do kolejnych 7 pinów Arduino. Problem: skończyłyby się wolne piny, a przy 3 lub 4 wyświetlaczach byłoby to zupełnie niemożliwe.
 
-**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami. Porozmawiamy o tym trochu póżniej w części 8.3. Multipleksowanie w praktyce 
+**Sprytne rozwiązanie:** podłączymy segmenty obu wyświetlaczy **razem** (pin A pierwszego z pinem A drugiego itd.) i użyjemy tylko 7 pinów dla segmentów. Żeby wyświetlać **różne cyfry** na każdym wyświetlaczu, zastosujemy **multipleksowanie** z tranzystorami. Porozmawiamy o tym trochę później — w części 8.3 „Multipleksowanie w praktyce”.
 
 ### 8.1. Połączenie segmentów
 
@@ -568,36 +567,30 @@ Odpowiadające sobie piny segmentów obu wyświetlaczy łączymy razem:
   file="18.19-drugi-wyswietlacz-polaczenia.jpg"
   caption="Łączenie odpowiadających sobie pinów segmentów obu wyświetlaczy za pomocą zworek."
   alt="Płytka stykowa z dwoma wyświetlaczami połączonymi zworkami"
-
 />
-
-Każdy z dwóch wyświetlaczy ma własną wspólną katodę (minus):
-
-- **Pin 4** to wspólna katoda (masa) dla **pierwszego** wyświetlacza.
-- **Pin 5** to wspólna katoda (masa) dla **drugiego** wyświetlacza.
 
 <Photo
   file="18.20-drugi-wyswietlacz-uklad.jpg"
-  caption="Oba wyświetlacze podłączone wspólnymi segmentami — na razie wyświetlają identyczną cyfrę."
-  alt="Dwa wyświetlacze 7-segmentowe podłączone do Arduino pokazujące tę samą cyfrę"
+  caption="Kolejne zworki (zaznaczone) łączące piny segmentów obu cyfr."
+  alt="Płytka stykowa z zaznaczonymi zworkami łączącymi piny segmentów obu cyfr"
 />
 
 <Photo
   file="18.21-tranzystor-BC547-uklad.jpg"
-  caption="Tranzystor BC547 jako klucz sterujący wyświetlaczem — kolektor do katody wyświetlacza."
-  alt="Schemat podłączenia tranzystora BC547 do wyświetlacza 7-segmentowego"
+  caption="Komplet zworek łączących odpowiadające sobie segmenty obu cyfr — widok bez wyświetlacza."
+  alt="Płytka stykowa z rezystorami i zworkami łączącymi segmenty, bez wyświetlacza"
 />
 
 <Photo
   file="18.22-tranzystor-BC547-podlaczenie.jpg"
-  caption="Montaż tranzystora BC547 na płytce stykowej — baza przez rezystor 10 kΩ do Arduino."
-  alt="Tranzystor BC547 na płytce stykowej z rezystorem 10 kΩ na bazie"
+  caption="Wyświetlacz wpięty z powrotem — zworki pod obudową łączą segmenty obu cyfr."
+  alt="Wyświetlacz 7-segmentowy wpięty w płytkę stykową nad zworkami"
 />
 
 <Photo
   file="18.23-tranzystor-kompletny-uklad.jpg"
-  caption="Kompletny układ z dwoma wyświetlaczami sterowanymi przez tranzystory NPN."
-  alt="Płytka stykowa z dwoma wyświetlaczami i dwoma tranzystorami BC547"
+  caption="Obie wspólne katody podłączone na razie bezpośrednio do GND — przy wspólnych segmentach obie cyfry pokazują to samo."
+  alt="Dwucyfrowy wyświetlacz 7-segmentowy pokazujący cyfrę 3 na obu pozycjach"
 />
 
 ### 8.2. Sterowanie przez tranzystory NPN (BC547)
@@ -605,7 +598,7 @@ Każdy z dwóch wyświetlaczy ma własną wspólną katodę (minus):
 Gdy zapalone są wszystkie segmenty, przez katodę wyświetlacza może płynąć ponad 20 mA — za dużo dla bezpośredniego podłączenia do pinu Arduino. Dlatego każdy wyświetlacz włączamy przez [**tranzystor NPN BC547**](https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315):
 
 <Callout type="note">
-Prosimy o **spędzenie kilku minut** na zapoznanie się z [tranzystorem NPN BC547](https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315) — artykuł Forbot wyjaśnia działanie tranzystora bipolarnego w praktyce i ułatwi zrozumienie układu poniżej.
+Prosimy o **spędzenie kilku minut** na zapoznaniu się z [tranzystorem NPN BC547](https://forbot.pl/blog/kurs-elektroniki-tranzystory-bipolarne-w-praktyce-id4315) — artykuł Forbot wyjaśnia działanie tranzystora bipolarnego w praktyce i ułatwi zrozumienie układu poniżej.
 </Callout>
 
 - **Kolektor** tranzystora → katoda wyświetlacza (pin 4 — wyświetlacz 1; pin 5 — wyświetlacz 2)
@@ -622,8 +615,8 @@ Stan **HIGH** na pinie Arduino → tranzystor przewodzi → wyświetlacz świeci
 
 <Photo
   file="18.25-multipleksowanie-wynik-statyczny.jpg"
-  caption="Wyświetlacze pokazują różne cyfry dzięki multipleksowaniu."
-  alt="Dwa wyświetlacze 7-segmentowe pokazujące różne cyfry jednocześnie"
+  caption="Kompletny układ z dwoma tranzystorami BC547 — widok całości z Arduino UNO."
+  alt="Arduino UNO i płytka stykowa z wyświetlaczem, rezystorami i dwoma tranzystorami BC547"
 />
 
 ### 8.3. Multipleksowanie w praktyce
@@ -654,7 +647,7 @@ const byte WYSW_1 = 10;
 const byte WYSW_2 = 9;
 
 void setup() {
-  // Konfiguracja pinow jako wyjscia
+  // Konfiguracja pinów jako wyjścia
   pinMode(SEG_A, OUTPUT);
   pinMode(SEG_B, OUTPUT);
   pinMode(SEG_C, OUTPUT);
@@ -668,14 +661,14 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(WYSW_1, HIGH); // Wlacz pierwszy wyswietlacz
-  digitalWrite(WYSW_2, LOW);  // Wylacz drugi
-  wyswietlacz(5);              // Wyswietl 5 na pierwszym
+  digitalWrite(WYSW_1, HIGH); // Włącz pierwszy wyświetlacz
+  digitalWrite(WYSW_2, LOW);  // Wyłącz drugi
+  wyswietlacz(5);              // Wyświetl 5 na pierwszym
   delay(10);
 
-  digitalWrite(WYSW_1, LOW);  // Wylacz pierwszy wyswietlacz
-  digitalWrite(WYSW_2, HIGH); // Wlacz drugi
-  wyswietlacz(3);              // Wyswietl 3 na drugim
+  digitalWrite(WYSW_1, LOW);  // Wyłącz pierwszy wyświetlacz
+  digitalWrite(WYSW_2, HIGH); // Włącz drugi
+  wyswietlacz(3);              // Wyświetl 3 na drugim
   delay(10);
 }
 
@@ -740,7 +733,7 @@ void wyswietlacz(int cyfra) {
 
 <Photo
   file="18.26-multipleksowanie-100ms.gif"
-  caption="delay(100) — wyraźne migotanie, oko zdąża zobaczyć każde przełączenie."
+  caption="delay(100) — wyraźne migotanie, oko zdąży zobaczyć każde przełączenie."
   alt="Animacja GIF multipleksowania z opóźnieniem 100 ms — widoczne migotanie"
 />
 
@@ -758,12 +751,12 @@ void wyswietlacz(int cyfra) {
 
 <Photo
   file="18.29-sevseg-biblioteka-uklad.jpg"
-  caption="Układ testowy z biblioteką SevSeg — te same połączenia fizyczne co wcześniej."
-  alt="Układ z dwoma wyświetlaczami 7-segmentowymi działający z biblioteką SevSeg"
+  caption="Efekt multipleksowania — pierwsza cyfra pokazuje 5, druga 3, a obie wydają się świecić jednocześnie."
+  alt="Dwucyfrowy wyświetlacz 7-segmentowy pokazujący liczbę 53"
 />
 
 <Callout type="warning">
-Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje cały procesor**. W praktycznych projektach nie możesz używać `delay()` razem z multipleksowaniem — zamiast tego używaj `millis()` (omówione w lekcji o wielozadaniowości) lub skorzystaj z gotowej biblioteki SevSeg.
+Podejście z `delay()` w multipleksowaniu działa demonstracyjnie, ale **blokuje cały procesor**. W praktycznych projektach nie możesz używać `delay()` razem z multipleksowaniem — zamiast tego używaj `millis()` (omówimy je w lekcji o wielozadaniowości) lub skorzystaj z gotowej biblioteki SevSeg.
 </Callout>
 
 <Task title="Zadanie 6.3 — licznik 0–99">
@@ -775,9 +768,9 @@ Napisz program wyświetlający na dwóch wyświetlaczach licznik od 00 do 99. Li
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Wyświetlacze 7-segmentowe i multipleksowanie to temat, gdzie AI pomoże zrozumieć zarówno fizykę, jak i kod:
 
-- **Zasada multipleksowania** — zapytaj AI: „Wyjaśnij, dlaczego szybkie przełączanie między dwoma wyświetlaczami 7-segmentowymi (multipleksowanie) sprawia, że oko widzi oba jednocześnie. Co to jest persistence of vision?". Zrozumiesz, dlaczego `delay()` niszczy multipleksowanie.
-- **Wzorce segmentów dla liter** — poproś AI: „Wygeneruj tablicę bajtów dla wyświetlacza 7-segmentowego przedstawiającą litery A, b, C, d, E, F. Użyj kolejności segmentów A, B, C, D, E, F, G". AI wygeneruje wartości gotowe do `switch-case`.
-- **Dlaczego delay() blokuje multipleksowanie?** — wklej kod z `delay()` wewnątrz pętli multipleksowania i zapytaj: „Wyjaśnij, co się stanie z obrazem na wyświetlaczu, gdy `delay(500)` jest wywołane wewnątrz pętli multipleksowania. Jak to naprawić używając `millis()`?". To naturalne wprowadzenie do wielozadaniowości.
+- **Zasada multipleksowania** — zapytaj AI: „Wyjaśnij, dlaczego szybkie przełączanie między dwoma wyświetlaczami 7-segmentowymi (multipleksowanie) sprawia, że oko widzi oba jednocześnie. Co to jest persistence of vision?”. Zrozumiesz, dlaczego `delay()` niszczy multipleksowanie.
+- **Wzorce segmentów dla liter** — poproś AI: „Wygeneruj tablicę bajtów dla wyświetlacza 7-segmentowego przedstawiającą litery A, b, C, d, E, F. Użyj kolejności segmentów A, B, C, D, E, F, G”. AI wygeneruje wartości gotowe do `switch-case`.
+- **Dlaczego delay() blokuje multipleksowanie?** — wklej kod z `delay()` wewnątrz pętli multipleksowania i zapytaj: „Wyjaśnij, co się stanie z obrazem na wyświetlaczu, gdy `delay(500)` jest wywołane wewnątrz pętli multipleksowania. Jak to naprawić, używając `millis()`?”. To naturalne wprowadzenie do wielozadaniowości.
 </Callout>
 
 ## 9. Gotowa biblioteka SevSeg
@@ -786,7 +779,7 @@ Programowanie multipleksowania ręcznie jest możliwe, ale skomplikowane. Na szc
 
 ### 9.1. Instalacja biblioteki
 
-1. Wejdź na GitHub i pobierz repozytorium SevSeg jako ZIP (*Clone or download → Download ZIP*).
+1. Wejdź na GitHub i pobierz repozytorium SevSeg jako ZIP (*Code → Download ZIP*; w starszej wersji GitHuba, widocznej na zrzucie, przycisk nazywał się *Clone or download*).
 2. Wypakuj folder `SevSeg-master`.
 3. Skopiuj go do katalogu bibliotek Arduino: `C:\Users\<nazwa_uzytkownika>\Documents\Arduino\libraries\`.
 4. Uruchom ponownie Arduino IDE.
@@ -811,22 +804,26 @@ void setup() {
   byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
   bool resistorsOnSegments = true;
   byte hardwareConfig = N_TRANSISTORS;
-  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+  bool updateWithDelays = false; // Zalecana wartość domyślna
+  bool leadingZeros = false;     // Bez zer wiodących
+  bool disableDecPoint = true;   // Brak kropki dziesiętnej — podajemy tylko 7 pinów segmentów
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments,
+               updateWithDelays, leadingZeros, disableDecPoint);
 }
 
 void loop() {
-  sevseg.setNumber(34, 2); // Wyswietl 34 (2 cyfry)
-  sevseg.refreshDisplay(); // Odswiezanie — musi byc wywolywane regularnie!
+  sevseg.setNumber(34, 0); // Wyświetl 34 (0 miejsc po przecinku)
+  sevseg.refreshDisplay(); // Odświeżanie — musi być wywoływane regularnie!
 }
 ```
 </Code>
 
-Pierwsza wartość `setNumber()` to wyświetlana liczba; druga to liczba cyfr. Metoda `refreshDisplay()` sama obsługuje multipleksowanie — ale **musi być wywoływana bardzo często**, najlepiej w każdym obrocie pętli `loop()`.
+Pierwsza wartość `setNumber()` to wyświetlana liczba; druga to liczba miejsc po przecinku (pozycja kropki dziesiętnej) — dla liczby całkowitej podajemy `0`. Metoda `refreshDisplay()` sama obsługuje multipleksowanie — ale **musi być wywoływana bardzo często**, najlepiej w każdym obrocie pętli `loop()`.
 
 <Photo
   file="18.34-podsumowanie.jpg"
-  caption="Gotowy układ z biblioteką SevSeg i potencjometrem — wyświetlacze działają płynnie bez delay()."
-  alt="Kompletny układ z dwoma wyświetlaczami 7-segmentowymi i potencjometrem"
+  caption="Efekt programu — liczba 34 wyświetlona za pomocą biblioteki SevSeg, bez ręcznego multipleksowania."
+  alt="Dwucyfrowy wyświetlacz 7-segmentowy pokazujący liczbę 34"
 />
 
 ### 9.3. Wyświetlanie znaków
@@ -842,11 +839,15 @@ void setup() {
   byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
   bool resistorsOnSegments = true;
   byte hardwareConfig = N_TRANSISTORS;
-  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+  bool updateWithDelays = false; // Zalecana wartość domyślna
+  bool leadingZeros = false;     // Bez zer wiodących
+  bool disableDecPoint = true;   // Brak kropki dziesiętnej — podajemy tylko 7 pinów segmentów
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments,
+               updateWithDelays, leadingZeros, disableDecPoint);
 }
 
 void loop() {
-  sevseg.setChars("AC"); // Wyswietl litery A i C
+  sevseg.setChars("AC"); // Wyświetl litery A i C
   sevseg.refreshDisplay();
 }
 ```
@@ -854,8 +855,8 @@ void loop() {
 
 <Photo
   file="18.33-potencjometr-wynik.jpg"
-  caption="Wyświetlacz pokazuje wartość odczytaną z potencjometru — obracanie gałki zmienia liczbę."
-  alt="Wyświetlacze 7-segmentowe pokazujące wartość z potencjometru"
+  caption="Efekt programu — setChars() wyświetla litery „AC”."
+  alt="Dwucyfrowy wyświetlacz 7-segmentowy pokazujący litery A i C"
 />
 
 ## 10. Ostatni przykład — potencjometr na wyświetlaczu
@@ -877,14 +878,18 @@ void setup() {
   byte segmentPins[] = {7, 5, 2, 4, 3, 8, 6};
   bool resistorsOnSegments = true;
   byte hardwareConfig = N_TRANSISTORS;
-  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
+  bool updateWithDelays = false; // Zalecana wartość domyślna
+  bool leadingZeros = false;     // Bez zer wiodących
+  bool disableDecPoint = true;   // Brak kropki dziesiętnej — podajemy tylko 7 pinów segmentów
+  sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments,
+               updateWithDelays, leadingZeros, disableDecPoint);
 }
 
 void loop() {
   int potencjometr = analogRead(A0);              // Odczyt 0–1023
   potencjometr = map(potencjometr, 0, 1023, 0, 99); // Przeskalowanie do 0–99
 
-  sevseg.setNumber(potencjometr, 2);
+  sevseg.setNumber(potencjometr, 0); // Liczba całkowita
   sevseg.refreshDisplay();
 }
 ```
@@ -898,8 +903,8 @@ void loop() {
 
 <Photo
   file="18.31-sevseg-licznik-animacja.gif"
-  caption="Animacja licznika zrealizowanego z biblioteką SevSeg — oba wyświetlacze działają płynnie."
-  alt="Animacja GIF licznika z biblioteką SevSeg na dwóch wyświetlaczach 7-segmentowych"
+  caption="Obracanie potencjometru zmienia liczbę na wyświetlaczu — oba wyświetlacze działają płynnie dzięki bibliotece SevSeg."
+  alt="Animacja GIF: obracanie potencjometru śrubokrętem zmienia liczbę na dwóch wyświetlaczach 7-segmentowych"
 />
 
 
@@ -917,5 +922,5 @@ W tej lekcji poznałeś wyświetlacze 7-segmentowe od podstaw:
 - Istnieją dwa typy: **wspólna katoda** (segmenty włącza HIGH) i **wspólna anoda** (segmenty włącza LOW).
 - Zawsze stosuj **rezystory ochronne 1 kΩ** na pinach segmentów — diody w wyświetlaczu palą się łatwiej niż zwykłe LED-y.
 - Przy wielu wyświetlaczach zamiast dedykowanych pinów dla każdego stosuj **multipleksowanie** — wspólne segmenty + tranzystory NPN sterujące każdym wyświetlaczem osobno.
-- Multipleksowanie z `delay()` blokuje procesor; w praktyce używaj **biblioteki SevSeg** i jej metody `refreshDisplay()` wywoływanej cyklicznie z `millis()`.
-- `setNumber(wartość, cyfry)` wyświetla liczby, `setChars("XY")` — znaki.
+- Multipleksowanie z `delay()` blokuje procesor; w praktyce używaj **biblioteki SevSeg** i jej metody `refreshDisplay()` wywoływanej w każdym obiegu `loop()`, a opóźnienia realizuj za pomocą `millis()`.
+- `setNumber(wartość, miejscaPoPrzecinku)` wyświetla liczby, `setChars("XY")` — znaki.

@@ -14,8 +14,8 @@ day: 1
 weekend: 1
 order: 4
 duration: 90
-block: 1
-blockTitle: "Podstawy Arduino oraz środowisko programowania"
+block: 3
+blockTitle: "Płytka Arduino — porty I/O, PWM, ADC, komunikacja"
 forbotCourse: 1
 forbotChapter: 2
 
@@ -33,8 +33,8 @@ prerequisites:
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
-  - { name: "Dioda LED", qty: 3 }
-  - { name: "Rezystor 1000 Ω", qty: 3 }
+  - { name: "Dioda LED", qty: 4, note: "czerwona, żółta, zielona + dodatkowa do zadania końcowego" }
+  - { name: "Rezystor 1000 Ω", qty: 4 }
   - { name: "Przycisk chwilowy (tact switch)", qty: 1 }
   - { name: "Płytka stykowa (breadboard)", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 10 }
@@ -42,9 +42,13 @@ hardware:
 tags: [arduino, setup, loop, pinmode, digitalwrite, digitalread, delay, if-else, while, dioda-led, przycisk, swiatla-drogowe]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-podstawy-programowania-porty-io-id3648"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=39 (Książka B, r. 3)"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=87 (Książka B, r. 6)"
+  - "https://docs.arduino.cc/learn/microcontrollers/digital-pins/"
+  - "https://docs.arduino.cc/built-in-examples/digital/Debounce/"
 
 publish: true
-updated: "2026-05-14"
+updated: "2026-10-15"
 ---
 
 W tej lekcji piszemy pierwsze działające programy na Arduino. Zaczniemy od struktury szkicu — funkcji `setup()` i `loop()` — a skończymy na symulacji świateł drogowych sterowanych przyciskiem. Po drodze poznasz wszystkie podstawowe funkcje wejścia/wyjścia: `pinMode()`, `digitalWrite()`, `digitalRead()` i `delay()`.
@@ -106,15 +110,15 @@ Zanim zaczniesz pisać program sterujący pinami, warto poznać mapę wyprowadze
     ["Ciemnozielony", "Cyfrowe wejścia/wyjścia", "D0–D13 (0–13)", "Stan LOW (0 V) lub HIGH (5 V); pin 13 ma wbudowaną diodę LED (Light Emitting Diode, dioda elektroluminescencyjna)"],
     ["Jasnozielony", "Analogowe wejścia", "A0–A5", "Pomiar napięcia 0–5 V (10-bitowy ADC — Analog-Digital Converter, przetwornik analogowo-cyfrowy); mogą też pracować jako cyfrowe I/O"],
     ["Niebieski", "Funkcje specjalne", "0 (RX — Receive, odbiornik), 1 (TX — Transmit, nadajnik), A4 (SDA — Serial Data), A5 (SCL — Serial Clock), 3/5/6/9/10/11 (PWM — Pulse Width Modulation, modulacja szerokości impulsu)", "UART (Universal Asynchronous Receiver-Transmitter), I²C (Inter-Integrated Circuit), sygnał PWM, wbudowana dioda (pin 13)"],
-    ["Pomarańczowy", "Zasilanie", "5 V, 3,3 V, GND (Ground, masa), Vin", "Piny nieprogrAmowalne — zasilanie i masa układu"],
+    ["Pomarańczowy", "Zasilanie", "5 V, 3,3 V, GND (Ground, masa), Vin", "Piny nieprogramowalne — zasilanie i masa układu"],
   ]}
 />
 
 <Expandable title="Głębiej: limity prądowe pinów Arduino" heading="####">
 
-Każdy pin cyfrowy Arduino UNO może bezpiecznie **dostarczyć lub pochłonąć maksymalnie 40 mA**. Łączny prąd ze wszystkich pinów I/O nie może przekroczyć **200 mA** — inaczej grozi uszkodzenie mikrokontrolera ATmega328P.
+Każdy pin cyfrowy Arduino UNO może **dostarczyć lub pochłonąć maksymalnie 40 mA** (absolutne maksimum — bezpiecznie do 20 mA). Łączny prąd ze wszystkich pinów I/O nie może przekroczyć **200 mA** — inaczej grozi uszkodzenie mikrokontrolera ATmega328P.
 
-Typowa dioda LED świeci już przy 10–20 mA. Bez rezystora napięcie 5 V przy niskiej rezystancji diody wytworzyłoby prąd nawet 100 mA — trzykrotnie powyżej limitu.
+Typowa dioda LED świeci pełną jasnością przy 10–20 mA. Bez rezystora napięcie 5 V przy niskiej rezystancji diody wytworzyłoby prąd nawet 100 mA — ponad dwukrotnie powyżej limitu.
 
 Dobór rezystora ze wzoru: `R = (Vcc − Vf) / If`. Dla czerwonej diody (Vf ≈ 2 V, If = 20 mA): `R = (5 − 2) / 0,02 = 150 Ω`. W praktyce stosujemy **1000 Ω** — dioda świeci nieco słabiej (ok. 3 mA), ale pin Arduino jest bezpieczny nawet przy długotrwałym użytkowaniu.
 
@@ -132,14 +136,14 @@ Piny analogowe A0–A5 mają te same limity prądowe co cyfrowe — mogą pracow
 
 <Schematic
   src="/img/lekcje/04.12-dioda-led-schemat.png"
-  caption="Podłączenie diody LED do pinu 8 przez rezystor 1000 Ω."
-  alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 1000 om"
+  caption="Podłączenie diody LED do pinu 8 przez rezystor. Na rysunku jest 330 Ω (paski pomarańczowy, pomarańczowy, brązowy); my używamy 1000 Ω — oba są bezpieczne."
+  alt="Schemat Fritzing: dioda LED połączona z pinem 8 Arduino przez rezystor 330 om"
   width={600}
   height={400}
 />
 
 <Callout type="hazard" title="Rezystor jest obowiązkowy!">
-Bez rezystora przez diodę LED popłynie zbyt duży prąd i zniszczy ją — a może też uszkodzić pin Arduino. Dla typowych diod 5 mm stosuj rezystor **500-1000 Ω**.
+Bez rezystora przez diodę LED popłynie zbyt duży prąd i zniszczy ją — a może też uszkodzić pin Arduino. Dla typowych diod 5 mm stosuj rezystor **330–1000 Ω**.
 </Callout>
 
 Program zapalający diodę podłączoną do pinu 8:
@@ -163,7 +167,7 @@ void loop() {
 
 ## 5. Miganie diodą — funkcja delay()
 
-Funkcja `delay(ms)` wstrzymuje wykonanie programu na podaną liczbę milisekund (1000 ms = 1 s). Bez opóźnień Arduino przełączałoby pin miliony razy na sekundę — ludzkie oko nie zdążyłoby tego zauważyć.
+Funkcja `delay(ms)` wstrzymuje wykonanie programu na podaną liczbę milisekund (1000 ms = 1 s). Bez opóźnień Arduino przełączałoby pin setki tysięcy razy na sekundę — ludzkie oko nie zdążyłoby tego zauważyć.
 
 <Code lang="cpp" file="miganie-led.ino">
 ```cpp
@@ -183,7 +187,7 @@ void loop() {
 Wgraj program i obserwuj migającą diodę. Eksperymentuj ze zmianą wartości `delay()`.
 
 <Task title="Zadanie 1.1 — minimalne miganie" estimate="10 min">
-Zmniejszaj wartość `delay()` i sprawdź, jaka jest **minimalna wartość** przy której nadal widzisz miganie. Zanotuj wynik. Następnie podłącz drugą diodę do pinu 9 i napisz program, w którym diody migają **naprzemiennie** — gdy jedna świeci, druga jest wyłączona.
+Zmniejszaj wartość `delay()` i sprawdź, jaka jest **minimalna wartość**, przy której nadal widzisz miganie. Zanotuj wynik i porównaj go z wynikami innych osób.
 </Task>
 
 <Task title="Zadanie 1.2 — dwie diody" estimate="15 min">
@@ -194,9 +198,9 @@ Wybierz wolny pin i podłącz do niego drugą diodę LED. Napisz program, który
 
 `delay(ms)` to **aktywne czekanie** (busy-wait). Arduino UNO pracuje z zegarem 16 MHz — wykonuje 16 milionów prostych operacji na sekundę. Podczas `delay(1000)` procesor wciąż pracuje, ale zamiast wykonywać użyteczny kod, w kółko sprawdza jedno pytanie: *czy minęło już 1000 ms?*
 
-Oznacza to, że przez cały czas trwania `delay()` Arduino **nie czyta żadnych wejść, nie wysyła danych UART, nie aktualizuje żadnych wyjść**. W przykładzie z włącznikiem (sekcja 7) wciśnięcie przycisku podczas 10-sekundowego `delay()` jest całkowicie ignorowane.
+Oznacza to, że przez cały czas trwania `delay()` Arduino **nie wykonuje dalszych instrukcji Twojego programu — nie sprawdza wejść, nie zmienia stanów wyjść, nie reaguje na komendy z UART**. (W tle działają tylko przerwania sprzętowe: np. bajty odebrane przez UART trafiają do bufora, a sygnał PWM jest generowany dalej.) W przykładzie z włącznikiem (sekcja 7) wciśnięcie przycisku podczas 10-sekundowego `delay()` jest całkowicie ignorowane.
 
-W dalszej części kursu poznasz funkcję `millis()`, która zwraca czas w milisekundach od uruchomienia płytki. Zamiast "stać w miejscu", program regularnie sprawdza: *czy upłynął już wymagany czas?* — i przy okazji obsługuje inne zadania. To podejście nosi nazwę **nieblokującego kodu** (non-blocking code).
+W dalszej części kursu poznasz funkcję `millis()`, która zwraca czas w milisekundach od uruchomienia płytki. Zamiast „stać w miejscu”, program regularnie sprawdza: *czy upłynął już wymagany czas?* — i przy okazji obsługuje inne zadania. To podejście nosi nazwę **nieblokującego kodu** (non-blocking code).
 
 *Źródło: [docs.arduino.cc — delay()](https://docs.arduino.cc/language-reference/en/functions/time/delay/) · Książka B, r. 3 (pętle i timing)*
 
@@ -208,8 +212,8 @@ Do odczytu stanu przycisku lub innego sygnału wejściowego używamy `digitalRea
 
 <Schematic
   src="/img/lekcje/04.13-przycisk-schemat.png"
-  caption="Podłączenie przycisku chwilowego do pinu 7 z wykorzystaniem INPUT_PULLUP."
-  alt="Schemat Fritzing: przycisk tact-switch połączony z pinem 7 Arduino bez zewnętrznego rezystora"
+  caption="Podłączenie przycisku chwilowego do pinu 7 z wykorzystaniem INPUT_PULLUP; dioda LED z rezystorem zostaje na pinie 8."
+  alt="Schemat Fritzing: przycisk tact-switch między pinem 7 a GND, bez zewnętrznego rezystora podciągającego, oraz dioda LED z rezystorem na pinie 8"
   width={600}
   height={400}
 />
@@ -235,7 +239,7 @@ W prostych programach tego nie widać, bo `loop()` ma inne opóźnienia. Problem
 
 Najprostsze rozwiązanie programowe — **opóźnieniowy debouncing**: po wykryciu `LOW` odczekaj 50 ms, zanim zareagujesz. W tym czasie drgania zdążą ustąpić i odczyt stanie się wiarygodny.
 
-Istnieje też zaawansowana metoda oparta na `millis()`, która nie blokuje programu — poznasz ją w lekcji o wielozadaniowości. Sprzętowe rozwiązanie to kondensator ceramiczny 100 nF równolegle do przycisku.
+Istnieje też zaawansowana metoda oparta na `millis()`, która nie blokuje programu (przykład **Plik → Przykłady → 02.Digital → Debounce** w Arduino IDE) — samą funkcję `millis()` poznasz w lekcji o wielozadaniowości. Sprzętowe rozwiązanie to kondensator ceramiczny 100 nF równolegle do przycisku.
 
 *Źródło: [docs.arduino.cc — Debounce](https://docs.arduino.cc/built-in-examples/digital/Debounce/) · Książka B, r. 6*
 
@@ -330,7 +334,7 @@ Trzy diody LED (czerwona → pin 10, żółta → pin 9, zielona → pin 8) i pr
 
 <Schematic
   src="/img/lekcje/04.14-swiatla-drogowe-schemat.png"
-  caption="Schemat układu: trzy diody LED (czerwona, żółta, zielona) i przycisk podłączone do Arduino UNO."
+  caption="Schemat układu: trzy diody LED (czerwona, żółta, zielona) i przycisk podłączone do Arduino UNO. Na rysunku rezystory mają 330 Ω — możesz użyć 1000 Ω z listy sprzętu."
   alt="Schemat Fritzing: trzy diody LED na pinach 8, 9, 10 i przycisk na pinie 7 Arduino UNO"
   width={700}
   height={450}
@@ -438,7 +442,7 @@ void loop() {
 
 ### Wersja łączona — minimalne opóźnienie + przycisk
 
-Krótkie `delay()` przed sprawdzaniem przycisku zapobiega przypadkowemu wciśnięciu:
+Krótkie `delay()` przed sprawdzaniem przycisku zapobiega przeskoczeniu kilku faz naraz przy jednym, dłuższym wciśnięciu:
 
 <Code lang="cpp" file="swiatla-delay-while.ino">
 ```cpp
@@ -482,7 +486,7 @@ void loop() {
 
 <Task title="Zadanie końcowe — rozbudowa świateł" estimate="15 min">
 1. Ustaw różne czasy dla każdej fazy: zielona — 3 s, żółta — 1 s, czerwona — 2 s.
-2. Podłącz dodatkową diodę LED jako „sygnał dla pieszych" (świeci tylko gdy czerwona jest aktywna).
+2. Podłącz dodatkową diodę LED jako „sygnał dla pieszych” (świeci tylko, gdy czerwona jest aktywna).
 3. Dodaj komunikaty w Monitorze portu szeregowego: wywołaj `Serial.begin(9600)` w `setup()`, a przy każdej zmianie fazy użyj `Serial.println("Zielona")` itd. — zobaczysz w terminalu, na którym kolorze aktualnie jest program.
 4. **Dodatkowe:** Sprawdź, jaka jest minimalna wartość `delay()` przed pętlą `while()`, przy której przycisk reaguje niezawodnie.
 </Task>
@@ -496,4 +500,4 @@ void loop() {
 - `if/else` podejmuje decyzje na podstawie warunku; `while()` czeka tak długo, jak warunek jest prawdziwy.
 - Łącząc te elementy, zbudowałeś pełny system świateł drogowych sterowany przyciskiem.
 
-W następnej lekcji wyjdziemy poza binarne wejście/wyjście i poznamy symulatory oraz dodatkowe źródła wiedzy przydatne w dalszej pracy.
+W następnej lekcji poznamy symulator Tinkercad oraz dodatkowe źródła wiedzy przydatne w dalszej pracy.

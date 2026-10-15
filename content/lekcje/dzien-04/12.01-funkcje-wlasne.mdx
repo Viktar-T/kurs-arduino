@@ -22,25 +22,25 @@ forbotChapter: 9
 objectives:
   - "Wyjaśnić, po co wydzielamy kod do osobnych funkcji"
   - "Napisać własną funkcję bez argumentów, z argumentami i zwracającą wynik"
-  - "Odróżnić przekazywanie przez wartość od przekazywania przez referencję"
+  - "Wskazać elementy definicji funkcji: typ zwracany, nazwę, listę parametrów i ciało"
 
 prerequisites:
-  - "dzien-03/sterowanie-silnikami-dc"
+  - "dzien-04/sterowanie-silnikami-dc"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
-  - { name: "Dioda LED", qty: 3, optional: true }
-  - { name: "Rezystor 1000 Ω", qty: 3, optional: true }
+  - { name: "Dioda LED", qty: 2, optional: true }
+  - { name: "Rezystor 1000 Ω", qty: 2, optional: true }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 4 }
 
 tags: [arduino, funkcje, cpp, void, return, argumenty]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-czujnik-odleglosci-hc-sr04-funkcje-id4290"
 
 publish: true
-updated: "2026-05-21"
+updated: "2026-10-15"
 ---
 
 W tej lekcji nauczysz się pisać własne funkcje w C++ — zarówno proste, jak i z argumentami oraz wartością zwracaną. W następnej lekcji użyjesz funkcji razem z czujnikiem HC-SR04 do zbudowania prostego alarmu zbliżeniowego.
@@ -69,9 +69,9 @@ void setup() {
 
 void loop() {
   digitalWrite(PIN_LED, HIGH);
-  delay(1000);
+  delay(500);
   digitalWrite(PIN_LED, LOW);
-  delay(1000);
+  delay(500);
 }
 ```
 </Code>
@@ -111,7 +111,7 @@ Przepisz program z lekcji o miganiu diodą tak, żeby sekwencja migania była w 
 
 ## 2. Funkcje z argumentami
 
-Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie-takich-samych funkcji dla różnych czasów migania, piszemy jedną z parametrem:
+Funkcja z argumentem przyjmuje wartość z zewnątrz. Zamiast mieć kilka prawie takich samych funkcji dla różnych czasów migania, piszemy jedną z parametrem:
 
 <Code lang="cpp" file="blink-z-argumentem.ino">
 ```cpp
@@ -196,7 +196,7 @@ Zbuduj schemat z dwiema diodami, który odpowiada kodowi powyżej.
 </Task>
 
 <Task title="Zadanie 2.2" estimate="10 min">
-Napisz funkcję `sygnalSOS()` bez argumentów, która wyda trzy krótkie i trzy długie mignięcia diodą, korzystając wewnętrznie z funkcji `zamigajLED(int czas, int ile, int pin)`.
+Napisz funkcję `sygnalSOS()` bez argumentów, która wyda trzy krótkie, trzy długie i ponownie trzy krótkie mignięcia diodą (SOS w alfabecie Morse'a), korzystając wewnętrznie z funkcji `zamigajLED(int czas, int ile, int pin)`.
 </Task>
 
 ## 3. Funkcje zwracające wynik
@@ -267,13 +267,13 @@ int dodaj(int a, int b) {
 }
 ```
 
-- **Typ zwracany** (`int`) — co funkcja oddaje do miejsca wywołania. `void` oznacza „nic nie zwracam".
+- **Typ zwracany** (`int`) — co funkcja oddaje do miejsca wywołania. `void` oznacza „nic nie zwracam”.
 - **Nazwa** (`dodaj`) — własna nazwa, którą wywołasz funkcję. Konwencja w Arduino: `camelCase`, opisowa, w formie czasownika (`zmierzOdleglosc`, `zamigajLED`).
-- **Lista parametrów** (`int a, int b`) — co funkcja przyjmuje. Każdy parametr ma typ i nazwę, oddzielone przecinkami. Puste nawiasy `()` to brak parametrów.
+- **Lista parametrów** (`int a, int b`) — co funkcja przyjmuje. Każdy parametr ma typ i nazwę, a kolejne parametry oddzielamy przecinkami. Puste nawiasy `()` to brak parametrów.
 - **Ciało** (kod w `{ }`) — instrukcje wykonywane przy każdym wywołaniu.
 
 W Arduino IDE możesz pisać funkcje **w dowolnej kolejności** — IDE generuje za ciebie tzw. *prototypy* (deklaracje na początku pliku). W klasycznym C++ funkcja musi być zadeklarowana przed pierwszym użyciem — dlatego w bibliotekach zewnętrznych zobaczysz pliki `.h` z prototypami i `.cpp` z implementacjami.
 
-Zasada **jedna funkcja = jedno zadanie** to fundament czystego kodu. Gdy funkcja zaczyna mieć więcej niż 20–30 linii lub robi „kilka rzeczy naraz", to dobry sygnał, że warto ją podzielić na mniejsze.
+Zasada **jedna funkcja = jedno zadanie** to fundament czystego kodu. Gdy funkcja zaczyna mieć więcej niż 20–30 linii lub robi „kilka rzeczy naraz”, to dobry sygnał, że warto ją podzielić na mniejsze.
 
 Własne funkcje porządkują kod: wydzielasz powtarzające się bloki, nadajesz im nazwy i możesz wielokrotnie wywoływać jedną linijką. Argumenty sprawiają, że funkcja jest elastyczna — jeden fragment kodu działa dla różnych wartości. Funkcja zwracająca wynik pozwala użyć obliczonej wartości tam, gdzie jej potrzebujesz.

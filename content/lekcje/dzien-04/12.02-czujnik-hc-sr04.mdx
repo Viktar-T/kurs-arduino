@@ -26,24 +26,24 @@ objectives:
   - "Zmierzyć odległość i wykorzystać ją w warunkach programu"
 
 prerequisites:
-  - "dzien-03/funkcje-wlasne"
+  - "dzien-04/funkcje-wlasne"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
-  - { name: "Buzzer pasywny", qty: 1 }
+  - { name: "Buzzer z generatorem (aktywny)", qty: 1 }
   - { name: "Dioda LED", qty: 3, optional: true }
   - { name: "Rezystor 1000 Ω", qty: 3, optional: true }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 8 }
 
 tags: [arduino, hc-sr04, czujnik-odleglosci, pulsein, ultradzwieki, funkcje]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-czujnik-odleglosci-hc-sr04-funkcje-id4290"
 
 publish: true
-updated: "2026-05-21"
+updated: "2026-10-15"
 ---
 
 W poprzedniej lekcji poznałeś własne funkcje w C++. Teraz zastosujesz je w praktyce — poznasz czujnik ultradźwiękowy HC-SR04 i użyjesz funkcji zwracającej wynik do zbudowania prostego alarmu zbliżeniowego.
@@ -85,7 +85,7 @@ Czujnik ma cztery piny:
 
 ### Zasada działania
 
-1. Na pin `Trig` podajemy impuls wysoki trwający **10 µs (mikrosekundy)** — czujnik wysyła 8 impulsów ultradźwiękowych.
+1. Na pin `Trig` podajemy impuls wysoki trwający **10 µs (mikrosekund)** — czujnik wysyła 8 impulsów ultradźwiękowych.
 2. Pin `Echo` przechodzi w stan wysoki i pozostaje tam przez czas proporcjonalny do zmierzonej odległości.
 3. Mierzymy czas trwania stanu wysokiego na `Echo` — to czas podróży dźwięku (tam i z powrotem).
 4. Dzielimy przez `58`, żeby otrzymać odległość w centymetrach.
@@ -96,7 +96,7 @@ HC-SR04 to prosty i tani czujnik, ale ma kilka praktycznych ograniczeń:
 
 - **Martwa strefa:** obiekt bliższy niż ok. `2–3 cm` nie zostanie wykryty — echo wraca zbyt szybko, zanim czujnik zdąży przełączyć się w tryb nasłuchiwania.
 - **Maksymalny zasięg:** producent deklaruje ok. `400 cm`, ale powyżej `200–250 cm` pomiary stają się niestabilne.
-- **Kąt wiązki:** czujnik „widzi" stożek o półkącie ok. `15°`. Obiekt pod dużym skosem może odbić sygnał w bok i nie wrócić do czujnika.
+- **Kąt wiązki:** czujnik „widzi” stożek o półkącie ok. `15°`. Obiekt pod dużym skosem może odbić sygnał w bok i nie wrócić do czujnika.
 - **Materiały pochłaniające:** miękkie powierzchnie (tkaniny, piana, futro) pochłaniają ultradźwięki i zwracają słabe echo lub w ogóle go nie zwracają.
 - **Fałszywe echa:** w pomieszczeniach z wieloma powierzchniami echo może wielokrotnie odbijać się od ścian. `pulseIn()` chwyta pierwsze echo — zazwyczaj poprawne, ale przy skomplikowanej geometrii mogą pojawiać się skoki odczytu.
 
@@ -122,7 +122,7 @@ Podłącz czujnik do Arduino jak na schemacie:
   height={400}
 />
 
-Zaczynamy od pełnego programu: wyzwalamy pomiar, mierzymy czas echa funkcją `pulseIn()` i przeliczamy wynik na centymetry. Opis `pulseIn()` znajdziesz też w [dokumentacji Arduino](https://docs.arduino.cc/language-reference/?_gl=1*kpmpc9*_up*MQ..*_ga*MzU5ODg2ODMwLjE3NzkxMTA4ODE.*_ga_NEXN8H46L5*czE3NzkxODQ2OTAkbzIkZzAkdDE3NzkxODQ2OTAkajYwJGwwJGg2NzQyMTQzNzk.):
+Zaczynamy od pełnego programu: wyzwalamy pomiar, mierzymy czas echa funkcją `pulseIn()` i przeliczamy wynik na centymetry. Opis `pulseIn()` znajdziesz też w [dokumentacji Arduino](https://docs.arduino.cc/language-reference/en/functions/advanced-io/pulseIn/):
 
 <Expandable title="Jak działa pulseIn()?" heading="####">
 
@@ -172,7 +172,7 @@ void loop() {
 </Code>
 
 <Callout type="note" title="Skąd wzięło się 58?">
-Dźwięk przebywa w powietrzu ok. 340 m/s. Impuls pokonuje dystans dwukrotnie (tam i z powrotem), a `pulseIn()` zwraca czas w mikrosekundach. Dzielenie przez 58 daje przybliżenie odległości w centymetrach: 1 cm = 58 µs.
+Dźwięk porusza się w powietrzu z prędkością ok. 343 m/s, czyli ok. 0,0343 cm/µs. Impuls pokonuje dystans dwukrotnie (tam i z powrotem), a `pulseIn()` zwraca czas w mikrosekundach. Na 1 cm odległości przypada więc ok. 2 / 0,0343 ≈ 58 µs impulsu `Echo` — dzielenie czasu przez 58 daje odległość w centymetrach (równoważnie: czas × 0,0343 / 2).
 </Callout>
 
 <Expandable title="Kompensacja temperatury — kiedy dzielnik 58 nie wystarczy" heading="####">
@@ -183,7 +183,7 @@ Prędkość dźwięku w powietrzu zależy od temperatury. Wzór przybliżony:
 
 Przy `20 °C` wynosi ok. `343 m/s`, a przy `0 °C` ok. `331 m/s`. Dzielnik `58` odpowiada temperaturze pokojowej — przy mrozie lub upale wynik jest nieco zaburzony.
 
-W sali szkolnej różnica temperatury między zimą a latem to ok. `20 °C`, co przekłada się na błąd pomiaru ok. `3%`. Przy zasięgu `100 cm` to ok. `3 cm` — często pomijalne, ale przy precyzyjnym omijaniu przeszkód warto mieć to z tyłu głowy.
+Między mroźnym podwórkiem a ogrzewaną salą różnica temperatury to łatwo ok. `20 °C`, co przekłada się na błąd pomiaru ok. `3%`. Przy zasięgu `100 cm` to ok. `3 cm` — często pomijalne, ale przy precyzyjnym omijaniu przeszkód warto mieć to z tyłu głowy.
 
 </Expandable>
 
@@ -232,26 +232,26 @@ int zmierzOdleglosc() {
 </Task>
 
 <Task title="Zadanie 4" estimate="10 min">
-Kontynuj prace z kodem z poprzedniego zadania. Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. 
+Kontynuuj pracę z kodem z poprzedniego zadania. Uruchom powyższy program i powoli przybliżaj dłoń do czujnika. 
 Sprawdź, czy wyniki w Monitorze portu szeregowego zmieniają się płynnie. 
-Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością. Dodaj funkcje uśredniania pomiarów.
+Następnie zapisz wynik do zmiennej i wydrukuj go ze słowem `"Odleglosc: "` przed wartością. Dodaj funkcję uśredniania pomiarów.
 
 <Expandable title="Uśrednianie pomiarów — stabilniejsze wskazania" heading="####">
 
-Pojedynczy odczyt HC-SR04 może czasem „skoczyć" o kilka centymetrów z powodu przypadkowego echa lub drgań zasilania. Uśrednianie kilku pomiarów znacząco poprawia stabilność:
+Pojedynczy odczyt HC-SR04 może czasem „skoczyć” o kilka centymetrów z powodu przypadkowego echa lub drgań zasilania. Uśrednianie kilku pomiarów znacząco poprawia stabilność:
 
 ```cpp
 int zmierzOdlegloscUsredniona(int probek) {
   long suma = 0;
   for (int i = 0; i < probek; i++) {
     suma += zmierzOdleglosc();
-    delay(20);
+    delay(60);
   }
   return suma / probek;
 }
 ```
 
-Wywołanie `zmierzOdlegloscUsredniona(5)` pobiera `5` pomiarów i zwraca ich średnią. Jedno `delay(20)` to `20 ms` przerwy między próbkami — pięć próbek zajmuje łącznie ok. `100 ms`. Im więcej próbek, tym wolniejsza reakcja programu. W robotach mobilnych `3`–`5` pomiarów to zazwyczaj dobry kompromis między stabilnością odczytu a szybkością reagowania na przeszkody.
+Wywołanie `zmierzOdlegloscUsredniona(5)` pobiera `5` pomiarów i zwraca ich średnią. Jedno `delay(60)` to `60 ms` przerwy między próbkami — nota katalogowa HC-SR04 zaleca co najmniej `60 ms` między pomiarami, żeby echo poprzedniego impulsu nie zakłóciło kolejnego. Pięć próbek zajmuje więc łącznie ok. `300 ms`. Im więcej próbek, tym wolniejsza reakcja programu. W robotach mobilnych `3`–`5` pomiarów to zazwyczaj dobry kompromis między stabilnością odczytu a szybkością reagowania na przeszkody.
 
 </Expandable>
 </Task>
@@ -284,14 +284,14 @@ Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się
   rows={[
     [<Photo
   file="12.07-buzzer-z-etykieta.jpg"
-  caption="Buzzer z naklejką — naklejka tłumi dźwięk, zdejm ją przed użyciem."
-  alt="Buzzer pasywny z etykietą fabryczną"
+  caption="Buzzer z naklejką — naklejka tłumi dźwięk, zdejmij ją przed użyciem."
+  alt="Buzzer z generatorem (aktywny) z etykietą fabryczną"
   width={300}
   height={225}
 />, <Photo
   file="12.08-buzzer-bez-etykiety.jpg"
   caption="Buzzer po zdjęciu naklejki."
-  alt="Buzzer pasywny bez naklejki"
+  alt="Buzzer z generatorem (aktywny) bez naklejki"
   width={300}
   height={225}
 />],   
@@ -314,7 +314,7 @@ Podłącz buzzer do pinu `2`. Program włącza sygnał, gdy obiekt znajdzie się
   height={433}
 />
 
-<Code lang="cpp" file="alarm-zblizkowy.ino">
+<Code lang="cpp" file="alarm-zblizeniowy.ino">
 ```cpp
 const byte trigPin   = 12;
 const byte echoPin   = 11;
@@ -359,7 +359,7 @@ void zakres(int a, int b) {
 </Code>
 
 <Task title="Zadanie 5" estimate="15 min">
-Zmień granice `zakres(10, 25)` na własne wartości. Następnie dodaj drugą diodę LED i napisz funkcję `zakres2()`, która reaguje na inny przedział odległości. Przy okazji: czy dało się skrócić kod, przekazując pin jako argument?
+Zmień granice `zakres(10, 25)` na własne wartości. Następnie dodaj diodę LED jako drugi sygnalizator i napisz funkcję `zakres2()`, która reaguje na inny przedział odległości. Przy okazji: czy dałoby się skrócić kod, przekazując pin jako argument?
 </Task>
 
 <MiniProject title="Wizualny wskaźnik odległości" estimate="20 min">
@@ -375,7 +375,7 @@ Zmień granice `zakres(10, 25)` na własne wartości. Następnie dodaj drugą di
 Masz do dyspozycji 3 diody LED (piny `2`, `3`, `4`). Napisz program:
 - 1 dioda świeci, gdy obiekt jest dalej niż 30 cm,
 - 2 diody świecą przy 15–30 cm,
-- 3 diody świecą przy bliżej niż 15 cm.
+- 3 diody świecą, gdy obiekt jest bliżej niż 15 cm.
 
 Skorzystaj z funkcji `zmierzOdleglosc()` i trzech wywołań `zakres()` albo warunków `if-else if-else`.
 
@@ -384,9 +384,9 @@ Skorzystaj z funkcji `zmierzOdleglosc()` i trzech wywołań `zakres()` albo waru
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Funkcje i czujnik HC-SR04 to świetny moment, żeby nauczyć się pisać modularny kod — AI może w tym pomóc konkretnie:
 
-- **Projektowanie funkcji z wartością zwracaną** — opisz AI, co chcesz osiągnąć: „Napisz funkcję Arduino, która mierzy odległość HC-SR04 i zwraca wynik w centymetrach. Wyjaśnij każdą linię". Porównaj wynik z własną implementacją.
-- **Dlaczego dzielimy przez 58?** — zapytaj AI: „Skąd pochodzi liczba 58 w formule `czas / 58` przy konwersji impulsu HC-SR04 na centymetry? Wyprowadź wzór krok po kroku". Zrozumienie wzoru zamiast zapamiętywania go na pamięć.
-- **Stabilizacja odczytów** — jeśli HC-SR04 daje niestabilne wskazania, poproś AI: „Napisz funkcję, która pobiera 5 pomiarów HC-SR04, odrzuca wartości odstające i zwraca uśredniony wynik". To praktyczne ćwiczenie z tablicami i pętlami w kontekście realnego problemu.
+- **Projektowanie funkcji z wartością zwracaną** — opisz AI, co chcesz osiągnąć: „Napisz funkcję Arduino, która mierzy odległość HC-SR04 i zwraca wynik w centymetrach. Wyjaśnij każdą linię”. Porównaj wynik z własną implementacją.
+- **Dlaczego dzielimy przez 58?** — zapytaj AI: „Skąd pochodzi liczba 58 w formule `czas / 58` przy konwersji impulsu HC-SR04 na centymetry? Wyprowadź wzór krok po kroku”. Zrozumienie wzoru zamiast uczenia się go na pamięć.
+- **Stabilizacja odczytów** — jeśli HC-SR04 daje niestabilne wskazania, poproś AI: „Napisz funkcję, która pobiera 5 pomiarów HC-SR04, odrzuca wartości odstające i zwraca uśredniony wynik”. To praktyczne ćwiczenie z tablicami i pętlami w kontekście realnego problemu.
 </Callout>
 
 ## Podsumowanie

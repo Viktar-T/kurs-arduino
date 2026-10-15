@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Wykresy i warunki — ciąg dalszy"
 slug: "wykresy-warunki-cd"
-summary: "Plan lekcji na podstawie kursu Forbot #10: rysowanie wykresów z danych Arduino, wykres odległości z HC-SR04, kilka wartości na wykresie oraz łączenie warunków logicznych."
+summary: "Lekcja z kursu Forbot #10: rysowanie wykresów z danych Arduino w Serial Plotterze, wykres odległości z HC-SR04, kilka wartości na wykresie, łączenie warunków logicznych oraz alarm z czujnikiem odległości i przyciskiem."
 
 day: 4
 weekend: 2
@@ -25,26 +25,29 @@ objectives:
   - "Łączyć warunki logiczne w bardziej złożone decyzje programu"
 
 prerequisites:
-  - "dzien-03/czujnik-hc-sr04"
+  - "dzien-04/czujnik-hc-sr04"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Czujnik odległości HC-SR04", qty: 1 }
+  - { name: "Potencjometr", qty: 1 }
+  - { name: "Przycisk (tact switch)", qty: 2 }
+  - { name: "Buzzer z generatorem (aktywny)", qty: 1 }
   - { name: "Dioda LED", qty: 3 }
   - { name: "Rezystor 1000 Ω", qty: 3 }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 20 }
 
 tags: [arduino, wykresy, serial-plotter, warunki, hc-sr04]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-wykresy-liczby-losowe-id9676"
 
 publish: true
-updated: "2026-05-24"
+updated: "2026-10-15"
 ---
 
-W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym oraz łączyć warunki logiczne w bardziej złożone decyzje. To ostatnia lekcja pierwszego dnia — zamkniemy go praktycznym przykładem alarmu z czujnikiem odległości i przyciskiem.
+W tej lekcji nauczysz się rysować wykresy z danych Arduino w czasie rzeczywistym oraz łączyć warunki logiczne w bardziej złożone decyzje. Na koniec połączymy obie umiejętności w praktycznym przykładzie alarmu z czujnikiem odległości i przyciskiem.
 
 ## 1. Rysowanie wykresów z Arduino
 
@@ -60,7 +63,7 @@ Arduino IDE (Integrated Development Environment, zintegrowane środowisko progra
 
 ### Prosty wykres z potencjometru
 
-Podłącz potencjometr do pinu `A5` (środkowy nóżka do A5, skrajne do 5 V i GND (Ground, masa)):
+Podłącz potencjometr do pinu `A5` (środkowa nóżka do A5, skrajne do 5 V i GND (Ground, masa)):
 
 <Schematic
   src="/img/lekcje/13.02-potencjometr-schemat.png"
@@ -105,7 +108,7 @@ Otwórz teraz **Serial Plotter** (Narzędzia → Serial Plotter) i kręć potenc
 />
 
 <Callout type="note" title="Serial Plotter vs Serial Monitor">
-Nie możesz otworzyć obu jednocześnie — zajmują ten sam port szeregowy. Zamknij jedno przed otwarciem drugiego.
+W starszym Arduino IDE 1.x nie możesz otworzyć obu jednocześnie — zajmują ten sam port szeregowy, więc trzeba zamknąć jedno przed otwarciem drugiego. W zalecanym w kursie Arduino IDE 2.x oba narzędzia mogą działać równocześnie.
 </Callout>
 
 <Expandable title="Jak często można odświeżać wykres?" heading="####">
@@ -128,7 +131,7 @@ Zmień wartość `delay(200)` na `50` i obserwuj, jak wykres staje się bardziej
 
 ## 2. Wykres odległości od przeszkody
 
-Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w [lekcji 12, rozdziale „Miernik odległości"](../dzien-03/12.02-czujnik-hc-sr04#2-miernik-odleglosci) (`trigPin = 12`, `echoPin = 11`):
+Teraz wyślemy dane z czujnika HC-SR04 do Plottera. Podłącz czujnik tak samo jak w [lekcji 12, rozdziale „Miernik odległości”](/lekcje/dzien-04/12.02-czujnik-hc-sr04#2-miernik-odległości) (`trigPin = 12`, `echoPin = 11`):
 
 <Code lang="cpp" file="hc-sr04-wykres.ino">
 ```cpp
@@ -214,7 +217,7 @@ void loop() {
 
 <Expandable title="pulseIn() — timeout i tryb nieblokujący" heading="####">
 
-`pulseIn(pin, HIGH)` czeka, aż sygnał przejdzie z LOW na HIGH, po czym mierzy czas trwania impulsu. Domyślnie czeka maksymalnie **1 sekundę** — gdy nic nie stoi przed czujnikiem, program „zamarza" na tę chwilę przy każdym pomiarze.
+`pulseIn(pin, HIGH)` czeka, aż sygnał przejdzie z LOW na HIGH, po czym mierzy czas trwania impulsu. Domyślnie czeka maksymalnie **1 sekundę** — jeśli impuls w ogóle się nie pojawi (np. przy odłączonym przewodzie `Echo`), program „zamarza” na tę chwilę przy każdym pomiarze. Gdy nic nie stoi przed czujnikiem, impuls `Echo` jest bardzo długi (kilkadziesiąt milisekund lub więcej) i daje fałszywie duży odczyt.
 
 Możesz to naprawić, przekazując trzeci argument — limit czasu w mikrosekundach:
 
@@ -222,7 +225,7 @@ Możesz to naprawić, przekazując trzeci argument — limit czasu w mikrosekund
 czas = pulseIn(echoPin, HIGH, 25000); // max 25 ms → odpowiada ~4 m
 ```
 
-Fala dźwiękowa przy 400 cm przebywa trasę tam i z powrotem w ok. 23 ms, więc 25 000 µs w zupełności wystarczy. Gdy nic nie wykryto, funkcja zwraca `0` natychmiast, zamiast czekać pełną sekundę — pętla `loop()` pracuje wyraźnie szybciej.
+Fala dźwiękowa przy 400 cm przebywa trasę tam i z powrotem w ok. 23 ms, więc 25 000 µs w zupełności wystarczy. Gdy nic nie wykryto, funkcja zwraca `0` już po 25 ms, zamiast czekać na koniec długiego impulsu albo pełną sekundę — pętla `loop()` pracuje wyraźnie szybciej.
 
 </Expandable>
 
@@ -251,7 +254,7 @@ Serial.println("");
 
 <Expandable title="Nazwane serie w Serial Plotter (Arduino IDE 2)" heading="####">
 
-Arduino IDE 2.x obsługuje etykiety serii. Jeśli wyślesz dane w formacie `Etykieta:Wartość`, Plotter wyświetli legendę zamiast domyślnych `Data0`, `Data1`:
+Arduino IDE 2.x obsługuje etykiety serii. Jeśli wyślesz dane w formacie `Etykieta:Wartość`, Plotter wyświetli w legendzie Twoje nazwy zamiast domyślnych `value 1`, `value 2`:
 
 ```cpp
 Serial.print("potencjometr:");
@@ -261,7 +264,7 @@ Serial.print("odleglosc:");
 Serial.println(dystans);
 ```
 
-Na wykresie zobaczysz wtedy czytelną legendę z nazwami. Uwaga: w starszym IDE 1.x ten format nie jest obsługiwany — wyświetli się surowy tekst w Monitorze portu zamiast wykresu.
+Na wykresie zobaczysz wtedy czytelną legendę z nazwami. Uwaga: etykieta nie może zawierać spacji. Ten sam format obsługuje też Serial Plotter w nowszych wersjach IDE 1.8.x.
 
 </Expandable>
 
@@ -360,7 +363,7 @@ void loop() {
 />
 
 <Expandable title="Głębiej: ocena leniwa (short-circuit) i jej praktyczne pułapki" heading="####">
-C++ stosuje tzw. **ocenę leniwą** (ang. *short-circuit evaluation*) dla operatorów `&&` i `||`. To znaczy, że kompilator przerywa sprawdzanie warunku, gdy wynik jest już znany:
+C++ stosuje tzw. **ocenę leniwą** (ang. *short-circuit evaluation*) dla operatorów `&&` i `||`. To znaczy, że program przerywa sprawdzanie warunku, gdy wynik jest już znany:
 
 - `A && B` — jeśli `A` jest fałszywe, `B` **nigdy nie zostanie obliczone** (cały warunek na pewno fałszywy).
 - `A || B` — jeśli `A` jest prawdziwe, `B` **nigdy nie zostanie obliczone** (cały warunek na pewno prawdziwy).
@@ -396,7 +399,7 @@ if (!digitalRead(8)) { ... }  // równoważne: digitalRead(8) == LOW
 - `!(A && B)` jest równoważne `!A || !B`
 - `!(A || B)` jest równoważne `!A && !B`
 
-XOR z Zadania 4 możesz więc zapisać na dwa równoważne sposoby:
+XOR z Zadania 3 możesz więc zapisać na dwa równoważne sposoby:
 
 ```cpp
 (A || B) && !(A && B)    // tradycyjny zapis
@@ -408,7 +411,7 @@ Obie wersje dają identyczny wynik — wybierz tę, która jest dla ciebie czyte
 </Expandable>
 
 <Task title="Zadanie 3" estimate="10 min">
-Dodaj do programu trzecią diodę (pin `6`), która świeci tylko gdy **jeden** z przycisków jest wciśnięty (ale nie oba razem). Wskazówka: użyj XOR-a zapisanego jako `(A || B) && !(A && B)`.
+Dodaj do programu trzecią diodę (pin `6`), która świeci tylko wtedy, gdy **jeden** z przycisków jest wciśnięty (ale nie oba razem). Wskazówka: użyj XOR-a zapisanego jako `(A || B) && !(A && B)`.
 </Task>
 
 ## 5. Warunki w praktyce — alarm z czujnikiem i przyciskiem
@@ -422,6 +425,8 @@ Połączmy to wszystko. Program włącza buzzer, gdy obiekt jest w odległości 
   width={650}
   height={433}
 />
+
+W tym układzie piny są inne niż w rozdziale 2, więc przepnij przewody: `Trig` → pin `12`, `Echo` → pin `9`, przycisk → pin `10` (drugą nóżką do GND), buzzer → pin `11`.
 
 <Expandable title="Przykład kodu" heading="####">
 
@@ -457,14 +462,16 @@ void loop() {
   } else {
     digitalWrite(PIN_BUZZER, LOW);
   }
+
+  delay(60); // HC-SR04: co najmniej 60 ms między kolejnymi pomiarami
 }
 ```
 </Code>
 
 </Expandable>
 
-<Callout type="tip" title="Czytaj warunek od prawej do lewej">
-`(dystans > 20 && dystans < 40) || digitalRead(10) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
+<Callout type="tip" title="Czytaj warunek od lewej do prawej">
+`(dystans > 20 && dystans < 40) || digitalRead(PIN_BTN) == LOW` — najpierw sprawdzamy, czy dystans mieści się w oknie 20–40 cm, a potem, czy przycisk jest wciśnięty. Wystarczy jeden z tych faktów, żeby alarm zadziałał.
 </Callout>
 
 <Expandable title="Histereza — jak unikać drgania alarmu na granicy" heading="####">
@@ -486,19 +493,19 @@ void loop() {
     alarm = false;  // wyłącz dopiero gdy dalej niż 30 cm
   }
 
-  digitalWrite(11, alarm ? HIGH : LOW);
+  digitalWrite(PIN_BUZZER, alarm ? HIGH : LOW);
 }
 ```
 
-Masz teraz 5 cm „strefy buforowej" — alarm nie będzie drżał przy granicy progu.
+Masz teraz 5 cm „strefy buforowej” — alarm nie będzie drżał przy granicy progu.
 
 </Expandable>
 
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Operatory logiczne i Serial Plotter — AI pomoże zrozumieć te tematy głębiej:
 
-- **Upraszczanie warunków logicznych** — masz skomplikowany warunek `if`? Wklej go do AI i napisz: „Uprość ten warunek logiczny i wyjaśnij, czy można zastosować prawa De Morgana". Nauka algebry Boole'a na własnym kodzie jest skuteczniejsza niż teoria z podręcznika.
-- **Serial Plotter — interpretacja wykresu** — wgraj kod z wieloma seriami danych, uruchom Plotter i zrób zrzut ekranu. Opisz AI, co widzisz: „Na wykresie mam dwie linie — jedna gwałtownie rośnie, druga jest stała. Co to może oznaczać w kontekście pomiaru HC-SR04?". AI pomoże zinterpretować zachowanie układu.
+- **Upraszczanie warunków logicznych** — masz skomplikowany warunek `if`? Wklej go do AI i napisz: „Uprość ten warunek logiczny i wyjaśnij, czy można zastosować prawa De Morgana”. Nauka algebry Boole'a na własnym kodzie jest skuteczniejsza niż teoria z podręcznika.
+- **Serial Plotter — interpretacja wykresu** — wgraj kod z wieloma seriami danych, uruchom Plotter i zrób zrzut ekranu. Opisz AI, co widzisz: „Na wykresie mam dwie linie — jedna gwałtownie rośnie, druga jest stała. Co to może oznaczać w kontekście pomiaru HC-SR04?”. AI pomoże zinterpretować zachowanie układu.
 </Callout>
 
 ## Podsumowanie

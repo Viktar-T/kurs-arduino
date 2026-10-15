@@ -15,7 +15,7 @@ weekend: 5
 order: 4
 duration: 75
 block: 1
-blockTitle: "Podstawy Arduino i środowisko IDE"
+blockTitle: "Podstawy Arduino oraz środowisko programowania"
 forbotCourse: 3
 forbotChapter: 4
 
@@ -40,13 +40,13 @@ sources:
   - "https://docs.arduino.cc/language-reference/"
 
 publish: true
-updated: "2026-06-19"
+updated: "2026-10-15"
 ---
 
-W programowaniu zwykłym błąd kończy się komunikatem — poprawiasz i wgrywasz ponownie. W elektronice błąd bywa **nieodwracalny**: zła podpowiedź AI potrafi w sekundę spalić czujnik za kilkadziesiąt złotych albo cały pin mikrokontrolera. Dlatego każdą radę AI dotyczącą sprzętu traktujemy zasadą: **„winna, dopóki nie zostanie sprawdzona w dokumentacji".** Ta lekcja uczy najważniejszej umiejętności całego modułu — **weryfikacji**.
+W programowaniu zwykłym błąd kończy się komunikatem — poprawiasz i wgrywasz ponownie. W elektronice błąd bywa **nieodwracalny**: zła podpowiedź AI potrafi w sekundę spalić czujnik za kilkadziesiąt złotych albo cały pin mikrokontrolera. Dlatego każdą radę AI dotyczącą sprzętu traktujemy według zasady: **„winna, dopóki nie zostanie sprawdzona w dokumentacji”.** Ta lekcja uczy najważniejszej umiejętności całego modułu — **weryfikacji**.
 
 <Callout type="hazard" title="Nieodwracalność">
-Gdy ustawisz pin jako `OUTPUT` i podłączysz do niego nieodpowiedni element, możesz uszkodzić sprzęt **trwale** — i czasem dzieje się to po cichu albo z opóźnieniem. Uczeń myśli wtedy, że „czujnik był wadliwy", i powtarza ten sam błąd. Dlatego sprawdzamy **przed** podaniem zasilania.
+Gdy ustawisz pin jako `OUTPUT` i podłączysz do niego nieodpowiedni element, możesz uszkodzić sprzęt **trwale** — i czasem dzieje się to po cichu albo z opóźnieniem. Uczeń myśli wtedy, że „czujnik był wadliwy”, i powtarza ten sam błąd. Dlatego sprawdzamy **przed** podaniem zasilania.
 </Callout>
 
 <Objectives
@@ -68,7 +68,7 @@ Gdy ustawisz pin jako `OUTPUT` i podłączysz do niego nieodpowiedni element, mo
 
 ## 1. Dlaczego AI jest niebezpieczna przy sprzęcie
 
-Model językowy nie „rozumie" fizyki — przewiduje najbardziej prawdopodobne słowa. Dlatego świetnie pisze kod do typowych zadań, ale **myli się przy sprzęcie**, i to pewnym tonem. Niezależne testy pokazują, że jedynym zadaniem elektronicznym, które AI wykonuje w miarę pewnie, jest **streszczanie dokumentacji** — projektowanie układów i dobór elementów zawodzi. Traktuj więc AI jak szybki, ale omylny **indeks do dokumentacji**, a nie jak autorytet.
+Model językowy nie „rozumie” fizyki — przewiduje najbardziej prawdopodobne słowa. Dlatego świetnie pisze kod do typowych zadań, ale **myli się przy sprzęcie**, i to pewnym tonem. Z testów i doświadczeń inżynierów wynika, że AI najpewniej radzi sobie ze **streszczaniem dokumentacji**, a przy projektowaniu układów i doborze elementów często zawodzi. Traktuj więc AI jak szybki, ale omylny **indeks do dokumentacji**, a nie jak autorytet.
 
 ## 2. Sześć typów halucynacji AI w elektronice
 
@@ -82,7 +82,7 @@ To są pułapki, które realnie niszczą sprzęt na Arduino UNO. Naucz się ich 
     ["Przekroczony prąd GPIO", "Steruje silnikiem/brzęczykiem wprost z pinu", "Spalony pin lub cały układ", "Tranzystor / mostek H; maks. 20 mA na pin"],
     ["Zmyślone funkcje i biblioteki", "Wywołuje nieistniejącą funkcję lub bibliotekę", "Kod się nie kompiluje (lub działa źle)", "Sprawdź, czy biblioteka/funkcja istnieje i instaluje się"],
     ["Złe piny, adresy I2C, rejestry", "Myli piny UNO/Mega, podaje zły adres I2C", "Układ nie startuje", "Potwierdź w dokumentacji; adres I2C skanerem"],
-    ["Brak elementów ochronnych", "Pomija diodę gaszącą przy cewce, rezystor podciągający przy przycisku", "Układ działa, potem pada", "Dodaj diodę gaszącą, rezystor pull-up/down"],
+    ["Brak elementów ochronnych", "Pomija diodę gaszącą przy cewce, rezystor podciągający przy przycisku", "Bez diody: układ działa, potem pada; bez pull-up: przypadkowe odczyty przycisku", "Dodaj diodę gaszącą, rezystor pull-up/down"],
     ["Ogólna niepewność faktów", "Podaje pewnym tonem błędne dane", "Mylące decyzje projektowe", "Każdą liczbę sprawdź u źródła"],
   ]}
 />
@@ -105,7 +105,7 @@ Zanim **jakikolwiek** przewód dostanie zasilanie, przejdź tę bramkę. To rytu
 
 ## 4. Checklista przeglądu kodu C++
 
-Kod od AI sprawdzaj **przed kompilacją** według tej listy. To „bramka" dla oprogramowania.
+Kod od AI sprawdzaj **przed kompilacją** według tej listy. To „bramka” dla oprogramowania.
 
 <Table
   caption="Checklista przeglądu kodu Arduino od AI"
@@ -128,17 +128,17 @@ Dwa narzędzia łapią dużą część błędów AI za darmo i bez ryzyka.
 
 **Kompilator PlatformIO** wyłapuje **zmyślone funkcje i biblioteki**: jeśli AI wymyśliło nieistniejącą funkcję, kompilacja po prostu się nie powiedzie. To nie porażka — to **cenny moment nauki debugowania**. Skopiuj **dokładny** komunikat błędu i wklej go do czatu AI razem z kodem.
 
-**Symulator [Wokwi](https://wokwi.com)** pozwala przetestować układ i kod **wirtualnie**, zanim dotkniesz prawdziwych elementów. Jeśli AI źle policzyło rezystor albo logika zawiesza silnik — zobaczysz to **bezpiecznie** na ekranie. Wokwi jest **darmowy** do nauki i działa na dwa sposoby:
+**Symulator [Wokwi](https://wokwi.com)** pozwala przetestować układ i kod **wirtualnie**, zanim dotkniesz prawdziwych elementów. Jeśli AI pomyliło piny albo logika zawiesza silnik — zobaczysz to **bezpiecznie** na ekranie. Pamiętaj jednak, że Wokwi symuluje elektrykę tylko w podstawowym zakresie: nie wykryje przekroczonego prądu, źle dobranego rezystora ani brakującej diody gaszącej — to sprawdzasz w dokumentacji (bramka z punktu 3). Wokwi jest **darmowy** do nauki i działa na dwa sposoby:
 
 - **W przeglądarce** na [wokwi.com](https://wokwi.com) — nic nie instalujesz, najszybszy start.
 - **Jako rozszerzenie do VS Code** — symulujesz projekt PlatformIO; połączenia opisuje plik `diagram.json` (obok `wokwi.toml`, oba w korzeniu projektu).
 
-#### Jak zacząć z Wokwi i jak używać (krok po kroku)
+### Jak zacząć z Wokwi i jak używać (krok po kroku)
 
 1. Wejdź na [wokwi.com](https://wokwi.com), kliknij **New Project** i wybierz **Arduino Uno**.
 2. W zakładce z kodem (`sketch.ino`) wklej swój szkic.
 3. Dodaj elementy przyciskiem **+** (np. dioda LED, czujnik HC-SR04, rezystor, wyświetlacz).
-4. **Połącz nóżki**: kliknij pin jednego elementu i przeciągnij do pinu drugiego — przewody rysują się kliknięciami.
+4. **Połącz nóżki**: kliknij pin jednego elementu, a potem pin drugiego — przewody rysują się kliknięciami.
 5. Kliknij zielone **Play**, aby uruchomić symulację.
 6. Otwórz **Serial Monitor** na dole, żeby zobaczyć dane z `Serial.print()`; przydaje się też wirtualny analizator stanów logicznych.
 7. Coś nie gra? Zatrzymaj (**Stop**), popraw kod lub połączenia i uruchom ponownie — **bez ryzyka dla sprzętu**.
@@ -149,19 +149,19 @@ Gdy układ działa w symulacji, możesz pobrać `diagram.json` i wsadzić go do 
 Dopiero gdy kod **kompiluje się** i **przechodzi symulację w Wokwi**, wolno podać zasilanie na prawdziwą płytkę. Symulacja jest siatką bezpieczeństwa, która sprawia, że zmyślone połączenie jest nieszkodliwe.
 </Callout>
 
-## 6. „Biblioteka błędów AI"
+## 6. „Biblioteka błędów AI”
 
 Załóżcie wspólną klasową notatkę, do której **zbieracie złapane halucynacje**: zły pin, zmyślona funkcja, przekroczony prąd. Każde takie znalezisko to mały sukces — uczy czujności i pokazuje, że to **wy** kontrolujecie maszynę, a nie odwrotnie.
 
 <Task title="Znajdź błędy w kodzie od AI" estimate="25 min">
-Poniżej „odpowiedź AI" do naszego czujnika cofania. Zawiera kilka celowych błędów. Korzystając z checklisty z punktu 4 i tabeli halucynacji z punktu 2, **wypisz wszystkie usterki** i zaproponuj poprawki. Dopiero potem rozwiń klucz odpowiedzi.
+Poniżej „odpowiedź AI” do naszego czujnika cofania. Zawiera kilka celowych błędów. Korzystając z checklisty z punktu 4 i tabeli halucynacji z punktu 2, **wypisz wszystkie usterki** i zaproponuj poprawki. Dopiero potem rozwiń klucz odpowiedzi.
 
 <Code lang="cpp" file="ai-czujnik-cofania-WERSJA-BLEDNA.cpp">
 ```cpp
 #include <Arduino.h>
-#include <HCSR04.h>            // czy ta biblioteka istnieje i instaluje sie?
+#include <HCSR04.h>            // czy ta biblioteka istnieje i instaluje się?
 
-const int BUZZER = 5;          // brzeczyk 5 V, 50 mA - wprost z pinu?
+const int BUZZER = 5;          // brzęczyk 5 V, 50 mA - wprost z pinu?
 const int LED = 6;
 
 void setup() {
@@ -171,29 +171,30 @@ void setup() {
 }
 
 void loop() {
-  float cm = sonar.measureCentimeters();   // skad sie wzial obiekt "sonar"?
+  float cm = sonar.measureCentimeters();   // skąd się wziął obiekt "sonar"?
   String log = "Dystans: " + String(cm) + " cm";  // klasa String
   Serial.println(log);
 
   if (cm < 10) {
     digitalWrite(BUZZER, HIGH);
-    delay(100);                 // blokujace opoznienie w petli
+    delay(100);                 // blokujące opóźnienie w pętli
     digitalWrite(BUZZER, LOW);
     digitalWrite(LED, HIGH);
   }
-  delay(500);                   // kolejne blokujace opoznienie
+  delay(500);                   // kolejne blokujące opóźnienie
 }
 ```
 </Code>
 
 <Expandable title="Klucz odpowiedzi" heading="####">
 
-- **Zmyślona biblioteka/obiekt:** `#include <HCSR04.h>` oraz `sonar.measureCentimeters()` — obiekt `sonar` nie został utworzony, a metoda prawdopodobnie nie istnieje. Trzeba sprawdzić realną bibliotekę (np. NewPing) i utworzyć obiekt, albo zmierzyć odległość samodzielnie przez `pulseIn()`.
+- **Niesprawdzona biblioteka i zmyślony obiekt:** `#include <HCSR04.h>` oraz `sonar.measureCentimeters()` — plik `HCSR04.h` ma kilka różnych bibliotek, każda z innymi funkcjami, więc nie wiadomo, o którą chodzi; obiekt `sonar` nie został utworzony, a metoda prawdopodobnie nie istnieje. Trzeba sprawdzić realną bibliotekę (np. NewPing) i utworzyć obiekt, albo zmierzyć odległość samodzielnie przez `pulseIn()`.
 - **Przekroczony prąd pinu:** brzęczyk 50 mA wprost z pinu przekracza zalecane 20 mA — potrzebny tranzystor sterujący.
-- **Klasa String:** `String log = ...` grozi fragmentacją 2 KB SRAM — użyć `Serial.print()` po kawałku lub `snprintf` z buforem `char`.
+- **Klasa String:** `String log = ...` grozi fragmentacją 2 KB SRAM — użyć `Serial.print()` po kawałku lub `snprintf` z buforem `char` (na AVR `snprintf` nie formatuje `float` przez `%f` — liczbę zamień `dtostrf()`).
 - **Blokujące `delay()`:** dwa `delay()` w pętli łamią zasadę z konstytucji — logikę pikania przepisać na `millis()`.
-- **Brak przypadku brzegowego:** nie ma reakcji na odczyt 0 / brak echa (czujnik odłączony).
+- **Brak przypadku brzegowego:** nie ma reakcji na odczyt 0 / brak echa (czujnik odłączony) — co gorsza, `0 < 10`, więc odłączony czujnik włącza alarm.
 - **Brak gasnięcia LED:** dioda zapala się, ale nigdy nie gaśnie powyżej progu.
+- **Niezgodność ze specyfikacją:** brakuje strefy 10–30 cm (wolne pikanie co 500 ms), a pomiar nie odbywa się co 200 ms, tylko w rytmie wyznaczanym przez `delay()`.
 
 </Expandable>
 </Task>
@@ -208,6 +209,6 @@ Kluczowe wnioski:
 - Znaj **sześć typów halucynacji** i twarde limity ATmega328P (20 mA na pin, 200 mA na układ).
 - Stosuj **bramkę weryfikacji sprzętu** (7 kroków) i **checklistę przeglądu kodu**.
 - **Kompilator** łapie zmyślone funkcje, a **Wokwi** pozwala testować bezpiecznie — dopiero potem prawdziwa płytka.
-- Prowadźcie **„Bibliotekę błędów AI"** — czujność to umiejętność, którą się ćwiczy.
+- Prowadźcie **„Bibliotekę błędów AI”** — czujność to umiejętność, którą się ćwiczy.
 
-W ostatniej lekcji modułu połączymy wszystko: przejdziemy **pełny przepływ pracy** od specyfikacji, przez kod z AI i symulację, aż po działający układ na biurku.
+W następnej lekcji połączymy wszystko: przejdziemy **pełny przepływ pracy** od specyfikacji, przez kod z AI i symulację, aż po działający układ na biurku.

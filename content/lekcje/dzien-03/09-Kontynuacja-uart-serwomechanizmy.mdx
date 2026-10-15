@@ -33,11 +33,14 @@ hardware:
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Serwomechanizm", qty: 1 }
   - { name: "Potencjometr 10 kΩ", qty: 1 }
-  - { name: "Fotorezystor", qty: 1 }
-  - { name: "Rezystor 10 kΩ", qty: 1 }
+  - { name: "Fotorezystor", qty: 2, note: "drugi tylko do zadania 1" }
+  - { name: "Rezystor 10 kΩ", qty: 2, note: "do dzielników z fotorezystorami" }
+  - { name: "Przycisk tact-switch", qty: 1, optional: true, note: "do zadania 1" }
+  - { name: "Dioda LED", qty: 2, optional: true, note: "do zadania 2 (układ z lekcji o UART)" }
+  - { name: "Rezystor 1000 Ω", qty: 2, optional: true, note: "do diod LED w zadaniu 2" }
   - { name: "Stabilizator LM7805", qty: 1 }
   - { name: "Bateria 9 V z klipsem", qty: 1 }
-  - { name: "Kondensator filtrujący", qty: 2 }
+  - { name: "Kondensator 100 nF", qty: 2, note: "na wejściu i wyjściu LM7805" }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 16 }
 
@@ -47,7 +50,7 @@ sources:
 
 cover: "/img/lekcje/09.01-kontynuacja-uart-serwomechanizmy-okladka.png"
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 W tej lekcji wracamy na chwilę do UART (Universal Asynchronous Receiver-Transmitter), żeby uporządkować formatowanie danych w Monitorze portu szeregowego. Potem poznajemy instrukcję `switch`, a na końcu łączymy ADC (Analog-to-Digital Converter), serwomechanizm i UART w praktyczny projekt: analogowy wskaźnik światła.
@@ -108,8 +111,8 @@ Spójrz na liczbę `2345` z przykładu:
 - HEX: `0x929` (3 cyfry — krótko i jednoznacznie)
 
 HEX króluje wszędzie tam, gdzie liczy się **wewnętrzny układ bitów**:
-- **Adresy w pamięci**: `0x7F` lub `0x3F` jako adresy I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa).
-- **Maski bitowe i rejestry**: `PORTB = 0x0F` od razu mówi „cztery dolne piny w stan wysoki".
+- **Adresy urządzeń i pamięci**: `0x27` lub `0x3F` jako adresy I2C (Inter-Integrated Circuit, magistrala dwuprzewodowa).
+- **Maski bitowe i rejestry**: `PORTB = 0x0F` od razu mówi „cztery dolne piny w stan wysoki”.
 - **Kolory RGB**: `#FF8800` to czytelnie `255, 136, 0`, a nie trzeba liczyć potęg dwójki.
 
 Przedrostek `0x` w kodzie C++ oznacza, że liczba jest w HEX (np. `int x = 0x1A;`). Bez niego kompilator potraktowałby `1A` jako błąd, a `10` jako zwykłą dziesiątkę.
@@ -158,7 +161,7 @@ Typ `float` w Arduino to 32-bitowa liczba zmiennoprzecinkowa zapisana zgodnie ze
 
 Mantysa przechowuje znaczące cyfry liczby. 23 bity odpowiadają mniej więcej **7 cyfrom dziesiętnym** dokładności — to nieprzekraczalny sufit dla `float`. Liczba `3.14159265` jest przechowywana tylko jako przybliżenie.
 
-**Ważne dla Arduino AVR:** Na UNO, Mega i Nano (procesor ATmega) typy `float` i `double` mają **identyczny rozmiar** — oba zajmują 32 bity. Prawdziwy 64-bitowy `double` z prawie 16 cyframi dokładności jest dostępny tylko na płytkach z procesorem ARM: Arduino Due, Nano 33 BLE czy MKR Zero.
+**Ważne dla Arduino AVR:** Na UNO, Mega i Nano (procesor ATmega) typy `float` i `double` mają **identyczny rozmiar** — oba zajmują 32 bity. Prawdziwy 64-bitowy `double` z prawie 16 cyframi dokładności jest dostępny m.in. na płytkach z procesorem ARM: Arduino Due, Nano 33 BLE czy MKR Zero.
 
 </Expandable>
 
@@ -326,7 +329,10 @@ void loop() {
   int potencjometr = analogRead(A5);
 
   if (Serial.available() > 0) {
-    odebraneDane = Serial.read();
+    int znak = Serial.read();
+    if (znak != '\n' && znak != '\r') {  // pomijamy znaki końca linii
+      odebraneDane = znak;
+    }
   }
 
   switch (odebraneDane) {
@@ -361,11 +367,11 @@ void loop() {
 
 <Expandable title="Fall-through — kiedy brak break jest celowy" heading="####">
 
-Pominięcie `break` w jednym `case` powoduje, że wykonanie „spada" do następnego bloku — jest to tzw. **fall-through**. Zwykle to błąd, ale można go użyć celowo, gdy kilka wartości ma wywołać ten sam kod.
+Pominięcie `break` w jednym `case` powoduje, że wykonanie „spada” do następnego bloku — jest to tzw. **fall-through**. Zwykle to błąd, ale można go użyć celowo, gdy kilka wartości ma wywołać ten sam kod.
 
-Przykład: chcemy obsłużyć zarówno `'d'`, jak i `'D'` jako polecenie wypisania w systemie dziesiętnym. Wystarczy napisać dwa puste `case` jeden pod drugim — `case 'D':` bez własnego kodu spada do `case 'd':` i wykonuje jego blok. Taki wzorzec często stosuje się do obsługi dużych i małych liter bez duplikowania kodu.
+Przykład: chcemy obsłużyć zarówno `'d'`, jak i `'D'` jako polecenie wypisania w systemie dziesiętnym. Wystarczy napisać dwa `case` jeden pod drugim — `case 'D':` bez własnego kodu spada do `case 'd':` i wykonuje jego blok. Taki wzorzec często stosuje się do obsługi dużych i małych liter bez duplikowania kodu.
 
-Wielu kompilatorów C++ ostrzega przed nieumyślnym fall-through. Jeśli chcesz oznaczyć, że to świadomy wybór, wstaw komentarz `/* fall-through */` lub (od C++17) atrybut `[[fallthrough]]`.
+Wiele kompilatorów C++ ostrzega przed nieumyślnym fall-through. Jeśli chcesz oznaczyć, że to świadomy wybór, wstaw komentarz `/* fall-through */` lub (od C++17) atrybut `[[fallthrough]]`.
 
 </Expandable>
 
@@ -447,7 +453,7 @@ Nie każdą wartość trzeba pokazywać na ekranie. Czasem czytelniejszy jest kl
   height={300}
 />
 
-Układ składa się z dwóch znanych części: serwomechanizmu z osobnym zasilaniem oraz dzielnika napięcia z fotorezystorem podłączonego do `A5`. Wartość światła przeliczamy na pozycję serwa.
+Układ składa się z dwóch znanych części: serwomechanizmu z osobnym zasilaniem (sygnał sterujący na pinie `11`) oraz dzielnika napięcia z fotorezystorem podłączonego do `A5`. Wartość światła przeliczamy na pozycję serwa.
 
 <Schematic
   src="/img/lekcje/09.07-wskaznik-swiatla-serwo-schemat.png"
@@ -505,7 +511,7 @@ const byte PIN_SERVO = 11;
 
 Servo serwomechanizm;
 
-byte pozycja = 0;
+int pozycja = 0;
 int pozycjaPoprzednia = 0;
 
 void setup() {
@@ -532,9 +538,9 @@ Funkcja `abs()` zwraca wartość bezwzględną. Dzięki temu nie ma znaczenia, c
 
 <Expandable title="Dlaczego próg 5 — histereza w pomiarach" heading="####">
 
-Warunek `abs(pozycja - pozycjaPoprzednia) > 5` to przykład **histerezy** (lub strefy martwej). Każdy czujnik analogowy generuje drobny szum elektryczny — nawet przy nieruchomym fotorezystorze wartości ADC mogą „drżeć" o kilka jednostek.
+Warunek `abs(pozycja - pozycjaPoprzednia) > 5` to przykład **histerezy** (lub strefy martwej). Każdy czujnik analogowy generuje drobny szum elektryczny — nawet przy nieruchomym fotorezystorze wartości ADC mogą „drżeć” o kilka jednostek.
 
-Gdybyśmy ruszali serwem przy każdej zmianie o 1 jednostkę, wskazówka trzęsłaby się bez przerwy. Próg 5 mówi układowi: „reaguj tylko na zmiany, które są naprawdę znaczące".
+Gdybyśmy ruszali serwem przy każdej zmianie o 1 jednostkę, wskazówka trzęsłaby się bez przerwy. Próg 5 mówi układowi: „reaguj tylko na zmiany, które są naprawdę znaczące”.
 
 To samo podejście stosuje się wszędzie tam, gdzie sterujemy urządzeniem mechanicznym na podstawie zaszumionego pomiaru: w termostatach, regulatorach prędkości silników, stabilizatorach kamery. Im większy próg, tym bardziej stabilna praca, ale mniejsza czułość na powolne zmiany. Wartość dobierasz eksperymentalnie dla swojego czujnika i warunków oświetlenia.
 
@@ -585,9 +591,9 @@ Rozbuduj projekt o tryb diagnostyczny uruchamiany z UART. Po wysłaniu znaku `d`
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 `switch`/`case`, precyzja `float` i wskaźnik świetlny to tematy, przy których AI przyspieszy naukę:
 
-- **Przepisanie if-else na switch-case** — masz długi łańcuch `if / else if`? Wklej go do AI i napisz: „Przepisz ten kod używając `switch`/`case` i wyjaśnij, kiedy `switch` jest lepszy od `if-else`". To ćwiczenie refaktoryzacji uczy doboru właściwej struktury sterowania.
-- **Precyzja float** — zapytaj AI: „Dlaczego `Serial.println(3.14159265358979, 10)` w Arduino nie wypisuje dokładnie tej liczby? Ile cyfr po przecinku jest wiarygodnych dla `float`?". AI wyjaśni IEEE 754 w przystępny sposób.
-- **Kalibracja wskaźnika serwomechanizmu** — jeśli serwo nie pokrywa całego zakresu 0–5 V proporcjonalnie, poproś AI: „Mój analogowy wskaźnik serwomechanizmowy działa od pozycji 10° do 170°, ale napięcie mierzę w zakresie 0–5 V. Jak użyć funkcji `map()`, żeby serwo poruszało się proporcjonalnie?".
+- **Przepisanie if-else na switch-case** — masz długi łańcuch `if / else if`? Wklej go do AI i napisz: „Przepisz ten kod, używając `switch`/`case`, i wyjaśnij, kiedy `switch` jest lepszy od `if-else`”. To ćwiczenie refaktoryzacji uczy doboru właściwej struktury sterowania.
+- **Precyzja float** — zapytaj AI: „Dlaczego `Serial.println(3.14159265358979, 10)` w Arduino nie wypisuje dokładnie tej liczby? Ile cyfr po przecinku jest wiarygodnych dla `float`?”. AI wyjaśni IEEE 754 w przystępny sposób.
+- **Kalibracja wskaźnika serwomechanizmu** — jeśli serwo nie pokrywa całego zakresu 0–5 V proporcjonalnie, poproś AI: „Mój analogowy wskaźnik serwomechanizmowy działa od pozycji 10° do 170°, ale napięcie mierzę w zakresie 0–5 V. Jak użyć funkcji `map()`, żeby serwo poruszało się proporcjonalnie?”.
 </Callout>
 
 ## Podsumowanie

@@ -40,10 +40,10 @@ sources:
 
 cover: "/img/lekcje/08.01-pwm-serwomechanizmy-biblioteki-okladka.png"
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
-W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC (Analog-Digital Converter). Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM (Pulse Width Modulation, modulacja szerokości impulsu).
+W poprzedniej lekcji mierzyliśmy sygnały analogowe za pomocą ADC (Analog-to-Digital Converter). Teraz pójdziemy w drugą stronę: nauczymy się generować sygnał, który pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji. Będzie to PWM (Pulse Width Modulation, modulacja szerokości impulsu).
 
 <Callout type="note" title="Kierunek działania">
 ADC zamieniał napięcie analogowe na liczbę. PWM działa odwrotnie z punktu widzenia efektu: program podaje liczbę, a pin Arduino bardzo szybko przełącza się między `HIGH` i `LOW`, tworząc wrażenie płynnej regulacji mocy.
@@ -135,8 +135,8 @@ Gdy zamienimy czasy miejscami, otrzymamy małe wypełnienie. Pin jest w stanie w
 PWM polega właśnie na szybkim przełączaniu sygnału prostokątnego i regulacji jego wypełnienia. Jeżeli dzieje się to wystarczająco szybko, dioda nie wygląda jak migająca, tylko jak świecąca słabiej albo mocniej. Podobnie silnik może pracować wolniej albo szybciej, bo dostaje energię tylko przez część czasu.
 
 <Task title="Zadanie — zmiana jasności LED przez wypełnienie" estimate="15 min">
-W tym zadaniu zbudujemy własny programowy PWM (Software PWM) aby kontrolować jasność diody LED.
-Podłącz diodę LED z rezystorem do pinu `3`. Wgraj poniższy szkic i obserwuj jak świeci dioda.
+W tym zadaniu zbudujemy własny programowy PWM (Software PWM), aby kontrolować jasność diody LED.
+Podłącz diodę LED z rezystorem do pinu `3`. Wgraj poniższy szkic i obserwuj, jak świeci dioda.
 
 <Code lang="cpp" file="pwm-reczne-10ms.ino">
 ```cpp
@@ -156,9 +156,9 @@ void loop() {
 ```
 </Code>
 
-Okres sygnału wynosi tu `10 ms` (1 ms + 9 ms), a wypełnienie `10%`. Zmień wartości opóźnień tak, aby wypełnienie wynosiło `50%`, a następnie `90%`. Sprawdź jak zmienia się jasność diody.
+Okres sygnału wynosi tu `10 ms` (1 ms + 9 ms), a wypełnienie `10%`. Zmień wartości opóźnień tak, aby wypełnienie wynosiło `50%`, a następnie `90%`. Sprawdź, jak zmienia się jasność diody.
 
-Następnie przepisz szkic używając `delayMicroseconds()` zamiast `delay()`. Dzięki temu uzyskasz dokładniejszą kontrolę nad krótkimi impulsami. Przykład z wypełnieniem `0,5%` (50 µs stanu wysokiego na 9600 µs okresu):
+Następnie przepisz szkic, używając `delayMicroseconds()` zamiast `delay()`. Dzięki temu uzyskasz dokładniejszą kontrolę nad krótkimi impulsami. Przykład z wypełnieniem `0,5%` (50 µs stanu wysokiego na 9600 µs okresu):
 
 <Code lang="cpp" file="pwm-reczne-delayMicroseconds.ino">
 ```cpp
@@ -179,25 +179,25 @@ void loop() {
 </Code>
 
 1. Zmień wartość `50` na `500`, `1000`, `5000`. Jak zmienia się jasność diody? Jaki wniosek możesz wyciągnąć o zależności między wypełnieniem a jasnością?
-2. Zmień Pin z `3` na `2` i uruchom program. Jak widzicie pin `2` nie ma symbolu `~`. Dlaczego wciąż możemy regulować jasność diody? 
-Żeby zrozumieć przeczytaj sekcję "Głębiej: częstotliwość sprzętowego PWM w Arduino UNO"  poniżej.
+2. Zmień pin z `3` na `2` i uruchom program. Jak widzisz, pin `2` nie ma symbolu `~`. Dlaczego wciąż możemy regulować jasność diody? 
+Żeby to zrozumieć, przeczytaj poniżej sekcję „Głębiej: Dlaczego pin 2 działa z naszym kodem…”.
 
 </Task>
 
 <Expandable title="Głębiej: częstotliwość sprzętowego PWM w Arduino UNO" heading="####">
-W powyższych przykładach używamy opóźnień jednej sekundy i dioda widocznie miga. Sprzętowy PWM na pinach oznaczonych `~` działa domyślnie znacznie szybciej: piny `3`, `9`, `10`, `11` generują sygnał z częstotliwością **490 Hz**, a piny `5` i `6` — **980 Hz**. Jeden cykl trwa odpowiednio około `2 ms` i `1 ms` — zbyt szybko, żeby ludzkie oko mogło śledzić miganie.
+W pierwszych przykładach używaliśmy opóźnień jednej sekundy i dioda widocznie migała. Sprzętowy PWM na pinach oznaczonych `~` działa domyślnie znacznie szybciej: piny `3`, `9`, `10`, `11` generują sygnał z częstotliwością **490 Hz**, a piny `5` i `6` — **980 Hz**. Jeden cykl trwa odpowiednio około `2 ms` i `1 ms` — zbyt szybko, żeby ludzkie oko mogło śledzić miganie.
 
-Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC (Direct Current, prąd stały) pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy `20 ms` niezależnie od sprzętowego PWM.
+Częstotliwość ma znaczenie praktyczne: dla diod LED 490 Hz jest wystarczające. Silniki DC (Direct Current, prąd stały) pracują ciszej i sprawniej przy wyższych częstotliwościach, bo cewki i elementy mechaniczne mniej drgają. Dla serwomechanizmów biblioteka `Servo` generuje własne impulsy powtarzane co `20 ms` (50 Hz), niezależnie od `analogWrite()`.
 
 </Expandable>
 
-<Expandable title="Głębiej: Dlaczego pin `2` działa z naszym kodem, choć nie ma symbolu `~`?" heading="####">
+<Expandable title="Głębiej: Dlaczego pin 2 działa z naszym kodem, choć nie ma symbolu ~?" heading="####">
 
 W zadaniu sterujemy jasnością diody przez ręczne wpisywanie bardzo krótkich `digitalWrite(HIGH)` i `digitalWrite(LOW)` z `delayMicroseconds()`. To jest **programowy PWM (Software PWM)**: główny procesor Arduino sam włącza i wyłącza pin, wykonując po kolei kolejne linie kodu. Nie potrzebuje żadnych specjalnych układów — każdy pin może to robić. Dlatego pin `2` bez `~` działa tak samo jak pin `3` z `~` w tym ćwiczeniu.
 
-**Sprzętowy PWM jest zupełnie innym mechanizmem.** Funkcja `analogWrite()` deleguje generowanie sygnału do wbudowanych modułów mikrokontrolera zwanych **Timerami**. Timer to mały, niezależny licznik, który tyka z częstotliwością 16 MHz i sam zmienia stan pinu bez angażowania głównego procesora. Processor w tym czasie wykonuje inne zadania.
+**Sprzętowy PWM jest zupełnie innym mechanizmem.** Funkcja `analogWrite()` deleguje generowanie sygnału do wbudowanych modułów mikrokontrolera zwanych **Timerami**. Timer to mały, niezależny licznik, który odlicza takty zegara 16 MHz (w Arduino dzielonego przez preskaler) i sam zmienia stan pinu bez angażowania głównego procesora. Procesor w tym czasie wykonuje inne zadania.
 
-W sercu Arduino UNO R3, układzie **ATmega328P**, inżynierowie firmy Microchip umieścili dokładnie **trzy Timery**, a każdy z nich ma dwa fizyczne kanały wyjściowe. Te kanały są na stałe, krzemowymi ścieżkami, połączone z konkretnymi pinami:
+W sercu Arduino UNO R3, układzie **ATmega328P**, inżynierowie firmy Atmel (dziś część Microchip) umieścili dokładnie **trzy Timery**, a każdy z nich ma dwa fizyczne kanały wyjściowe. Te kanały są na stałe, krzemowymi ścieżkami, połączone z konkretnymi pinami:
 
 <Table
   caption="Timery ATmega328P i przypisane do nich piny PWM"
@@ -211,7 +211,7 @@ W sercu Arduino UNO R3, układzie **ATmega328P**, inżynierowie firmy Microchip 
 
 Matematyka jest nieubłagana: 3 Timery × 2 kanały = **6 sprzętowych wyjść PWM**. To właśnie te piny oznaczone `~`. Pin `2` nie jest fizycznie podłączony do żadnego Timera — brakuje mu krzemowej ścieżki wewnątrz układu scalonego.
 
-Kiedy wywołasz `analog3Write(2, 128)`, oprogramowanie Arduino widzi brak połączenia z Timerem i po prostu ignoruje polecenie PWM (pin zachowuje się jak zwykłe `digitalWrite`). Żeby mieć sprzętowy PWM, musisz użyć pinu z `~`.
+Kiedy wywołasz `analogWrite(2, 128)`, oprogramowanie Arduino widzi brak połączenia z Timerem i po prostu ignoruje polecenie PWM (pin zachowuje się jak zwykłe `digitalWrite`). Żeby mieć sprzętowy PWM, musisz użyć pinu z `~`.
 
 <Callout type="note" title="Timer0 a funkcje millis() i delay()">
 Timer0 jest domyślnie używany przez Arduino do odliczania czasu — bez niego `millis()`, `micros()` i `delay()` przestałyby działać. Sterowanie jasnością przez pin `5` lub `6` nadal działa, ale jeśli kiedyś zmienisz ustawienia Timer0 ręcznie (przez rejestry), zaburzysz odmierzanie czasu.
@@ -248,7 +248,7 @@ Arduino UNO ma kilka pinów sprzętowego PWM. Na płytce są one oznaczone tyld�
   height={533}
 />
 
-Do generowania PWM używamy funkcji `analogWrite(pin, wartosc)`. Nazwa może być myląca: nie tworzy ona prawdziwego napięcia analogowego, tylko sygnał PWM. Wartość mieści się w zakresie `0`-`255`, bo PWM w Arduino UNO jest 8-bitowy.
+Do generowania PWM używamy funkcji `analogWrite(pin, wartosc)`. Nazwa może być myląca: nie tworzy ona prawdziwego napięcia analogowego, tylko sygnał PWM. Wartość mieści się w zakresie `0`–`255`, bo PWM w Arduino UNO jest 8-bitowy.
 
 <Table
   caption="Zakres funkcji analogWrite()"
@@ -264,9 +264,9 @@ Do generowania PWM używamy funkcji `analogWrite(pin, wartosc)`. Nazwa może by�
 <Expandable title="Głębiej: 8 bitów PWM kontra 10 bitów ADC" heading="####">
 `analogRead()` zwraca wartości `0`–`1023` (10-bitowa rozdzielczość), natomiast `analogWrite()` przyjmuje wartości `0`–`255` (8-bitowa rozdzielczość). Ta asymetria bywa myląca.
 
-ADC ma wyższą rozdzielczość, bo precyzja pomiaru jest ważna — 10-bitowy ADC mierzy napięcie z krokiem około `4,9 mV`. Dla wyjścia PWM 8 bitów daje 256 kroków jasności albo prędkości, co w praktyce jest wystarczające (ludzkie oko nie odróżni 1024 odcieni jasności od 256).
+ADC ma wyższą rozdzielczość, bo precyzja pomiaru jest ważna — 10-bitowy ADC mierzy napięcie z krokiem około `4,9 mV`. Dla wyjścia PWM 8 bitów daje 256 kroków jasności albo prędkości, co w praktyce jest wystarczające (skoki między sąsiednimi poziomami widać głównie przy bardzo słabym świeceniu, bo oko jest najczulsze na zmiany przy małej jasności).
 
-Gdy chcesz sterować serwem lub silnikiem wartością odczytaną przez `analogRead()`, musisz przeskalować zakresy. Użyj `map(odczyt, 0, 1023, 0, 255)` albo po prostu podziel wynik przez `4`.
+Gdy chcesz sterować diodą lub silnikiem wartością odczytaną przez `analogRead()`, musisz przeskalować zakresy. Użyj `map(odczyt, 0, 1023, 0, 255)` albo po prostu podziel wynik przez `4`.
 </Expandable>
 
 ## 4. Sterowanie jasnością diody LED z pinów PWM za pomocą funkcji analogWrite()
@@ -306,14 +306,14 @@ void loop() {
 ```
 </Code>
 
-Program zwiększa wypełnienie co `50 ms`. Gdy dojdzie do wartości bliskiej pełnej jasności, wraca do zera i zaczyna rozjaśnianie od początku. To najprostszy sposób pokazania, że PWM może sterować „siłą" działania elementu.
+Program zwiększa wypełnienie co `50 ms`. Gdy dojdzie do wartości bliskiej pełnej jasności, wraca do zera i zaczyna rozjaśnianie od początku. To najprostszy sposób pokazania, że PWM może sterować „siłą” działania elementu.
 
 <Task title="Zadanie 1" estimate="10 min">
-Spróbuj uprościć powyższy program, tak aby nie trzeba było korzystać z instrukcji warunkowej if. Podpowiedź: zastanów się jaki wpływ na działanie programu ma typ zmiennej wypełnienie.
+Spróbuj uprościć powyższy program tak, aby nie trzeba było korzystać z instrukcji warunkowej `if`. Podpowiedź: zastanów się, jaki wpływ na działanie programu ma typ zmiennej `wypelnienie`.
 </Task>
 
 <Task title="Zadanie 2" estimate="15 min">
-Napisz program, który po zwiększeniu wypełnienia do `255` zacznie je stopniowo zmniejszać do zera (i tak w koło). Sprawdź przy jakim opóźnieniu w każdym obiegu pętli można zaobserwowany efekt pulsowania będzie najciekawszy.
+Napisz program, który po zwiększeniu wypełnienia do `255` zacznie je stopniowo zmniejszać do zera (i tak w kółko). Sprawdź, przy jakim opóźnieniu w każdym obiegu pętli zaobserwowany efekt pulsowania będzie najciekawszy.
 </Task>
 
 <Task title="Zadanie 3 — regulator jasności LED przez UART" estimate="15 min">
@@ -326,7 +326,7 @@ Wskazówka: `analogWrite(pin, wartosc)` przyjmuje wartość 0–255.
 
 <Expandable title="Rozwiązanie Zadania 3" heading="####">
 ```cpp
-const byte pinLed = 9;  // pin z obsługą PWM (tyldą ~ przy numerze)
+const byte pinLed = 9;  // pin z obsługą PWM (z tyldą ~ przy numerze)
 
 void setup() {
   Serial.begin(9600);
@@ -354,4 +354,4 @@ void loop() {
 
 ## Podsumowanie
 
-PWM pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji przez szybkie przełączanie pinu między stanami `HIGH` i `LOW`. Wypełnienie sygnału decyduje o średnim efekcie: jasności diody, prędkości silnika albo pozycji interpretowanej przez serwo. Piny oznaczone `~` obsługują sprzętowy PWM — wywołaj `analogWrite(pin, 0–255)` i timer mikrokontrolera wykona resztę bez angażowania procesora. Programowy PWM działa na dowolnym pinie, ale blokuje procesor na czas generowania impulsów.
+PWM pozwala cyfrowemu Arduino uzyskać efekt płynnej regulacji przez szybkie przełączanie pinu między stanami `HIGH` i `LOW`. Wypełnienie sygnału decyduje o średnim efekcie: jasności diody albo prędkości silnika, a w serwomechanizmie szerokość impulsu wyznacza pozycję wału. Piny oznaczone `~` obsługują sprzętowy PWM — wywołaj `analogWrite(pin, 0–255)` i timer mikrokontrolera wykona resztę bez angażowania procesora. Programowy PWM działa na dowolnym pinie, ale blokuje procesor na czas generowania impulsów.

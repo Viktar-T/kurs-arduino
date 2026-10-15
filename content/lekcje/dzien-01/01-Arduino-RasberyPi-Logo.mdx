@@ -24,8 +24,8 @@ objectives:
   - "Wytłumaczyć, czym jest Arduino i do czego służy"
   - "Wymienić projekty, które można zbudować z Arduino"
   - "Wskazać kluczowe różnice między Arduino, Raspberry Pi a Siemens LOGO"
-  - "Dobrać odpowiednią platformę do prostego, zadanego scenariusza zastosowania -- ???"
-  - "Sformułować osobisty cel kursu: co chcę zbudować do końca 80 godzin -- ???"
+  - "Dobrać odpowiednią platformę do prostego, zadanego scenariusza zastosowania"
+  - "Sformułować osobisty cel kursu: co chcę zbudować do końca 80 godzin"
 
 prerequisites: []
 
@@ -38,10 +38,10 @@ tags: [arduino, wprowadzenie, raspberry-pi, siemens-logo, projekty, icebreaker]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
   - "https://youtu.be/Xvj2HO0bNHM"
-  - "[[../../40_materialy/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s.|Książka B, r. 1]]"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=17 (Książka B, r. 1)"
 
 publish: true
-updated: "2026-05-12"
+updated: "2026-10-15"
 ---
 
 ## Czego się dziś nauczymy
@@ -68,7 +68,7 @@ alt="Arduino UNO, Raspberry Pi i Siemens LOGO!" />
 
 <Callout type="note" title="Bez wymagań wstępnych">
 Ta lekcja jest wprowadzeniem — nie musisz nic wcześniej umieć. Pierwsze szkice i podłączanie elementów
-zaczynamy w kolejnej lekcji.
+zaczynamy w kolejnych lekcjach.
 </Callout>
 
 ## 1. Czym jest Arduino
@@ -119,7 +119,7 @@ czy stacją pogodową.
 ## 2. Co można zbudować z Arduino
 
 Arduino jest świetne wszędzie tam, gdzie potrzebujemy **szybko reagować na
-sygnały ze świata fizycznego**: czujniki, przyciski, silniki, diody. Wielie projektów można znaleźć w internecie, napszykład [Arduino Projects](https://create.arduino.cc/projecthub). Oto kilka
+sygnały ze świata fizycznego**: czujniki, przyciski, silniki, diody. Wiele projektów można znaleźć w internecie, na przykład w serwisie [Arduino Project Hub](https://projecthub.arduino.cc/). Oto kilka
 typów projektów, które można zbudować — wszystkie są realne, hobbyści wykonują
 je tysiącami:
 
@@ -130,7 +130,7 @@ je tysiącami:
 - 🟢 **[Pomiar odległości czujnikiem HC-SR04](https://projecthub.arduino.cc/Isaac100/getting-started-with-the-hc-sr04-ultrasonic-sensor-7cabe1)** *(Getting Started with the HC-SR04 Ultrasonic Sensor — 1,2 mln+ wyświetleń)* —
   najpopularniejszy tutorial na całym hubie. Arduino wysyła impuls ultradźwiękowy
   i mierzy czas powrotu echa; wynik trafia do Monitora Szeregowego. Dokładnie ten
-  czujnik omawiamy w dniu 5. kursu.
+  czujnik omawiamy w dniu 4. kursu.
 
 - 🟡 **[Temperatura i wilgotność na wyświetlaczu OLED](https://projecthub.arduino.cc/n1ckw1ck/temperature-and-humidity-on-oled-easy-08ef94)** *(From Sensor to Screen: Build a Digital Thermometer in Minutes)* —
   czujnik temperatury + wyświetlacz OLED SSD1306: kompletny projekt w kilkanaście
@@ -138,28 +138,29 @@ je tysiącami:
 
 - 🟡 **[Radar ultradźwiękowy z wizualizacją na PC](https://projecthub.arduino.cc/diegogalvan_1294/building-an-ultrasonic-radar-using-arduino-and-processing-59053e)** *(Building an Ultrasonic Radar using Arduino and Processing — 139 k+ wyświetleń)* —
   serwomechanizm obraca czujnik HC-SR04 o 180°; aplikacja Processing rysuje na
-  ekranie obracający się ekran radaru w czasie rzeczywistym. Łączy serwa (dzień 4.)
-  i HC-SR04 (dzień 5.).
+  ekranie obracającą się wiązkę radaru w czasie rzeczywistym. Łączy serwa (dzień 3.)
+  i HC-SR04 (dzień 4.).
 
 - 🔴 **[Robot jeżdżący po linii](https://projecthub.arduino.cc/lee_curiosity/building-a-line-following-robot-using-arduino-017dbb)** *(Building a Line Following Robot Using Arduino — 113 k+ wyświetleń)* —
   dwa silniki DC, czujniki IR odbiciowe i prosty algorytm sterowania. Klasyczny
-  projekt line follower — bardzo zbliżony do naszego robota finałowego z dnia 10.
+  projekt line follower — bardzo zbliżony do robotów z kursu budowy robotów (dzień 8.).
 
 - 🔴 **[Dwukołowy robot balansujący](https://projecthub.arduino.cc/mircemk/arduino-two-weel-self-balancing-robot-edef61)** *(Arduino Two Wheel Self-Balancing Robot — 131 k+ wyświetleń)* —
   żyroskop MPU-6050 dostarcza kąt przechylenia; regulator PID koryguje obroty
-  dwóch silników krokowych tak, żeby robot stał w pionie. Pokazuje, że Arduino
+  dwóch silników DC z przekładnią tak, żeby robot stał w pionie. Pokazuje, że Arduino
   radzi sobie z algorytmami sterowania w czasie rzeczywistym.
 
 <Video
   youtube="Xvj2HO0bNHM"
   title="Galeria inspiracji — projekty Arduino"
-  caption="5-minutowy przegląd projektów Arduino."
+  caption="Krótki (ok. 3,5 min) przegląd pięciu ciekawych projektów DIY na Arduino."
 />
 
 <Callout type="note" title="Co konkretnie zbudujemy na kursie">
 W ciągu 80 godzin kursu po kolei zbudujemy m.in.: migającą diodę, ręczną
-sygnalizację świetlną, alarm z czujnikiem PIR, termometr z LCD, czujnik
-parkowania HC-SR04, a na finał — **mobilny robot line follower / robosumo**.
+sygnalizację świetlną, czujnik parkowania HC-SR04, alarm z czujnikiem PIR,
+termometry z czujnikami LM35 i DS18B20, poznamy budowę **mobilnych robotów line follower / robosumo**,
+a na finał — **własny projekt** doprowadzony od pomysłu do działającego układu.
 Każdy projekt to osobna lekcja w tym serwisie.
 </Callout>
 
@@ -194,7 +195,7 @@ zupełnie różne problemy:
     <tr>
       <td>Pamięć RAM</td>
       <td>2 kB</td>
-      <td>4 / 8 / 16 GB</td>
+      <td>1 / 2 / 4 / 8 / 16 GB</td>
       <td>kilka kB (zależy od wersji)</td>
     </tr>
     <tr>
@@ -207,12 +208,12 @@ zupełnie różne problemy:
       <td>Język programowania</td>
       <td>C/C++ (Arduino, uproszczony)</td>
       <td>Praktycznie dowolny: Python, C++, JavaScript, Java...</td>
-      <td>Język drabinkowy (LD — Ladder Diagram) / funkcjonalny (FBD — Function Block Diagram)</td>
+      <td>Język drabinkowy (LD — Ladder Diagram) / bloków funkcyjnych (FBD — Function Block Diagram)</td>
     </tr>
     <tr>
       <td>Liczba pinów I/O (Input/Output, wejście/wyjście)</td>
       <td>14 cyfrowych + 6 analogowych</td>
-      <td>40 pinów GPIO (General Purpose Input/Output, wejścia/wyjścia ogólnego przeznaczenia)</td>
+      <td>Złącze 40-pinowe, w tym 28 linii GPIO (General Purpose Input/Output, wejścia/wyjścia ogólnego przeznaczenia)</td>
       <td>8-24 wejść/wyjść (przemysłowe, 24 V / 230 V)</td>
     </tr>
     <tr>
@@ -237,7 +238,7 @@ zupełnie różne problemy:
       <td>Typowe zastosowania</td>
       <td>Sterowanie sprzętem, czujniki, roboty, prototypy</td>
       <td>Komputer ogólnego przeznaczenia, serwer domowy, kiosk, AI (Artificial Intelligence, sztuczna inteligencja)</td>
-      <td>Automatyka przemysłowa, sterowanie maszynami, bram, wind</td>
+      <td>Automatyka przemysłowa, sterowanie maszynami, bramami, windami</td>
     </tr>
     <tr>
       <td>Kiedy wybrać</td>
@@ -261,7 +262,7 @@ zupełnie różne problemy:
 Jeśli projekt mieści się w zdaniu *„czujnik → decyzja → reakcja silnika lub
 diody”*, użyj Arduino. Jeśli pojawia się słowo *ekran*, *kamera*, *strona
 internetowa*, *baza danych*, *AI* — prawdopodobnie potrzebujesz Raspberry
-Pi (lub Arduino z Raspberry Pi razem). Jeśli słyszysz *„hala produkcyjna”,
+Pi (lub Arduino z Raspberry Pi razem). Jeśli słyszysz *„hala produkcyjna”*,
 *„rozdzielnia”*, *„24 V”*, *„DIN”* — to terytorium PLC, czyli np. Siemens
 LOGO.
 </Callout>
@@ -283,6 +284,19 @@ Wybór nie jest przypadkowy:
   łatwiej przejdziesz do Raspberry Pi (jako *„mózgu wyższego rzędu”*) albo do
   PLC w przyszłej pracy zawodowej.
 
+<Task title="Wybierz platformę i zapisz swój cel" estimate="10 min">
+1. Dla każdego scenariusza wybierz platformę (Arduino, Raspberry Pi albo
+   Siemens LOGO!) i uzasadnij wybór jednym zdaniem:
+   - czujnik wilgotności gleby, który włącza pompkę podlewającą kwiatek,
+   - kamera przy drzwiach, która rozpoznaje twarze domowników i wysyła
+     zdjęcie na telefon,
+   - sterowanie bramą wjazdową w zakładzie produkcyjnym, które musi przejść
+     odbiór techniczny.
+2. Zapisz jednym zdaniem swój cel kursu: co chcesz zbudować do końca
+   80 godzin zajęć. Zachowaj go — przyda się przy własnym projekcie pod
+   koniec kursu.
+</Task>
+
 ## Podsumowanie
 
 - **Arduino** to mała płytka z mikrokontrolerem + bezpłatne IDE + ogromna
@@ -290,7 +304,7 @@ Wybór nie jest przypadkowy:
 - Mikrokontroler to *„cały komputer w jednym układzie”*, ale bardzo mały —
   jego siła nie leży w mocy obliczeniowej, tylko w błyskawicznej reakcji na
   sygnały elektryczne.
-- Z Arduino budujemy: alarmy, stacje pogodowe, roboty, sygnalizację, MIDI (Musical Instrument Digital Interface),
+- Z Arduino budujemy: alarmy, stacje pogodowe, roboty, sygnalizację, kontrolery MIDI (Musical Instrument Digital Interface),
   IoT (Internet of Things, Internet Rzeczy), sterowanie oświetleniem, drukarki 3D, drony i wiele innych projektów.
 - **Raspberry Pi** to pełnoprawny komputer z Linuksem — sięgaj po niego, gdy
   potrzebujesz ekranu, kamery, AI, sieci.
@@ -298,8 +312,8 @@ Wybór nie jest przypadkowy:
   budujesz układ w fabryce, rozdzielni albo w warsztacie, który musi
   przejść odbiór.
 - Na tym kursie pracujemy z Arduino, bo daje najszybsze „a-ha!”, jest tanie,
-  bezpieczne i prowadzi prosto do finałowego projektu — własnego robota
-  mobilnego.
+  bezpieczne i prowadzi prosto do robotów mobilnych oraz finałowego,
+  własnego projektu.
 
-W następnej lekcji uruchamiamy **Arduino IDE**, podłączamy płytkę i wgrywamy
-nasz pierwszy szkic — migającą diodę.
+W następnej lekcji bierzemy do ręki **płytkę Arduino UNO** i poznajemy jej budowę,
+a zaraz potem uruchamiamy **Arduino IDE** i wgrywamy nasz pierwszy szkic — migającą diodę.

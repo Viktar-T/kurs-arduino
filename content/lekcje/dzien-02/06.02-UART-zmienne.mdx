@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Typy danych, zasięg zmiennych i liczby przez UART"
 slug: "typy-danych-zasieg-uart-parseint"
-summary: "Dogłębny przegląd typów bool, byte, int, long, char, String i float — z pułapką dzielenia całkowitoliczbowego, zasięgiem zmiennych globalnych i lokalnych, skróconymi operatorami ++/--/+=/−= oraz odbieraniem liczb przez Serial.parseInt()."
+summary: "Dogłębny przegląd typów bool, byte, int, long, char, String i float — z pułapką dzielenia całkowitoliczbowego, zasięgiem zmiennych globalnych i lokalnych, skróconymi operatorami ++/--/+=/-= oraz odbieraniem liczb przez Serial.parseInt()."
 
 day: 2
 weekend: 1
@@ -34,7 +34,9 @@ hardware:
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda LED czerwona", qty: 1 }
   - { name: "Dioda LED zielona", qty: 1 }
-  - { name: "Rezystor 220 Ω", qty: 2 }
+  - { name: "Rezystor 1 kΩ", qty: 2 }
+  - { name: "Przycisk tact-switch", qty: 1, optional: true, note: "do Zadania 3 (pin 4)" }
+  - { name: "Potencjometr 10 kΩ", qty: 1, optional: true, note: "do Zadania 1 (A0)" }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 6 }
 
@@ -47,12 +49,12 @@ sources:
   - "/docs/teoria-niektore-tematy/programowanie/05_Operatory.md"
 
 publish: true
-updated: "2026-05-14"
+updated: "2026-10-15"
 ---
 
 ## Czego się dziś nauczymy
 
-W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART (Universal Asynchronous Receiver-Transmitter, asynchroniczny nadajnik-odbiornik) i zobaczyłeś/aś tabelę typów danych. Teraz czas na głębsze nurkowanie: każdy typ z osobna, analogie z życia, pułapka która potrafi zaskoczyć nawet doświadczonych programistów, oraz nowa supermoc — wpisanie liczby z klawiatury i odebranie jej jako wartości numerycznej, nie tylko jako znaku.
+W poprzedniej lekcji wysłałeś/aś pierwszy komunikat przez UART (Universal Asynchronous Receiver-Transmitter, asynchroniczny nadajnik-odbiornik) i zobaczyłeś/aś tabelę typów danych. Teraz czas na głębsze nurkowanie: każdy typ z osobna, analogie z życia, pułapka, która potrafi zaskoczyć nawet doświadczonych programistów, oraz nowa supermoc — wpisanie liczby z klawiatury i odebranie jej jako wartości numerycznej, nie tylko jako znaku.
 
 <Callout type="note" title="Lekcja bazuje na">
 Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zmiennych. Masz już za sobą: `Serial.begin/print/println`, ramkę UART, odbieranie znaków przez `Serial.read()` i obsługę komend tekstowych przez `readStringUntil()`. Nie będziemy tego powtarzać — budujemy dalej.
@@ -60,7 +62,7 @@ Forbot #3 i #6 (UART, zmienne), lokalne notatki o typach danych oraz zasięgu zm
 
 ## 1. Szufladki różnych rozmiarów — typy danych od środka
 
-Mikrokontroler Arduino UNO ATmega328P posiada dokładnie 2 Kilobajty (2 KB) pamięci operacyjnej SRAM. 
+Mikrokontroler Arduino UNO ATmega328P posiada dokładnie 2 kilobajty (2 KB) pamięci operacyjnej SRAM. 
 Wyobraź sobie pamięć Arduino jako biurko z dokładnie **2048 szufladkami**, każda na jeden bajt. 
 To jedyne zasoby robocze, jakie masz. Zmienna o rozmiarze 4 bajtów zajmuje 4 szufladki naraz, `byte` — jedną. Dobieranie zbyt dużego typu marnuje miejsce. Wkładanie za dużej liczby w za małą szufladkę kończy się przepełnieniem.
 
@@ -71,7 +73,7 @@ Skoro `bool` potrzebuje tylko jednego bitu (0 lub 1), czemu zajmuje cały bajt i
 
 Drugim powodem jest **schemat adresowania**. Każdy adres w pamięci wskazuje grupę ośmiu przerzutników (elementarnych komórek pamiętających jeden bit każda). Gdybyśmy chcieli adresować pojedyncze bity, trzeba by było mieć osiem razy więcej adresów i o wiele bardziej skomplikowany sterownik pamięci.
 
-Efekt praktyczny jest taki, że **bajt = 8 bitów to najmniejszy atom**, jakim posługuje się sprzęt. Jeśli potrzebujesz tylko jednego bitu (np. stan alarmu), i tak dostajesz cały bajt — i zostawiasz 7 bitów pustych. Można co prawda upchać kilka flag bitowych w jednym bajcie ręcznie (operatory bitowe `&`, `|`, `<<`), ale to zaawansowana technika. Na co dzień po prostu godzimy się na tę „marnotrawność" i deklarujemy `bool` zamiast skomplikować kod.
+Efekt praktyczny jest taki, że **bajt = 8 bitów to najmniejszy atom**, jakim posługuje się sprzęt. Jeśli potrzebujesz tylko jednego bitu (np. stan alarmu), i tak dostajesz cały bajt — i zostawiasz 7 bitów pustych. Można co prawda upchać kilka flag bitowych w jednym bajcie ręcznie (operatory bitowe `&`, `|`, `<<`), ale to zaawansowana technika. Na co dzień po prostu godzimy się na tę „marnotrawność” i deklarujemy `bool` zamiast komplikować kod.
 
 Dlatego właśnie **rozmiary wszystkich typów są wielokrotnością 1 bajtu**: `bool`/`char`/`byte` = 1 B, `int` = 2 B, `long`/`float` = 4 B. Procesory nie mają pojęcia, co to ułamek bajtu.
  **1 bajt** (czyli 8 bitów) daje nam $2^8$, czyli 256 unikalnych kombinacji (od 0 do 255).
@@ -84,10 +86,10 @@ Dlatego właśnie **rozmiary wszystkich typów są wielokrotnością 1 bajtu**: 
     ["bool", "1", "true / false", "flagi, stany: czy alarm jest aktywny, czy LED (Light Emitting Diode, dioda elektroluminescencyjna) świeci"],
     ["byte", "1", "0 … 255", "numery pinów, wartości PWM (Pulse Width Modulation, modulacja szerokości impulsu), adresy I²C (Inter-Integrated Circuit)"],
     ["int", "2", "−32 768 … 32 767", "odczyty analogowe, temperatury, liczniki ogólnego przeznaczenia"],
-    ["long", "4", "±2 147 483 647", "wynik millis(), duże liczniki impulsów"],
+    ["long", "4", "−2 147 483 648 … 2 147 483 647", "duże liczniki impulsów (wynik millis() zapisuj w unsigned long)"],
     ["char", "1", "−128 … 127", "pojedynczy znak ASCII (American Standard Code for Information Interchange), jednobajtowa komenda"],
     ["String", "zmienny", "dynamiczny (heap)", "proste komendy tekstowe — ostrożnie z RAM!"],
-    ["float", "4", "±3.4 × 10³⁸ (~6 cyfr)", "temperatura, napięcie, ułamki"],
+    ["float", "4", "±3,4 × 10³⁸ (~6–7 cyfr)", "temperatura, napięcie, ułamki"],
   ]}
 />
 
@@ -135,7 +137,7 @@ int odczyt = analogRead(A0);  // zwraca 0…1023 — mieści się w int
 int temperatura = -15;        // może być ujemna
 ```
 
-`int` to 2 bajty i zakres −32 768 … 32 767. Na Arduino `analogRead()` zwraca właśnie `int`. Codzienne liczniki i wyniki porównań to jego terytorium.
+`int` to 2 bajty i zakres −32 768 … 32 767. Na Arduino `analogRead()` zwraca właśnie `int`. Codzienne liczniki i proste obliczenia to jego terytorium.
 
 <Callout type="warning" title="int na Arduino ≠ int na PC">
 Na komputerze `int` ma zwykle 4 bajty (zakres ±2 miliardy). Na Arduino UNO to **2 bajty** — maksimum 32 767. Kod pisany na PC i przeniesiony na Arduino może cicho przepełniać zmienne `int`.
@@ -148,7 +150,7 @@ unsigned long start = millis();  // millis() zwraca unsigned long!
 long impulsow = 1500000L;
 ```
 
-`long` zajmuje 4 bajty i mieści miliardy. Funkcja `millis()` zwraca `unsigned long` — jeśli zapiszesz ją do `int`, dostaniesz przepełnienie już po kilku minutach. Zawsze używaj `unsigned long` dla czasu.
+`long` zajmuje 4 bajty i mieści miliardy. Funkcja `millis()` zwraca `unsigned long` — jeśli zapiszesz ją do `int`, dostaniesz przepełnienie już po około 33 sekundach (32 767 ms). Zawsze używaj `unsigned long` dla czasu.
 
 ### char — jeden bajt, jeden znak
 
@@ -157,7 +159,7 @@ char komenda = 'Z';  // wartość 90 (kod ASCII litery Z)
 char cyfra   = '5';  // wartość 53, a NIE liczba 5!
 ```
 
-Pamiętasz z poprzedniej lekcji, że `Serial.read()` zwraca `char` i że znaki mają kody ASCII? `char` to właśnie ten typ. Jednobajtowe komendy z terminala (np. `'A'` = włącz, `'B'` = wyłącz) to klasyczny przypadek użycia.
+Pamiętasz z poprzedniej lekcji, że wynik `Serial.read()` zapisywaliśmy w zmiennej `char` i że znaki mają kody ASCII? `char` to właśnie ten typ. Jednobajtowe komendy z terminala (np. `'A'` = włącz, `'B'` = wyłącz) to klasyczny przypadek użycia.
 
 <Code lang="cpp" file="char-uart.ino">
 ```cpp
@@ -171,8 +173,9 @@ void loop() {
     char znak = Serial.read();   // odbierz jeden bajt jako char
 
     Serial.print("Znak: ");
-    Serial.print(znak);          // wypisze sam znak, np. A
+    Serial.println(znak);        // wypisze sam znak, np. A
 
+    delay(10);                                 // poczekaj, aż dotrze reszta (np. \n)
     while (Serial.available()) Serial.read();  // opróżnij resztę bufora
   }
 }
@@ -181,7 +184,7 @@ void loop() {
 
 Wgraj i wpisz kolejno `A`, `5`, `a`, spację. 
 
-Przeprowadź eksperyment: zamień `char` na `int` i zobacz co się stanie. Wgraj i wpisz kolejno A, 5, a, spację.
+Przeprowadź eksperyment: zamień `char` na `int` i zobacz, co się stanie. Wgraj i wpisz kolejno A, 5, a, spację.
 
 <Expandable title="Dlaczego int wypisuje liczby, a nie litery?">
 Każdy znak ma przypisany numer według tabeli **ASCII** (American Standard Code for Information Interchange). Kiedy typ zmiennej to `char`, `Serial.print()` wie, że bajt ma być zinterpretowany jako znak i wypisuje literę lub symbol. Kiedy typ zmiennej to `int`, ta sama funkcja traktuje wartość jako **liczbę całkowitą** i wypisuje jej dziesiętną reprezentację.
@@ -264,7 +267,7 @@ void setup() {
   Serial.print("(int)7 / (int)2 = ");
   Serial.println(wynik1);   // wypisze: 3.00, NIE 3.50!
 
-  // ✅ POPRAWKA A: jeden literal float wystarczy
+  // ✅ POPRAWKA A: jeden literał float wystarczy
   float wynik2 = a / 2.0;
   Serial.print("7 / 2.0 = ");
   Serial.println(wynik2);   // wypisze: 3.50
@@ -286,13 +289,13 @@ void loop() {}
 </Callout>
 
 <Task title="Zadanie 1 — znajdź i napraw błąd" estimate="8 min">
-Poniższy kod ma przeliczyć odczyt z pinu A0 (wartości 0–1023) na napięcie (0–5 V). Ale wynik zawsze wychodzi `0.00` albo `1.00`. Dlaczego? Napraw jeden błąd.
+Poniższy kod ma przeliczyć odczyt z pinu A0 (wartości 0–1023) na napięcie (0–5 V). Ale wynik zawsze wychodzi `0.00`. Dlaczego? Napraw jeden błąd.
 
 ```cpp
 void setup() {
   Serial.begin(9600);
   int surowy = analogRead(A0);
-  float napiecie = surowy / 1023;  // ← co tu jest nie tak?
+  float napiecie = surowy / 1024 * 5;  // ← co tu jest nie tak?
   Serial.print("Napiecie: ");
   Serial.println(napiecie);
 }
@@ -301,12 +304,12 @@ void loop() {}
 </Task>
 
 <Expandable title="Rozwiązanie Zadania 1" heading="####">
-`surowy` to `int`, a `1023` to literał całkowity — oba operandy to `int`, więc dzielenie daje 0 lub 1. Dwie poprawki:
+`surowy` to `int`, a `1024` to literał całkowity — oba operandy to `int`, więc dzielenie jest całkowite i zawsze daje 0 (odczyt nigdy nie przekracza 1023). Dwie poprawki:
 
 ```cpp
-float napiecie = surowy / 1023.0;   // literal float naprawia problem
+float napiecie = surowy / 1024.0 * 5;   // literał float naprawia problem
 // albo:
-float napiecie = (float)surowy / 1023;
+float napiecie = (float)surowy / 1024 * 5;
 ```
 </Expandable>
 
@@ -393,18 +396,18 @@ void loop() {
 
 ---
 
-## 4. Zasięg zmiennych — gdzie zmienna „żyje"
+## 4. Zasięg zmiennych — gdzie zmienna „żyje”
 
 W Zadaniu 2 poprzedniej lekcji przeniosłeś/aś `int licznik = 0;` z początku programu do wnętrza `loop()` i licznik przestał rosnąć. Czas wyjaśnić to zjawisko formalnie.
 
-**Zasięg** (ang. *scope*) to obszar kodu, w którym dana zmienna istnieje i jest dostępna. Granicą zasięgu są **klamry `{ }`** — zmienna „rodzi się" przy deklaracji i „umiera" przy zamknięciu bloku.
+**Zasięg** (ang. *scope*) to obszar kodu, w którym dana zmienna istnieje i jest dostępna. Granicą zasięgu są **klamry `{ }`** — zmienna „rodzi się” przy deklaracji i „umiera” przy zamknięciu bloku.
 
-```
+```text
 {                       ← zmienna jeszcze nie istnieje
   int moja = 0;         ← deklaracja: zmienna się rodzi, zajmuje RAM
   moja += 5;            ← można używać
 }                       ← koniec bloku: zmienna ginie, RAM zwolniony
-// tutaj: moja nie istnieje — błąd kompilacji gdybyś spróbował!
+// tutaj: moja nie istnieje — błąd kompilacji, gdybyś spróbował!
 ```
 
 ### Zmienne globalne — pamiętają cały czas
@@ -434,6 +437,10 @@ Zmienne zadeklarowane **wewnątrz** funkcji lub bloku `{}` są **lokalne**: twor
 
 <Code lang="cpp" file="lokalny-licznik-bugged.ino">
 ```cpp
+void setup() {
+  Serial.begin(9600);
+}
+
 // ❌ BUG: zmienna lokalna resetuje się co obieg
 void loop() {
   int licznik = 0;  // tworzony od nowa przy KAŻDYM obiegu pętli!
@@ -463,7 +470,7 @@ Przy każdym obiegu `loop()` program wchodzi do `{`, deklaruje `int licznik = 0`
   ]}
 />
 
-**Zasada:** deklaruj zmienną **tak nisko jak to możliwe**. Zmienne globalne żyją przez cały czas działania programu i zużywają RAM nieprzerwanie. Używaj ich tylko gdy naprawdę potrzebujesz trwałości między obiegami.
+**Zasada:** deklaruj zmienną **tak nisko, jak to możliwe**. Zmienne globalne żyją przez cały czas działania programu i zużywają RAM nieprzerwanie. Używaj ich tylko wtedy, gdy naprawdę potrzebujesz trwałości między obiegami.
 
 <Task title="Zadanie 3 — napraw zasięg" estimate="10 min">
 Program ma liczyć wciśnięcia przycisku podłączonego do pinu 4 (INPUT_PULLUP) i wysyłać aktualny wynik przez UART. Ale coś jest nie tak — napraw jeden błąd:
@@ -525,7 +532,7 @@ void loop() {
 }
 ```
 
-Komunikat `was not declared in this scope` znaczy dosłownie: poza klamrami `{}` gdzie ją zadeklarowałeś ta zmienna nie istnieje. To nie jest bug kompilatora — to zamierzone zachowanie, które chroni przed przypadkowym dostępem do niezainicjalizowanej pamięci.
+Komunikat `was not declared in this scope` znaczy dosłownie: poza klamrami `{}`, w których ją zadeklarowałeś, ta zmienna nie istnieje. To nie jest bug kompilatora — to zamierzone zachowanie, które chroni przed przypadkowym dostępem do niezainicjalizowanej pamięci.
 </Expandable>
 
 ---
@@ -569,7 +576,7 @@ void loop() {
 </Code>
 
 Wgraj, wpisz `128` i naciśnij Enter. Zobaczysz:
-```
+```text
 Bajt: '1'   kod ASCII: 49
 Bajt: '2'   kod ASCII: 50
 Bajt: '8'   kod ASCII: 56
@@ -584,7 +591,7 @@ Masz trzy niezależne bajty — nie liczbę 128. Żeby ją ręcznie odtworzyć, 
 long wartosc = Serial.parseInt();
 ```
 
-`Serial.parseInt()` czeka, aż w buforze pojawią się cyfry, zbiera je wszystkie, przelicza pozycje dziesiętne i zwraca gotową liczbę jako `long`. Zatrzymuje się gdy napotka znak niebędący cyfrą (np. spację, literę, `\n`) lub gdy minie krótki timeout (domyślnie 1 sekunda).
+`Serial.parseInt()` czeka, aż w buforze pojawią się cyfry, zbiera je wszystkie, przelicza pozycje dziesiętne i zwraca gotową liczbę jako `long`. Zatrzymuje się, gdy napotka znak niebędący cyfrą (np. spację, literę, `\n`) lub gdy minie krótki timeout (domyślnie 1 sekunda).
 
 <Callout type="note" title="Zwracany typ to long">
 `Serial.parseInt()` zwraca `long`. Możesz bezpiecznie przypisać wynik do `int`, jeśli spodziewasz się wartości w zakresie −32 768…32 767. Przy większych wartościach zostaw `long`.
@@ -606,20 +613,22 @@ void loop() {
     Serial.print("Podwojona: ");
     Serial.println(liczba * 2);
     Serial.print("Polowa (float!): ");
-    Serial.println(liczba / 2.0);  // bez .0 byloby dzielenie calkowite!
+    Serial.println(liczba / 2.0);  // bez .0 byłoby dzielenie całkowite!
+
+    while (Serial.available()) Serial.read();  // opróżnij bufor (usuwa \n)
   }
 }
 ```
 </Code>
 
 Wgraj, otwórz Monitor, wpisz `42` i naciśnij Enter. Powinieneś/Powinnaś zobaczyć:
-```
+```text
 Odebrano: 42
 Podwojona: 84
 Polowa (float!): 21.00
 ```
 
-Teraz wpisz `7` i sprawdź, czy kolumna `Polowa` faktycznie daje `3.50` (a nie `3.00` jak bez `.0`).
+Teraz wpisz `7` i sprawdź, czy wiersz `Polowa` faktycznie daje `3.50` (a nie `3.00` jak bez `.0`).
 
 ### Sterowanie LED na podstawie liczby z UART
 
@@ -662,7 +671,7 @@ void loop() {
 </Code>
 
 <Callout type="tip" title="Zawsze waliduj dane wejściowe">
-`Serial.parseInt()` zwraca `0` jeśli w buforze nie było cyfr (np. gdy wpisałeś/aś pusty Enter). Zawsze sprawdzaj odebraną wartość przed użyciem — `if (ile < 1 || ile > 20)` chroni logikę programu przed przypadkami brzegowymi.
+`Serial.parseInt()` zwraca `0`, jeśli w buforze nie było cyfr (np. gdy wpisałeś/aś pusty Enter). Zawsze sprawdzaj odebraną wartość przed użyciem — `if (ile < 1 || ile > 20)` chroni logikę programu przed przypadkami brzegowymi.
 </Callout>
 
 <Expandable title="Głębiej: co zostaje w buforze po parseInt()?" heading="####">
@@ -686,9 +695,9 @@ Ta wersja jest bardziej odporna na różne ustawienia końca linii w terminalach
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Typy danych i zasięg zmiennych to obszar, gdzie AI może być wyjątkowo pomocny. Kilka konkretnych podpowiedzi:
 
-- **Pułapka dzielenia całkowitoliczbowego** — wklej do AI kod `float wynik = 7/2;` i zapytaj: „dlaczego wynik to 3.0, a nie 3.5, i jak to poprawić?". AI wyjaśni rzutowanie typów (`(float)7/2`) lepiej niż niejeden podręcznik.
-- **Błąd zasięgu zmiennej** — gdy kompilator zgłasza `'x' was not declared in this scope`, wklej cały szkic do AI i napisz: „Wyjaśnij, dlaczego ta zmienna nie jest widoczna w tym miejscu i popraw kod". AI wskaże dokładnie, gdzie przenieść deklarację.
-- **Ćwiczenie z Serial.parseInt()** — poproś AI: „Napisz szkic Arduino, który odbiera przez Serial liczbę od użytkownika i wyświetla jej kwadrat oraz sześcian. Użyj Serial.parseInt()". Następnie przeanalizuj odpowiedź i wgraj kod na płytkę — to najszybszy sposób na utrwalenie materiału przez praktykę.
+- **Pułapka dzielenia całkowitoliczbowego** — wklej do AI kod `float wynik = 7/2;` i zapytaj: „dlaczego wynik to 3.0, a nie 3.5, i jak to poprawić?”. AI wyjaśni rzutowanie typów (`(float)7/2`) lepiej niż niejeden podręcznik.
+- **Błąd zasięgu zmiennej** — gdy kompilator zgłasza `'x' was not declared in this scope`, wklej cały szkic do AI i napisz: „Wyjaśnij, dlaczego ta zmienna nie jest widoczna w tym miejscu i popraw kod”. AI wskaże dokładnie, gdzie przenieść deklarację.
+- **Ćwiczenie z Serial.parseInt()** — poproś AI: „Napisz szkic Arduino, który odbiera przez Serial liczbę od użytkownika i wyświetla jej kwadrat oraz sześcian. Użyj Serial.parseInt()”. Następnie przeanalizuj odpowiedź i wgraj kod na płytkę — to najszybszy sposób na utrwalenie materiału przez praktykę.
 </Callout>
 
 ## Mini-projekt: symulowany termometr z klasyfikacją
@@ -741,12 +750,12 @@ void loop() {
     Serial.print(temp, 1);  // 1 miejsce po przecinku
     Serial.println(" C");
 
-    // wygas oba LED przed ustawieniem nowego stanu
+    // wygaś obie diody LED przed ustawieniem nowego stanu
     digitalWrite(pinZielona,  LOW);
     digitalWrite(pinCzerwona, LOW);
 
     if (temp < 0.0) {
-      Serial.println("Mroz! Uwazaj na zamarznie.");
+      Serial.println("Mroz! Uwazaj na zamarzniecie.");
       digitalWrite(pinCzerwona, HIGH);
     } else if (temp <= 25.0) {
       Serial.println("OK - temperatura w normie.");
@@ -757,7 +766,7 @@ void loop() {
       digitalWrite(pinCzerwona, HIGH);
     }
 
-    Serial.println();  // pusta linia dla czytelnosci
+    Serial.println();  // pusta linia dla czytelności
     while (Serial.available()) Serial.read();  // opróżnij bufor
   }
 }
@@ -765,37 +774,32 @@ void loop() {
 </Code>
 </Expandable>
 
-**Rozszerzenie:** Dodaj zmienną `float minTemp` i `float maxTemp` (globalne, zainicjuj je pierwszym odczytem lub wartościami 100.0 i -100.0). Przy każdym pomiarze aktualizuj minimum i maksimum i wypisuj je na końcu wiadomości.
+**Rozszerzenie:** Dodaj zmienne `float minTemp` i `float maxTemp` (globalne, zainicjuj je pierwszym odczytem lub wartościami 100.0 i -100.0). Przy każdym pomiarze aktualizuj minimum i maksimum i wypisuj je na końcu wiadomości.
 </MiniProject>
 
 <Troubleshooting>
   <Issue title="Serial.parseInt() zwraca 0 zamiast wpisanej liczby">
-    - Upewnij się, że wpisujesz cyfrę, nie literę — parseInt() zwraca 0 gdy nie znalazł cyfr.
-    - Sprawdź czy w Monitorze jest ustawione wysyłanie znaku końca linii.
-    - Po poprzednim odczycie w buforze może tkwić '\n' — dodaj `while(Serial.available()) Serial.read();` po odczycie.
+    - Upewnij się, że wpisujesz cyfrę, nie literę — parseInt() zwraca 0, gdy nie znajdzie cyfr.
+    - Sprawdź ustawienie końca linii w Monitorze: przy „Nowa linia” znak `\n` zostaje w buforze po liczbie, a bez końca linii parseInt() zwraca wynik dopiero po 1 s (timeout).
+    - Po poprzednim odczycie w buforze może tkwić `'\n'` — dodaj `while(Serial.available()) Serial.read();` po odczycie.
   </Issue>
   <Issue title="Obliczenie float wychodzi .00 zamiast ułamka">
-    - Szukaj dzielenia całkowitoliczbowego: obaj operandy muszą być int.
-    - Zmień jeden z operandów na float, dodając `.0`: `wartość / 1023.0`.
-    - Możesz też użyć rzutowania: `(float)wartość / 1023`.
+    - Szukaj dzielenia całkowitoliczbowego: występuje, gdy oba operandy są typu int.
+    - Zmień jeden z operandów na float, dodając `.0`: `wartosc / 1024.0`.
+    - Możesz też użyć rzutowania: `(float)wartosc / 1024`.
   </Issue>
   <Issue title="Licznik globalny nie rośnie lub zawsze pokazuje 1">
     - Sprawdź, czy deklaracja jest PRZED setup(), nie wewnątrz loop() lub setup().
     - Szukaj przypadkowego `int licznik = 0;` wewnątrz loop() — taka lokalna zmienna resetuje się co obieg.
-  </Issue>
-  <Issue title="analogWrite() nie zmienia jasności LED">
-    - Upewnij się, że LED jest podłączona do pinu PWM (na UNO: 3, 5, 6, 9, 10, 11 — oznaczone tyldą ~).
-    - Pin 13 (wbudowana dioda) nie obsługuje analogWrite().
-    - Sprawdź, czy pinMode(pin, OUTPUT) jest wywołane w setup().
   </Issue>
 </Troubleshooting>
 
 ## Podsumowanie
 
 - Każdy typ danych ma ustalony rozmiar w RAM: `bool`/`byte`/`char` = 1 bajt, `int` = 2 bajty, `float`/`long` = 4 bajty. Dobieraj typ do zadania — na 2 KB RAM każdy bajt ma znaczenie.
-- **Pułapka `float`:** `int / int` to dzielenie całkowite — reszta ginie. Żeby dostać ułamek, przynajmniej jeden operand musi być `float`: `wartość / 1023.0` lub `(float)wartość / 1023`.
+- **Pułapka `float`:** `int / int` to dzielenie całkowite — reszta ginie. Żeby dostać ułamek, przynajmniej jeden operand musi być `float`: `wartosc / 1024.0` lub `(float)wartosc / 1024`.
 - **Operatory skrócone** (`i++`, `i--`, `i += n`, `i -= n`) to idiom C++ — używaj ich zamiast długich form przypisania.
-- **Zasięg:** zmienne globalne (przed `setup()`) pamiętają wartość przez cały czas działania programu; lokalne (w bloku `{}`) są niszczone przy wychodzeniu z klamry. Deklaruj zmienne tak nisko jak to możliwe.
+- **Zasięg:** zmienne globalne (przed `setup()`) pamiętają wartość przez cały czas działania programu; lokalne (w bloku `{}`) są niszczone przy wychodzeniu z klamry. Deklaruj zmienne tak nisko, jak to możliwe.
 - **`Serial.parseInt()`** odbiera wielocyfrową liczbę całkowitą z UART i zwraca ją jako `long` — to o wiele więcej niż `Serial.read()`, który daje pojedynczy bajt ASCII.
 
-W kolejnej lekcji użyjemy przetwornika ADC (Analog-Digital Converter, przetwornik analogowo-cyfrowy) do odczytu prawdziwych wartości analogowych — napięcia, czujnika temperatury, potencjometru. Znasz już wszystkie narzędzia, żeby wysyłać te dane przez UART i przeliczać je na sensowne jednostki.
+W kolejnej lekcji użyjemy przetwornika ADC (Analog-Digital Converter, przetwornik analogowo-cyfrowy) do odczytu prawdziwych wartości analogowych — napięcia, potencjometru, fotorezystora. Znasz już wszystkie narzędzia, żeby wysyłać te dane przez UART i przeliczać je na sensowne jednostki.

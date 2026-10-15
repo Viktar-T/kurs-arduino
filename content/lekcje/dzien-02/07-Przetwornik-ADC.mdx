@@ -14,8 +14,8 @@ day: 2
 weekend: 1
 order: 3
 duration: 90
-block: 1
-blockTitle: "Podstawy Arduino oraz środowisko programowania"
+block: 5
+blockTitle: "Przetwornik ADC"
 forbotCourse: 1
 forbotChapter: 4
 
@@ -45,7 +45,7 @@ sources:
 
 cover: "/img/lekcje/07.01-arduino-uno-pinout-adc.png"
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 W poprzednich lekcjach pracowaliśmy głównie z sygnałami cyfrowymi: pin był w stanie `HIGH` albo `LOW`, przycisk był wciśnięty albo puszczony, a dioda świeciła albo nie. W praktycznych układach często chcemy jednak mierzyć coś płynnego: napięcie, położenie pokrętła, jasność albo odległość. Do takiego zadania Arduino wykorzystuje wejścia analogowe oraz przetwornik ADC.
@@ -112,7 +112,7 @@ Arduino UNO udostępnia wejścia `A0`-`A5`. W środku mikrokontrolera nie ma oso
   rows={[
     ["Zakres napięcia", "0-5 V", "Tylko taki zakres można bezpośrednio mierzyć na standardowym UNO"],
     ["Rozdzielczość", "10 bitów", "Wynik ma 1024 możliwe wartości"],
-    ["Wynik `analogRead()`", "0-1023", "0 oznacza około 0 V, 1023 oznacza napięcie bliskie 5 V"],
+    ["Wynik analogRead()", "0-1023", "0 oznacza około 0 V, 1023 oznacza napięcie bliskie 5 V"],
     ["Wejścia", "A0-A5", "Sześć kanałów analogowych dostępnych na złączu płytki"],
   ]}
 />
@@ -157,23 +157,22 @@ void loop() {
 Tak zbudowany woltomierz jest dobrym ćwiczeniem, ale nie zastępuje prawdziwego miernika. Wejście analogowe zbiera zakłócenia, zasilanie USB nie zawsze ma idealnie `5 V`, a samo Arduino nie jest zabezpieczone przed zbyt wysokim napięciem.
 
 <Callout type="tip" title="Kiedy można mierzyć baterię AA?">
-Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie wejścia Arduino UNO. Jeśli wykonujesz taki test, połącz minus baterii z `GND` Arduino, a plus baterii przyłóż do przewodu idącego na `A5`. Nie rób tak z baterią 9 V.
+Pojedyncza bateria AA ma zwykle około `1,5 V`, więc mieści się w zakresie wejścia Arduino UNO. Jeśli wykonujesz taki test, połącz minus baterii z `GND` Arduino, a plus baterii przyłóż do przewodu idącego na `A5` (wcześniej odłączonego od potencjometru). Nie rób tak z baterią 9 V.
 </Callout>
 
 <Schematic
   src="/img/lekcje/07.03-prosty-woltomierz-arduino.png"
   caption="Prosty woltomierz na Arduino mierzy tylko napięcia bezpieczne dla wejścia ADC."
-  alt="Prosty woltomierz zbudowany na Arduino"
+  alt="Monitor portu szeregowego pokazujący kolejne pomiary napięcia (ok. 1,64 V)"
   width={503}
   height={316}
 />
 
 <Expandable title="Głębiej: napięcie referencyjne i pin AREF" heading="####">
-Domyślnie ADC porównuje mierzone napięcie z napięciem zasilania Arduino, czyli `5 V`. Dlatego wynik `1023` odpowiada blisko `5 V`. Mikrokontroler ATmega328P udostępnia jednak pin `AREF` (Analog Reference, napięcie odniesienia przetwornika), do którego można podłączyć zewnętrzne napięcie referencyjne. Po wywołaniu `analogReference(EXTERNAL)` wynik `1023` będzie odpowiadał temu zewnętrznemu napięciu, a rozdzielczość jednego kroku wzrośnie proporcjonalnie — przy `2,5 V` referencji mierzysz napięcia do `2,5 V` z krokiem około `2,4 mV` zamiast `4,9 mV`.
+Domyślnie ADC porównuje mierzone napięcie z napięciem zasilania Arduino, czyli `5 V`. Dlatego wynik `1023` odpowiada blisko `5 V`. Mikrokontroler ATmega328P udostępnia jednak pin `AREF` (Analog Reference, napięcie odniesienia przetwornika), do którego można podłączyć zewnętrzne napięcie referencyjne (z zakresu od `0 V` do maksymalnie `5 V`). Po wywołaniu `analogReference(EXTERNAL)` wynik `1023` będzie odpowiadał temu zewnętrznemu napięciu, a rozdzielczość jednego kroku wzrośnie proporcjonalnie — przy `2,5 V` referencji mierzysz napięcia do `2,5 V` z krokiem około `2,4 mV` zamiast `4,9 mV`.
 
 Ważne: nigdy nie podłączaj napięcia na pin `AREF` bez uprzedniego wywołania `analogReference(EXTERNAL)`. 
-Bez tej komendy wewnętrzne napięcie referencyjne jest aktywne, czyli łączy główną linię zasilania Arduino (5 V) bezpośrednio z pinem AREF. 
-Bez tej komendy zewnętrzne napięcie na pinie `AREF` może uszkodzić układ.
+Bez tej komendy aktywne jest wewnętrzne napięcie odniesienia — mikrokontroler łączy wtedy linię zasilania (5 V) z pinem `AREF`, więc zewnętrzne napięcie podane na ten pin może uszkodzić układ.
 
 </Expandable>
 
@@ -223,7 +222,7 @@ void loop() {
 </Code>
 
 <Callout type="note" title="Piny A0–A5 działają też jako cyfrowe">
-Wejścia analogowe to nie są zupełnie osobne piny — to te same wyprowadzenia mikrokontrolera, które mogą pracować w dwóch trybach. Gdy wywołujesz `analogRead()`, pin staje się wejściem analogowym. Możesz go jednak użyć jak zwykłego pinu cyfrowego: wywołaj `pinMode(A5, OUTPUT)` i `digitalWrite(A5, HIGH)`, a zadziała dokładnie tak samo jak pin `13`.
+Wejścia analogowe to nie są zupełnie osobne piny — to te same wyprowadzenia mikrokontrolera, które mogą pracować w dwóch trybach. Gdy wywołujesz `analogRead()`, napięcie z tego pinu trafia do przetwornika ADC. Możesz go jednak użyć jak zwykłego pinu cyfrowego: wywołaj `pinMode(A5, OUTPUT)` i `digitalWrite(A5, HIGH)`, a zadziała dokładnie tak samo jak pin `13`.
 
 Każde z wejść analogowych ma też swój numer cyfrowy — kolejne liczby następujące po ostatnim pinie cyfrowym płytki: `A0` to numer `14`, `A1` to `15` i tak dalej aż do `A5`, który pod maską jest po prostu liczbą `19`. Dla programu `digitalWrite(A5, HIGH)` i `digitalWrite(19, HIGH)` to identyczne polecenie.
 </Callout>
@@ -233,7 +232,7 @@ Gdy odczyt ADC jest mały, opóźnienie jest krótkie i dioda miga szybko. Gdy o
 <Task title="Zadanie 2" estimate="10 min">
 Zmień program tak, aby dioda nigdy nie migała z opóźnieniem mniejszym niż `50 ms`. 
 Wskazówka: możesz dodać stałą wartość do wyniku `analogRead()` albo użyć funkcji `map()` z innym zakresem wyjściowym.
-Zbadaj funkcje `map()` na stronie [docs.arduino.cc](https://docs.arduino.cc/).
+Zbadaj funkcję `map()` na stronie [docs.arduino.cc](https://docs.arduino.cc/).
 </Task>
 
 ## 5. Funkcja `map()` i wskaźnik na pięciu diodach
@@ -320,7 +319,7 @@ Odłącz przewód sygnałowy od potencjometru i zostaw wejście analogowe w powi
 </Task>
 
 <Expandable title="Głębiej: dlaczego niepodłączone wejście szumi?" heading="####">
-Wejście analogowe mierzy napięcie. Gdy żaden element nie jest podłączony, na pinie nie ma ustalonego potencjału — pin „widzi" zakłócenia elektrostatyczne z otoczenia: pole elektromagnetyczne kabla USB, rąk, oświetlenia, a nawet własny szum termiczny przewodów na płytce stykowej.
+Wejście analogowe mierzy napięcie. Gdy żaden element nie jest podłączony, na pinie nie ma ustalonego potencjału — pin „widzi” zakłócenia elektrostatyczne z otoczenia: pole elektromagnetyczne kabla USB, rąk, oświetlenia, a nawet własny szum termiczny przewodów na płytce stykowej.
 
 Wartość `analogRead()` z pływającego wejścia może skakać po całym zakresie `0`–`1023` pozornie losowo. W docelowym układzie każde wejście powinno mieć ustalony stan: rezystor podciągający do `5 V` albo ściągający do `GND`. Kondensator filtrujący między wejściem a masą dodatkowo tłumi szybkie zakłócenia.
 </Expandable>
@@ -329,7 +328,7 @@ Wartość `analogRead()` z pływającego wejścia może skakać po całym zakres
 
 Fotorezystor zmienia rezystancję pod wpływem światła. 
 Im mocniej jest oświetlony, tym mniejszą ma rezystancję. 
-Łącząc fotorezystor z rezystorem (10 kΩ) tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
+Łącząc fotorezystor z rezystorem (10 kΩ), tworzymy dzielnik napięcia, którego napięcie wyjściowe zależy od jasności otoczenia.
 
 <Schematic
   src="/img/lekcje/07.06-fotorezystor-lampka-zmierzchowa.png"
@@ -364,7 +363,7 @@ void loop() {
 ```
 </Code>
 
-Jeśli dioda nie reaguje tak, jak oczekujesz, zmień wartość `100`. Dobrą metodą jest rozpoczęcie od większej wartości, na przykład `500`, a potem stopniowe zmniejszanie progu do momentu, w którym zasłonięcie fotorezystora ręką włącza diodę.
+Jeśli dioda nie reaguje tak, jak oczekujesz, zmień wartość progu `500`. Dobrą metodą jest rozpoczęcie od dużej wartości, takiej jak `500` w przykładzie, a potem stopniowe zmniejszanie progu do momentu, w którym zasłonięcie fotorezystora ręką włącza diodę.
 
 <Task title="Zadanie 5" estimate="15 min">
 Dodaj `Serial.begin(9600)` oraz `Serial.println(odczytanaWartosc)`, aby obserwować wskazania fotorezystora. Odczytaj wartość przy oświetlonym czujniku i po jego zasłonięciu. Na tej podstawie dobierz własny próg dla instrukcji `if`.
@@ -373,7 +372,7 @@ Dodaj `Serial.begin(9600)` oraz `Serial.println(odczytanaWartosc)`, aby obserwow
 <Expandable title="Głębiej: histereza — jak uniknąć migotania przy progu" heading="####">
 Jeśli odczyt z fotorezystora oscyluje tuż przy wartości progu, dioda może włączać i wyłączać się wielokrotnie w ciągu sekundy. Jeden próg pełni jednocześnie rolę progu włączenia i wyłączenia — każde drobne wahanie czujnika powoduje przełączenie.
 
-Rozwiązaniem jest **histereza**: próg włączenia jest niższy od progu wyłączenia. Na przykład dioda zapala się, gdy odczyt spada poniżej `100`, ale gasi się dopiero, gdy odczyt wzrośnie powyżej `130`. Wahania czujnika w zakresie `100`–`130` nie powodują żadnych przełączeń. Program musi wtedy pamiętać aktualny stan diody w zmiennej logicznej `bool` — sama wartość ADC nie wystarcza, bo ta sama liczba może oznaczać stan „właśnie weszliśmy w zakres" albo „już jesteśmy w środku histerezy".
+Rozwiązaniem jest **histereza**: próg włączenia jest niższy od progu wyłączenia. Na przykład dioda zapala się, gdy odczyt spada poniżej `100`, ale gasi się dopiero, gdy odczyt wzrośnie powyżej `130`. Wahania czujnika w zakresie `100`–`130` nie powodują żadnych przełączeń. Program musi wtedy pamiętać aktualny stan diody w zmiennej logicznej `bool` — sama wartość ADC nie wystarcza, bo ta sama liczba może oznaczać stan „właśnie weszliśmy w zakres” albo „już jesteśmy w środku histerezy”.
 </Expandable>
 
 ## 7. Lampka z regulowanym progiem
@@ -420,7 +419,7 @@ Rozbuduj lampkę tak, aby po włączeniu diody wysłała do Monitora portu szere
 
 <Task title="Zadanie 7" estimate="20 min">
 Zamień jedną diodę na pięciostopniowy wskaźnik jasności, podobny do wskaźnika z potencjometrem. 
-Zamiast prostego „świeci / nie świeci", fotorezystor powinien sterować liczbą zapalonych diod: przy dużym oświetleniu świeci tylko jedna dioda, przy całkowitej ciemności — wszystkie pięć. 
+Zamiast prostego „świeci / nie świeci”, fotorezystor powinien sterować liczbą zapalonych diod: przy dużym oświetleniu świeci tylko jedna dioda, przy całkowitej ciemności — wszystkie pięć. 
 
 Wskazówka: użyj funkcji `map()` do przeliczenia odczytu ADC na zakres `1`–`5`, tak jak w ćwiczeniu z potencjometrem w sekcji 5.
 </Task>
@@ -428,9 +427,9 @@ Wskazówka: użyj funkcji `map()` do przeliczenia odczytu ADC na zakres `1`–`5
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Przetwornik ADC i praca z czujnikami analogowymi to świetny temat do eksperymentowania z pomocą AI:
 
-- **Wzór na napięcie** — jeśli nie rozumiesz, skąd bierze się `(odczyt / 1023.0) * 5.0`, zapytaj AI: „Wytłumacz krok po kroku, jak zamienić odczyt ADC 0–1023 na napięcie 0–5 V w Arduino". AI rozpisze każdy czynnik wzoru.
-- **Kalibracja progu czujnika** — gdy próg lampki zmierzchowej jest zbyt wysoki lub zbyt niski, poproś AI: „Mój czujnik fotorezystora daje wartości 200–800 w zależności od oświetlenia. Jaki próg `if` ustawić, żeby lampka zapalała się przy półmroku?". Opisz swoje obserwacje — AI zaproponuje wartość i wyjaśni metodykę.
-- **Dlaczego wejście pływające daje losowe wartości** — podłącz pin analogowy do niczego, odczytaj wartości i zapytaj AI: „Dlaczego niepodłączony pin analogowy Arduina daje przypadkowe odczyty? Jak temu zapobiec?". To ważna lekcja o właściwościach elektrycznych wejść.
+- **Wzór na napięcie** — jeśli nie rozumiesz, skąd bierze się `odczytanaWartosc * (5.0 / 1024.0)`, zapytaj AI: „Wytłumacz krok po kroku, jak zamienić odczyt ADC 0–1023 na napięcie 0–5 V w Arduino”. AI rozpisze każdy czynnik wzoru.
+- **Kalibracja progu czujnika** — gdy próg lampki zmierzchowej jest zbyt wysoki lub zbyt niski, poproś AI: „Mój czujnik fotorezystora daje wartości 200–800 w zależności od oświetlenia. Jaki próg `if` ustawić, żeby lampka zapalała się przy półmroku?”. Opisz swoje obserwacje — AI zaproponuje wartość i wyjaśni metodykę.
+- **Dlaczego wejście pływające daje losowe wartości** — podłącz pin analogowy do niczego, odczytaj wartości i zapytaj AI: „Dlaczego niepodłączony pin analogowy Arduina daje przypadkowe odczyty? Jak temu zapobiec?”. To ważna lekcja o właściwościach elektrycznych wejść.
 </Callout>
 
 ## Podsumowanie

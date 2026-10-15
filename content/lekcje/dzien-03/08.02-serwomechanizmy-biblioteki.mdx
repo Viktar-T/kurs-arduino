@@ -34,6 +34,7 @@ hardware:
   - { name: "Potencjometr 10 kΩ", qty: 1 }
   - { name: "Stabilizator LM7805", qty: 1 }
   - { name: "Bateria 9 V z klipsem", qty: 1 }
+  - { name: "Kondensator 100 nF", qty: 2, note: "na wejściu i wyjściu LM7805" }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 10 }
 
@@ -43,14 +44,14 @@ sources:
   - "https://forbot.pl/blog/kurs-elektroniki-stabilizatory-napiecia-id4353"
 
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 PWM poznany w poprzedniej lekcji to sygnał, który Arduino generuje cyfrowo i który pozwala sterować analogowym zachowaniem elementów. Teraz użyjemy go do czegoś konkretnego: pokażemy, jak sterować serwomechanizmem za pomocą biblioteki `Servo`, jak go bezpiecznie zasilić i jak połączyć odczyt potencjometru z pozycją wału.
 
 ## 1. Serwomechanizm: czym jest i jak działa
 
-Serwomechanizm to mały napęd, w którym w jednej obudowie znajdują się **silnik, przekładnia oraz sterownik**. Typowe serwo modelarskie nie obraca się bez końca jak zwykły silnik DC. Zamiast tego **ustawia wał w zadanej pozycji**, najczęściej w zakresie około `0`-`180°`.
+Serwomechanizm to mały napęd, w którym w jednej obudowie znajdują się **silnik, przekładnia oraz sterownik**. Typowe serwo modelarskie nie obraca się bez końca jak zwykły silnik DC. Zamiast tego **ustawia wał w zadanej pozycji**, najczęściej w zakresie około `0`–`180°`.
 
 <Photo
   file="08.07-serwomechanizm-micro-sg90.png"
@@ -67,7 +68,7 @@ W środku małego serwa są delikatne plastikowe koła zębate. Ręczne przekrę
 </Callout>
 
 Standardowy sygnał sterujący serwem ma okres około `20 ms`. Długość impulsu w tym okresie informuje elektronikę serwa, pod jakim kątem ma ustawić wał. W praktyce nie będziemy generować tych impulsów ręcznie, bo Arduino ma gotową bibliotekę `Servo`.
-Zbadaj biblioteke `Servo.h` i spróbuj zrozumieć jak działa [https://docs.arduino.cc/programming/](https://docs.arduino.cc/programming/).
+Zbadaj bibliotekę `Servo.h` i spróbuj zrozumieć, jak działa: [https://docs.arduino.cc/libraries/servo/](https://docs.arduino.cc/libraries/servo/).
 
 <Expandable title="Głębiej: jak elektronika serwa interpretuje sygnał sterujący" heading="####">
 Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz). Elektronika serwa nie patrzy na wypełnienie procentowe, lecz na bezwzględną długość impulsu w stanie wysokim:
@@ -76,7 +77,7 @@ Standardowy sygnał sterujący serwem modelarskim ma stały okres `20 ms` (50 Hz
 - **1,5 ms** → pozycja środkowa `90°`
 - **2 ms** → pozycja `180°`
 
-Biblioteka `Servo.h` domyślnie używa impulsów `544 µs` (mikrosekund) dla `0°` i `2400 µs` dla `180°`. Jeśli serwo nie dochodzi do skrajnych pozycji albo drży na krańcach, podaj własne granice w mikrosekudach przez `attach(pin, minUs, maxUs)` — wartości zależą od konkretnego modelu serwa.
+Biblioteka `Servo.h` domyślnie używa impulsów `544 µs` (mikrosekund) dla `0°` i `2400 µs` dla `180°`. Jeśli serwo nie dochodzi do skrajnych pozycji albo drży na krańcach, podaj własne granice w mikrosekundach przez `attach(pin, minUs, maxUs)` — wartości zależą od konkretnego modelu serwa.
 </Expandable>
 
 ## 2. Zasilanie serwomechanizmu
@@ -103,7 +104,7 @@ W ćwiczeniu wykorzystujemy układ ze stabilizatorem `LM7805`, który zasila ser
 
 <Photo
   file="08.09-lm7805-wyprowadzenia.png"
-  caption="Wyprowadzenia stabilizatora LM7805 (patrząc na płaską ściankę obudowy od lewej: IN, GND, OUT)."
+  caption="Wyprowadzenia stabilizatora LM7805 (patrząc od strony napisu, nóżkami w dół, od lewej: IN, GND, OUT)."
   alt="Rysunek wyprowadzeń stabilizatora LM7805: wyprowadzenie 1 — IN, 2 — GND, 3 — OUT"
   width={569}
   height={379}
@@ -153,7 +154,7 @@ void loop() {
 ```
 </Code>
 
-W programie `#include <Servo.h>` dołącza bibliotekę. Linia `Servo serwomechanizm;` tworzy obiekt, przez który będziemy sterować napędem. Funkcja `attach(9)` przypisuje serwo do pinu `9`, a `write(pozycja)` ustawia kąt z zakresu `0`-`180`.
+W programie `#include <Servo.h>` dołącza bibliotekę. Linia `Servo serwomechanizm;` tworzy obiekt, przez który będziemy sterować napędem. Funkcja `attach(9)` przypisuje serwo do pinu `9`, a `write(pozycja)` ustawia kąt z zakresu `0`–`180`. Uwaga: na Arduino UNO biblioteka `Servo` korzysta z Timer1, więc po wywołaniu `attach()` funkcja `analogWrite()` przestaje działać na pinach `9` i `10` — niezależnie od tego, do którego pinu podłączono serwo.
 
 <Task title="Zadanie 4" estimate="10 min">
 Zmień wartość zmiennej `zmiana` na `1`, `3`, `10` i `30`. Sprawdź, jak wpływa to na płynność oraz szybkość ruchu serwa.
@@ -165,12 +166,12 @@ Napisz program, który ustawia serwo w pozycji przesłanej z Monitora portu szer
 
 ## 4. Sterowanie serwem potencjometrem
 
-W poprzedniej lekcji odczytywaliśmy potencjometr przez ADC. Teraz możemy połączyć te umiejętności: odczyt z `analogRead()` ma zakres `0`-`1023`, a serwo przyjmuje kąt `0`-`180`. Funkcja `map()` pozwala przeskalować jeden zakres na drugi.
+W lekcji o przetworniku ADC odczytywaliśmy potencjometr przez `analogRead()`. Teraz możemy połączyć te umiejętności: odczyt z `analogRead()` ma zakres `0`–`1023`, a serwo przyjmuje kąt `0`–`180`. Funkcja `map()` pozwala przeskalować jeden zakres na drugi.
 
 <Task title="Zadanie 6" estimate="15 min">
 Do układu podłącz potencjometr w roli dzielnika napięcia do wejścia `A5`. 
-Następnie wykorzystaj przetwornik ADC  do pomiaru napięcia ustawionego na potencjometrze. 
-Im będzie ono większe tym serwo powinno znajdować się bliżej swojej skrajnej, prawej pozycji.
+Następnie wykorzystaj przetwornik ADC do pomiaru napięcia ustawionego na potencjometrze. 
+Im będzie ono większe, tym serwo powinno znajdować się bliżej swojej skrajnej, prawej pozycji.
 </Task>
 
 <Expandable title="Rozwiązanie: Zadanie 6" heading="####">
@@ -197,7 +198,7 @@ void loop() {
 ```
 </Code>
 
-`map(wartość, fromLow, fromHigh, toLow, toHigh)` — funkcja wbudowana w Arduino, która wykonuje proporcjonalne przeskalowanie zakresu wejściowego na zakres wyjściowy. Delay `20 ms` odpowiada jednemu okresowi sygnału sterującego serwa i daje elektronice czas na przetworzenie nowej pozycji.
+`map(wartość, fromLow, fromHigh, toLow, toHigh)` — funkcja wbudowana w Arduino, która wykonuje proporcjonalne przeskalowanie zakresu wejściowego na zakres wyjściowy. Opóźnienie `20 ms` odpowiada jednemu okresowi sygnału sterującego serwa i daje elektronice czas na przetworzenie nowej pozycji.
 </Expandable>
 
 <Expandable title="Dlaczego serwo może drżeć?" heading="####">
@@ -217,10 +218,10 @@ W kolejnych lekcjach wrócimy do silników DC i pokażemy, jak sterować nimi po
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 PWM i serwomechanizmy otwierają wiele ciekawych pytań — AI pomoże je zgłębić:
 
-- **Serwo bez biblioteki** — gdy już rozumiesz `Servo.write()`, spróbuj: „Jak sterować serwomechanizmem w Arduino za pomocą bezpośredniej modulacji pinu, bez biblioteki Servo?". AI pokaże niskopoziomową mechanikę, która kryje się za biblioteką.
-- **Drgający serwo** — jeśli serwo drga lub nie trafia dokładnie w pozycję, wklej swój kod i napisz: „Moje serwo drga na pozycji 90°. Jakie mogą być przyczyny i jak to naprawić?". AI sprawdzi zasilanie, uziemienie i timing w kodzie.
+- **Serwo bez biblioteki** — gdy już rozumiesz `Servo.write()`, spróbuj: „Jak sterować serwomechanizmem w Arduino za pomocą bezpośredniej modulacji pinu, bez biblioteki Servo?”. AI pokaże niskopoziomową mechanikę, która kryje się za biblioteką.
+- **Drgające serwo** — jeśli serwo drga lub nie trafia dokładnie w pozycję, wklej swój kod i napisz: „Moje serwo drga na pozycji 90°. Jakie mogą być przyczyny i jak to naprawić?”. AI sprawdzi zasilanie, wspólną masę i timing w kodzie.
 </Callout>
 
 ## Podsumowanie
 
-Serwomechanizm ustawia wał w zadanym położeniu (0–180°) na podstawie długości impulsu sterującego o stałym okresie `20 ms`. Biblioteka `Servo` ukrywa szczegóły timingu: `attach(pin)` przypisuje serwo do pinu, a `write(kąt)` zadaje żądaną pozycję. Elementy wykonawcze zawierające silniki muszą mieć osobne zasilanie z wspólną masą — pin Arduino steruje, ale nie dostarcza dużych prądów.
+Serwomechanizm ustawia wał w zadanym położeniu (0–180°) na podstawie długości impulsu sterującego o stałym okresie `20 ms`. Biblioteka `Servo` ukrywa szczegóły timingu: `attach(pin)` przypisuje serwo do pinu, a `write(kąt)` zadaje żądaną pozycję. Elementy wykonawcze zawierające silniki muszą mieć osobne zasilanie ze wspólną masą — pin Arduino steruje, ale nie dostarcza dużych prądów.

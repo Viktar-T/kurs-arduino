@@ -47,7 +47,7 @@ sources:
 
 cover: "/img/lekcje/11.01-sterowanie-silnikami-dc-okladka.png"
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 W tej lekcji zajmiemy się małymi silnikami DC (Direct Current, prąd stały). Nauczysz się, dlaczego nie wolno podłączać ich bezpośrednio do pinów Arduino, do czego służy mostek H, jak zmieniać kierunek obrotów i jak regulować prędkość przez PWM (Pulse Width Modulation, modulacja szerokości impulsu). Przy okazji poznamy pętlę `for`, która bardzo ułatwia płynne zmiany wartości.
@@ -77,7 +77,7 @@ W świecie napędów elektrycznych spotkasz trzy popularne typy silników — ka
 
 **Silnik szczotkowy DC** (omawiany w tej lekcji) to klasyk: prąd dostarczany jest do wirnika przez węglowe szczotki ślizgające się po komutatorze. Zalety to prostota sterowania (wystarczą dwa przewody i zmiana polaryzacji) oraz niska cena. Wady: szczotki się zużywają (trzeba je czasem wymieniać), iskrzą i są źródłem zakłóceń elektromagnetycznych.
 
-**Silnik bezszczotkowy (BLDC, Brushless DC)** to nowoczesna alternatywa: zamiast szczotek elektronika zewnętrzna w odpowiedniej kolejności włącza trzy cewki w stojanie. Działa cicho, dłużej, bez iskrzenia — używany w dronach, dyskach SSD, e-rowerach. Wymaga specjalnego sterownika **ESC (Electronic Speed Controller)** — nie da się go uruchomić zwykłym mostkiem H.
+**Silnik bezszczotkowy (BLDC, Brushless DC)** to nowoczesna alternatywa: zamiast szczotek elektronika zewnętrzna w odpowiedniej kolejności włącza trzy cewki w stojanie. Działa cicho, dłużej, bez iskrzenia — używany w dronach, dyskach twardych (HDD), e-rowerach. Wymaga specjalnego sterownika **ESC (Electronic Speed Controller)** — nie da się go uruchomić zwykłym mostkiem H.
 
 **Silnik krokowy (stepper)** porusza się o ściśle określone kąty (`1,8°` na krok to standard). Świetnie nadaje się tam, gdzie trzeba precyzyjnie spozycjonować coś bez sprzężenia zwrotnego: drukarki 3D, plotery, lasery CNC. Wymaga sterownika typu `A4988` lub `DRV8825`, który generuje sygnał krok-kierunek.
 
@@ -104,7 +104,7 @@ Silnik jest też źródłem zakłóceń i przepięć. Bez elementu pośredniczą
 
 Gdy wirnik silnika obraca się w polu magnetycznym, sam zachowuje się jak generator i wytwarza napięcie skierowane przeciwnie do źródła zasilania. Nazywamy to **siłą przeciwelektromotoryczną** (ang. *back-EMF*, Back Electromotive Force — wsteczna siła elektromotoryczna).
 
-Poważniejszy problem pojawia się w chwili nagłego odcięcia zasilania. Energia zgromadzona w uzwojeniach nie znika natychmiast — silnik „wyrzuca" wtedy skok napięcia z powrotem do układu. Bez ochrony takie przepięcie może zniszczyć tranzystory sterownika lub mikrokontroler.
+Poważniejszy problem pojawia się w chwili nagłego odcięcia zasilania. Energia zgromadzona w uzwojeniach nie znika natychmiast — silnik „wyrzuca” wtedy skok napięcia z powrotem do układu. Bez ochrony takie przepięcie może zniszczyć tranzystory sterownika lub mikrokontroler.
 
 Rozwiązaniem są **diody swobodne** (*flyback diodes*), podłączone równolegle do silnika i skierowane tak, by przepięcie odprowadzało się do szyny zasilania. Litera **D** w nazwie `L293D` oznacza właśnie, że scalak ma wbudowane diody ochronne — starszy `L293` (bez litery D) ich nie posiada i wymaga diod zewnętrznych.
 
@@ -177,11 +177,11 @@ L293D może dostarczyć ograniczony prąd. W praktyce silnik powinien pobierać 
 
 <Expandable title="Co kryje się wewnątrz mostka H?" heading="####">
 
-Nazwa „mostek H" pochodzi od wyglądu schematu: cztery tranzystory tworzą kształt litery **H**, a silnik podłączony jest poprzecznie — w poziomej belce łączącej obie gałęzie.
+Nazwa „mostek H” pochodzi od wyglądu schematu: cztery tranzystory tworzą kształt litery **H**, a silnik podłączony jest poprzecznie — w poziomej belce łączącej obie gałęzie.
 
 Aby silnik kręcił się w jedną stronę, włączamy tranzystory T1 i T4 (prąd płynie przez silnik od lewej do prawej). Odwrócenie kierunku wymaga pary T2 i T3. Jednoczesne włączenie T1 i T3 (albo T2 i T4) zwierałoby zasilanie z masą — dlatego sterowniki mostkowe mają wbudowaną logikę blokującą takie kombinacje.
 
-W układzie `L293D` rolę tranzystorów pełnią struktury Darlingtona sterowane bezpośrednio napięciem logicznym `5 V`. Wbudowane diody ochronne (wspomniane przy back-EMF wyżej) siedzą w tych samych „nogach" obudowy co tranzystory.
+W układzie `L293D` rolę tranzystorów pełnią struktury Darlingtona sterowane bezpośrednio napięciem logicznym `5 V`. Wbudowane diody ochronne (wspomniane przy back-EMF wyżej) siedzą w tych samych „nogach” obudowy co tranzystory.
 
 </Expandable>
 
@@ -217,14 +217,14 @@ Klasyczna bateria 9 V ma małą wydajność prądową. W kursie wystarcza do dem
 
 <Expandable title="Po co kondensator przy zasilaniu L293D?" heading="####">
 
-Na schemacie widać kondensator umieszczony blisko pinów zasilania `L293D`. To tzw. **kondensator odsprzęgający** (bypass capacitor) — zazwyczaj 100 nF ceramiczny.
+Na schemacie widać kondensator umieszczony blisko pinów zasilania `L293D`. To tzw. **kondensator filtrujący (odsprzęgający)** (bypass capacitor). Na schemacie jest to kondensator elektrolityczny wpięty między szyny zasilania; w praktyce często dodaje się do niego kondensator ceramiczny 100 nF tuż przy pinach zasilania układu.
 
 Silnik DC to nie zwykły opornik. Przy każdym uruchomieniu, zatrzymaniu lub zmianie kierunku pobiera z linii zasilania krótki, ale intensywny impuls prądu. Ten impuls powoduje chwilowy spadek napięcia na przewodach i ścieżkach płytki.
 
 Kondensator działa jak mały lokalny magazyn ładunku tuż przy układzie scalonym:
 
 - **Wyrównuje skoki napięcia** — kiedy silnik pobiera impuls prądu, kondensator momentalnie go uzupełnia z własnego ładunku, zanim prąd zdąży popłynąć z odległego źródła zasilania.
-- **Filtruje zakłócenia elektryczne** — komutacja (przełączanie szczotek w silniku) generuje szybkie impulsy zakłócające. Kondensator pochłania te zakłócenia zanim wnikną głębiej w obwód.
+- **Filtruje zakłócenia elektryczne** — komutacja (przełączanie szczotek w silniku) generuje szybkie impulsy zakłócające. Kondensator pochłania te zakłócenia, zanim wnikną głębiej w obwód.
 - **Chroni logikę Arduino** — bez odsprzęgania skoki napięcia mogłyby zakłócać pracę mikrokontrolera, powodując losowe resety lub błędne odczyty czujników.
 
 Kondensator umieszcza się **jak najbliżej pinów zasilania układu** — długie przewody do niego samego zmniejszają skuteczność filtrowania.
@@ -388,8 +388,8 @@ Domyślne częstotliwości sprzętowego PWM w Arduino UNO to:
 
 Obie wartości leżą głęboko w paśmie słyszalnym — stąd charakterystyczny pisk. Można go zlikwidować na trzy sposoby:
 
-1. **Podnieść częstotliwość PWM powyżej słyszalnego pasma** (`> 20 kHz`) — modyfikacja preskalerów Timer'ów. To wymaga grzebania w rejestrach mikrokontrolera i może popsuć inne funkcje (`millis()` zależy od Timer0).
-2. **Użyć dedykowanego sterownika silników** typu `DRV8833` lub `TB6612FNG`, które same generują PWM z odpowiednią częstotliwością.
+1. **Podnieść częstotliwość PWM powyżej słyszalnego pasma** (`> 20 kHz`) — modyfikacja preskalerów timerów. To wymaga grzebania w rejestrach mikrokontrolera i może popsuć inne funkcje (`millis()` zależy od Timer0).
+2. **Użyć nowocześniejszego sterownika silników** typu `DRV8833` lub `TB6612FNG`, który (w przeciwieństwie do `L293D`) poprawnie pracuje z PWM powyżej `20 kHz` — sam sygnał PWM o takiej częstotliwości nadal musi wygenerować Arduino.
 3. **Zaakceptować pisk** — w robotach edukacyjnych i prototypach często nikomu nie przeszkadza.
 
 W produktach komercyjnych (np. drony, e-hulajnogi) sterowniki silników zwykle pracują z PWM `> 20 kHz` właśnie dla wygody akustycznej.
@@ -404,6 +404,7 @@ Warto wyznaczyć go doświadczalnie — wystarczy prosta pętla:
 ```cpp
 const byte PIN_ENABLE = 6;
 
+// fragment do setup() — wcześniej Serial.begin(9600) i ustawienie kierunku na IN1/IN2
 for (int i = 0; i <= 255; i++) {
   analogWrite(PIN_ENABLE, i);
   Serial.println(i);
@@ -411,7 +412,7 @@ for (int i = 0; i <= 255; i++) {
 }
 ```
 
-Obserwuj, przy jakiej wartości silnik faktycznie rusza. To jest Twoje `MIN_PWM`. Przy budowie sterownika robota warto ustawić dolną granicę prędkości właśnie na tę wartość — żeby komenda „jedź powoli" nie oznaczała „stój w miejscu i piszcz".
+Obserwuj, przy jakiej wartości silnik faktycznie rusza. To jest Twoje `MIN_PWM`. Przy budowie sterownika robota warto ustawić dolną granicę prędkości właśnie na tę wartość — żeby komenda „jedź powoli” nie oznaczała „stój w miejscu i piszcz”.
 
 </Expandable>
 
@@ -459,7 +460,7 @@ for (int i = 25; i > 0; i--) {}
 
 </Expandable>
 
-<Task title="Zadanie 2" estimate="15 min">
+<Task title="Zadanie 1" estimate="15 min">
 Napisz program, który za pomocą pętli `for` miga diodą 5 razy. Następnie spróbuj napisać ten sam program z użyciem pętli `while`.
 </Task>
 
@@ -497,16 +498,16 @@ void loop() {
 
 Rozruch prawdziwego silnika jest trudniejszy niż świecenie diody. Silnik musi pokonać tarcie, może piszczeć przy małym PWM i ruszyć dopiero od pewnej wartości. Jeśli robot nie rusza, problemem może być zbyt słabe zasilanie albo zbyt małe wypełnienie PWM.
 
-<Task title="Zadanie 4" estimate="5 min">
+<Task title="Zadanie 2" estimate="5 min">
 Napisz program, który używa dwóch pętli `for`: pierwsza płynnie rozpędza silnik od `0` do `255`, a druga płynnie hamuje od `255` do `0`.
 </Task>
 
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Sterowanie silnikami i mostek H to elektryka i programowanie — idealna okazja, żeby AI pomogło połączyć te dwa światy:
 
-- **Prąd wsteczny i diody zabezpieczające** — zapytaj AI: „Dlaczego silnik DC generuje prąd wsteczny (back-EMF) przy wyłączeniu i jak diody flyback chronią Arduino?". Zrozumienie tego mechanizmu zapobiega przypadkowemu uszkodzeniu płytki.
-- **Pętla for do płynnego rozruchu** — wklej kod z `analogWrite` i `for` i zapytaj: „Wyjaśnij, dlaczego płynne zwiększanie PWM za pomocą pętli `for` jest lepsze dla silnika niż natychmiastowe ustawienie pełnej prędkości". AI wyjaśni pojęcie prądu rozruchowego.
-- **Rozszerzenie projektu** — poproś AI: „Dodaj do mojego kodu obsługę dwóch silników niezależnie, z możliwością sterowania kierunkiem i prędkością przez Serial". To ćwiczenie pokazuje, jak skalować kod z jednego silnika na dwa.
+- **Napięcie wsteczne i diody zabezpieczające** — zapytaj AI: „Dlaczego silnik DC generuje napięcie wsteczne (back-EMF) przy wyłączeniu i jak diody flyback chronią Arduino?”. Zrozumienie tego mechanizmu zapobiega przypadkowemu uszkodzeniu płytki.
+- **Pętla for do płynnego rozruchu** — wklej kod z `analogWrite` i `for` i zapytaj: „Wyjaśnij, dlaczego płynne zwiększanie PWM za pomocą pętli `for` jest lepsze dla silnika niż natychmiastowe ustawienie pełnej prędkości”. AI wyjaśni pojęcie prądu rozruchowego.
+- **Rozszerzenie projektu** — poproś AI: „Dodaj do mojego kodu obsługę dwóch silników niezależnie, z możliwością sterowania kierunkiem i prędkością przez Serial”. To ćwiczenie pokazuje, jak skalować kod z jednego silnika na dwa.
 </Callout>
 
 ## Podsumowanie

@@ -40,13 +40,14 @@ hardware:
 tags: [arduino, uart, serial, zmienne, monitor-portu-szeregowego, ascii]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-uart-komunikacja-z-komputerem-pc-zmienne-id3836"
-  - "public/docs/teoria-niektore-tematy/programowanie/06_UART.md"
-  - "public/docs/teoria-niektore-tematy/plytka-elektronika/03.01_komunikacja-UART.md"
-  - "public/docs/teoria-niektore-tematy/programowanie/04_Zmienne.md"
-  - "public/docs/teoria-niektore-tematy/plytka-elektronika/01_infor-podstawowe.md"
+  - "/docs/teoria-niektore-tematy/programowanie/06_UART.md"
+  - "/docs/teoria-niektore-tematy/plytka-elektronika/03.01_komunikacja-UART.md"
+  - "/docs/teoria-niektore-tematy/programowanie/04_Zmienne.md"
+  - "/docs/teoria-niektore-tematy/plytka-elektronika/01_infor-podstawowe.md"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=67 (Książka B, r. 4)"
 
 publish: true
-updated: "2026-05-13"
+updated: "2026-10-15"
 ---
 
 ## Czego się dziś nauczymy
@@ -125,9 +126,9 @@ przycisków albo czujników.
 
 Komputer nie mówi TTL UART — mówi USB. Na płytce Arduino UNO siedzi dodatkowy układ scalony (w zależności od wersji: **CH340** lub **ATmega16U2**), który pełni rolę mostka USB↔UART. Jego jedyne zadanie to tłumaczenie pakietów USB na sygnały TTL 5 V i z powrotem.
 
-Gdy podłączasz Arduino kablem USB, system operacyjny wykrywa mostek i tworzy **wirtualny port COM** (Windows: `COMx`, Linux/macOS: `/dev/ttyUSB0` lub `/dev/tty.usbmodem...`). Właśnie z tym portem łączy się Monitor portu szeregowego.
+Gdy podłączasz Arduino kablem USB, system operacyjny wykrywa mostek i tworzy **wirtualny port COM** (Windows: `COMx`, Linux: `/dev/ttyACM0` lub `/dev/ttyUSB0`, macOS: `/dev/tty.usbmodem...`). Właśnie z tym portem łączy się Monitor portu szeregowego.
 
-Sygnał UART między mostkiem a mikrokontrolererem ATmega328P płynie po śladach PCB (Printed Circuit Board, co po polsku oznacza płytkę drukowaną) do fizycznych pinów `D0` i `D1`. Dlatego zajęte są dokładnie te dwa piny, a diody `TX` i `RX` na płytce mrugają przy każdym przesyłaniu danych.
+Sygnał UART między mostkiem a mikrokontrolerem ATmega328P płynie po śladach PCB (Printed Circuit Board, co po polsku oznacza płytkę drukowaną) do fizycznych pinów `D0` i `D1`. Dlatego zajęte są dokładnie te dwa piny, a diody `TX` i `RX` na płytce mrugają przy każdym przesyłaniu danych.
 
 </Expandable>
 
@@ -150,6 +151,7 @@ ramka zawiera:
 
 - bit startu, który informuje odbiornik, że transmisja się zaczyna,
 - bity danych, najczęściej 8 bitów,
+- opcjonalny bit parzystości do prostego wykrywania błędów (w Arduino domyślnie wyłączony),
 - bit stopu, który kończy ramkę i pozwala linii wrócić do stanu spoczynku.
 
 <Photo
@@ -236,7 +238,7 @@ dwiema diodami. Przycisk udaje czujnik w ramie okna:
 - przycisk wciśnięty oznacza okno zamknięte,
 - przycisk puszczony oznacza okno otwarte,
 - zielona LED sygnalizuje stan bezpieczny,
-- czerwona LED i komunikat w terminalu sygnalizują alarm "Uwaga! Alarm! Okno nie jest zamknięte!".
+- czerwona LED i komunikat w terminalu sygnalizują alarm „Uwaga! Alarm! Okno nie jest zamknięte!”.
 
 <Schematic
   src="/img/lekcje/06.04-alarm-okna-led-przycisk.png"
@@ -275,7 +277,7 @@ void loop() {
 ```
 </Code>
 
-Sprawdźmy jak działa program! Niestety nie najlepiej, gdy okno nie jest zamknięte informacja o alarmie nadawana jest cały czas. Wolelibyśmy jednak, aby wysyłana była tylko raz.
+Sprawdźmy, jak działa program! Niestety nie najlepiej — gdy okno nie jest zamknięte, informacja o alarmie nadawana jest cały czas. Wolelibyśmy jednak, aby wysyłana była tylko raz.
 
 
 Wersja poniżej po wykryciu otwartego okna zatrzymuje się w
@@ -314,9 +316,9 @@ void loop() {
 ```
 </Code>
 
-Z czasem nasze programy będą się znacznie rozrastały. Co w przypadku, gdy konieczna będzie zmiana fizycznego podłączenia np.: diody lub przycisku?  Zmiana numeru pinu w każdym miejscu programu byłaby uciążliwa?
+Z czasem nasze programy będą się znacznie rozrastały. Co w przypadku, gdy konieczna będzie zmiana fizycznego podłączenia np. diody lub przycisku? Zmiana numeru pinu w każdym miejscu programu byłaby uciążliwa?
 
-Z pomocą przychodzi nam dyrektywa #define oraz zmienne. Pozwalają one na zdefiniowanie symboli, które będą podmieniane przed kompilacją w każdym miejscu programu.  Przykładowo:
+Z pomocą przychodzą nam dyrektywa `#define` oraz stałe (`const byte`). Pozwalają one nadać wartościom nazwy używane w całym programie, więc numer pinu zmieniamy tylko w jednym miejscu. Przykładowo:
 
 <Expandable title="Instrukcja #define">
 <Code lang="cpp" file="alarm-okna.ino">
@@ -354,7 +356,7 @@ void loop() {
 </Code>
 </Expandable>
 
-<Expandable title="Zmienna 'byte'">
+<Expandable title="Stała const byte">
 <Code lang="cpp" file="alarm-okna.ino">
 ```cpp
 const byte pinCzerwona = 8;
@@ -436,8 +438,10 @@ void loop() {
 kompilacją. Preprocesor znajduje każde wystąpienie `pinLed` i wstawia tam `8`.
 To nie jest zmienna i nie ma typu. Dlatego `#define` bywa użyteczne, ale w
 codziennych szkicach dla numerów pinów bezpieczniej używać `const byte` —
-kompilator zna typ, więc wykryje błąd (np. `pinLed = 5`), a komunikaty
-błędów będą wskazywać nazwę stałej, nie gołą liczbę.
+kompilator zna typ stałej, a komunikaty błędów wskazują jej nazwę, nie gołą
+liczbę. Przykład: przypadkowe `pinLed = 5` nie skompiluje się w obu wersjach,
+ale przy `#define` kompilator zobaczy `8 = 5` i zgłosi niejasny błąd, a przy
+`const byte` jasno napisze, że próbujesz zmienić stałą `pinLed`.
 </Expandable>
 
 ## 6. Zmienne jako pamięć programu
@@ -456,7 +460,7 @@ zmienna i każdy tekst typu `String` mają znaczenie.
     ["byte", "1", "0 … 255", "numer pinu, wartość PWM (Pulse Width Modulation, modulacja szerokości impulsu), bajt odebrany z Serial"],
     ["int", "2", "−32 768 … +32 767", "liczniki, wyniki analogRead(), obliczenia ogólne"],
     ["unsigned int", "2", "0 … 65 535", "gdy liczby ujemne nie są potrzebne; nie mieszać z int w arytmetyce"],
-    ["long", "4", "−2 147 483 648 … +2 147 483 647", "millis(), duże liczniki, czas w ms"],
+    ["long", "4", "−2 147 483 648 … +2 147 483 647", "duże liczniki, wyniki poza zakresem int (czas z millis() — patrz unsigned long)"],
     ["unsigned long", "4", "0 … 4 294 967 295", "zwracany przez millis() i micros()"],
     ["float", "4", "±3,4 × 10³⁸ (~6–7 cyfr znaczących)", "temperatura, napięcie — obliczenia z ułamkami"],
     ["double", "4", "identyczny z float na Arduino UNO", "na AVR taki sam zakres co float"],
@@ -486,7 +490,7 @@ Arduino UNO (ATmega328P) ma trzy oddzielne obszary pamięci:
 
 **Flash** jest zapisywany przy każdym wgraniu szkicu. Zmienne globalne, stałe i literały tekstowe zaczynają życie we Flash, ale przy starcie programu są kopiowane do SRAM.
 
-**SRAM** to pamięć robocza. Zmienne, tablica `Serial` (64-bajtowy bufor odbiorczy!) i stos rekurencji — wszystko tu. Gdy SRAM się przepełni, program zaczyna zachowywać się losowo bez żadnego komunikatu błędu.
+**SRAM** to pamięć robocza. Zmienne, bufory `Serial` (64-bajtowy bufor odbiorczy i 64-bajtowy nadawczy!) i stos wywołań funkcji — wszystko tu. Gdy SRAM się przepełni, program zaczyna zachowywać się losowo bez żadnego komunikatu błędu.
 
 **EEPROM** czyta się i zapisuje przez bibliotekę `EEPROM.h`. Ma ograniczoną trwałość zapisu (~100 000 cykli na komórkę), więc nie nadaje się do danych zmienianych w każdym obiegu `loop()`.
 
@@ -532,7 +536,7 @@ programowaniu znak `=` oznacza przypisanie:
 <Task title="Zadanie 2" estimate="10 min">
 1. Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji `loop()`. Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
 2. Przenieś deklarację `int licznik = 0;` z początku programu do wnętrza funkcji `setup()`. 
-Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
+Spróbuj skompilować i uruchomić program. Wyjaśnij, co się stało.
 </Task>
 
 <Task title="Zadanie 3" estimate="10 min">
@@ -540,13 +544,13 @@ Uruchom program i wyjaśnij, dlaczego licznik zachowuje się inaczej.
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
 2. Zmień typ zmiennej `licznik` z `int` na `byte`. Obserwuj wartości w Monitorze
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `255`.
-3. Zmień `int licznik = 32760;`. Obserwuj wartości w Monitorze
+3. Zmień deklarację na `int licznik = 32760;`. Obserwuj wartości w Monitorze
 portu szeregowego i sprawdź, co stanie się po przekroczeniu `32767`.
 </Task>
 
 <Expandable title="Głębiej: przepełnienie liczby całkowitej (integer overflow)" heading="####">
 
-W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — wartość po prostu zawija się na drugi koniec zakresu. Jest to zachowanie zdefiniowane dla typów bez znaku i powszechnie spotykane dla typów ze znakiem na AVR.
+W C/C++, gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — wartość po prostu zawija się na drugi koniec zakresu. Dla typów bez znaku to zachowanie gwarantuje standard języka. Dla typów ze znakiem standard go nie gwarantuje (to tzw. zachowanie niezdefiniowane), choć na Arduino UNO w praktyce zwykle też widać zawinięcie — nie warto na nim polegać.
 
 <Table
   headers={["Typ", "Zakres", "Po przekroczeniu max"]}
@@ -558,14 +562,14 @@ W C/C++ gdy liczba przekroczy zakres swojego typu, **nie ma błędu** — warto�
   ]}
 />
 
-To zjawisko ma praktyczne skutki: funkcja `millis()` zwraca `unsigned long` i po ~49 dniach zawija się do zera. Kod, który poprawnie obsługuje zawijaniew `millis()`, musi używać odejmowania, a nie porównywania `>=`. Ten wzorzec poznasz w lekcji o wielozadaniowości.
+To zjawisko ma praktyczne skutki: funkcja `millis()` zwraca `unsigned long` i po ~49 dniach zawija się do zera. Kod, który poprawnie obsługuje zawijanie `millis()`, musi porównywać różnicę czasów (`millis() - start >= okres`), a nie bezpośrednio znaczniki czasu (`millis() >= koniec`). Ten wzorzec poznasz w lekcji o wielozadaniowości.
 
 </Expandable>
 
 <Task title="Zadanie 4" estimate="10 min">
 1. Zmień typ zmiennej na `char` i ustaw wartość początkową: `char licznik = 125;`. Obserwuj w Monitorze portu szeregowego, co stanie się po dodaniu 1 do wartości `127`.
 Następnie ustaw wartość początkową: `char licznik = 25;`. Obserwuj w Monitorze portu szeregowego.
-Zbadaj razem z naszym [Pomocnikiem-AI](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing) dlaczego na początku Monitor nie wyświetla symbolów.
+Zbadaj razem z naszym [Pomocnikiem AI](https://gemini.google.com/gem/1JLWeDALhz-pl9ijtcTPSgMVEPMmORUrd?usp=sharing), dlaczego na początku Monitor nie wyświetla symboli.
 
 *Wskazówka:* Zmienna `char` domyślnie wyświetli się jako znak tekstu (np. litera). Aby Monitor portu szeregowego wyświetlił wartość liczbową, użyj rzutowania: `Serial.println((int)licznik);`.
 
@@ -592,7 +596,7 @@ Serial.println((int)licznik);   // wyświetli: 65
 ```
 
 **Dlaczego dla małych wartości Monitor milczy lub pokazuje dziwne znaki?**  
-Kody 0–31 to tzw. znaki sterujące ASCII (np. 7 = BEL, 10 = nowa linia, 13 = powrót karetki). Większość terminali nie wyświetla ich jako widoczny symbol — stąd "puste" linie w Monitorze na początku zliczania.
+Kody 0–31 to tzw. znaki sterujące ASCII (np. 7 = BEL, 10 = nowa linia, 13 = powrót karetki). Większość terminali nie wyświetla ich jako widoczny symbol — stąd „puste” linie w Monitorze na początku zliczania.
 
 <Table
   headers={["Kod ASCII", "Znak / opis"]}
@@ -606,7 +610,7 @@ Kody 0–31 to tzw. znaki sterujące ASCII (np. 7 = BEL, 10 = nowa linia, 13 = p
   ]}
 />
 
-Przekroczenie zakresu `char` (127 → 128) powoduje przepełnienie dokładnie tak samo jak dla innych typów — wartość zawija się do −128. Możesz to sprawdzić rzutując wynik na `int`.
+Przekroczenie zakresu `char` (127 → 128) powoduje przepełnienie dokładnie tak samo jak dla innych typów — wartość zawija się do −128. Możesz to sprawdzić, rzutując wynik na `int`.
 
 </Expandable>
 
@@ -615,13 +619,14 @@ Przekroczenie zakresu `char` (127 → 128) powoduje przepełnienie dokładnie ta
 Typ char w pamięci mikrokontrolera to wciąż liczba z zakresu od -128 do 127, która według standardu ASCII reprezentuje konkretny znak. 
 Tym znakiem może być litera alfabetu, cyfra, znak interpunkcyjny, ale też tak zwany znak specjalny, jak znak tabulacji lub znak przesuwu o wiersz.  
 Kody ASCII od 0 do 31 to właśnie znaki sterujące (ang. control characters). 
-Nie posiadają one swojej reprezentacji wizualnej (jak np. litera 'A' czy cyfra '5'), ponieważ zostały wymyślone wiele dekad temu z myślą o dawnych, mechanicznych teleksach i wczesnych drukarkach. Ich zadaniem nie było "wyglądać", ale sterować zachowaniem maszyny. 
+Nie posiadają one swojej reprezentacji wizualnej (jak np. litera 'A' czy cyfra '5'), ponieważ zostały wymyślone wiele dekad temu z myślą o dawnych, mechanicznych teleksach i wczesnych drukarkach. Ich zadaniem nie było „wyglądać”, ale sterować zachowaniem maszyny. 
 Oto kilka najciekawszych przykładów znaków sterujących:
-- ASCII 7 (BELL - Dzwonek): Kiedyś sprawiał, że w dalekopisie uderzał fizyczny dzwonek, alarmując operatora. Dziś systemy operacyjne często odtwarzają w tym momencie dźwięk systemowy.
+- ASCII 7 (BEL - Dzwonek): Kiedyś sprawiał, że w dalekopisie uderzał fizyczny dzwonek, alarmując operatora. Dziś systemy operacyjne często odtwarzają w tym momencie dźwięk systemowy.
 - ASCII 9 (TAB - Tabulacja pozioma): Przesuwa kursor o z góry ustaloną liczbę spacji (bardzo przydatne do formatowania tekstu).
 - ASCII 10 (LF - Line Feed - Nowa linia): Każe urządzeniu (lub naszemu Monitorowi portu szeregowego) przenieść kursor do nowej linijki. W języku C/C++ często zapisujemy ten znak jako \n.
 - ASCII 13 (CR - Carriage Return - Powrót karetki): Pochodzi z czasów maszyn do pisania – nakazywał powrót wałka drukującego na sam początek linii. W C/C++ oznaczany jako \r.
-Kiedy kazałeś mikrokontrolerowi ATmega328P wysłać do komputera wartości np. 25, 26 czy 27, Monitor portu szeregowego odebrał je poprawnie, ale uznał, że to komendy sterujące, z którymi nie musi nic wizualnie robić (lub których nie obsługuje). Dlatego do momentu osiągnięcia kodu 32 (czyli pierwszej widocznej przerwy – spacji), w okienku nic się nie "rysowało".
+
+Kiedy kazałeś mikrokontrolerowi ATmega328P wysłać do komputera wartości np. 25, 26 czy 27, Monitor portu szeregowego odebrał je poprawnie, ale uznał, że to komendy sterujące, z którymi nie musi nic wizualnie robić (lub których nie obsługuje). Dlatego do momentu osiągnięcia kodu 32 (czyli pierwszej widocznej przerwy – spacji), w okienku nic się nie „rysowało”.
 
 </Expandable>
 
@@ -684,7 +689,7 @@ Dlatego porównanie `znak == '1'` jest poprawne i czytelne, a `znak == 1` porów
 
 </Expandable>
 
-Zadaniem następnego programu będzie "nasłuchiwanie" naszego imienia. Gdy je prześlemy, Arduino powinno nas przywitać komunikatem "Witaj Imie!", gdzie oczywiście wstawione zostanie przesłane wcześniej imię.
+Zadaniem następnego programu będzie „nasłuchiwanie” naszego imienia. Gdy je prześlemy, Arduino powinno nas przywitać komunikatem „Witaj Imie!”, gdzie oczywiście wstawione zostanie przesłane wcześniej imię.
 
 <Code lang="cpp" file="uart-witaj.ino">
 ```cpp
@@ -702,9 +707,9 @@ void loop() {
 }
 ```
 </Code>
-Na początku deklarujemy zmienną *odebraneDane*, do których kopiowany będzie ciąg odebranych znaków. Poznajemy nową funkcję: *Serial.available()*. Funkcja ta zwraca ilość bajtów, które zostały odebrane i czekają na obsługę przez Arduino.
+Na początku deklarujemy zmienną *odebraneDane*, do której kopiowany będzie ciąg odebranych znaków. Funkcja *Serial.available()*, znana z poprzedniego przykładu, zwraca liczbę bajtów, które zostały odebrane i czekają na obsługę przez Arduino.
 
-W wypadku kiedy dane będą dostępne (będzie ich więcej niż 0) - rozpoczyna się ich zapisywanie do zmiennej odebraneDane. Dzieje się to za pomocą funkcji *Serial.readStringUntil(terminator)*, która kopiuje dane z bufora do momentu napotkania znaku terminatora (w tym przypadku "\n" - czyli znak nowej linii).
+W wypadku, kiedy dane będą dostępne (będzie ich więcej niż 0) - rozpoczyna się ich zapisywanie do zmiennej odebraneDane. Dzieje się to za pomocą funkcji *Serial.readStringUntil(terminator)*, która kopiuje dane z bufora do momentu napotkania znaku terminatora (w tym przypadku `'\n'` - czyli znak nowej linii).
 
 <Photo
   file="06.06-uart-wysylanie-imienia.png"
@@ -811,17 +816,17 @@ Przy kolejnych zadaniach masz do dyspozycji naszego [Pomocnika AI](https://gemin
 Żeby naprawdę się nauczyć, używaj go jak nauczyciela, a nie jak kogoś, kto odrobi zadanie za Ciebie.
 
 **Zanim napiszesz do Pomocnika — spróbuj samodzielnie:**
-1. Przeczytaj treść zadania jeszcze raz i spróbuj rozpisać samodzielnie.
+1. Przeczytaj treść zadania jeszcze raz i spróbuj samodzielnie rozpisać rozwiązanie.
 2. Dopiero gdy utkniesz w konkretnym miejscu, pytaj Pomocnika.
 
 **Jak pytać skutecznie:**
-- Opisz, co próbowałeś: *„Próbowałem użyć `if`, ale nie wiem, jak porównać dwa napisy String."*
-- Powiedz, czego nie rozumiesz, zamiast prosić o gotowe rozwiązanie: *„Wyjaśnij, co robi `trim()` i dlaczego jest potrzebne."*
-- Wklej swój kod i zapytaj, dlaczego nie działa: *„Mój program kompiluje się, ale dioda nie reaguje. Gdzie może być błąd?"*
-- Poproś o wskazówkę, nie o kod: *„Jaką funkcję powinienem tu użyć?"*
+- Opisz, co próbowałeś: *„Próbowałem użyć `if`, ale nie wiem, jak porównać dwa napisy String.”*
+- Powiedz, czego nie rozumiesz, zamiast prosić o gotowe rozwiązanie: *„Wyjaśnij, co robi `trim()` i dlaczego jest potrzebne.”*
+- Wklej swój kod i zapytaj, dlaczego nie działa: *„Mój program kompiluje się, ale dioda nie reaguje. Gdzie może być błąd?”*
+- Poproś o wskazówkę, nie o kod: *„Jakiej funkcji powinienem tu użyć?”*
 
 **Czego unikać:**
-- Nie wklejaj treści zadania z prośbą „napisz mi to". Gotowy kod niczego Cię nie nauczy.
+- Nie wklejaj treści zadania z prośbą „napisz mi to”. Gotowy kod niczego Cię nie nauczy.
 - Nie akceptuj odpowiedzi, której nie rozumiesz — pytaj dalej, aż każda linijka będzie dla Ciebie jasna.
 </Callout>
 

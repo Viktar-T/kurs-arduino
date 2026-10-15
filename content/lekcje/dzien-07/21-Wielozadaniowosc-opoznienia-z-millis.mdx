@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Wielozadaniowość — opóźnienia z millis()"
 slug: "wielozadaniowosc-opoznienia-z-millis"
-summary: "Lekcja z kursu Forbot II #9: dlaczego delay() blokuje cały program, funkcja millis() jako wbudowany stoper, wzorzec pomiaru różnicy czasu bez blokowania, miganie dwóch diod LED z niezależnymi interwałami, sterowanie przyciskiem, projekt automatycznego oświetlenia schodów z czujnikiem PIR i kontaktronem."
+summary: "Lekcja z kursu Forbot II #9: dlaczego delay() blokuje cały program, funkcja millis() jako wbudowany stoper, wzorzec pomiaru różnicy czasu bez blokowania, miganie dwóch diod LED z niezależnymi interwałami, sterowanie przyciskiem, ćwiczenia z timerem i „zamrażaniem” układu na zadany czas."
 
 day: 7
 weekend: 4
@@ -26,7 +26,7 @@ objectives:
   - "Napisać program migający diodą LED bez użycia delay()"
   - "Zrealizować prawdziwą wielozadaniowość: dwie diody LED migające z różnymi częstotliwościami"
   - "Połączyć millis() z odczytem przycisku do zmiany tempa migania w czasie rzeczywistym"
-  - "Zaprojektować prosty automat czasowy — oświetlenie schodów z czujnikiem PIR i kontaktronem"
+  - "Zaprojektować prosty automat czasowy — timer odliczający i blokadę układu na zadany czas"
 
 prerequisites:
   - "dzien-07/cyfrowy-czujnik-wilgotnosci-dht11"
@@ -37,20 +37,21 @@ hardware:
   - { name: "Dioda LED (zielona)", qty: 1 }
   - { name: "Dioda LED (czerwona)", qty: 1 }
   - { name: "Rezystor 220 Ω", qty: 2 }
+  - { name: "Dioda LED (dowolny kolor) + rezystor 220 Ω", qty: 1, optional: true, note: "do zadania z trzema diodami" }
   - { name: "Przycisk taktowy", qty: 1 }
   - { name: "Płytka stykowa", qty: 1 }
   - { name: "Przewody połączeniowe", qty: 8 }
 
-tags: [arduino, millis, delay, wielozadaniowosc, timer, led, przycisk, pir, kontaktron]
+tags: [arduino, millis, delay, wielozadaniowosc, timer, led, przycisk]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-ii-wielozadaniowosc-opoznienia-z-millis-id18418"
 
 cover: "/img/lekcje/21.00.01-okladka-millis.jpg"
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
-W tej lekcji nauczymy się omijać jedno z największych ograniczeń funkcji `delay()` — **blokowanie całego programu**. Poznasz funkcję `millis()`, która działa jak wbudowany stoper i pozwala Arduino wykonywać kilka zadań „jednocześnie" — bez zatrzymywania pętli `loop()`.
+W tej lekcji nauczymy się omijać jedno z największych ograniczeń funkcji `delay()` — **blokowanie całego programu**. Poznasz funkcję `millis()`, która działa jak wbudowany stoper i pozwala Arduino wykonywać kilka zadań „jednocześnie” — bez zatrzymywania pętli `loop()`.
 
 ## 1. Problem z delay()
 
@@ -134,10 +135,10 @@ W Arduino znajdziemy funkcję `millis()`. Jej działanie najlepiej przyrównać 
   caption="millis() działa jak wbudowany stoper — odlicza czas od uruchomienia Arduino."
   alt="Zdjęcie stopera jako analogia do działania funkcji millis()"
   width={600}
-  hight={400}
+  height={400}
 />
 
-Wartość zwracana przez `millis()` jest typu `unsigned long` (32-bitowa, bez znaku) i rośnie do ok. **50 dni**, po czym resetuje się do zera. Najprościej użyć jej tak:
+Wartość zwracana przez `millis()` jest typu `unsigned long` (32-bitowa, bez znaku) i rośnie przez ok. **49,7 dnia**, po czym przepełnia się i liczy od zera. Najprościej użyć jej tak:
 
 <Code lang="cpp" file="millis-basic.ino">
 ```cpp
@@ -169,9 +170,9 @@ Zawsze deklaruj zmienne przechowujące wartość `millis()` jako `unsigned long`
 
 <Expandable title="Głębiej: co dzieje się po przepełnieniu millis()?" heading="####">
 
-`millis()` nie rośnie w nieskończoność. Po około 49,7 dniach licznik typu `unsigned long` osiąga maksymalną wartość i wraca do zera. To normalne zachowanie liczb bez znaku w mikrokontrolerze.
+`millis()` nie rośnie w nieskończoność. Po około 49,7 dnia licznik typu `unsigned long` osiąga maksymalną wartość i wraca do zera. To normalne zachowanie liczb bez znaku w mikrokontrolerze.
 
-Dlatego nie porównujemy czasu w stylu `if (millis() > start + interwal)`. Taki zapis może zawieść w okolicy przepełnienia. Bezpieczny wzorzec to odejmowanie: `if (aktualnyCzas - zapamietanyCzas >= interwal)`. Arytmetyka `unsigned long` sprawia, że różnica pozostaje poprawna nawet wtedy, gdy licznik zdążył „zawinąć się” przez zero.
+Dlatego nie porównujemy czasu w stylu `if (millis() > start + interwal)`. Taki zapis może zawieść w okolicy przepełnienia: gdy `start + interwal` przekroczy maksymalną wartość `unsigned long`, suma „zawinie się” do małej liczby i warunek będzie prawdziwy od razu, zanim minie zadany czas. Bezpieczny wzorzec to odejmowanie: `if (aktualnyCzas - zapamietanyCzas >= interwal)`. Arytmetyka `unsigned long` sprawia, że różnica pozostaje poprawna nawet wtedy, gdy licznik zdążył „zawinąć się” przez zero.
 
 W praktyce oznacza to, że dobrze napisany kod z `millis()` może działać tygodniami bez specjalnej obsługi resetu licznika. Warunek jest bezpieczny, o ile wszystkie zmienne czasu mają typ `unsigned long`.
 
@@ -213,12 +214,12 @@ void loop()
 
 <Photo
   file="21.00.06-millis-roznica-1000ms.gif"
-  caption="Monitor portu szeregowego: program drukuje czas co dokładnie 1000 ms bez użycia delay()."
+  caption="Monitor portu szeregowego: program drukuje czas co ok. 1000 ms bez użycia delay()."
   alt="Animacja monitora portu szeregowego z wartościami wypisywanymi co 1 sekundę bez delay()"
 />
 
 <Callout type="note" title="Sufiks UL przy stałych czasowych">
-Przyrostek `UL` przy liczbie (np. `1000UL`) informuje kompilator, że stała jest typu `unsigned long`. Bez niego przy dużych wartościach (> 32 767) może dojść do niezamierzonego skrócenia do typu `int`. Stosuj `UL` zawsze, gdy liczba representuje milisekundy.
+Przyrostek `UL` przy liczbie (np. `1000UL`) informuje kompilator, że stała jest typu `unsigned long`. Bez niego obliczenia na samych stałych (np. `60 * 1000`) są wykonywane w typie `int` (16 bitów na UNO), więc wynik większy niż 32 767 ulegnie przepełnieniu. Stosuj `UL` zawsze, gdy liczba reprezentuje milisekundy.
 </Callout>
 
 ## 4. Miganie diody LED bez delay()
@@ -260,10 +261,10 @@ void loop()
   caption="Dioda LED miga co 1 sekundę przy użyciu millis() — pętla loop() nie jest blokowana."
   alt="Animacja przedstawiająca miganie diody LED z millis() bez blokowania loop()"
   width={600}
-  hight={400}
+  height={400}
 />
 
-Program wygląda bardziej rozbudowanie niż z `delay()`, ale zysk jest ogromny — `loop()` wykonuje się bez przerwy i jest gotowa na kolejne zadania.
+Program wygląda na bardziej rozbudowany niż wersja z `delay()`, ale zysk jest ogromny — `loop()` wykonuje się bez przerwy i jest gotowa na kolejne zadania.
 
 ## 5. Dwie diody — prawdziwa wielozadaniowość
 
@@ -421,12 +422,12 @@ Wskazówka: użyj jednej zmiennej `zapamietanyStart` do przechowywania momentu w
 <MiniProject title="Projekt końcowy — stacja świetlna z przyciskiem stop" estimate="30 min">
 Zbuduj układ z dwiema diodami LED i przyciskiem:
 - **Tryb normalny**: LED1 miga co 500 ms, LED2 miga co 1200 ms.
-- **Wciśnięcie przycisku**: obie diody gasną i przez **5 sekund** układ jest „zamrożony" (żadne LED nie miga).
+- **Wciśnięcie przycisku**: obie diody gasną i przez **5 sekund** układ jest „zamrożony” (żadna dioda nie miga).
 - Po 5 sekundach **automatycznie** wraca do trybu normalnego.
 
-Uwaga: podczas „zamrożenia" przycisk nie może być ponownie aktywowany — odblokowanie następuje wyłącznie po upływie czasu.
+Uwaga: podczas „zamrożenia” przycisk nie może być ponownie aktywowany — odblokowanie następuje wyłącznie po upływie czasu.
 </MiniProject>
 
 ## Podsumowanie
 
-Funkcja **`millis()`** zwraca liczbę milisekund od uruchomienia Arduino (typ `unsigned long`) i **nigdy nie blokuje** programu — to jej kluczowa przewaga nad `delay()`. Wzorzec wielozadaniowości sprowadza się do trzech elementów: zmienna `zapamietanyCzas`, porównanie `millis() - zapamietanyCzas >= interwał` i aktualizacja `zapamietanyCzas` po każdym zdarzeniu. Każde niezależne zadanie dostaje własny zegar i własny interwał — `loop()` działa nieprzerwalnie, reagując na wszystkie zdarzenia (przyciski, czujniki, UART) bez żadnych opóźnień. Pamiętaj: zmienne przechowujące czas zawsze deklaruj jako `unsigned long`, a stałe interwałów zapisuj z sufiksem `UL`.
+Funkcja **`millis()`** zwraca liczbę milisekund od uruchomienia Arduino (typ `unsigned long`) i **nigdy nie blokuje** programu — to jej kluczowa przewaga nad `delay()`. Wzorzec wielozadaniowości sprowadza się do trzech elementów: zmienna `zapamietanyCzas`, porównanie `millis() - zapamietanyCzas >= interwal` i aktualizacja `zapamietanyCzas` po każdym zdarzeniu. Każde niezależne zadanie dostaje własny zegar i własny interwał — `loop()` działa nieprzerwanie, reagując na wszystkie zdarzenia (przyciski, czujniki, UART) bez żadnych opóźnień. Pamiętaj: zmienne przechowujące czas zawsze deklaruj jako `unsigned long`, a stałe interwałów zapisuj z sufiksem `UL`.

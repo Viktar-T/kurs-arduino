@@ -12,7 +12,7 @@ summary: "Lekcja z kursu Forbot II #5: klawiatura matrycowa 4×4, biblioteka Key
 
 day: 6
 weekend: 3
-order: 5
+order: 1
 duration: 90
 block: 12
 blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
@@ -25,7 +25,7 @@ objectives:
   - "Odczytać naciśnięty klawisz i wydrukować go przez UART"
   - "Zaprojektować program oparty na automacie stanów (switch-case)"
   - "Zaimplementować cztery stany centralki alarmowej: czuwanie, monitorowanie, rozbrajanie i sygnalizacja alarmu"
-  - "Dodać odliczanie czasu na wpisanie kodu PIN i blokadę po błędnym wprowadzeniu"
+  - "Dodać odliczanie czasu na wpisanie kodu PIN i uruchomienie alarmu po błędnym wprowadzeniu"
 
 prerequisites:
   - "dzien-05/przerwania-kontaktron-czujnik-pir"
@@ -41,7 +41,7 @@ hardware:
   - { name: "Kontaktron (czujnik magnetyczny)", qty: 1 }
   - { name: "Buzzer bez generatora", qty: 1 }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 20, note: "w tym 11 męsko-żeńskich: 8 do klawiatury i 3 do czujnika PIR" }
 
 tags: [arduino, klawiatura, keypad, alarm, automat-stanow, ws2812, pir, kontaktron, buzzer, switch-case]
 sources:
@@ -49,7 +49,7 @@ sources:
 
 cover: "/img/lekcje/17.01-klawiatura-numeryczna-przyklad.jpg"
 publish: true
-updated: "2026-05-30"
+updated: "2026-10-15"
 ---
 
 W tej lekcji nauczysz się obsługiwać **klawiaturę matrycową 4×4** za pomocą biblioteki `Keypad`, a następnie wykorzystasz ją do zbudowania własnej **centralki alarmowej**. System będzie składał się z czterech stanów: czuwanie, monitorowanie, rozbrajanie i aktywny alarm. Do jego realizacji połączymy razem elementy poznane w poprzednich lekcjach — linijkę WS2812, czujnik PIR, kontaktron i buzzer.
@@ -60,8 +60,8 @@ Klawiatura numeryczna to wygodny sposób na wprowadzanie danych do Arduino. Popu
 
 <Photo
   file="17.01-klawiatura-numeryczna-przyklad.jpg"
-  caption="Przykład klawiatury numerycznej — 16 przycisków podłączonych do Arduino zaledwie 8 przewodami."
-  alt="Zdjęcie klawiatury numerycznej 4x4"
+  caption="Przykład foliowej klawiatury numerycznej 3×4 — 12 klawiszy obsługiwanych przez zaledwie 7 wyprowadzeń (4 wiersze + 3 kolumny)."
+  alt="Zdjęcie foliowej klawiatury numerycznej 3x4"
   width={600}
   height={400}
 />
@@ -86,7 +86,7 @@ Przy wielu jednoczesnych naciśnięciach mogą pojawić się niejednoznaczności
 
 ## 2. Klawiatura z zestawu
 
-W zestawie Arduino znajduje się foliowa klawiatura matrycowa 4×4. Na froncie widać oznaczenia klawiszy `1`–`9`, `0`, `*`, `#` oraz `A`–`D`. Z tyłu wyprowadzone jest **8 elastycznych pinów** — cztery dla wierszy i cztery dla kolumn.
+W zestawie Arduino znajduje się klawiatura matrycowa 4×4 zbudowana z 16 przycisków (oznaczonych na płytce S1–S16). Przyciski nie mają nadruków — znaki `1`–`9`, `0`, `*`, `#` oraz `A`–`D` przypiszemy im w programie (mapa klawiszy w sekcji 4). Na krawędzi płytki wyprowadzonych jest **8 pinów goldpin** — cztery dla wierszy i cztery dla kolumn.
 
 <Photo
   file="17.03-klawiatura-matrycowa-przod.jpg"
@@ -98,8 +98,8 @@ W zestawie Arduino znajduje się foliowa klawiatura matrycowa 4×4. Na froncie w
 
 <Photo
   file="17.04-klawiatura-matrycowa-tyl.jpg"
-  caption="Tył klawiatury matrycowej — widoczne 8 elastycznych pinów wychodzących z taśmy."
-  alt="Zdjęcie tyłu klawiatury matrycowej z widocznymi pinami"
+  caption="Tył klawiatury matrycowej — ścieżki łączą przyciski w 4 wiersze i 4 kolumny, wyprowadzone na 8 pinów."
+  alt="Zdjęcie tyłu płytki klawiatury matrycowej ze ścieżkami łączącymi przyciski"
   width={600}
   height={400}
 />
@@ -114,30 +114,30 @@ Piny klawiatury podłączamy do pinów cyfrowych Arduino od **2 do 9**:
 <Photo
   file="17.05-klawiatura-podlaczenie-arduino.jpg"
   caption="Połączenie klawiatury matrycowej z Arduino — piny 2–9."
-  alt="Zdjęcie klawiatury podłączonej do Arduino przewodami"
+  alt="Klawiatura 4x4 z opisanymi wyprowadzeniami — numery odpowiadających im pinów Arduino 2–9"
   width={600}
   height={400}
 />
 
-<Callout type="note" title="Przejściówka do płytki stykowej">
-Elastyczne piny klawiatury nie pasują bezpośrednio do płytki stykowej. Należy przymocować je do przewodów zakończonych goldpinem (żeńskim) — tworząc przejściówkę.
+<Callout type="note" title="Przejściówka z przewodów">
+Klawiaturę najwygodniej połączyć bezpośrednio z pinami Arduino ośmioma przewodami męsko-żeńskimi (końcówka żeńska na goldpin klawiatury). Jeśli masz tylko przewody męsko-męskie i żeńsko-żeńskie, połącz je parami — powstanie przejściówka męsko-żeńska.
 </Callout>
 
 <Photo
   file="17.06-przejsciowka-przewody.jpg"
-  caption="Przejściówka: przewody połączeniowe umożliwiające wpięcie klawiatury do płytki stykowej."
-  alt="Zdjęcie przewodów połączeniowych jako przejściówki do płytki stykowej"
+  caption="Przejściówka: przewód żeńsko-żeński połączony z męsko-męskim daje przewód męsko-żeński."
+  alt="Zdjęcie przewodów żeńsko-żeńskich i męsko-męskich połączonych w przejściówki męsko-żeńskie"
 />
 
 <Photo
   file="17.07-uklad-testowy-klawiatura.jpg"
   caption="Pierwszy układ testowy z klawiaturą matrycową podłączoną do Arduino."
-  alt="Zdjęcie kompletnego układu testowego na płytce stykowej"
+  alt="Zdjęcie klawiatury podłączonej ośmioma przewodami bezpośrednio do pinów 2–9 Arduino"
 />
 
 ## 4. Biblioteka Keypad — konfiguracja
 
-Do obsługi klawiatury używamy biblioteki `Keypad.h`. Trzeba ją najpierw zainstalować w Arduino IDE: **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami** → wyszukaj `Keypad` autora Mark Stanley.
+Do obsługi klawiatury używamy biblioteki `Keypad.h`. Trzeba ją najpierw zainstalować w Arduino IDE: **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami** → wyszukaj `Keypad` autorstwa Marka Stanleya.
 
 Konfiguracja biblioteki wymaga trzech kroków: deklaracji pinów, mapy klawiszy i inicjalizacji obiektu.
 
@@ -178,7 +178,7 @@ Keypad klawiatura = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 ## 5. Pierwszy program — odczyt klawiatury przez UART
 
-Funkcja `klawiatura.getKey()` zwraca znak wciśniętego klawisza lub `0`, jeśli żaden klawisz nie jest naciśnięty. Poniższy program drukuje wciśnięty klawisz w Monitorze portu szeregowego:
+Funkcja `klawiatura.getKey()` zwraca znak klawisza w chwili jego naciśnięcia lub `NO_KEY` (znak `'\0'`, czyli wartość `0`), jeśli nie naciśnięto żadnego nowego klawisza. Poniższy program drukuje wciśnięty klawisz w Monitorze portu szeregowego:
 
 <Code lang="cpp" file="klawiatura-test.ino">
 ```cpp
@@ -227,7 +227,7 @@ Wgraj program testowy i sprawdź, czy wszystkie klawisze działają poprawnie. C
 
 ## 6. Projekt — własna centralka alarmowa
 
-Teraz zastosujemy klawiaturę w praktycznym projekcie: **centralce alarmowej**. Wyobraź sobie alarm zamontowany przy oknie — gdy złodziej otworzy okno, uruchamia się sygnalizacja. Właściciel wracając do domu ma chwilę, żeby wpisać PIN i rozbroić alarm.
+Teraz zastosujemy klawiaturę w praktycznym projekcie: **centralce alarmowej**. Wyobraź sobie alarm zamontowany przy oknie — gdy złodziej otworzy okno, uruchamia się sygnalizacja. Właściciel, wracając do domu, ma chwilę, żeby wpisać PIN i rozbroić alarm.
 
 <Photo
   file="17.10-alarm-scenariusz.jpg"
@@ -257,7 +257,7 @@ Cztery stany systemu:
   rows={[
     ["Czuwanie", "1", "Alarm wyłączony, czekamy na uzbrojenie (klawisz A)", "Zielona dioda LED"],
     ["Monitorowanie", "2", "Alarm uzbrojony, czujniki aktywne", "Czerwona dioda miga"],
-    ["Rozbrajanie", "3", "Otwarto drzwi/okno — 5 sekund na wpisanie PIN", "Czerwone miganie + odliczanie"],
+    ["Rozbrajanie", "3", "Otwarto drzwi/okno — 5 sekund na wpisanie PIN", "Linijka zgaszona, odliczanie czasu w programie"],
     ["Sygnalizacja alarmu", "4", "Alarm aktywny — błysk czerwony/niebieski i syrena", "Naprzemienne LED + buzzer"],
   ]}
 />
@@ -281,7 +281,7 @@ Do budowy centralki potrzebujemy czterech elementów poza klawiaturą:
 <Photo
   file="17.14-kontaktron.jpg"
   caption="Kontaktron (czujnik magnetyczny) — montowany przy drzwiach lub oknie, daje czas na rozbrojenie."
-  alt="Zdjęcie kontaktronu zamontowanego przy oknie lub drzwiach"
+  alt="Zdjęcie układu centralki z kontaktronem przykręconym do podstawki obok płytki stykowej"
 />
 
 <Photo
@@ -289,6 +289,10 @@ Do budowy centralki potrzebujemy czterech elementów poza klawiaturą:
   caption="Buzzer podłączony do pinu 11 — sygnał dźwiękowy podczas alarmu."
   alt="Zdjęcie buzzera podłączonego do centralki alarmowej"
 />
+
+<Callout type="warning" title="PIR na pinie 1 (TX)">
+Czujnik PIR jest podłączony do pinu 1, który jest też linią **TX** (nadawanie danych do komputera). Dlatego w tym projekcie nie używamy `Serial`, a jeśli wgrywanie programu kończy się błędem, na czas wgrywania odłącz przewód sygnałowy PIR. Możesz też przepiąć PIR na wolny pin (np. 12) i zmienić stałą `PIR` w kodzie.
+</Callout>
 
 ## 7. Szkielet kodu — automat stanów
 
@@ -426,7 +430,7 @@ void wylaczDiody() {
 ## 9. Stan 2 — monitorowanie
 
 <Task title="Zadanie — stan 2: monitorowanie" estimate="10 min">
-Proszę spróbować samodzielnie zaimplementować **stan 2 — monitorowanie** (`case 2`): ósma dioda miga na czerwono, a w każdej iteracji pętli sprawdzaj czujniki — wykrycie ruchu przez PIR uruchamia alarm natychmiast (stan 4), otwarcie okna lub drzwi przez kontaktron daje użytkownikowi czas na wpisanie PIN (stan 3).
+Proszę spróbować samodzielnie zaimplementować **stan 2 — monitorowanie** (`case 2`): ósma dioda miga na czerwono, a w każdej iteracji pętli sprawdzaj czujniki — wykrycie ruchu przez PIR uruchamia alarm natychmiast (stan 4), otwarcie okna lub drzwi wykryte przez kontaktron daje użytkownikowi czas na wpisanie PIN (stan 3).
 </Task>
 
 <Expandable title="Przykład rozwiązania: centralka-stan2.ino" heading="####">
@@ -445,6 +449,7 @@ case 2:
   if (digitalRead(PIR) == HIGH) {
     stanAlarmu = 4; // Ruch wykryty — alarm natychmiast
   } else if (digitalRead(KONTAKTRON) == HIGH) {
+    ileCzasuMinelo = 0; // Reset odliczania (licznik wykorzystamy w stanie 3)
     stanAlarmu = 3; // Kontaktron — szansa na rozbrojenie
   }
 break;
@@ -685,7 +690,7 @@ Wgraj kompletny program i przetestuj wszystkie stany:
 </Task>
 
 <Task title="Zadanie 3 — zmiana PIN" estimate="5 min">
-Zmień PIN alarmu na dowolny czterocyfrowy kod. Zaktualizuj zmienne `pinCyfra1`–`pinCyfra4` i sprawdź, czy nowy kod działa poprawnie. Pamiętaj o cudzysłowach apostrofowych: `'5'`, nie `5`.
+Zmień PIN alarmu na dowolny czterocyfrowy kod. Zaktualizuj zmienne `pinCyfra1`–`pinCyfra4` i sprawdź, czy nowy kod działa poprawnie. Pamiętaj o apostrofach: `'5'`, nie `5`.
 </Task>
 
 <MiniProject title="Rozbudowa centralki" estimate="20 min">
@@ -693,16 +698,16 @@ Zmień PIN alarmu na dowolny czterocyfrowy kod. Zaktualizuj zmienne `pinCyfra1`�
 Wybierz jedno z poniższych ulepszeń i zaimplementuj je:
 
 **Opcja A — wyświetlanie pozycji PIN na linijce:**
-Podczas wpisywania kodu PIN (stan 3) zapraw kolejne diody na żółto (`linijka.Color(10, 10, 0)`) w miarę wpisywania kolejnych cyfr. Cztery żółte diody = PIN kompletny.
+Podczas wpisywania kodu PIN (stan 3) zapalaj kolejne diody na żółto (`linijka.Color(10, 10, 0)`) w miarę wpisywania kolejnych cyfr. Cztery żółte diody = PIN kompletny.
 
 **Opcja B — dźwiękowe potwierdzenie naciśnięcia klawisza:**
 Dodaj krótki sygnał (np. `tone(BUZZER, 1000)` przez 50 ms) po każdym naciśnięciu klawisza w stanie rozbrajania — tak jak w prawdziwych klawiaturach alarmowych.
 
 **Opcja C — odliczanie czasu na linijce:**
-W stanie 3 (rozbrajanie) wyświetlaj na linijce ile czasu pozostało: 5 sekund = 8 diód czerwonych, 4 sekundy = 6 diód, … Użyj zmiennej `ileCzasuMinelo` do wyliczenia liczby diód.
+W stanie 3 (rozbrajanie) wyświetlaj na linijce, ile czasu pozostało: 5 sekund = 8 diod czerwonych, 4 sekundy = 6 diod, … Użyj zmiennej `ileCzasuMinelo` do wyliczenia liczby diod.
 
 </MiniProject>
 
 ## Podsumowanie
 
-Klawiatura matrycowa 4×4 komunikuje się z Arduino przez **8 wyprowadzeń** — cztery wiersze i cztery kolumny — dzięki czemu 16 klawiszy nie zajmuje 16 pinów. Biblioteka `Keypad` automatycznie obsługuje skanowanie matrycy; wystarczy zadeklarować piny, mapę znaków i wywołać `getKey()` w pętli. Centralka alarmowa bazuje na **automacie stanów** zbudowanym ze `switch-case` i zmiennej `stanAlarmu` — każdy stan wykonuje tylko swoje operacje i w odpowiednim momencie zmienia wartość tej zmiennej, przenosząc program do kolejnego stanu. Taka architektura jest czytelna, łatwa w rozbudowie i eliminuje potrzebę stosowania przerwań do większości zadań czasu rzeczywistego.
+Klawiatura matrycowa 4×4 komunikuje się z Arduino przez **8 wyprowadzeń** — cztery wiersze i cztery kolumny — dzięki czemu 16 klawiszy nie zajmuje 16 pinów. Biblioteka `Keypad` automatycznie obsługuje skanowanie matrycy; wystarczy zadeklarować piny, mapę znaków i wywołać `getKey()` w pętli. Centralka alarmowa bazuje na **automacie stanów** zbudowanym ze `switch-case` i zmiennej `stanAlarmu` — każdy stan wykonuje tylko swoje operacje i w odpowiednim momencie zmienia wartość tej zmiennej, przenosząc program do kolejnego stanu. Taka architektura jest czytelna, łatwa w rozbudowie i w wielu prostych projektach pozwala obejść się bez przerwań.

@@ -12,7 +12,7 @@ summary: "Lekcja z kursu Forbot II #4: czujnik kontaktronowy jako alarm okienny,
 
 day: 5
 weekend: 3
-order: 1
+order: 3
 duration: 90
 block: 12
 blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
@@ -30,7 +30,7 @@ objectives:
   - "Unikać funkcji delay() wewnątrz obsługi przerwania"
 
 prerequisites:
-  - "dzien-04/syrena-alarmowa-mosfet"
+  - "dzien-05/syrena-alarmowa-mosfet"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
@@ -39,8 +39,9 @@ hardware:
   - { name: "Rezystor 1 kΩ", qty: 3 }
   - { name: "Czujnik kontaktronowy (rurka + magnes)", qty: 1 }
   - { name: "Czujnik PIR HC-SR501", qty: 1 }
+  - { name: "Buzzer bez generatora", qty: 1, note: "do zadań 4.1 i 4.2" }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 12, note: "w tym 3 męsko-żeńskie do czujnika PIR" }
 
 tags: [arduino, przerwania, interrupt, kontaktron, pir, hc-sr501, attachInterrupt, volatile, alarm]
 sources:
@@ -48,7 +49,7 @@ sources:
 
 cover: "/img/lekcje/16.01-okladka-alarm.jpg"
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
 W tej lekcji poznasz dwa popularne czujniki alarmowe: **kontaktron** (czujnik drzwiowy/okienny) i **czujnik ruchu PIR HC-SR501**. Nauczysz się też korzystać z **przerwań sprzętowych** — mechanizmu pozwalającego Arduino natychmiast reagować na zdarzenia zewnętrzne bez nieustannego sprawdzania stanu wejść w pętli głównej.
@@ -89,6 +90,10 @@ Gdy magnes zbliży się do rurki, wewnętrzne styki zamykają się i prąd może
 ### Pierwszy program z kontaktronem
 
 Używamy trybu **INPUT_PULLUP** — wbudowany rezystor podciągający utrzymuje pin 0 w stanie HIGH, gdy kontaktron jest rozwarty (okno otwarte). Zbliżenie magnesu (okno zamknięte) ściąga pin do LOW.
+
+<Callout type="warning" title="Pin 0 to linia RX">
+Pin 0 jest też linią **RX** (odbiór danych z komputera), dlatego w tym układzie nie używamy `Serial`. Jeśli wgrywanie programu kończy się błędem, odsuń magnes od kontaktronu (rozwarty kontaktron nie przeszkadza) albo przepnij kontaktron na wolny pin (np. 4) i zmień numer pinu w kodzie.
+</Callout>
 
 <Code lang="cpp" file="kontaktron-led.ino">
 ```cpp
@@ -132,7 +137,7 @@ Wskazówka: użyj zmiennej logicznej `bool alarmWyzwolony = false;`.
 
 ## 2. Czujnik PIR HC-SR501
 
-PIR (Passive InfraRed — pasywna podczerwień) wykrywa ruch na podstawie zmian promieniowania podczerwonego (ciepła) w polu widzenia. „Pasywny" oznacza, że sam niczego nie emituje — jedynie mierzy różnice temperatury otoczenia. Nawet ciepłe powietrze z uchylonego okna może wyzwolić tańsze modele.
+PIR (Passive InfraRed — pasywna podczerwień) wykrywa ruch na podstawie zmian promieniowania podczerwonego (ciepła) w polu widzenia. „Pasywny” oznacza, że sam niczego nie emituje — jedynie mierzy różnice temperatury otoczenia. Nawet ciepłe powietrze z uchylonego okna może wyzwolić tańsze modele.
 
 <Photo
   file="16.04-pir-czujniki-alarm.jpg"
@@ -243,7 +248,7 @@ Wyprowadzenia czujnika:
 - **GND** → **GND** Arduino
 
 <Callout type="note" title="Dostosuj potencjometry przed pierwszym testem">
-Przed uruchomieniem ustaw Tx w minimum (najkrótszy czas sygnału) i Sx w maksimum (największy zasięg). Ułatwi to testowanie i skróci czas oczekiwania między kolejnymi wykryciami.
+Przed uruchomieniem ustaw Tx w minimum (najkrótszy czas sygnału) i Sx w maksimum (największy zasięg). Ułatwi to testowanie i skróci czas oczekiwania między kolejnymi wykryciami. Po włączeniu zasilania odczekaj ok. 30–60 s — w tym czasie czujnik się stabilizuje i może zgłaszać fałszywe wykrycia.
 </Callout>
 
 <Photo
@@ -330,7 +335,7 @@ Lepszy sposób: prosisz sąsiadkę, żeby patrzyła przez okno i **zapukała**, 
 
 ### Kiedy stosować przerwania
 
-- Gdy program ma `delay()` lub wiele zadań i nie może „czekać" na czujnik.
+- Gdy program ma `delay()` lub wiele zadań i nie może „czekać” na czujnik.
 - Gdy wymagana jest **natychmiastowa** reakcja (alarm, licznik impulsów, enkoder).
 
 ### Kiedy przerwania nie są potrzebne
@@ -384,13 +389,14 @@ Funkcja `digitalPinToInterrupt()` automatycznie przelicza numer pinu na numer pr
 ### Zasady pisania funkcji obsługi przerwania (ISR)
 
 <Callout type="warning" title="Nigdy nie używaj delay() wewnątrz obsługi przerwania!">
-ISR (Interrupt Service Routine — funkcja obsługi przerwania) musi wykonać się **błyskawicznie**. Umieszczenie `delay()` lub `delayMicroseconds()` w ISR **zatrzymuje cały program** na czas jej wykonania. Prowadzi to do nieprzewidywalnego zachowania układu i jest bardzo trudne do debugowania.
+ISR (Interrupt Service Routine — funkcja obsługi przerwania) musi wykonać się **błyskawicznie**. Wewnątrz ISR `delay()` **nie działa poprawnie** (przerwania są wtedy wyłączone, więc `millis()` nie rośnie), a `delayMicroseconds()` **zatrzymuje cały program** na czas oczekiwania. Prowadzi to do nieprzewidywalnego zachowania układu i jest bardzo trudne do debugowania.
 </Callout>
 
 Reguły ISR:
 - Nie przyjmuje argumentów i niczego nie zwraca.
 - Wykonuje się jak najkrócej.
 - **Bezwzględny zakaz** `delay()` i `delayMicroseconds()`.
+- Nie używaj w niej `Serial` — dane odbierane podczas ISR mogą zostać zgubione.
 - Unikaj długich obliczeń i pętli oczekujących.
 
 ## 5. Przykład 1 — przerwanie na wykrycie ruchu
@@ -443,12 +449,12 @@ void alarm() {
 Gdy ISR musi przekazać informację do `loop()`, używamy zmiennej **globalnej** oznaczonej słowem kluczowym `volatile`. Bez `volatile` kompilator może zoptymalizować zmienną do **rejestru procesora** — `loop()` nie zobaczyłaby aktualnej wartości zmienionej przez ISR.
 
 <Callout type="note" title="Słowo kluczowe volatile">
-`volatile` informuje kompilator: „ta zmienna może być zmieniona poza normalnym tokiem programu (np. przez ISR) — zawsze czytaj jej wartość bezpośrednio z **pamięci RAM**, nie korzystaj z wartości zapisanej w **rejestrze procesora**."
+`volatile` informuje kompilator: „ta zmienna może być zmieniona poza normalnym tokiem programu (np. przez ISR) — zawsze czytaj jej wartość bezpośrednio z **pamięci RAM**, nie korzystaj z wartości zapisanej w **rejestrze procesora**.”
 </Callout>
 
 <Expandable title="Głębiej: słowo kluczowe volatile" heading="####">
 
-Kompilator optymalizuje kod, zakładając że **tylko bieżąca funkcja** zmienia lokalne i globalne zmienne. W pętli `loop()` może więc raz odczytać `ileRazy` do **rejestru procesora** i w kolejnych obrotach używać **starej wartości z rejestru** — bez ponownego zajrzenia do pamięci RAM.
+Kompilator optymalizuje kod, zakładając, że **tylko bieżąca funkcja** zmienia lokalne i globalne zmienne. W pętli `loop()` może więc raz odczytać `ileRazy` do **rejestru procesora** i w kolejnych obrotach używać **starej wartości z rejestru** — bez ponownego zajrzenia do pamięci RAM.
 
 Tymczasem ISR (`alarm()`) wykonuje się **w dowolnym momencie** — nawet w środku `loop()`. Dla mikrokontrolera to dwa fragmenty kodu współdzielące jedną zmienną, choć kompilator tego „nie widzi”.
 
@@ -457,9 +463,9 @@ Tymczasem ISR (`alarm()`) wykonuje się **w dowolnym momencie** — nawet w śro
 **Czego `volatile` nie gwarantuje:**
 
 - **Atomowości** — operacja `ileRazy++` to odczyt, dodanie 1 i zapis. ISR może przerwać ją w połowie, jeśli wywołasz ją też w `loop()`.
-- **Bezpieczeństwa złożonych typów** — struktury czy tablice współdzielone z ISR wymagają dodatkowej ostrożności (krótka blokada przerwań: `noInterrupts()` … `interrupts()` albo kopiowanie do zmiennej lokalnej w `loop()`).
+- **Atomowego odczytu typów wielobajtowych i złożonych** — na 8-bitowym UNO `int` (2 bajty) czy `long` (4 bajty) jest odczytywany w kilku krokach, więc ISR może zmienić wartość w połowie odczytu; struktury i tablice tym bardziej. Pomaga krótka blokada przerwań: `noInterrupts()`, skopiowanie wartości do zmiennej lokalnej w `loop()`, `interrupts()`.
 
-**Praktyka w tej lekcji:** ISR tylko inkrementuje prosty licznik (`ileRazy++`), a cała logika LED zostaje w `loop()`. To bezpieczny i czytelny wzorzec na start.
+**Praktyka w tej lekcji:** ISR tylko inkrementuje prosty licznik (`ileRazy++`), a cała logika LED zostaje w `loop()`. To bezpieczny i czytelny wzorzec na start — licznik przyjmuje tu tylko małe wartości (starszy bajt `int` się nie zmienia), więc odczyt bez blokady przerwań w tym szkicu nie sprawia problemów.
 
 </Expandable>
 
@@ -542,12 +548,12 @@ Kolory sygnalizują aktualny poziom zagrożenia:
   height={400}
 />
 
-Jeśli umieścisz `delay(5000)` wewnątrz ISR, **każde wykrycie ruchu zatrzymuje cały program na 5 sekund**. Jeśli w `loop()` masz `delay(1000)`, timing wszystkich operacji zacznie się kumulować i zachowanie układu stanie się nieprzewidywalne — bardzo trudne do debugowania.
+Jeśli umieścisz `delay(5000)` wewnątrz ISR, **nie dostaniesz 5-sekundowej pauzy** — `delay()` w ISR nie działa poprawnie, więc program może się zawiesić albo opóźnienie potrwa zupełnie inaczej, niż zakładasz. Jeśli dodatkowo w `loop()` masz `delay(1000)`, timing wszystkich operacji zacznie się kumulować i zachowanie układu stanie się nieprzewidywalne — bardzo trudne do debugowania.
 
 **Złota zasada:** ISR tylko ustawia flagę lub inkrementuje licznik. Całą logikę (długie obliczenia, wyświetlanie, dźwięki) przenoś do `loop()`.
 
 <Task title="Zadanie 4.3 — alarm po zakończeniu ruchu" estimate="15 min">
-Napisz program, który wyzwala alarm **dopiero gdy ruch przestanie być wykrywany** (nie w momencie wykrycia). Przerwanie powinno reagować na zbocze **opadające** (FALLING), nie rosnące.
+Napisz program, który wyzwala alarm, **dopiero gdy ruch przestanie być wykrywany** (nie w momencie wykrycia). Przerwanie powinno reagować na zbocze **opadające** (FALLING), nie rosnące.
 
 Pamiętaj, że HC-SR501 w trybie retriggering utrzymuje wyjście HIGH przez czas ustawiony przez Tx — ustaw go na minimum przed testowaniem.
 </Task>
@@ -558,4 +564,4 @@ Napisz program, w którym każde wykrycie ruchu **przełącza** stan diody (jeś
 
 ## Podsumowanie
 
-**Kontaktron** działa jak zwykły przycisk z `INPUT_PULLUP` — reaguje na zbliżenie lub odsunięcie magnesu. **Czujnik PIR HC-SR501** wykrywa zmiany temperatury podczerwieni w polu 120°; zasięg i czas sygnału HIGH regulujesz potencjometrami Sx i Tx. Gdy program ma `delay()` lub wiele zadań, sprawdzanie czujnika w `loop()` może przeoczyć krótkie zdarzenia — **przerwanie sprzętowe** (`attachInterrupt()`) gwarantuje natychmiastową reakcję niezależnie od aktywności pętli głównej. Arduino UNO obsługuje przerwania tylko na pinach **2** i **3**. Dobierz tryb wyzwalania do sytuacji: `RISING` dla zbocza rosnącego, `FALLING` dla opadającego, `CHANGE` dla obydwu. Zmienne dzielone między ISR a `loop()` zawsze oznaczaj jako `volatile`. **Nigdy nie używaj `delay()` wewnątrz ISR** — zatrzymuje cały mikrokontroler na czas wykonania funkcji.
+**Kontaktron** działa jak zwykły przycisk z `INPUT_PULLUP` — reaguje na zbliżenie lub odsunięcie magnesu. **Czujnik PIR HC-SR501** wykrywa zmiany promieniowania podczerwonego w polu 120°; zasięg i czas sygnału HIGH regulujesz potencjometrami Sx i Tx. Gdy program ma `delay()` lub wiele zadań, sprawdzanie czujnika w `loop()` może przeoczyć krótkie zdarzenia — **przerwanie sprzętowe** (`attachInterrupt()`) gwarantuje natychmiastową reakcję niezależnie od aktywności pętli głównej. Arduino UNO obsługuje przerwania tylko na pinach **2** i **3**. Dobierz tryb wyzwalania do sytuacji: `RISING` dla zbocza rosnącego, `FALLING` dla opadającego, `CHANGE` dla obydwu. Zmienne dzielone między ISR a `loop()` zawsze oznaczaj jako `volatile`. **Nigdy nie używaj `delay()` wewnątrz ISR** — nie działa tam poprawnie, a każda długa ISR blokuje resztę programu.

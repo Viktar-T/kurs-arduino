@@ -24,20 +24,21 @@ objectives:
   - "Wyjaśnić różnicę między funkcjami setup() a loop()"
   - "Wgrać szkic Blink na płytkę i zaobserwować efekt"
 
-prerequisites: []
+prerequisites:
+  - "dzien-01/arduino-uno-budowa-plytki"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
-  - { name: "Kabel USB-B",     qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Komputer z dostępem do internetu", qty: 1 }
 
 tags: [arduino, ide, blink, setup-loop]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
-  - "Książka B — Arduino dla początkujących, r. 1–2"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=17 (Książka B, r. 1–2)"
 
 publish: true
-updated: "2026-05-11"
+updated: "2026-10-15"
 ---
 
 ## Czego się dziś nauczymy
@@ -59,7 +60,7 @@ sterowników USB (Universal Serial Bus, magistrala szeregowa). Dostęp do intern
    (Windows poprosi o zgodę kilkukrotnie).
 
 <Callout type="warning">
-Nie używaj wersji „Web Editor” na tym kursie — będziemy pracować lokalnie,
+Nie używaj przeglądarkowej wersji „Cloud Editor” (dawniej „Web Editor”) na tym kursie — będziemy pracować lokalnie,
 bez konta i bez chmury.
 </Callout>
 
@@ -68,9 +69,9 @@ bez konta i bez chmury.
 Podłącz Arduino UNO do komputera kablem USB-B. Sprawdź, czy dioda **ON** na
 płytce świeci na zielono — to znak, że płytka jest zasilana.
 
-W IDE: **Narzędzia → Płytka → Arduino UNO**, następnie **Narzędzia → Port**
-i wybierz port szeregowy, pod którym widnieje płytka (zwykle `COM3+` na
-Windows lub `/dev/cu.usbmodem*` na macOS/Linux).
+W IDE: **Narzędzia → Płytka → Arduino AVR Boards → Arduino UNO**, następnie **Narzędzia → Port**
+i wybierz port szeregowy, pod którym widnieje płytka (zwykle `COM3` lub wyższy numer na
+Windows, `/dev/cu.usbmodem*` na macOS lub `/dev/ttyACM0` / `/dev/ttyUSB0` na Linuksie).
 
 <Photo file="03.01-Arduino_IDE_instalacja_blink2-726x320.png" caption="Wybór odpowiedniej płytki Arduino" alt="Wybór odpowiedniej płytki Arduino" />
 
@@ -79,24 +80,24 @@ Windows lub `/dev/cu.usbmodem*` na macOS/Linux).
 Arduino IDE ma dwa kluczowe przyciski w pasku narzędzi:
 
 - **Weryfikuj** (ikona ✓) — kompiluje kod i sprawdza błędy składni, ale **nie wysyła** programu na płytkę. Używaj przed wgraniem, żeby upewnić się, że kod jest poprawny.
-- **Wgraj** (ikona →) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
+- **Wgraj** (ikona →; w polskiej wersji IDE 2.x podpowiedź „Prześlij”) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
 
-<Photo file="03.02-Arduino_IDE_instalacja_blink3.png" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Wgraj" />
+<Photo file="03.02-Arduino_IDE_instalacja_blink3.png" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Prześlij (Wgraj)" />
 
 Jak wgrać program krok po kroku:
 
 1. Upewnij się, że płytka jest podłączona i wybrany jest właściwy port (**Narzędzia → Port**).
 2. Kliknij **Wgraj** (→) lub naciśnij `Ctrl+U` (Windows/Linux) albo `Cmd+U` (macOS).
 3. W dolnym panelu IDE zobaczysz komunikaty kompilacji, a następnie pasek postępu przesyłania.
-4. Komunikat **„Wgrywanie zakończone"** (*Done uploading*) oznacza sukces — płytka automatycznie się resetuje i uruchamia nowy program.
+4. Komunikat **„Przesyłanie zakończone”** (*Done uploading*) w prawym dolnym rogu oznacza sukces — płytka automatycznie się resetuje i uruchamia nowy program.
 
-<Photo file="03.03-Arduino_IDE_instalacja_blink4.png" caption="Program został poprawnie przesłany do Arduino" alt="Komunikat Done uploading w dolnym panelu Arduino IDE" />
+<Photo file="03.03-Arduino_IDE_instalacja_blink4.png" caption="Program został poprawnie przesłany do Arduino" alt="Powiadomienie Przesyłanie zakończone w prawym dolnym rogu Arduino IDE, nad panelem Dane wyjściowe" />
 
 <Callout type="note" title="Diody TX i RX">
-W trakcie wgrywania mrugają diody **TX** (Transmit, nadajnik) i **RX** (Receive, odbiornik) na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Komunikacja odbywa poprzez protokół komunikacji szeregowej **UART** (Universal Asynchronous Receiver-Transmitter). Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź czy wybrałeś właściwy port i płytkę.
+W trakcie wgrywania mrugają diody **TX** (Transmit, nadajnik) i **RX** (Receive, odbiornik) na płytce Arduino — to normalny objaw przesyłania danych przez kabel USB. Komunikacja odbywa się poprzez protokół komunikacji szeregowej **UART** (Universal Asynchronous Receiver-Transmitter). Jeśli mruganie trwa bardzo długo lub pojawia się błąd, sprawdź, czy wybrałeś właściwy port i płytkę.
 </Callout>
 
-Po wgraniu programu dioda LED (Light Emitting Diode, dioda elektroluminescencyjna) na pinie 13 powinna zacząć migać:
+Po wgraniu programu *Blink* (poznasz go w sekcji 5) dioda LED (Light Emitting Diode, dioda elektroluminescencyjna) na pinie 13 powinna zacząć migać:
 
 <Photo file="03.04-Arduino-UNO-pin13-miga.png" caption="Dioda LED na pinie 13 miga — program działa!" alt="Arduino UNO z migającą diodą LED na pinie 13" />
 
@@ -126,17 +127,17 @@ Wpisz lub wklej poniższy kod:
 ```cpp
 // Miga wbudowaną diodą LED na pinie 13.
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT); //Konfiguracja pinu 8 jako wyjście
+  pinMode(LED_BUILTIN, OUTPUT); //Konfiguracja pinu 13 (LED_BUILTIN) jako wyjście
   
   digitalWrite(LED_BUILTIN, HIGH); //Włączenie diody
-  delay(2000); //Odczekanie 1 sekundy
+  delay(2000); //Odczekanie 2 sekund
   digitalWrite(LED_BUILTIN, LOW); //Wyłączenie diody
-  delay(2000); //Odczekanie jednej sekundy
+  delay(2000); //Odczekanie 2 sekund
   
   digitalWrite(LED_BUILTIN, HIGH); //Włączenie diody
-  delay(2000); //Odczekanie 1 sekundy
+  delay(2000); //Odczekanie 2 sekund
   digitalWrite(LED_BUILTIN, LOW); //Wyłączenie diody
-  delay(2000); //Odczekanie jednej sekundy
+  delay(2000); //Odczekanie 2 sekund
 }
 
 void loop() {
@@ -145,9 +146,9 @@ void loop() {
 ```
 </Code>
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,25 Hz (1000 milisekund to 1 sekunda). 
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,25 Hz (1000 milisekund to 1 sekunda). 
 
-Policz ilość migań diody. Następnie naciśnij reset na płytce Arduino. Co się stało po wciśnięciu reset?
+Policz liczbę migań diody. Następnie naciśnij reset na płytce Arduino. Co się stało po wciśnięciu reset?
 
 Wczytaj następny gotowy przykład: **Plik → Przykłady → 01.Basics → Blink**.
 
@@ -168,7 +169,7 @@ void loop() {
 </Code>
 
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać 0,5 Hz.
+Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,5 Hz.
 
 <ExpectedOutput title="Efekt po wgraniu">
 Wbudowana dioda LED na płytce Arduino UNO zapala się na 1 sekundę, gaśnie na
@@ -177,7 +178,7 @@ czerwonych komunikatów o błędach kompilacji.
 </ExpectedOutput>
 
 <Task title="Zadanie 1" estimate="10 min">
-Zmień częstotliwość migania na ok. 4 Hz (dwa razy szybciej w obie strony).
+Zmień częstotliwość migania na 1 Hz (dwa razy szybciej w obie strony).
 Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
 </Task>
 
@@ -186,10 +187,11 @@ Wgraj zmodyfikowany szkic i potwierdź wynik wizualnie.
     - Sprawdź, czy kabel USB przesyła dane, a nie służy tylko do ładowania.
     - Odłącz i podłącz płytkę ponownie, potem otwórz menu **Narzędzia → Port**.
     - Na Windows zaakceptuj instalację sterownika, jeśli system o to poprosi.
+    - Klon UNO z układem CH340 (zamiast ATmega16U2) wymaga sterownika CH340 — jeśli Windows nie zainstaluje go sam, pobierz go ze [strony producenta układu (WCH)](https://www.wch-ic.com/downloads/CH341SER_EXE.html).
   </Issue>
   <Issue title="Program się kompiluje, ale nie wgrywa">
     - Upewnij się, że wybrana jest płytka **Arduino UNO**.
-    - Zamknij Serial Monitor, jeśli jest otwarty na tym samym porcie.
+    - Zamknij Monitor portu szeregowego (lub inny program), jeśli jest otwarty na tym samym porcie.
     - Naciśnij przycisk RESET na płytce i spróbuj wgrać szkic jeszcze raz.
   </Issue>
 </Troubleshooting>

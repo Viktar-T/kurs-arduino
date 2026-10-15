@@ -334,9 +334,9 @@ Polski arkusz kalkulacyjny zapisuje ułamki z przecinkiem, a my wysyłamy kropk�
 
 ### 4.5. Program
 
-Cały projekt to jeden szkic: `stacja_monitoringu.ino`. Arduino IDE trzyma go w folderze o tej samej nazwie, `stacja_monitoringu`. Każda część rozbudowuje ten szkic i pokazuje go **w całości**, a nie tylko zmiany.
+Cały projekt to jeden szkic: `stacja_monitoringu.ino`. Arduino IDE trzyma go w folderze o tej samej nazwie, `stacja_monitoringu`. Części 1–3 rozbudowują ten szkic i pokazują go **w całości**, a nie tylko zmiany.
 
-Na początku szkicu stoją stałe: numery pinów i odstęp między pomiarami. Każda część dopisuje stałe tylko tych czujników, które właśnie podłączamy, ale nazwy i wartości są zawsze takie:
+Na początku szkicu stoją stałe: numery pinów i odstęp między pomiarami. Każda z tych części dopisuje stałe tylko tych czujników, które właśnie podłączamy, ale nazwy i wartości są zawsze takie:
 
 <Code lang="cpp" file="stacja_monitoringu.ino (stałe)">
 ```cpp
@@ -408,7 +408,7 @@ Czujniki analogowe (fotorezystor, potencjometr, LM35) nie zgłaszają błędów.
 
 ## 5. Plan projektu
 
-Projekt ma cztery części. Każda dokłada nowe elementy do tego samego układu, a szkic `stacja_monitoringu.ino` rośnie o kolejne kolumny.
+Projekt ma cztery części. Pierwsze trzy dokładają nowe elementy do tego samego układu, a szkic `stacja_monitoringu.ino` rośnie o kolejne kolumny.
 
 - **[Część 1. Szkielet systemu monitoringu i pierwsze czujniki](/projekty/monitorowanie/01-szkielet-systemu)**
 

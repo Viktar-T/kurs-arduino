@@ -12,10 +12,10 @@ summary: "Sterowanie diodami RGB metodą tradycyjną (3 piny + PWM) — w warian
 
 day: 5
 weekend: 3
-order: 5
+order: 1
 duration: 90
-block: 6
-blockTitle: "PWM, serwomechanizmy, biblioteki"
+block: 12
+blockTitle: "Projekty praktyczne: RGB, syrena, przerwania, PIR, klawiatura, termometry, DHT, HC-SR04, wyświetlacze"
 forbotCourse: 2
 forbotChapter: 2
 
@@ -29,24 +29,26 @@ objectives:
 
 prerequisites:
   - "dzien-03/pwm"
-  - "dzien-02/uart-zmienne"
+  - "dzien-02/typy-danych-zasieg-uart-parseint"
 
 hardware:
   - { name: "Arduino UNO R3", qty: 1 }
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Dioda RGB (wspólna katoda)", qty: 1 }
   - { name: "Dioda RGB (wspólna anoda)", qty: 1 }
-  - { name: "Rezystor 1000 Ω", qty: 6 }
+  - { name: "Rezystor 1 kΩ", qty: 6 }
   - { name: "Moduł WS2812 — linijka 8 LED", qty: 1 }
+  - { name: "Rezystor 470 Ω (300–500 Ω)", qty: 1, note: "w linii danych DIN linijki WS2812" }
+  - { name: "Kondensator elektrolityczny 1000 µF (min. 6,3 V)", qty: 1, note: "między +5V i GND przy linijce WS2812" }
   - { name: "Płytka stykowa", qty: 1 }
-  - { name: "Przewody połączeniowe", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 10 }
 
 tags: [rgb, ws2812, pwm, neopixel, biblioteki, diody-led, animacja]
 sources:
   - "https://forbot.pl/blog/kurs-arduino-ii-diody-rgb-tradycyjne-oraz-ws2812-id15495"
 
 publish: true
-updated: "2026-05-15"
+updated: "2026-10-15"
 ---
 
 Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz prostej sygnalizacji stanu urządzenia zależy nam na efektach wizualnych. W tej lekcji poznamy dwa podejścia do sterowania kolorowymi diodami RGB (Red, Green, Blue):  
@@ -55,7 +57,7 @@ Diody świecące znajdują zastosowanie w każdym projekcie. Często oprócz pro
 
 ## 1. Czym są diody programowalne?
 
-Diody programowalne, nazywane czasem inteligentnymi, mogą być elementami zagadkowymi dla wielu początkujących. Jak objawia się ich „inteligencja"? W każdej diodzie WS2812 producent zamieścił miniaturowy układ sterujący, który potrafi odebrać dane z Arduino przez **jeden przewód sygnałowy** i na ich podstawie ustawić jasność trzech barw (R, G, B). Dzięki temu możemy kontrolować setki diod, używając tylko jednego pinu Arduino.
+Diody programowalne, nazywane czasem inteligentnymi, mogą być elementami zagadkowymi dla wielu początkujących. Jak objawia się ich „inteligencja”? W każdej diodzie WS2812 producent zamieścił miniaturowy układ sterujący, który potrafi odebrać dane z Arduino przez **jeden przewód sygnałowy** i na ich podstawie ustawić jasność trzech barw (R, G, B). Dzięki temu możemy kontrolować setki diod, używając tylko jednego pinu Arduino.
 
 <Photo
   file="14.04-ws2812-animacja.gif"
@@ -71,7 +73,7 @@ Tradycyjna dioda RGB wymaga **3 pinów Arduino** (po jednym na kolor) i 3 rezyst
 
 ## 2. Przygotowanie stanowiska do kursu Arduino
 
-Zanim przejdziemy do diod, warto zadbać o porządek na stanowisku pracy. Na tym etapie kursu używamy zestawu Arduino z podstawką — płytką, do której przymocowana jest zarówno płytka Arduino, jak i płytka stykowa.
+Zanim przejdziemy do diod, warto zadbać o porządek na stanowisku pracy. Wygodnym rozwiązaniem jest podstawka (na zdjęciach — z zestawu Forbot), czyli płytka, do której przymocowana jest zarówno płytka Arduino, jak i płytka stykowa.
 
 <Photo
   file="14.06-podstawka-arduino.jpg"
@@ -113,7 +115,7 @@ Diody RGB (ang. *Red, Green, Blue*) mają w swoim wnętrzu trzy struktury świec
 
 <Photo
   file="14.10-dioda-rgb.jpg"
-  caption="Dioda RGB z bliska — cztery nóżki: masa (wspólna) i po jednej dla każdego koloru."
+  caption="Dioda RGB z bliska — cztery nóżki: wspólna (katoda lub anoda) i po jednej dla każdego koloru."
   alt="Zbliżenie na diodę RGB z czterema wyprowadzeniami"
   width={400}
   height={300}
@@ -133,7 +135,7 @@ Trzy pozostałe nóżki (poza wspólną) odpowiadają kolejno czerwonemu, zielon
 
 To klasyczna pułapka dla początkujących. Wewnątrz diody RGB są trzy osobne struktury świecące (R, G, B), które muszą mieć jedno wspólne wyprowadzenie. Producenci łączą je na **dwa sposoby** — i to decyduje o tym, jak podłączysz diodę oraz jak napiszesz kod. Obie wersje wyglądają **identycznie** (cztery nóżki), więc trzeba wiedzieć, którą masz w ręku.
 
-- **Wspólna katoda (CC, *Common Cathode*)** — trzy diody mają połączone katody (minusy). Najdłuższą, wspólną nóżkę podłączasz do **GND (masy)**. Kolor zapalasz, podając na pin **napięcie** (stan `HIGH`). To wariant intuicyjny — logika „wprost".
+- **Wspólna katoda (CC, *Common Cathode*)** — trzy diody mają połączone katody (minusy). Najdłuższą, wspólną nóżkę podłączasz do **GND (masy)**. Kolor zapalasz, podając na pin **napięcie** (stan `HIGH`). To wariant intuicyjny — logika „wprost”.
 - **Wspólna anoda (CA, *Common Anode*)** — trzy diody mają połączone anody (plusy). Najdłuższą nóżkę podłączasz do **+5V**, a Arduino działa jako ujście prądu do masy (tzw. *sink*) i zamyka obwód. Kolor zapalasz, **ściągając** pin do masy (stan `LOW`). Logika jest **odwrócona**.
 
 <Table
@@ -163,7 +165,7 @@ Co ważne, **różnica w samym podłączeniu jest niewielka**: trzy nóżki kolo
 />
 
 <Callout type="warning" title="Rezystory są obowiązkowe">
-Każdy z trzech kanałów koloru łącz z Arduino przez rezystor **1 kΩ** (lub 220–470 Ω). Bez rezystora prąd ogranicza jedynie samo złącze Arduino i możesz je uszkodzić.
+Każdy z trzech kanałów koloru łącz z Arduino przez rezystor **1 kΩ** (lub 220–470 Ω). Bez rezystora prąd ogranicza jedynie wewnętrzna rezystancja wyjścia Arduino — możesz uszkodzić pin i diodę.
 </Callout>
 
 <Expandable title="Szybki test sprzętowy — którą diodę mam w ręku?" heading="####">
@@ -176,7 +178,7 @@ Jeśli diody pomieszały się w szufladkach, możesz rozpoznać typ bez pisania 
 </Expandable>
 
 <Callout type="note" title="Dwa typy — dwa przykłady kodu">
-W lekcji szkice w treści głównej są napisane dla diody ze **wspólną katodą** (logika wprost: `HIGH` zapala, `analogWrite(255)` to pełna jasność). Pod kluczowymi przykładami znajdziesz rozwijaną sekcję z **osobnym, gotowym szkicem dla wspólnej anody** (logika odwrócona: `LOW` zapala, `analogWrite(0)` to pełna jasność). Jeśli masz diodę ze wspólną anodą, użyj wersji z sekcji „dla wspólnej anody".
+W lekcji szkice w treści głównej są napisane dla diody ze **wspólną katodą** (logika wprost: `HIGH` zapala, `analogWrite(255)` to pełna jasność). Pod kluczowymi przykładami znajdziesz rozwijaną sekcję z **osobnym, gotowym szkicem dla wspólnej anody** (logika odwrócona: `LOW` zapala, `analogWrite(0)` to pełna jasność). Jeśli masz diodę ze wspólną anodą, użyj wersji z sekcji „dla wspólnej anody”.
 </Callout>
 
 ### 3.2 Pierwsze użycie diody RGB
@@ -273,7 +275,7 @@ void loop() {
 </Code>
 </Expandable>
 
-Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, żółty (czerwony + zielony), turkusowy (zielony + niebieski) i biały (wszystkie trzy):
+Po wgraniu szkicu powinieneś zobaczyć kolejno: czerwony, zielony, niebieski, ponownie czerwony, żółty (czerwony + zielony) i biały (wszystkie trzy), a na końcu dioda zgaśnie:
 
 <Table
   rows={[
@@ -316,6 +318,10 @@ Zmodyfikuj szkic, aby uzyskać kolor żółty (czerwony + zielony) i fioletowy (
 ### 3.3 Podłączanie wielu diod RGB
 
 Do jednego Arduino możemy podłączyć wiele tradycyjnych diod RGB — każda potrzebuje swoich pinów. Poniżej przykład z dwiema diodami ze **wspólną katodą** na pinach 3, 5, 6 oraz 9, 10, 11 (przy wspólnej anodzie zamień `HIGH` na `LOW` i odwrotnie):
+
+<Callout type="note" title="Masz dwie diody różnego typu?">
+Zestaw z listy sprzętu zawiera jedną diodę ze wspólną katodą i jedną ze wspólną anodą. Jeśli użyjesz ich razem, wspólną nóżkę każdej podłącz zgodnie z jej typem (katodę do `GND`, anodę do `+5V`), a w kodzie odwróć logikę tylko dla pinów diody ze wspólną anodą: `HIGH` ↔ `LOW`, a w `analogWrite()` zamiast wartości `x` podaj `255 - x`.
+</Callout>
 
 <Schematic
   src="/img/lekcje/14.16-schemat-dwie-diody-rgb.jpg"
@@ -417,7 +423,7 @@ void loop() {
 </Code>
 
 <Expandable title="Ten sam szkic dla wspólnej anody" heading="####">
-Przy wspólnej anodzie każdą wartość jasności odwracamy wzorem `255 − wartość`: tam gdzie katoda dostaje `0`, anoda dostaje `255`, i odwrotnie. Logika mieszania kolorów jest ta sama, zmieniają się tylko liczby przekazane do `analogWrite()`.
+Przy wspólnej anodzie każdą wartość jasności odwracamy wzorem `255 − wartość`: tam, gdzie katoda dostaje `0`, anoda dostaje `255`, i odwrotnie. Logika mieszania kolorów jest ta sama, zmieniają się tylko liczby przekazane do `analogWrite()`.
 
 <Code lang="cpp" file="rgb-mieszanie-kolorow-anoda.ino">
 ```cpp
@@ -658,7 +664,7 @@ Każda dioda WS2812 zawiera miniaturowy sterownik, który:
 2. Odczytuje własny kolor (24 bity: 8 bitów R, 8 G, 8 B).
 3. **Przekazuje dalej** pozostałe dane do następnej diody w szeregu.
 
-Dzięki temu do sterowania 8 (lub 800) diod wystarczy **jeden pin Arduino**.
+Dzięki temu do sterowania 8 (lub nawet kilkuset) diod wystarczy **jeden pin Arduino**.
 
 <Expandable title="Głębiej: jak fizycznie wygląda protokół WS2812 — bit po bicie" heading="####">
 Dlaczego do WS2812 trzeba używać biblioteki zamiast zwykłego `digitalWrite()`? Bo protokół jest **niewiarygodnie wymagający czasowo** — różnica między bitem `0` a bitem `1` to ułamek mikrosekundy.
@@ -679,7 +685,7 @@ Każda dioda potrzebuje **24 bitów** (8 G + 8 R + 8 B — kolejność GRB to ni
 
 `digitalWrite()` w Arduino trwa około **5 µs** — to czterokrotnie dłużej niż cały cykl jednego bitu. **Niemożliwe jest** wygenerowanie tego sygnału klasycznymi funkcjami. Biblioteka **Adafruit NeoPixel** używa precyzyjnie pomierzonych pętli w asemblerze i wyłącza przerwania na czas wysyłania, żeby `millis()` ani inne timery nie zaburzyły taktu.
 
-Dlatego podczas `linijka.show()` wszystkie przerwania są zablokowane — i dlatego `delay()` opartego na `millis()` nie powinieneś używać tuż przed `show()` w precyzyjnych systemach czasu rzeczywistego.
+Dlatego podczas `linijka.show()` wszystkie przerwania są zablokowane — przy długich paskach i częstym wywoływaniu `show()` licznik `millis()` może się spóźniać, a dane odbierane w tym czasie przez UART mogą zostać zgubione.
 </Expandable>
 
 ### 4.1 Podłączenie diod WS2812
@@ -696,7 +702,7 @@ Najważniejsze jest czytanie oznaczeń bezpośrednio na module. Różne linijki 
     ["GND / -", "Masa układu", "GND Arduino i masa płytki stykowej"],
     ["5V / VCC / VIN / +", "Dodatnia szyna zasilania", "+5V z Arduino lub zewnętrznego zasilacza 5 V"],
     ["DIN / Data IN", "Wejście danych do pierwszej diody", "Pin A0 Arduino przez rezystor 300–500 Ω"],
-    ["DOUT / Data OUT", "Wyjście danych do kolejnego modułu. Na górze diody WS2812", "Nie podłączamy w tym ćwiczeniu"],
+    ["DOUT / Data OUT", "Wyjście danych do kolejnego modułu (na drugim końcu linijki niż DIN)", "Nie podłączamy w tym ćwiczeniu"],
   ]}
 />
 
@@ -706,7 +712,7 @@ Podłączaj układ w bezpiecznej kolejności:
 2. Włóż linijkę WS2812 w płytkę stykową.
 3. Połącz **GND** modułu z masą układu.
 4. Połącz pin zasilania modułu z szyną **+5V**.
-5. Wstaw kondensator elektrolityczny około **100 µF** między **+5V** i **GND** możliwie blisko modułu.
+5. Wstaw kondensator elektrolityczny około **1000 µF** między **+5V** i **GND** możliwie blisko modułu — nóżką „−” (oznaczoną paskiem na obudowie) do GND.
 6. Połącz pin A0 Arduino z wejściem **DIN** przez rezystor z zakresu **300–500 Ω**.
 7. Dopiero na końcu podłącz Arduino do komputera.
 
@@ -715,7 +721,7 @@ Sygnał z Arduino musi trafić do wejścia **DIN** pierwszej diody. Pin **DOUT**
 </Callout>
 
 <Callout type="tip" title="Rezystor i kondensator chronią układ">
-Rezystor w linii danych tłumi krótkie zakłócenia na przewodzie sygnałowym. Jeśli nie masz rezystora 470 Ω, możesz użyć wartości zbliżonej z zakresu 300–500 Ω; dwa rezystory 1 kΩ połączone równolegle dadzą około 500 Ω. Kondensator 100 µF między +5V i GND pomaga przy nagłych zmianach poboru prądu, np. gdy wiele diod jednocześnie świeci jasno.
+Rezystor w linii danych tłumi krótkie zakłócenia na przewodzie sygnałowym. Jeśli nie masz rezystora 470 Ω, możesz użyć wartości zbliżonej z zakresu 300–500 Ω; dwa rezystory 1 kΩ połączone równolegle dadzą około 500 Ω. Kondensator 1000 µF między +5V i GND pomaga przy nagłych zmianach poboru prądu, np. gdy wiele diod jednocześnie świeci jasno.
 </Callout>
 
 <Schematic
@@ -735,7 +741,7 @@ Rezystor w linii danych tłumi krótkie zakłócenia na przewodzie sygnałowym. 
 />
 
 <Callout type="warning" title="Pobór prądu WS2812">
-Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to aż **480 mA** — znacznie więcej niż może dostarczyć pin USB Arduino (500 mA dla całej płytki). Przy intensywnych efektach świetlnych stosuj zewnętrzne zasilanie 5 V.
+Każda dioda WS2812 przy pełnej bieli pobiera ok. **60 mA**. Linijka 8 diod to aż **480 mA** — prawie cały limit portu USB (ok. 500 mA dla całej płytki razem z samym Arduino). Przy intensywnych efektach świetlnych stosuj zewnętrzne zasilanie 5 V i połącz masę zasilacza z GND Arduino (wspólna masa).
 </Callout>
 
 ### 4.2 Instalacja biblioteki Adafruit NeoPixel
@@ -750,13 +756,13 @@ Komunikację z WS2812 obsługuje biblioteka **Adafruit NeoPixel**. Zainstalujemy
   height={450}
 />
 
-**W przypadku Arduino IDE pobranego z Arduino.cc (zalecane):**
+**Przez menedżer bibliotek (zalecane):**
 
 1. Otwórz **Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami…**
 2. Wyszukaj `Adafruit NeoPixel`.
 3. Zainstaluj **Adafruit NeoPixel** (autor: Adafruit).
 
-**W przypadku Arduino IDE pobranego z Arduino.org:**
+**Instalacja ręczna z pliku ZIP (alternatywa):**
 
 Pobierz bibliotekę ręcznie z repozytorium GitHub Adafruit NeoPixel:
 
@@ -793,7 +799,7 @@ Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   linijka.begin(); // Inicjalizacja — wymagana przed użyciem
-  linijka.show();  // Zgasza wszystkie diody (czysty stan startowy)
+  linijka.show();  // Gasi wszystkie diody (czysty stan startowy)
 }
 
 void loop() {
@@ -841,7 +847,7 @@ Adafruit_NeoPixel linijka = Adafruit_NeoPixel(8, A0, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   linijka.begin(); // Inicjalizacja
-  linijka.show();  // Zgasza wszystkie diody
+  linijka.show();  // Gasi wszystkie diody
 
   linijka.setPixelColor(0, linijka.Color(0, 255, 0)); // Dioda nr 1 świeci na zielono
   linijka.show(); // Teraz dane są wysłane i dioda zaświeci
@@ -861,7 +867,7 @@ W bibliotece NeoPixel (i w C++ ogólnie) tablice i kolekcje numerowane są od **
 
 ## 5. Sygnalizator alarmowy
 
-<Task title="Zadanie 1: sygnalizator alarmowy" estimate="10 min">
+<Task title="Zadanie 3: sygnalizator alarmowy" estimate="10 min">
 Zbuduj na linijce WS2812 sygnalizator alarmowy w kilku linijkach kodu. Szkic ma **jednocześnie** zmieniać kolor wszystkich 8 diod między czerwonym a niebieskim, naśladując sygnał policyjny.
 </Task>
 
@@ -897,9 +903,9 @@ void loop() {
 
 </Expandable>
 
-## Sygnalizator — wersja sekwencyjna
+## 6. Sygnalizator — wersja sekwencyjna
 
-<Task title="Zadanie 2: sygnalizator sekwencyjny" estimate="10 min">
+<Task title="Zadanie 4: sygnalizator sekwencyjny" estimate="10 min">
 Bardziej realistyczny efekt uzyskamy, **zapalając diody kolejno** zamiast wszystkich naraz. Zmodyfikuj szkic sygnalizatora tak, aby diody 0–3 zapalały się na czerwono, a diody 4–7 na niebiesko, jedna po drugiej, z krótkim opóźnieniem po każdej diodzie.
 </Task>
 
@@ -942,7 +948,7 @@ void loop() {
 
 </Expandable>
 
-<Task title="Zadanie 3" estimate="15 min">
+<Task title="Zadanie 5" estimate="15 min">
 Zmodyfikuj sygnalizator sekwencyjny tak, aby:
 1. Pierwsza połowa diod (0–3) zapalała się na czerwono od lewej do prawej.
 2. Druga połowa (4–7) zapalała się na niebiesko od prawej do lewej.
@@ -951,7 +957,7 @@ Zmodyfikuj sygnalizator sekwencyjny tak, aby:
 **Wskazówka:** Użyj dwóch oddzielnych pętli `for` — jedna z `i++`, druga z `i--`.
 </Task>
 
-<Expandable title="Przykład rozwiązania Zadania 3" heading="####">
+<Expandable title="Przykład rozwiązania Zadania 5" heading="####">
 
 <Code lang="cpp" file="sygnalizator-sekwencja-dwa-kierunki.ino">
 ```cpp
@@ -995,19 +1001,19 @@ Stwórz animację tęczy na linijce WS2812:
 - W każdym obiegu pętli przesuń kolory o jedną pozycję w lewo (dioda 0 dostaje kolor diody 1, dioda 1 kolor diody 2 itd., a dioda 7 — kolor diody 0).
 - Dodaj `delay(100)` na końcu pętli.
 
-Efekt: "jadąca tęcza" na linijce.
+Efekt: „jadąca tęcza” na linijce.
 
 </MiniProject>
 
 <Callout type="tip" title="Jak używać Pomocnika AI do nauki programowania">
 Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI:
 
-- **Generowanie animacji NeoPixel** — poproś AI: „Napisz szkic Arduino z animacją tęczy dla paska 8 diod WS2812 używając biblioteki Adafruit NeoPixel. Skomentuj każdy krok". Gotowy kod możesz od razu wgrać i zobaczyć efekt.
-- **Protokół WS2812 pod maską** — zapytaj AI: „Jak fizycznie wygląda protokół sygnałowy WS2812 — jak bit 0 i bit 1 różnią się czasowo?". Zrozumienie protokołu pozwoli ocenić, dlaczego biblioteka jest niezbędna i co by się stało bez niej.
-- **Obliczanie kolorów RGB** — opisz kolor słowami: „Jaki kod RGB daje ciepłą barwę bursztynową? Podaj wartości R, G, B". Eksperymentuj z kolorami, prosząc AI o mieszanie barw i wyjaśnienia percepcji kolorów przez człowieka.
+- **Generowanie animacji NeoPixel** — poproś AI: „Napisz szkic Arduino z animacją tęczy dla paska 8 diod WS2812, używając biblioteki Adafruit NeoPixel. Skomentuj każdy krok”. Gotowy kod możesz od razu wgrać i zobaczyć efekt.
+- **Protokół WS2812 pod maską** — zapytaj AI: „Jak fizycznie wygląda protokół sygnałowy WS2812 — jak bit 0 i bit 1 różnią się czasowo?”. Zrozumienie protokołu pozwoli ocenić, dlaczego biblioteka jest niezbędna i co by się stało bez niej.
+- **Obliczanie kolorów RGB** — opisz kolor słowami: „Jaki kod RGB daje ciepłą barwę bursztynową? Podaj wartości R, G, B”. Eksperymentuj z kolorami, prosząc AI o mieszanie barw i wyjaśnienia percepcji kolorów przez człowieka.
 </Callout>
 
-## 6. Kiedy diody tradycyjne, a kiedy programowalne?
+## 7. Kiedy diody tradycyjne, a kiedy programowalne?
 
 <Table
   caption="Porównanie tradycyjnych diod RGB i diod WS2812"
@@ -1015,7 +1021,7 @@ Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI
   rows={[
     ["Liczba pinów Arduino", "3 piny na diodę", "1 pin na całą linijkę"],
     ["Rezystory", "Konieczne (3 szt. na diodę)", "Zalecany rezystor w linii danych"],
-    ["Adresowanie diod", "Nie — wszystkie reagują tak samo", "Tak — każda niezależnie"],
+    ["Adresowanie diod", "Nie — każda dioda wymaga osobnych pinów", "Tak — każda niezależnie"],
     ["Biblioteka", "Nie potrzeba", "Wymagana (NeoPixel)"],
     ["Koszt", "Niski", "Wyższy"],
     ["Kiedy używać", "1–2 diody, prosta sygnalizacja", "Wiele diod, animacje, efekty wizualne"],
@@ -1024,10 +1030,10 @@ Diody RGB i WS2812 to wdzięczny temat do twórczych eksperymentów z pomocą AI
 
 Jeśli projekt wymaga tylko jednej lub dwóch diod do sygnalizacji stanu — tradycyjna RGB jest prostsza i tańsza. Jeśli jednak zależy nam na wielu diodach RGB lub efektach świetlnych, WS2812 jest zdecydowanie wygodniejszym wyborem.
 
-<Expandable title='Głębiej: korekcja gamma — dlaczego `analogWrite(64)` nie jest „połową jasności"' heading="####">
+<Expandable title='Głębiej: korekcja gamma — dlaczego analogWrite(128) nie jest „połową jasności”' heading="####">
 Programujesz płynne rozjaśnianie LED od `0` do `255` w równych krokach co `10`. Oczekujesz liniowego efektu — a tymczasem oko widzi, że dioda **gwałtownie skacze** w pierwszej połowie i ledwo się zmienia w drugiej. Dlaczego?
 
-Powód leży w **nieliniowości ludzkiego wzroku** — opisuje ją tzw. **krzywa gamma**. Nasze oko jest dużo bardziej czułe na zmiany w zakresie niskiej jasności niż wysokiej. Dlatego percepcyjna „połowa jasności" odpowiada wartości PWM około **`64`–`73`**, a nie `128`.
+Powód leży w **nieliniowości ludzkiego wzroku** — opisuje ją tzw. **krzywa gamma**. Nasze oko jest dużo bardziej czułe na zmiany w zakresie niskiej jasności niż wysokiej. Dlatego percepcyjna „połowa jasności” odpowiada wartości PWM około **`55`** (dla typowego `γ = 2,2`), a nie `128`.
 
 Rozwiązanie to **korekcja gamma** — zamiast wysyłać `wartosc` bezpośrednio do `analogWrite()`, transformujesz ją przez potęgę (zwykle `γ = 2,2` lub `2,8`):
 
@@ -1044,9 +1050,9 @@ analogWrite(LED, gammaKorekta(linearWartosc));
 
 W praktyce zamiast liczyć `pow()` w czasie pracy, używa się **wstępnie obliczonej tablicy 256 wartości** w pamięci PROGMEM. Biblioteka Adafruit NeoPixel ma wbudowane funkcje `gamma8()` i `gamma32()` — wystarczy `linijka.setPixelColor(i, linijka.gamma32(linijka.Color(r, g, b)))`.
 
-Bez korekcji gamma efekt płynnej tęczy lub oddychającej diody wygląda „kanciasto". Z korekcją — naprawdę płynnie. To pierwszy poziom dobrego efektu świetlnego.
+Bez korekcji gamma efekt płynnej tęczy lub oddychającej diody wygląda „kanciasto”. Z korekcją — naprawdę płynnie. To pierwszy poziom dobrego efektu świetlnego.
 </Expandable>
 
 ## Podsumowanie
 
-Tradycyjna dioda RGB wymaga trzech pinów PWM i trzech rezystorów — za to jest prosta i nie wymaga żadnej biblioteki. Przez `analogWrite()` w zakresie 0–255 na każdym kanale R, G, B możemy uzyskać dowolny kolor świetlny. Pamiętaj o dwóch wariantach: dioda ze **wspólną katodą** ma wspólną nóżkę przy `GND` i logikę „wprost" (`HIGH`/`255` zapala), a dioda ze **wspólną anodą** ma wspólną nóżkę przy `+5V` i logikę odwróconą (`LOW`/`0` zapala). Dla każdego typu masz w lekcji osobny, gotowy szkic — wersję dla anody znajdziesz w rozwijanych sekcjach pod przykładami. Dioda programowalna WS2812 idzie o krok dalej: wbudowany sterownik pozwala adresować każdą diodę z osobna przez jeden przewód danych i bibliotekę NeoPixel. Kluczowe do zapamiętania: zawsze po `setPixelColor()` wywołuj `show()`, inaczej zmiany nie trafią do diod. Przy intensywnych efektach świetlnych na wielu diodach WS2812 korzystaj z zewnętrznego zasilania 5 V — każda dioda przy pełnej bieli pobiera nawet 60 mA.
+Tradycyjna dioda RGB wymaga trzech pinów PWM i trzech rezystorów — za to jest prosta i nie wymaga żadnej biblioteki. Przez `analogWrite()` w zakresie 0–255 na każdym kanale R, G, B możemy uzyskać dowolny kolor świetlny. Pamiętaj o dwóch wariantach: dioda ze **wspólną katodą** ma wspólną nóżkę przy `GND` i logikę „wprost” (`HIGH`/`255` zapala), a dioda ze **wspólną anodą** ma wspólną nóżkę przy `+5V` i logikę odwróconą (`LOW`/`0` zapala). Dla każdego typu masz w lekcji osobny, gotowy szkic — wersję dla anody znajdziesz w rozwijanych sekcjach pod przykładami. Dioda programowalna WS2812 idzie o krok dalej: wbudowany sterownik pozwala adresować każdą diodę z osobna przez jeden przewód danych i bibliotekę NeoPixel. Kluczowe do zapamiętania: zawsze po `setPixelColor()` wywołuj `show()`, inaczej zmiany nie trafią do diod. Przy intensywnych efektach świetlnych na wielu diodach WS2812 korzystaj z zewnętrznego zasilania 5 V — każda dioda przy pełnej bieli pobiera nawet 60 mA.
