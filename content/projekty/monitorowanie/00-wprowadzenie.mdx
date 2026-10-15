@@ -1,0 +1,450 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Projekt Monitorowanie: budujemy system monitoringu na Arduino"
+slug: "wprowadzenie"
+summary: "Projekt na zakończenie kursu: budujemy biurkowy model systemu monitoringu instalacji odnawialnych źródeł energii — od czujników, przez Arduino UNO i przesył danych kablem USB, po plik CSV na komputerze. Ta strona opisuje cel projektu, potrzebne elementy, specyfikację systemu i plan czterech części."
+
+project: "monitorowanie"
+projectTitle: "Monitorowanie"
+part: 0
+order: 0
+duration: 45
+
+objectives:
+  - "Wyjaśnić, z czego składa się system monitoringu instalacji OZE i jak płyną w nim dane"
+  - "Dopasować każdy element naszego układu do jego odpowiednika w prawdziwej instalacji"
+  - "Odczytać specyfikację systemu: piny, rytm pomiarów, przeliczenia i format linii danych"
+  - "Skompletować elementy i zaplanować połączenia na płytce stykowej"
+  - "Opisać, co dodaje każda z czterech części projektu"
+
+prerequisites:
+  - "/lekcje/dzien-01/03-srodowisko-ide"
+  - "/lekcje/dzien-01/04-podstawy-prog-porty-io"
+  - "/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne"
+  - "/lekcje/dzien-02/06.02-UART-zmienne"
+  - "/lekcje/dzien-02/07-Przetwornik-ADC"
+  - "/lekcje/dzien-03/09-Kontynuacja-uart-serwomechanizmy"
+  - "/lekcje/dzien-04/12.01-funkcje-wlasne"
+  - "/lekcje/dzien-04/13.01-miniProject"
+  - "/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis"
+  - "/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20"
+  - "/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11"
+
+hardware:
+  - { name: "Arduino UNO R3", qty: 1 }
+  - { name: "Kabel USB-A — USB-B", qty: 1 }
+  - { name: "Płytka stykowa", qty: 1 }
+  - { name: "Przewody połączeniowe", qty: 20 }
+  - { name: "Fotorezystor", qty: 1 }
+  - { name: "Rezystor 10 kΩ", qty: 1, note: "do dzielnika napięcia z fotorezystorem" }
+  - { name: "Potencjometr 10 kΩ", qty: 1 }
+  - { name: "Czujnik temperatury LM35", qty: 1 }
+  - { name: "Czujnik temperatury DS18B20 (obudowa TO-92)", qty: 2 }
+  - { name: "Czujnik wilgotności DHT11", qty: 1 }
+  - { name: "Rezystor 4,7 kΩ", qty: 2, note: "jeden do linii 1-Wire, drugi do linii danych DHT11" }
+
+tags: [projekt, monitoring, oze, fotowoltaika, czujniki, uart, csv, millis, lm35, ds18b20, dht11]
+sources:
+  - "https://www.ti.com/lit/ds/symlink/lm35.pdf"
+  - "https://www.analog.com/en/products/ds18b20.html"
+  - "https://cdn.sparkfun.com/datasheets/Sensors/Temp/DS18B20.pdf"
+  - "https://forbot.pl/blog/wp-content/uploads/2017/02/DHT11.pdf"
+  - "https://www.pjrc.com/teensy/td_libs_OneWire.html"
+  - "https://github.com/milesburton/Arduino-Temperature-Control-Library"
+  - "https://github.com/markruys/arduino-DHT"
+  - "https://github.com/adafruit/DHT-sensor-library"
+  - "https://docs.arduino.cc/language-reference/en/functions/analog-io/analogRead/"
+  - "https://docs.arduino.cc/language-reference/en/functions/time/millis/"
+  - "https://docs.arduino.cc/language-reference/en/functions/communication/serial/print/"
+  - "https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/Print.cpp"
+
+publish: true
+updated: "2026-10-15"
+---
+
+Ten projekt zamyka kurs. Zbudujesz w nim mały **system monitoringu**, czyli układ, który bez przerwy mierzy, co dzieje się w urządzeniu, i zapisuje wyniki. Czujniki mierzą, Arduino UNO zbiera pomiary i wysyła je kablem USB do komputera, a komputer zapisuje je w pliku. Projekt ma cztery części. Ta strona jest jego mapą: mówi, co budujemy i po co, czego potrzebujesz i jakich zasad trzyma się każda część.
+
+<Callout type="note" title="Dla kogo jest ten projekt">
+Projekt opiera się wyłącznie na lekcjach tego kursu. Nie musisz znać się na energetyce ani na automatyce przemysłowej: każde nowe pojęcie wyjaśniamy przy pierwszym użyciu. Wystarczą lekcje wymienione w rozdziale 2.
+</Callout>
+
+## 1. Co budujemy i po co
+
+**Odnawialne źródła energii** (w skrócie **OZE**) to między innymi farmy fotowoltaiczne, farmy wiatrowe i magazyny energii. Farma fotowoltaiczna to setki albo tysiące paneli, czyli **modułów PV**, które zamieniają światło słoneczne na prąd. Farma wiatrowa robi to samo z wiatrem, za pomocą turbin. **Magazyn energii** to akumulatory zamknięte w kontenerze: ładują się, gdy prądu jest za dużo, i oddają go, gdy go brakuje.
+
+Takie instalacje zwykle pracują bez obsługi, często daleko od ludzi. Żeby wiedzieć, czy wszystko pracuje poprawnie, mają **system monitoringu**. Dane przechodzą w nim przez pięć etapów:
+
+1. **Czujniki mierzą.** Czujnik to element, który zamienia wielkość fizyczną, na przykład temperaturę, na sygnał elektryczny. Na farmie mierzy się m.in. nasłonecznienie, prędkość wiatru, temperatury i wilgotność.
+2. **Sterownik zbiera pomiary.** Najczęściej jest to **sterownik PLC** (ang. *Programmable Logic Controller*, programowalny sterownik logiczny), czyli odporny komputer przemysłowy, albo **rejestrator danych** (ang. *data logger*): urządzenie, które zapisuje pomiary w równych odstępach czasu.
+3. **Dane płyną do dyspozytorni.** Dyspozytornia to pomieszczenie, z którego obsługa nadzoruje instalację, nawet z odległości wielu kilometrów.
+4. **Operator ogląda dane.** Widzi je na ekranach systemu **SCADA** (ang. *Supervisory Control And Data Acquisition*, czyli nadzór, sterowanie i zbieranie danych): liczby, wykresy i alarmy.
+5. **Archiwum przechowuje pomiary.** Dzięki niemu można później sprawdzić, kiedy zaczęła się awaria albo dlaczego instalacja dała mniej energii niż zwykle.
+
+My zbudujemy biurkową wersję tego samego łańcucha.
+
+<Schematic
+  src="/img/projekty/monitorowanie/00.01-przeplyw-danych.svg"
+  caption="Droga danych w naszym systemie. W każdym bloku, kursywą: jego odpowiednik w instalacji OZE."
+  alt="Schemat blokowy: czujniki, Arduino UNO, komputer z Monitorem portu szeregowego i Serial Plotterem, plik CSV, połączone strzałkami; przy każdym bloku jego odpowiednik w instalacji OZE"
+  width={420}
+  height={540}
+/>
+
+Każdy element naszego układu ma odpowiednik w prawdziwej instalacji:
+
+<Table
+  caption="Nasz system a prawdziwa instalacja OZE"
+  headers={["W naszym systemie", "W prawdziwej instalacji OZE"]}
+  rows={[
+    ["Fotorezystor", "Pyranometr, czyli czujnik natężenia promieniowania słonecznego. Mierzy się je w W/m² (watach na metr kwadratowy). Nasz fotorezystor jest tylko wskaźnikiem „jaśniej–ciemniej”: nie jest skalibrowany i nie poda wyniku w W/m²."],
+    ["Potencjometr", "Czujnik prędkości wiatru (anemometr) z wyjściem napięciowym 0–5 V. U nas „wiatr” ustawiasz ręką, kręcąc pokrętłem."],
+    ["LM35", "Termometr w szafie falownika. Falownik zamienia prąd stały z paneli na prąd przemienny dla sieci i przy tym się nagrzewa. Przegrzany ogranicza moc albo się wyłącza."],
+    ["Dwa czujniki DS18B20", "Temperatura tylnej strony modułu PV i temperatura otoczenia. Nagrzany panel daje mniej energii, dlatego obie temperatury porównuje się ze sobą."],
+    ["DHT11", "Wilgotność w szafie falownika albo w kontenerze z magazynem energii. Skroplona woda powoduje korozję i zwarcia w elektronice."],
+    ["Arduino UNO", "Sterownik PLC albo rejestrator danych."],
+    ["Monitor portu szeregowego i Serial Plotter", "Ekran systemu SCADA w dyspozytorni."],
+    ["Plik CSV", "Archiwum danych."],
+  ]}
+/>
+
+<Callout type="warning" title="To model, nie zabezpieczenie">
+Nasz układ pokazuje, jak działa monitoring, ale nie nadaje się do pilnowania prawdziwej instalacji. Czujniki z kursu są proste i mało dokładne (np. DHT11 mierzy temperaturę z dokładnością ±2 °C), a fotorezystor nie jest w ogóle skalibrowany. Nota katalogowa DHT11 (dokument z parametrami elementu) zastrzega wprost, że czujnika nie wolno używać w urządzeniach bezpieczeństwa ani tam, gdzie jego awaria może kogoś narazić na obrażenia.
+</Callout>
+
+## 2. Co musisz umieć wcześniej
+
+Projekt korzysta tylko z tego, co już znasz z kursu. Jeśli któraś lekcja jest Ci obca, wróć do niej przed rozpoczęciem danej części.
+
+<Prerequisites title="Lekcje, z których korzysta projekt">
+
+**Do części 1 (szkielet systemu):**
+
+- [Środowisko Arduino IDE i pierwszy szkic](/lekcje/dzien-01/03-srodowisko-ide) — tworzenie szkicu i wgrywanie go na płytkę.
+- [Podstawy programowania i porty I/O](/lekcje/dzien-01/04-podstawy-prog-porty-io) — `setup()`, `loop()`, `pinMode()` i `digitalWrite()`; wbudowana dioda posłuży za sygnał życia systemu.
+- [UART — komunikacja z PC i zmienne](/lekcje/dzien-02/06.01-UART-(komunikacja-z-PC)-zmienne) — `Serial.begin(9600)`, Monitor portu szeregowego i stałe zamiast „magicznych liczb”.
+- [Typy danych, zasięg zmiennych i liczby przez UART](/lekcje/dzien-02/06.02-UART-zmienne) — typy `int`, `float` i `unsigned long`, rzutowanie typów i pułapka dzielenia całkowitego.
+- [Przetwornik ADC — pomiar napięcia](/lekcje/dzien-02/07-Przetwornik-ADC) — `analogRead()`, potencjometr, dzielnik napięcia z fotorezystorem i przeliczanie odczytu na wolty.
+- [Kontynuacja UART i serwomechanizmy](/lekcje/dzien-03/09-Kontynuacja-uart-serwomechanizmy) — liczba miejsc po przecinku w `Serial.print()` i różnica między `print()` a `println()`.
+- [Własne funkcje w C++](/lekcje/dzien-04/12.01-funkcje-wlasne) — funkcje zwracające wynik; każdy czujnik dostanie własną funkcję pomiarową.
+- [Wykresy i warunki — ciąg dalszy](/lekcje/dzien-04/13.01-miniProject) — Serial Plotter i kilka serii danych na jednym wykresie.
+- [Wielozadaniowość — opóźnienia z millis()](/lekcje/dzien-07/21-Wielozadaniowosc-opoznienia-z-millis) — `millis()` i pomiary w równym rytmie bez `delay()`.
+
+**Do części 2 (temperatura):**
+
+- [Termometry analogowe LM35 i cyfrowe DS18B20](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20) — LM35 na wejściu analogowym, DS18B20 na linii 1-Wire oraz biblioteki OneWire i DallasTemperature.
+
+**Do części 3 (wilgotność):**
+
+- [Cyfrowy czujnik wilgotności DHT11](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11) — podłączenie z rezystorem 4,7 kΩ i biblioteka DHT Marka Ruysa.
+
+Część 4 nie wymaga nowej lekcji: korzysta z układu i programu z części 1–3.
+
+</Prerequisites>
+
+## 3. Elementy
+
+Wszystkie elementy znasz z lekcji. Zbierz je przed częścią 1 i trzymaj razem, bo układ będzie rósł przez cały projekt.
+
+<Hardware
+  title="Elementy projektu"
+  items={[
+    { name: "Arduino UNO R3", qty: 1 },
+    { name: "Kabel USB-A — USB-B", qty: 1 },
+    { name: "Płytka stykowa", qty: 1, note: "najlepiej duża, z szynami zasilania po obu stronach" },
+    { name: "Przewody połączeniowe", qty: 20 },
+    { name: "Fotorezystor", qty: 1 },
+    { name: "Rezystor 10 kΩ", qty: 1, note: "do dzielnika napięcia z fotorezystorem" },
+    { name: "Potencjometr 10 kΩ", qty: 1 },
+    { name: "Czujnik temperatury LM35", qty: 1 },
+    { name: "Czujnik temperatury DS18B20 (obudowa TO-92)", qty: 2 },
+    { name: "Czujnik wilgotności DHT11", qty: 1 },
+    { name: "Rezystor 4,7 kΩ", qty: 2, note: "jeden do linii 1-Wire, drugi do linii danych DHT11" },
+  ]}
+/>
+
+{/* SCHEMAT: zdjęcie wszystkich elementów projektu ułożonych obok siebie; LM35 i DS18B20 płaską stroną do góry, tak żeby było widać napisy na obudowach */}
+
+<Callout type="warning" title="Sprawdź, czy masz dwa rezystory 4,7 kΩ">
+W lekcjach 19 i 20 każdy czujnik cyfrowy potrzebował jednego rezystora 4,7 kΩ, ale każdy w osobnym układzie. Tutaj oba pracują jednocześnie. Jeden jest **rezystorem podciągającym** linię 1-Wire obu czujników DS18B20: łączy ją z 5 V, żeby w spoczynku miała stan wysoki. Drugi robi to samo z linią danych DHT11. Rezystor 4,7 kΩ rozpoznasz po paskach: żółty, fioletowy, czerwony (rezystor z czterema paskami) albo żółty, fioletowy, czarny, brązowy (z pięcioma paskami); ostatni pasek oznacza tolerancję. Jeśli Twój DHT11 jest przylutowany do małej płytki z trzema pinami (moduł), rezystor zwykle jest już na tej płytce i drugi rezystor nie jest potrzebny.
+</Callout>
+
+## 4. Specyfikacja systemu
+
+<Callout type="note" title="Specyfikacja: wspólna umowa wszystkich części">
+Specyfikacja to zbiór ustaleń, których trzyma się cały projekt: które piny, jak często mierzymy, jak przeliczamy odczyty i jak wygląda linia danych. Części 1–4 odwołują się do tego rozdziału. Nie zmieniaj tych ustaleń w trakcie projektu. Wtedy program z każdej części zadziała z układem złożonym w poprzednich częściach, a plik CSV na końcu będzie miał zawsze ten sam układ kolumn.
+</Callout>
+
+### 4.1. Piny i połączenia
+
+<Pinout
+  board="Arduino UNO"
+  pins={[
+    { pin: "A0", function: "Światło: dzielnik napięcia z fotorezystorem", note: "5V → fotorezystor → A0 → rezystor 10 kΩ → GND" },
+    { pin: "A1", function: "Wiatr: środkowa nóżka (suwak) potencjometru", note: "skrajne nóżki do 5V i GND" },
+    { pin: "A2", function: "Temperatura w szafie: wyjście LM35", note: "środkowa nóżka LM35" },
+    { pin: "D2", function: "Wilgotność i temperatura: linia danych DHT11", note: "rezystor 4,7 kΩ do 5V, jak w lekcji 20" },
+    { pin: "D3", function: "Temperatura modułu i otoczenia: linia 1-Wire obu DS18B20", note: "jeden rezystor 4,7 kΩ do 5V na całą linię" },
+    { pin: "D13", function: "Sygnał życia: wbudowana dioda L", note: "zmienia stan przy każdym pomiarze: 2 s świeci, 2 s nie świeci" },
+    { pin: "A4, A5", function: "Wolne", note: "zostawiamy na magistralę I²C, np. dla wyświetlacza" },
+    { pin: "D0, D1", function: "Zajęte przez UART", note: "komunikacja z komputerem; nic tu nie podłączaj" },
+  ]}
+/>
+
+Dlaczego właśnie tak? Czujniki, które dają napięcie (fotorezystor w dzielniku, potencjometr, LM35), trafiają na wejścia analogowe A0–A2. Czujniki cyfrowe (DHT11 i DS18B20) dostają piny cyfrowe 2 i 3. Piny A4 i A5 zostają wolne, bo na Arduino UNO działa przez nie **magistrala I²C**: dwuprzewodowe połączenie, przez które podłącza się np. wyświetlacze. Przydadzą się, gdy zechcesz rozbudować projekt. Piny 0 i 1 zajmuje UART (lekcja 06.01). **Sygnał życia** (ang. *heartbeat*) to regularny znak, że sterownik pracuje. U nas jest nim dioda L, która zmienia stan przy każdym pomiarze: przez jeden takt (2 s) świeci, przez następny nie świeci. Widać to nawet przy zamkniętym Monitorze portu szeregowego.
+
+{/* SCHEMAT: cały układ na płytce stykowej (eksport z Fritzinga) — szyny zasilania, fotorezystor na A0, potencjometr na A1, LM35 na A2, DHT11 na D2, dwa DS18B20 na D3 */}
+
+Nie musisz podłączać wszystkiego naraz. Każda część dokłada swoje elementy, ale zawsze tam, gdzie wskazuje tabela. Dzięki temu nowe czujniki nie zderzą się ze starymi.
+
+**Zawsze na początku**
+
+1. Odłącz kabel USB.
+2. Połącz pin `5V` Arduino z szyną „+” płytki stykowej (czerwona linia), a pin `GND` z szyną „−” (niebieska linia). Jeśli korzystasz z szyn po obu stronach płytki, połącz „+” z „+” i „−” z „−”.
+
+**Część 1: światło i wiatr**
+
+3. Fotorezystor: jedną nóżkę wepnij w szynę „+”, drugą w wolny rząd płytki. Z tego samego rzędu poprowadź przewód do `A0` i wepnij rezystor 10 kΩ do szyny „−”. To ten sam dzielnik napięcia co w lekcji 07: im więcej światła, tym większy odczyt. Fotorezystor nie ma biegunowości, więc nie ma znaczenia, którą stroną go wepniesz.
+4. Potencjometr: skrajne nóżki do szyn „+” i „−”, środkową (suwak) do `A1`. Jeśli kręcąc w prawo zmniejszasz „wiatr”, zamień skrajne nóżki miejscami.
+
+{/* SCHEMAT: dzielnik napięcia z fotorezystorem na A0 (5V, fotorezystor, A0, rezystor 10 kΩ, GND) i potencjometr na A1 */}
+
+**Część 2: temperatura**
+
+5. LM35: ustaw czujnik płaską stroną z napisem do siebie, nóżkami w dół. Lewa nóżka do „+”, środkowa do `A2`, prawa do „−”.
+6. Dwa DS18B20: wepnij oba w te same trzy rzędy płytki, jak w lekcji 19. Patrząc na płaską stronę z napisem, nóżkami w dół: lewa (GND) do „−”, środkowa (DQ, linia danych) do `D3`, prawa (VDD, zasilanie) do „+”. Rezystor 4,7 kΩ wepnij między rząd środkowych nóżek a szynę „+”.
+
+{/* SCHEMAT: LM35 na A2 oraz dwa DS18B20 na D3 z rezystorem 4,7 kΩ do 5V; widoczna płaska strona obudów i kolejność nóżek */}
+
+**Część 3: wilgotność**
+
+7. DHT11: ustaw czujnik kratką do siebie, nóżkami w dół. Nóżki od lewej: 1 (VCC) do „+”, 2 (DATA) do `D2`, 3 (NC, niepodłączona) zostaw wolną, 4 (GND) do „−”. Rezystor 4,7 kΩ wepnij między DATA a szynę „+”. Moduł z trzema pinami podłącz według opisu na jego płytce.
+
+{/* SCHEMAT: DHT11 na D2 z rezystorem 4,7 kΩ między DATA a 5V; kolejność nóżek 1–4 */}
+
+**Po każdej zmianie**
+
+8. Sprawdź połączenia według zasad z rozdziału 6. Dopiero wtedy podłącz kabel USB.
+
+### 4.2. Rytm pomiarów
+
+System mierzy wszystko **raz na 2 sekundy** (2000 ms). Jeden taki obieg, czyli pomiar wszystkich czujników i wysłanie jednej linii danych, nazywamy **taktem pomiarowym**. Dlaczego akurat 2 s?
+
+- DHT11 może mierzyć najwyżej raz na sekundę: nota katalogowa wymaga co najmniej 1 s między pomiarami, a tuż po włączeniu zasilania czujnik potrzebuje sekundy na ustabilizowanie się.
+- DS18B20 przy pełnej rozdzielczości (12 bitów) potrzebuje do 750 ms na jeden pomiar temperatury.
+- Takt 2 s mieści oba czujniki z zapasem. Temperatura i wilgotność i tak zmieniają się powoli.
+
+Takty odmierzamy funkcją `millis()` z lekcji 21, bez `delay()`, więc między pomiarami program nie stoi w miejscu. Termin kolejnego pomiaru trzymamy w zmiennej `nastepnyPomiar` i po każdym pomiarze przesuwamy go o stały krok:
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+const unsigned long INTERWAL_MS = 2000UL;   // odstęp między pomiarami: 2 s
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+
+void loop() {
+  // Czy nadszedł termin pomiaru? (działa także po przepełnieniu millis())
+  if ((long)(millis() - nastepnyPomiar) >= 0) {
+    nastepnyPomiar += INTERWAL_MS;          // termin następnego pomiaru: +2 s
+    wyslijWiersz();                         // zmierz czujniki i wyślij linię danych
+  }
+}
+```
+</Code>
+
+Warunek w `if` czytamy: „czy termin pomiaru już minął?”. Dopóki termin nie nadszedł, różnica `millis() - nastepnyPomiar` powinna być ujemna, ale typ `unsigned long` nie zna liczb ujemnych. Zapis `(long)` zamienia ją na liczbę ze znakiem (rzutowanie typów z lekcji 06.02) i wtedy minus jest widoczny. Odejmujemy czasy, zamiast porównywać je wprost, z tego samego powodu co w lekcji 21: po około 50 dniach licznik `millis()` wraca do zera, a odejmowanie i wtedy daje poprawny wynik. Pierwszy pomiar wypada 2 s po starcie płytki, więc DHT11 ma czas na rozruch.
+
+Dlaczego `nastepnyPomiar += INTERWAL_MS`, a nie `zapamietanyCzas = aktualnyCzas`, jak w lekcji 21? Program sprawdza zegar tylko wtedy, gdy przechodzi przez `loop()`, więc zauważa termin zawsze odrobinę po czasie. Zapis z lekcji 21 liczy kolejny termin od chwili tego sprawdzenia: każde spóźnienie, nawet o 1 ms, przesuwa wszystkie następne pomiary, a przesunięcia się sumują. Zapis `+=` liczy terminy od stałej siatki 2000, 4000, 6000 ms… Pojedynczy pomiar może się lekko spóźnić, ale kolejne wracają na swoje miejsca. W monitoringu to ważne: pomiary w równych odstępach łatwo porównywać i uśredniać.
+
+### 4.3. Przeliczenia
+
+Wejście analogowe daje surowy odczyt od 0 do 1023 (lekcja 07). Przeliczamy go tak samo jak w lekcjach 07 i 19, dzieląc przez 1024:
+
+- **Napięcie na wejściu:** `U = odczyt * 5.0 / 1024.0`, w woltach. Liczby z `.0` wymuszają obliczenia zmiennoprzecinkowe (lekcja 06.02).
+- **`wiatr_m_s = U * 6.0`.** To założenie projektu: czujnik wiatru daje 0 V przy 0 m/s i 5 V przy 30 m/s, a napięcie rośnie równo z prędkością, więc 1 V oznacza 6 m/s. Wiele analogowych czujników wiatru ma właśnie wyjście napięciowe 0–5 V. Przykład: odczyt 307 → U ≈ 1,50 V → 9,0 m/s.
+- **`T_szafa_C = U * 100.0`.** LM35 daje 10 mV na każdy 1 °C, czyli 1 V oznacza 100 °C. Przykład: odczyt 48 → U ≈ 0,234 V → 23,4 °C.
+- **`swiatlo`** zostaje surowym odczytem 0–1023, bez jednostki. Fotorezystor nie jest skalibrowany, więc przeliczanie go na W/m² byłoby udawaniem dokładności.
+
+<Callout type="note" title="1023 czy 1024?">
+W niektórych źródłach, nawet w przykładzie z dokumentacji Arduino, odczyt dzieli się przez 1023. Różnica wynosi około 0,1 %, czyli dużo mniej niż niedokładność naszych czujników. W kursie i w tym projekcie dzielimy przez 1024.
+</Callout>
+
+### 4.4. Linia danych (CSV)
+
+Arduino wysyła pomiary przez UART (kablem USB) jako tekst w formacie **CSV** (ang. *Comma-Separated Values*, czyli wartości rozdzielone przecinkami). Każda linia tekstu to jeden wiersz tabeli, a przecinki oddzielają kolumny. Taki tekst przeczytasz w Monitorze portu szeregowego. Serial Plotter też narysuje z niego wykres, ale bierze z każdej linii same liczby, po kolei: nazw kolumn z nagłówka nie używa (serie nazywa `value 1`, `value 2`…), a puste pole przesuwa następne wartości o jedną serię wcześniej. Jak wygodnie oglądać dane na wykresie, pokazuje [część 1](/projekty/monitorowanie/01-szkielet-systemu#5-wykres-w-serial-plotterze).
+
+Arduino nie zapisuje jednak pliku: nie ma dostępu do dysku komputera, potrafi tylko wysłać tekst. Plik `.csv` tworzy program po stronie komputera, który odbiera kolejne linie i dopisuje je do pliku. W tym projekcie jest nim [Rejestrator CSV](/narzedzia/rejestrator-csv): strona kursu, która działa w przeglądarce Chrome lub Edge, bez instalowania programów. Linie danych są już w formacie CSV, więc rejestrator zapisuje je bez żadnych przeliczeń.
+
+Zasady linii danych:
+
+1. Prędkość transmisji: **9600 baud** (`Serial.begin(9600)`).
+2. **Nagłówek**, czyli linię z nazwami kolumn, program wysyła **raz**, w `setup()`.
+3. Potem wysyła **jedną linię na każdy pomiar**, czyli co 2 s.
+4. Kolumny oddziela **przecinek**, bez spacji.
+5. Część ułamkową liczby oddziela **kropka**, bo tak wypisuje liczby `Serial.print()`.
+6. Temperatury, wiatr i wilgotność mają **jedno miejsce po przecinku**: `Serial.print(wartosc, 1)`. Kolumny `czas_ms` i `swiatlo` to liczby całkowite.
+7. Brak pomiaru albo błędny pomiar to **puste pole**: między przecinkami nic nie ma. Błędu nigdy nie zapisujemy jako `0`, `-127`, `85` ani `nan`.
+8. Każdą linię kończy `Serial.println()`.
+9. Poza nagłówkiem i liniami danych program nic nie wysyła. Każdy dodatkowy napis zepsułby plik CSV.
+
+Ostateczne kolumny, w tej kolejności:
+
+<Table
+  caption="Słownik kolumn"
+  headers={["Kolumna", "Co oznacza", "Jednostka", "Skąd pochodzi", "Część"]}
+  rows={[
+    ["czas_ms", "Czas od uruchomienia programu na płytce. To nie jest godzina zegarowa.", "ms", "millis()", "1"],
+    ["swiatlo", "Jasność: surowy odczyt dzielnika z fotorezystorem", "brak (0–1023)", "A0", "1"],
+    ["wiatr_m_s", "Prędkość „wiatru” ustawiona potencjometrem", "m/s", "A1, przeliczenie z punktu 4.3", "1"],
+    ["T_szafa_C", "Temperatura w „szafie falownika”", "°C", "LM35 na A2, przeliczenie z punktu 4.3", "2"],
+    ["T_modul_C", "Temperatura tylnej strony „modułu PV”", "°C", "DS18B20 na D3", "2"],
+    ["T_otoczenie_C", "Temperatura otoczenia", "°C", "DS18B20 na D3", "2"],
+    ["wilgotnosc_proc", "Wilgotność względna powietrza (lekcja 20)", "%RH", "DHT11 na D2", "3"],
+    ["T_dht_C", "Temperatura zmierzona przez DHT11", "°C", "DHT11 na D2", "3"],
+  ]}
+/>
+
+Nazwy kolumn piszemy bez polskich znaków i bez spacji, a jednostkę dopisujemy na końcu nazwy (`_ms`, `_m_s`, `_C`, `_proc`). Takie nazwy bezpiecznie odczyta każdy program. Na Arduino UNO otwarcie Monitora portu szeregowego zwykle restartuje program, więc `czas_ms` zaczyna wtedy liczyć od zera.
+
+Linia danych rośnie razem z projektem:
+
+- część 1: `czas_ms,swiatlo,wiatr_m_s`;
+- część 2 dokłada `T_szafa_C,T_modul_C,T_otoczenie_C`;
+- część 3 dokłada `wilgotnosc_proc,T_dht_C`. To ostateczny układ kolumn; część 4 go nie zmienia.
+
+Tak wygląda początek transmisji w ostatecznej wersji. **Wartości są przykładowe:**
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+2000,612,4.3,23.4,24.1,22.8,41.0,23.0
+4000,598,4.4,23.4,24.3,22.8,41.0,23.0
+6000,605,9.0,23.9,,22.9,,
+```
+
+W trzeciej linii ktoś przekręcił potencjometr (wiatr 9,0 m/s), a dwa pomiary się nie udały: czujnik DS18B20 na module nie odpowiedział, a DHT11 zgłosił błąd. Dlatego te pola są puste. Widać to jako dwa przecinki obok siebie, a na końcu linii jako przecinki bez wartości.
+
+**Dlaczego puste pole, a nie zero?** Zero to prawdziwa, możliwa wartość: 0 °C zimą albo 0 m/s przy ciszy. Gdyby błąd zapisać jako `0`, na wykresie pojawiłby się fałszywy spadek, średnia by się zaniżyła, a operator mógłby uznać awarię czujnika za mróz. Puste pole mówi uczciwie: „tu nie ma pomiaru”. Arkusz kalkulacyjny pomija puste komórki, gdy liczy średnią.
+
+Polski arkusz kalkulacyjny zapisuje ułamki z przecinkiem, a my wysyłamy kropkę. Dlatego rejestrator zapisuje plik w dwóch wersjach: dokładnie taki, jak wysłała płytka, i taki, który polski Excel otworzy poprawnie podwójnym kliknięciem. Szczegóły pokażemy w części 4.
+
+### 4.5. Program
+
+Cały projekt to jeden szkic: `stacja_monitoringu.ino`. Arduino IDE trzyma go w folderze o tej samej nazwie, `stacja_monitoringu`. Każda część rozbudowuje ten szkic i pokazuje go **w całości**, a nie tylko zmiany.
+
+Na początku szkicu stoją stałe: numery pinów i odstęp między pomiarami. Każda część dopisuje stałe tylko tych czujników, które właśnie podłączamy, ale nazwy i wartości są zawsze takie:
+
+<Code lang="cpp" file="stacja_monitoringu.ino (stałe)">
+```cpp
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LM35 = A2;          // temperatura w szafie
+const byte PIN_DHT11 = 2;          // wilgotność i temperatura DHT11
+const byte PIN_DS18B20 = 3;        // linia 1-Wire obu czujników DS18B20
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+```
+</Code>
+
+Każdy czujnik ma własną funkcję pomiarową, która zwraca wynik (lekcja 12.01). Trzy funkcje zajmują się wysyłaniem:
+
+<Table
+  caption="Funkcje programu"
+  headers={["Funkcja", "Co robi", "Część"]}
+  rows={[
+    ["zmierzSwiatlo()", "Zwraca surowy odczyt z A0 (int, 0–1023).", "1"],
+    ["zmierzWiatr()", "Zwraca prędkość wiatru w m/s (float).", "1"],
+    ["zmierzTemperatureSzafy()", "Zwraca temperaturę z LM35 w °C (float).", "2"],
+    ["zmierzTemperatureModulu()", "Zwraca temperaturę z DS18B20 na module w °C albo NAN (punkt 4.7).", "2"],
+    ["zmierzTemperatureOtoczenia()", "Zwraca temperaturę otoczenia z DS18B20 w °C albo NAN.", "2"],
+    ["zmierzWilgotnosc()", "Zwraca wilgotność z DHT11 w %RH albo NAN.", "3"],
+    ["zmierzTemperatureDht()", "Zwraca temperaturę z DHT11 w °C albo NAN.", "3"],
+    ["wyslijNaglowek()", "Wysyła linię z nazwami kolumn. Wywołujemy ją raz, w setup().", "1"],
+    ["wyslijWiersz()", "Wywołuje funkcje pomiarowe i wysyła jedną linię danych. Wywołujemy ją w każdym takcie.", "1"],
+    ["wyslijPole()", "Funkcja pomocnicza wyslijWiersz(): wysyła przecinek i wartość z jednym miejscem po przecinku, a dla NAN sam przecinek (puste pole).", "2"],
+  ]}
+/>
+
+`setup()` uruchamia UART, ustawia piny, przygotowuje biblioteki i wysyła nagłówek. `loop()` tylko pilnuje rytmu z punktu 4.2 i w każdym takcie wywołuje `wyslijWiersz()`.
+
+### 4.6. Biblioteki
+
+- **OneWire** i **DallasTemperature**: te same co w lekcji 19. Zainstalujesz je w Arduino IDE: *Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami*, a potem wyszukaj kolejno „OneWire” i „DallasTemperature”. Polecenie `sensors.requestTemperatures()` zleca pomiar obu czujnikom naraz i czeka na wynik (do 750 ms). Wywołujemy je więc **raz na takt**, a potem odczytujemy obie temperatury.
+- **DHT** Marka Ruysa (*arduino-DHT*): ta sama biblioteka co w lekcji 20, instalowana z pliku ZIP (*Szkic → Dołącz bibliotekę → Dodaj bibliotekę .ZIP*). W stacji podajemy typ czujnika wprost: `dht.setup(PIN_DHT11, DHT::DHT11)`. Bez drugiego argumentu biblioteka zgaduje typ, wysyłając sygnał do czujnika już w `setup()`, a wtedy pierwszy odczyt w ciągu sekundy po starcie się nie udaje. Biblioteka pyta czujnik najwyżej raz na sekundę: `getHumidity()` i `getTemperature()` wywołane zaraz po sobie dają wyniki z jednego odczytu ([część 3](/projekty/monitorowanie/03-pomiar-wilgotnosci#43-funkcje-pomiarowe-dht11)).
+
+<Callout type="warning" title="Nie instaluj drugiej biblioteki DHT">
+Popularna biblioteka „DHT sensor library” firmy Adafruit ma plik nagłówkowy o tej samej nazwie, `DHT.h` (to ten plik, który dołączasz poleceniem `#include`). Gdy na komputerze są obie biblioteki, Arduino IDE wybiera jedną z nich, a obie mają inne polecenia, więc szkic może się nie skompilować. Używaj tylko biblioteki z lekcji 20. Jeśli masz już bibliotekę Adafruit, usuń ją w Menedżerze bibliotek.
+</Callout>
+
+### 4.7. Błędne odczyty
+
+Czujniki cyfrowe potrafią zgłosić, że pomiar się nie udał, każdy na swój sposób:
+
+<Table
+  caption="Wartości oznaczające błąd"
+  headers={["Czujnik", "Co zwraca biblioteka", "Kiedy"]}
+  rows={[
+    ["DS18B20", "-127 (stała DEVICE_DISCONNECTED_C)", "Czujnik nie odpowiada: odłączony przewód, zła kolejność nóżek, brak rezystora 4,7 kΩ."],
+    ["DS18B20", "85.0", "Wartość startowa: czujnik ma ją w pamięci zaraz po włączeniu zasilania, zanim wykona pierwszy pomiar. Biblioteka rozpoznaje ją i zamienia na -127 dopiero od wersji 4.0.6; starsze wersje przepuszczają 85.0."],
+    ["DHT11", "NAN", "Odczyt się nie udał, np. przez odłączony przewód danych albo zakłócenia (biblioteka zgłasza wtedy status TIMEOUT albo CHECKSUM)."],
+  ]}
+/>
+
+Wszystkie te wartości stają się w linii danych **pustym polem**:
+
+- W programie wynik nieudanego pomiaru zapisujemy jako `NAN` (ang. *Not a Number*, „nie-liczba”). To specjalna wartość typu `float`, która znaczy „tu nie ma liczby”. Sprawdza ją funkcja `isnan()`: `isnan(x)` zwraca `true`, gdy `x` to `NAN`.
+- Funkcje pomiarowe DS18B20 zamieniają `-127` i `85.0` na `NAN`. W naszym biurkowym układzie temperatura 85 °C naprawdę nie wystąpi, więc taki odczyt traktujemy jako błąd.
+- Wyniki DHT11 trzymamy w zmiennych typu `float`. W lekcji 20 trafiały do zmiennych `int`, a wtedy nieudany odczyt zamieniał się w zwykłą liczbę (w lekcji 20 było to `0`) i nie dało się go odróżnić od pomiaru.
+- `wyslijWiersz()` dla `NAN` nie wysyła żadnej liczby (robi to za nią funkcja `wyslijPole()`), więc pole zostaje puste. Uwaga: `Serial.print(NAN)` wypisałoby tekst `nan`.
+
+Czujniki analogowe (fotorezystor, potencjometr, LM35) nie zgłaszają błędów. Odłączony przewód daje przypadkowe liczby (pamiętasz zadanie 4 z lekcji 07?), dlatego te kolumny zawsze mają wartość. Gdy wyglądają dziwnie, sprawdź połączenia.
+
+## 5. Plan projektu
+
+Projekt ma cztery części. Każda dokłada nowe elementy do tego samego układu, a szkic `stacja_monitoringu.ino` rośnie o kolejne kolumny.
+
+- **[Część 1. Szkielet systemu monitoringu i pierwsze czujniki](/projekty/monitorowanie/01-szkielet-systemu)**
+
+  Podłączasz fotorezystor („światło”) i potencjometr („wiatr”) i piszesz pierwszą wersję szkicu: rytm pomiarów co 2 s, nagłówek i linie danych `czas_ms,swiatlo,wiatr_m_s`. Dane oglądasz w Monitorze portu szeregowego i na wykresie w Serial Plotterze.
+
+- **[Część 2. Dodajemy pomiar temperatury do systemu](/projekty/monitorowanie/02-pomiar-temperatury)**
+
+  Dokładasz czujnik LM35 i dwa czujniki DS18B20. Najpierw porównujesz wszystkie trzy termometry ustawione obok siebie, a potem dajesz im role: szafa falownika, moduł PV i otoczenie. Linia danych rośnie o trzy temperatury.
+
+- **[Część 3. Dodajemy pomiar wilgotności do systemu](/projekty/monitorowanie/03-pomiar-wilgotnosci)**
+
+  Dokładasz DHT11, który mierzy wilgotność i temperaturę. Najważniejsza zasada tej części: nieudany odczyt nie może zamienić się w fałszywe zero, tylko zostaje pustym polem. Linia danych ma już wszystkie osiem kolumn.
+
+- **Część 4. Od czujnika do pliku CSV** (w przygotowaniu)
+
+  Projekt końcowy. Najpierw krótko podsumowujesz cały system i przeprowadzasz jego **odbiór**, czyli sprawdzasz punkt po punkcie, czy spełnia specyfikację. Potem zapisujesz dane płynące przez UART do pliku `.csv` na komputerze za pomocą [Rejestratora CSV](/narzedzia/rejestrator-csv) i otwierasz go w arkuszu kalkulacyjnym.
+
+## 6. Zasady bezpieczeństwa
+
+Pracujemy na niskim napięciu: 5 V z portu USB. Takie napięcie nie grozi porażeniem, ale błąd w połączeniach może zniszczyć czujnik, płytkę Arduino, a nawet port USB komputera. Dla porównania: w prawdziwej instalacji fotowoltaicznej napięcia stałe sięgają setek woltów i pracują przy nich wyłącznie elektrycy z uprawnieniami.
+
+<Callout type="hazard" title="Zasady bezpieczeństwa">
+
+1. **Zasilaj układ tylko z portu USB komputera.** Nie podłączaj zasilacza, baterii ani żadnego innego źródła.
+2. **Odłącz kabel USB przed każdą zmianą połączeń**, nawet przed przełożeniem jednego przewodu.
+3. **Sprawdź połączenia, zanim podłączysz USB.** Przede wszystkim upewnij się, że nigdzie nie ma **zwarcia**, czyli bezpośredniego połączenia 5V z GND, np. przez przewód z szyny „+” wpięty w szynę „−”.
+4. **Pilnuj kolejności nóżek czujników.** LM35, DS18B20 i DHT11 mają stałą kolejność wyprowadzeń. Odwrotnie wpięty czujnik grzeje się i może się zniszczyć. LM35 i DS18B20 wyglądają tak samo, a ich nóżki zasilania są zamienione miejscami, więc zawsze czytaj napis na obudowie.
+5. **Jeśli coś jest gorące albo czujesz zapach spalenizny, natychmiast odłącz USB.** Nie dotykaj tego elementu, dopóki nie ostygnie, i nie podłączaj zasilania, dopóki nie znajdziesz błędu.
+6. **Na wejścia analogowe podawaj tylko napięcie od 0 do 5 V.**
+7. **Do pinu 5V nie podłączaj żadnego źródła napięcia.** Ten pin oddaje napięcie z płytki do czujników; nie służy do zasilania płytki z zewnątrz.
+
+</Callout>
+
+## 7. Jak pracować z projektem
+
+- **Jeden układ na cały projekt.** Kolejne części dokładają elementy, niczego nie rozbierasz. Między zajęciami przechowuj układ złożony, np. w pudełku, tak żeby przewody nie wypadały z płytki.
+- **Jeden szkic.** `stacja_monitoringu.ino` rośnie z części na część. Zanim wgrasz na płytkę inny program (np. przykład z lekcji albo program testowy), zapisz szkic stacji. Na płytce działa zawsze tylko jeden program: wgranie innego zastępuje stację monitoringu. Szkic zostaje na komputerze, więc po teście wgrasz go z powrotem.
+- **Kopia po każdej części.** Gdy część działa, skopiuj cały folder `stacja_monitoringu` (domyślnie leży w folderze `Arduino` w Dokumentach) do nowego folderu, np. `kopia-czesc-1`. Nazwy samego folderu szkicu nie zmieniaj: Arduino IDE otwiera szkic tylko z folderu o tej samej nazwie co plik `.ino`. Gdy w kolejnej części coś się popsuje, masz do czego wrócić.
+- **Lista kontrolna na końcu każdej części.** Przejdź ją punkt po punkcie, zanim zaczniesz następną część.

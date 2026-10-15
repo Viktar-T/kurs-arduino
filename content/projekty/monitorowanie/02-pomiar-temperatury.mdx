@@ -1,0 +1,802 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Część 2. Dodajemy pomiar temperatury do systemu"
+slug: "pomiar-temperatury"
+summary: "Druga wersja stacji monitoringu: czujnik LM35 („szafa falownika”) na A2 i dwa czujniki DS18B20 („moduł PV” i „otoczenie”) na linii 1-Wire D3. Porównujesz trzy termometry, przypisujesz czujnikom role po ich adresach, a linia danych rośnie o trzy kolumny: T_szafa_C, T_modul_C i T_otoczenie_C. Nieudany odczyt zostaje pustym polem."
+
+project: "monitorowanie"
+part: 2
+order: 2
+duration: 120
+
+objectives:
+  - "Podłączyć LM35 do A2 i dwa czujniki DS18B20 do linii 1-Wire na D3 zgodnie ze specyfikacją, bez pomylenia kolejności nóżek"
+  - "Odczytać programem testowym liczbę czujników na linii 1-Wire i adres każdego czujnika DS18B20"
+  - "Porównać odczyty trzech termometrów i ocenić różnice na podstawie rozdzielczości i dokładności z not katalogowych"
+  - "Przypisać czujnikom DS18B20 role po adresach i wyjaśnić, dlaczego adres jest pewniejszy niż indeks"
+  - "Rozbudować szkic stacja_monitoringu.ino do wersji 2, w której błędny odczyt DS18B20 zostaje pustym polem"
+  - "Sprawdzić działanie stacji według listy kontrolnej części 2, łącznie z testem wyjętego czujnika"
+
+prerequisites:
+  - "/projekty/monitorowanie/01-szkielet-systemu"
+  - "/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20"
+
+hardware:
+  - { name: "Układ z części 1", qty: 1, note: "zostaje bez zmian; nowe elementy wpinasz obok, w wolne rzędy płytki" }
+  - { name: "Czujnik temperatury LM35 (obudowa TO-92)", qty: 1 }
+  - { name: "Czujnik temperatury DS18B20 (obudowa TO-92)", qty: 2 }
+  - { name: "Rezystor 4,7 kΩ", qty: 1, note: "rezystor podciągający linii 1-Wire; drugi rezystor 4,7 kΩ z zestawu zostaw na część 3" }
+  - { name: "Przewody połączeniowe", qty: 6 }
+  - { name: "Kawałek ciemnego kartonu i taśma klejąca", qty: 1, optional: true, note: "„moduł PV” dla jednego czujnika DS18B20 (rozdział 4)" }
+
+tags: [projekt, monitoring, oze, temperatura, lm35, ds18b20, 1-wire, onewire, dallastemperature, csv, nan]
+sources:
+  - "https://www.ti.com/lit/ds/symlink/lm35.pdf"
+  - "https://cdn.sparkfun.com/datasheets/Sensors/Temp/DS18B20.pdf"
+  - "https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/v4.0.6/DallasTemperature.cpp"
+  - "https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/v4.0.6/DallasTemperature.h"
+  - "https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/Print.cpp"
+
+publish: true
+updated: "2026-10-15"
+---
+
+To druga część [projektu Monitorowanie](/projekty/monitorowanie). Stacja z [części 1](/projekty/monitorowanie/01-szkielet-systemu) co 2 sekundy mierzy światło i „wiatr” i wysyła linię danych `czas_ms,swiatlo,wiatr_m_s`. Teraz, zgodnie z [planem projektu](/projekty/monitorowanie#5-plan-projektu), dołożysz do niej trzy termometry: analogowy czujnik LM35 i dwa cyfrowe czujniki DS18B20.
+
+W instalacji OZE temperatura dużo mówi o pracy urządzeń. Nagrzany moduł PV daje mniej mocy, a przegrzany falownik sam ogranicza moc albo się wyłącza. Co udają nasze trzy termometry, pokazuje [tabela we wprowadzeniu](/projekty/monitorowanie#1-co-budujemy-i-po-co).
+
+<Callout type="note" title="Co masz na końcu tej części">
+
+Stację, która co 2 sekundy wysyła linię z sześcioma wartościami, w kolejności z nagłówka:
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C
+```
+
+LM35 mierzy temperaturę w „szafie falownika”, jeden DS18B20 temperaturę „modułu PV”, a drugi temperaturę otoczenia. Gdy czujnik DS18B20 nie odpowie, jego pole zostaje puste, a pozostałe kolumny działają dalej.
+
+</Callout>
+
+<Prerequisites title="Zanim zaczniesz">
+
+- [Część 1. Szkielet systemu monitoringu i pierwsze czujniki](/projekty/monitorowanie/01-szkielet-systemu) — stacja przechodzi całą listę kontrolną części 1, a jej folder jest skopiowany do `kopia-czesc-1`.
+- [Termometry analogowe LM35 i cyfrowe DS18B20](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20) — przeliczanie odczytu LM35 na stopnie, linia 1-Wire z rezystorem 4,7 kΩ, biblioteki OneWire i DallasTemperature, kilka czujników na jednym pinie i ich adresy.
+
+</Prerequisites>
+
+## 1. Połączenia
+
+Układ z części 1 zostaje bez zmian. Nowe czujniki wpinasz obok, w wolne rzędy płytki, według kroków „Część 2” z [punktu 4.1 specyfikacji](/projekty/monitorowanie#41-piny-i-połączenia):
+
+1. Odłącz kabel USB.
+2. **LM35:** ustaw czujnik płaską stroną z napisem do siebie, nóżkami w dół. Lewa nóżka (+Vs, zasilanie) do szyny „+”, środkowa (Vout, wyjście) do `A2`, prawa (GND) do szyny „−”.
+3. **Dwa DS18B20:** wepnij oba w te same trzy rzędy płytki, jak w [lekcji 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20#10-kilka-czujników-ds18b20-na-jednym-pinie). Patrząc na płaską stronę z napisem, nóżkami w dół: lewa (GND) do „−”, środkowa (DQ, linia danych) do `D3`, prawa (VDD, zasilanie) do „+”. Zostaw między czujnikami jeden lub dwa wolne otwory, żeby dało się dotknąć jednego, nie dotykając drugiego.
+4. **Rezystor 4,7 kΩ:** jeden, między rząd środkowych nóżek DS18B20 a szynę „+”. To **rezystor podciągający** linii 1-Wire: w spoczynku utrzymuje na niej stan wysoki ([lekcja 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20#7-podłączenie-ds18b20-do-arduino)). Jeden rezystor wystarcza na oba czujniki.
+
+LM35 potrzebuje tylko trzech połączeń, bez żadnych dodatkowych elementów. Daje napięcie, które rośnie razem z temperaturą, więc trafia na wejście analogowe. DS18B20 sam mierzy temperaturę i wysyła gotową liczbę linią 1-Wire, czyli jednym przewodem danych, wspólnym dla obu czujników.
+
+<Pinout
+  board="Arduino UNO — część 2"
+  pins={[
+    { pin: "A2", function: "Temperatura w szafie: wyjście LM35 (środkowa nóżka)", note: "lewa nóżka do 5V, prawa do GND" },
+    { pin: "D3", function: "Temperatura modułu i otoczenia: linia 1-Wire (DQ) obu DS18B20", note: "jeden rezystor 4,7 kΩ do 5V na całą linię" },
+    { pin: "A0, A1, D13", function: "Bez zmian z części 1", note: "światło, wiatr, sygnał życia" },
+  ]}
+/>
+
+{/* SCHEMAT (02.01-polaczenia-czesc-2.png): schemat części 2 — LM35 na A2; dwa DS18B20 połączone równolegle (GND, DQ, VDD) z DQ na D3; jeden rezystor 4,7 kΩ między DQ a 5V; przy obu typach czujników podpisana kolejność nóżek (LM35: +Vs, Vout, GND; DS18B20: GND, DQ, VDD) */}
+
+{/* SCHEMAT (02.02-uklad-czesc-2.jpg): zdjęcie układu po części 2 — układ z części 1 bez zmian, obok LM35 i dwa DS18B20 w tych samych trzech rzędach z odstępem, rezystor 4,7 kΩ do szyny „+”, przewody do A2 i D3; napisy na obudowach czytelne */}
+
+<Callout type="hazard" title="LM35 i DS18B20 wyglądają tak samo">
+Oba czujniki mają taką samą czarną obudowę TO-92 z trzema nóżkami, ale ich nóżki zasilania są zamienione miejscami. Patrząc na napis: LM35 ma zasilanie („+”) po lewej, a DS18B20 po prawej. **Zanim wepniesz czujnik, przeczytaj napis na obudowie** (pomoże lupa albo zdjęcie telefonem): na LM35 jest „LM35…”, na DS18B20 „DS18B20” albo „18B20”. Czujnik wpięty odwrotnie albo w miejsce drugiego typu grzeje się i może się zniszczyć. **Jeśli po podłączeniu USB czujesz od któregoś czujnika ciepło albo zapach spalenizny, natychmiast odłącz USB** ([zasady bezpieczeństwa, punkty 4 i 5](/projekty/monitorowanie#6-zasady-bezpieczeństwa)) i nie dotykaj go, dopóki nie ostygnie. Sprawny czujnik w tym układzie ma temperaturę pokoju.
+</Callout>
+
+{/* SCHEMAT (02.03-lm35-i-ds18b20.jpg): zbliżenie — LM35 i DS18B20 obok siebie, płaską stroną z napisem do góry, nóżkami w dół; pod każdą nóżką podpis (LM35: +Vs, Vout, GND; DS18B20: GND, DQ, VDD), zasilanie zaznaczone kolorem */}
+
+## 2. Test czujników temperatury
+
+Zanim zmienisz szkic stacji, sprawdź nowe czujniki krótkim programem testowym. Co 2 sekundy wypisuje on temperaturę z LM35, liczbę czujników znalezionych na linii 1-Wire oraz **adres** i temperaturę każdego DS18B20. Adres to unikalny numer czujnika, nadany przez producenta ([lekcja 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20#11-unikalny-adres-każdego-czujnika-ds18b20)). Oba adresy przepiszesz potem do programu stacji.
+
+<Callout type="note" title="To program tymczasowy">
+Utwórz go jako osobny szkic (*Plik → Nowy szkic*), np. `test_temperatury`. Szkic stacji zostaje na komputerze, w folderze `stacja_monitoringu` i w kopii `kopia-czesc-1`; na płytkę wgrasz go z powrotem w rozdziale 5. Program testowy wysyła dodatkowe napisy, więc nie jest stacją monitoringu.
+</Callout>
+
+Program korzysta z bibliotek OneWire i DallasTemperature, tych samych co w lekcji 19. Jeśli ich jeszcze nie masz, zainstaluj je według [punktu 4.6 specyfikacji](/projekty/monitorowanie#46-biblioteki): *Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami*, a potem wyszukaj kolejno „OneWire” i „DallasTemperature”.
+
+<Code lang="cpp" file="test_temperatury.ino">
+```cpp
+// Test czujników temperatury: program tymczasowy, tylko do sprawdzenia połączeń.
+// Co 2 s wypisuje temperaturę z LM35 (A2), liczbę czujników na linii 1-Wire (D3)
+// oraz adres i temperaturę każdego czujnika DS18B20.
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+const byte PIN_LM35 = A2;    // temperatura w szafie
+const byte PIN_DS18B20 = 3;  // linia 1-Wire obu czujników DS18B20
+
+OneWire oneWire(PIN_DS18B20);         // linia 1-Wire na pinie 3
+DallasTemperature sensors(&oneWire);  // obsługa czujników DS18B20
+
+void setup() {
+  Serial.begin(9600);
+  sensors.begin();  // wyszukaj czujniki na linii 1-Wire (raz, przy starcie)
+  Serial.println("Test czujnikow temperatury");
+}
+
+void loop() {
+  // LM35: odczyt ADC -> napięcie -> temperatura (10 mV na 1 °C)
+  int odczyt = analogRead(PIN_LM35);
+  float U = odczyt * 5.0 / 1024.0;
+  Serial.print("LM35 (A2): odczyt ");
+  Serial.print(odczyt);
+  Serial.print(", ");
+  Serial.print(U * 100.0, 1);
+  Serial.println(" C");
+
+  // DS18B20: ile czujników znalazło sensors.begin()?
+  byte liczba = sensors.getDeviceCount();
+  Serial.print("Czujniki 1-Wire (D3): ");
+  Serial.println(liczba);
+
+  sensors.requestTemperatures();  // pomiar we wszystkich czujnikach naraz (do 750 ms)
+
+  for (byte i = 0; i < liczba; i++) {
+    DeviceAddress adres;          // 8 bajtów adresu
+    Serial.print("  DS18B20 nr ");
+    Serial.print(i);
+    if (sensors.getAddress(adres, i)) {
+      Serial.print(": adres { ");
+      wypiszAdres(adres);
+      Serial.print(" }, ");
+      Serial.print(sensors.getTempC(adres), 1);
+      Serial.println(" C");
+    } else {
+      Serial.println(": nie odpowiada");
+    }
+  }
+
+  Serial.println();  // pusta linia między kolejnymi odczytami
+  delay(2000);
+}
+
+// Wypisuje 8 bajtów adresu w zapisie szesnastkowym: 0x28, 0xD4, ...
+void wypiszAdres(DeviceAddress adres) {
+  for (byte i = 0; i < 8; i++) {
+    Serial.print("0x");
+    if (adres[i] < 0x10) {
+      Serial.print("0");  // zero wiodące: 0x0B zamiast 0xB
+    }
+    Serial.print(adres[i], HEX);
+    if (i < 7) {
+      Serial.print(", ");
+    }
+  }
+}
+```
+</Code>
+
+Co tu jest nowego w porównaniu z lekcją 19:
+
+- `sensors.begin()` w `setup()` przeszukuje linię 1-Wire i liczy czujniki. Robi to raz, przy starcie programu. Połączenia zmieniasz zawsze przy odłączonym USB, więc po każdej zmianie program i tak zaczyna od nowa.
+- `sensors.getDeviceCount()` zwraca liczbę czujników znalezionych przez `begin()`.
+- `sensors.getAddress(adres, i)` wpisuje do tablicy `adres` adres czujnika numer `i` i zwraca `true`, jeśli się udało. `DeviceAddress` to tablica 8 bajtów, ta sama co w lekcji 19.
+- `sensors.getTempC(adres)` zwraca temperaturę czujnika o tym adresie, zmierzoną po ostatnim `requestTemperatures()`.
+- `wypiszAdres()` wypisuje adres w zapisie szesnastkowym (`HEX`), z `0x` przed każdym bajtem i przecinkami między bajtami, czyli dokładnie tak, jak wpiszesz go w program stacji. Warunek `adres[i] < 0x10` dopisuje zero, żeby każdy bajt miał dwie cyfry.
+
+Wgraj program, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud. Wynik wygląda mniej więcej tak. Adresy są przykładowe: Twoje czujniki mają inne.
+
+```text
+Test czujnikow temperatury
+LM35 (A2): odczyt 48, 23.4 C
+Czujniki 1-Wire (D3): 2
+  DS18B20 nr 0: adres { 0x28, 0xD4, 0x3F, 0x57, 0x04, 0xE1, 0x3C, 0x81 }, 22.9 C
+  DS18B20 nr 1: adres { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7A, 0x0B, 0xCF }, 23.1 C
+```
+
+{/* SCHEMAT (02.04-test-temperatury-monitor.png): Monitor portu szeregowego z wynikiem programu test_temperatury; linia LM35, „Czujniki 1-Wire (D3): 2” i dwie linie z adresami i temperaturami */}
+
+Sprawdź po kolei:
+
+- **LM35.** W sali o temperaturze około 20–25 °C odczyt wynosi mniej więcej od 40 do 51. Ściśnij czujnik palcami: temperatura rośnie.
+- **Liczba czujników: 2.** Tyle czujników DS18B20 jest na linii.
+- **Adresy zaczynają się od `0x28`.** Pierwszy bajt adresu to **kod rodziny**: mówi, jakim układem jest czujnik, a `0x28` oznacza DS18B20 (nota katalogowa DS18B20, „64-bit lasered ROM”). Kolejne 6 bajtów to numer seryjny, a ostatni bajt to **suma kontrolna** (CRC), czyli liczba wyliczona z pozostałych bajtów, po której biblioteka poznaje, że adres dotarł bez błędu.
+- **Trzy temperatury są podobne.** Nie będą identyczne; dlaczego, wyjaśnia rozdział 3.
+
+**Skopiuj oba adresy.** Zaznacz w Monitorze dwie linie z adresami, skopiuj je (`Ctrl+C`) i wklej do notatnika albo przepisz na kartkę. Numery 0 i 1 to na razie tylko kolejność, w jakiej biblioteka znalazła czujniki. Role nadasz im w rozdziale 4.
+
+Gdy liczba czujników się nie zgadza, odłącz USB i sprawdź:
+
+- **0 czujników:** program nie znalazł żadnego DS18B20. Najczęściej brakuje rezystora 4,7 kΩ albo jest wpięty do szyny „−” zamiast „+”. Bez niego linia nie ma stanu wysokiego i czujniki nie mogą odpowiedzieć. Sprawdź też, czy przewód z rzędu środkowych nóżek idzie do `D3` (a nie do `A3` albo `D2`) i czy czujniki nie są obrócone.
+- **1 czujnik:** linia, rezystor i pin są dobre, więc winny jest drugi czujnik. Sprawdź, czy jego nóżki są w tych samych trzech rzędach co nóżki pierwszego i czy nie jest obrócony. Jeśli dalej nie odpowiada, zamień czujniki miejscami: gdy błąd „wędruje” z czujnikiem, czujnik jest uszkodzony.
+- **Czujnik odwrotnie** (zamienione GND i VDD) zwykle nie odpowiada i się grzeje. Jeśli czujesz ciepło, natychmiast odłącz USB.
+
+## 3. Porównanie trzech termometrów
+
+Program testowy zostaje na płytce. Teraz sprawdzisz, czy trzy termometry stojące obok siebie pokazują to samo.
+
+1. Czujniki stoją już blisko siebie na płytce stykowej. Odsuń płytkę od lampy, od okna w słońcu i od wylotu wentylatora laptopa. Nie dotykaj czujników.
+2. **Odczekaj około 5 minut.** Czujniki ogrzały się od palców przy wpinaniu i teraz stygną, każdy we własnym tempie. Każdy czujnik ma swoją **stałą czasową**, czyli czas, po którym pokonuje mniej więcej dwie trzecie drogi do nowej temperatury. Zależy ona od obudowy i od tego, jak czujnik oddaje ciepło. Nota katalogowa LM35 (rysunek „Thermal Response in Still Air”) pokazuje, że w nieruchomym powietrzu czujnik dochodzi do końcowego odczytu dopiero po około 3 minutach. Odczyty są ustalone, gdy przez minutę żaden się nie zmienia (LM35 może przy tym przeskakiwać o jeden krok, o czym niżej).
+3. Zapisz trzy wartości, np. LM35: 23,4 °C, DS18B20 nr 0: 22,9 °C, DS18B20 nr 1: 23,1 °C.
+
+Wyniki będą się różnić. To normalne, dopóki różnice mieszczą się w granicach, które wynikają z budowy czujników:
+
+<Table
+  caption="Skąd biorą się różnice między termometrami"
+  headers={["", "LM35 na A2", "DS18B20"]}
+  rows={[
+    ["Najmniejsza zmiana, jaką widać (rozdzielczość)", "Jeden krok ADC to 5 V / 1024 ≈ 4,88 mV. LM35 daje 10 mV na 1 °C, więc krok to około 0,49 °C: odczyt przeskakuje co pół stopnia.", "Przy 12 bitach 0,0625 °C. Stacja wypisuje jedno miejsce po przecinku, więc widzisz zmiany co 0,1 °C."],
+    ["Dokładność według noty katalogowej", "LM35D (napis LM35 DZ): ±1,5 °C przy 25 °C. LM35C (napis LM35 CZ): ±1 °C.", "±0,5 °C w zakresie od −10 do +85 °C."],
+    ["Od czego jeszcze zależy wynik", "Od napięcia na płytce. Wzór zakłada dokładnie 5,000 V.", "Nie zależy od napięcia na płytce: czujnik sam mierzy i wysyła gotową liczbę."],
+  ]}
+/>
+
+Którą klasę LM35 masz, odczytasz z napisu na obudowie: pod napisem „LM35” stoją litery klasy i obudowy. W obudowie TO-92 producent oferuje tylko klasy C, CA i D, a w zestawach do nauki jest to zwykle LM35DZ. Litera D to klasa dokładności o zakresie pracy od 0 do 100 °C (ten zakres podaje lekcja 19), a Z oznacza obudowę TO-92.
+
+**Napięcie zasilania.** Przetwornik ADC porównuje napięcie na wejściu z napięciem odniesienia. Na Arduino UNO zasilanym z USB jest nim napięcie zasilania płytki, a wzór `U = odczyt * 5.0 / 1024.0` zakłada, że wynosi ono dokładnie 5 V. Napięcie z portu USB bywa jednak trochę niższe, np. 4,8 V. Wtedy ten sam sygnał z LM35 daje odczyt większy w stosunku 5 / 4,8, czyli o około 4 %. Przy 23 °C to prawie 1 °C za dużo. DS18B20 tego problemu nie ma.
+
+**Wniosek.** Dwa DS18B20 mogą się różnić o 0,5 + 0,5 = 1 °C. LM35 może się różnić od DS18B20 o 1,5 + 0,5 = 2 °C, a do tego dochodzi krok ADC i napięcie zasilania. Różnice do około 1 °C między czujnikami DS18B20 i do około 3 °C między LM35 a DS18B20 są więc normalne. Różnica dużo większa, np. 10 °C, albo odczyt, który skacze o kilka stopni, wskazuje na błąd w połączeniach albo uszkodzony czujnik: zajrzyj do [typowych problemów](#9-typowe-problemy).
+
+<Callout type="note" title="Pomiar to liczba i jej niepewność">
+Żaden termometr nie podaje „prawdziwej” temperatury, tylko wynik z pewną niedokładnością. Nota katalogowa mówi, jak duża może ona być. W prawdziwym monitoringu porównuje się więc różnice z tymi granicami: odczyt, który nie mieści się w granicach, to sygnał do sprawdzenia czujnika.
+</Callout>
+
+## 4. Role czujników
+
+Program stacji musi wiedzieć, który DS18B20 to „moduł PV”, a który „otoczenie”. Biblioteka daje dwa sposoby odczytu, oba znasz z [lekcji 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20#11-unikalny-adres-każdego-czujnika-ds18b20): po **indeksie**, czyli numerze na liście (`getTempCByIndex(0)`, `getTempCByIndex(1)`), albo po **adresie** (`getTempC(adres)`). W stacji używamy adresów.
+
+Dlaczego nie indeksów? Indeks to tylko miejsce na liście czujników, które biblioteka znajdzie na linii. Kolejność listy wynika z adresów czujników, a nie z ich miejsca na płytce ani z roli. Gdy jeden czujnik przestanie odpowiadać, lista się skraca i drugi czujnik może przesunąć się na jego miejsce. Przykład: „moduł” ma indeks 0, a „otoczenie” indeks 1. Gdy „moduł” zamilknie, pod indeksem 0 odpowie czujnik otoczenia. Kolumna `T_modul_C` pokaże wtedy temperaturę powietrza, a `T_otoczenie_C` zostanie pusta. W danych nic nie zdradzi pomyłki.
+
+**Pomiar z błędną etykietą jest gorszy niż brak pomiaru.** Puste pole każdy zauważy. Fałszywą temperaturę modułu operator weźmie za prawdziwą i uzna, że moduł jest chłodniejszy, niż jest naprawdę. Z adresami czujnik, który nie odpowiada, daje puste pole we własnej kolumnie, a drugi czujnik nadal trafia do swojej.
+
+Jak poznać, który czujnik ma który adres? Program testowy wciąż działa:
+
+1. Chwyć jeden DS18B20 dwoma palcami na kilkanaście sekund. W Monitorze temperatura przy jednym adresie wyraźnie wzrośnie, a przy drugim się nie zmieni.
+2. Ogrzany czujnik będzie „modułem”. Zapisz przy jego adresie słowo „moduł”, a przy drugim „otoczenie”.
+3. Oznacz czujnik modułu na płytce, np. kawałkiem taśmy z literą „M” obok niego albo przewodem w innym kolorze. Wtedy rozpoznasz go także za tydzień.
+
+<Callout type="tip" title="Dla chętnych: „moduł” na kartonie">
+Do płaskiej strony czujnika „modułu” możesz przykleić taśmą mały kawałek ciemnego kartonu: udaje on tylną stronę modułu PV. Gdy oświetlisz karton lampką, „moduł” nagrzeje się bardziej niż powietrze, tak jak prawdziwy panel w słońcu. Czujnik otoczenia zostaw w powietrzu, z dala od kartonu i lampy. LM35 („szafa”) nie potrzebuje specjalnego miejsca. To tylko propozycje: stacja działa także bez nich.
+</Callout>
+
+{/* SCHEMAT (02.05-modul-na-kartonie.jpg): czujnik DS18B20 „modułu” z przyklejonym kawałkiem ciemnego kartonu i oznaczeniem „M” na płytce; obok czujnik otoczenia w powietrzu i LM35 */}
+
+## 5. Program stacji, wersja 2, krok po kroku
+
+Otwórz szkic `stacja_monitoringu` (*Plik → Otwórz…*). Rozbudujesz go do wersji 2. Poniżej omawiamy tylko to, co nowe, od góry pliku. Cały szkic do skopiowania jest w punkcie 5.6.
+
+<Callout type="note" title="Co się zmieniło w porównaniu z wersją 1">
+
+- Dwa nowe `#include`: biblioteki OneWire i DallasTemperature.
+- Nowe stałe `PIN_LM35` i `PIN_DS18B20` oraz dwa adresy: `ADRES_MODUL` i `ADRES_OTOCZENIE`.
+- Obiekty `oneWire` i `sensors`, a w `setup()` wywołanie `sensors.begin()`.
+- Trzy nowe funkcje pomiarowe: `zmierzTemperatureSzafy()`, `zmierzTemperatureModulu()` i `zmierzTemperatureOtoczenia()`.
+- Nowa funkcja pomocnicza `wyslijPole()`.
+- Trzy nowe kolumny w `wyslijNaglowek()`, a w `wyslijWiersz()` pomiar temperatur i trzy nowe pola.
+
+Bez zmian zostają `loop()`, `zmierzSwiatlo()`, `zmierzWiatr()` i sygnał życia.
+
+</Callout>
+
+### 5.1. Biblioteki, stałe i obiekty
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+#include <OneWire.h>            // protokół 1-Wire
+#include <DallasTemperature.h>  // czujniki DS18B20
+
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LM35 = A2;          // temperatura w szafie
+const byte PIN_DS18B20 = 3;        // linia 1-Wire obu czujników DS18B20
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+// Adresy czujników DS18B20: wpisz tu adresy ze swojego testu (rozdziały 2 i 4)!
+// Czujnik „modułu PV”:
+const DeviceAddress ADRES_MODUL = { 0x28, 0xD4, 0x3F, 0x57, 0x04, 0xE1, 0x3C, 0x81 };
+// Czujnik otoczenia:
+const DeviceAddress ADRES_OTOCZENIE = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7A, 0x0B, 0xCF };
+
+OneWire oneWire(PIN_DS18B20);         // linia 1-Wire na pinie 3
+DallasTemperature sensors(&oneWire);  // czujniki DS18B20 na tej linii
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+```
+</Code>
+
+- `#include` dołącza biblioteki, tak jak w [lekcji 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20). Te linie stoją na samej górze szkicu.
+- `PIN_LM35` i `PIN_DS18B20` mają nazwy i wartości z [punktu 4.5 specyfikacji](/projekty/monitorowanie#45-program). Pin cyfrowy D3 zapisujemy jako `3`.
+- `ADRES_MODUL` i `ADRES_OTOCZENIE` to tablice typu `DeviceAddress`, czyli 8 bajtów adresu. Słowo `const` znaczy to samo co przy pinach: adres nie zmienia się w trakcie działania programu.
+- **Wpisz tu swoje adresy.** W nawiasy klamrowe wklej adresy z programu testowego: ten, który rósł przy ogrzewaniu, do `ADRES_MODUL`, a drugi do `ADRES_OTOCZENIE`. Z przykładowymi adresami program się skompiluje, ale obie kolumny DS18B20 będą puste, bo takich czujników nie ma na Twojej płytce.
+- Obiekty `oneWire` i `sensors` znasz z lekcji 19: `oneWire` obsługuje linię 1-Wire na pinie 3, a `sensors` korzysta z niej, żeby rozmawiać z czujnikami DS18B20.
+
+### 5.2. `setup()`: jedna nowa linia
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  sensors.begin();            // wyszukaj czujniki DS18B20 na linii 1-Wire
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+```
+</Code>
+
+`sensors.begin()` przygotowuje bibliotekę i wyszukuje czujniki na linii, tak jak w programie testowym. Stoi przed `wyslijNaglowek()`, więc biblioteka jest gotowa, zanim stacja wyśle cokolwiek.
+
+### 5.3. Funkcje pomiarowe temperatury
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Temperatura w szafie: LM35 daje 10 mV na każdy 1 °C
+float zmierzTemperatureSzafy() {
+  int odczyt = analogRead(PIN_LM35);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;    // napięcie w woltach
+  return U * 100.0;                   // 1 V to 100 °C
+}
+
+// Temperatura modułu PV: DS18B20 o adresie ADRES_MODUL, w °C albo NAN
+float zmierzTemperatureModulu() {
+  float t = sensors.getTempC(ADRES_MODUL);        // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+
+// Temperatura otoczenia: DS18B20 o adresie ADRES_OTOCZENIE, w °C albo NAN
+float zmierzTemperatureOtoczenia() {
+  float t = sensors.getTempC(ADRES_OTOCZENIE);    // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+```
+</Code>
+
+- `zmierzTemperatureSzafy()` działa jak `zmierzWiatr()` z części 1: zamienia odczyt na napięcie, a napięcie na wynik, według [punktu 4.3 specyfikacji](/projekty/monitorowanie#43-przeliczenia). LM35 daje 10 mV na 1 °C, więc 1 V to 100 °C. Przykład: odczyt 48 → U = 48 × 5 / 1024 ≈ 0,234 V → 23,4 °C.
+- `zmierzTemperatureModulu()` nie zleca pomiaru. `getTempC()` tylko odczytuje z czujnika wynik pomiaru, który wcześniej zlecił `requestTemperatures()` (punkt 5.4).
+- Potem funkcja sprawdza dwa kody błędu z [punktu 4.7 specyfikacji](/projekty/monitorowanie#47-błędne-odczyty). `DEVICE_DISCONNECTED_C` to stała biblioteki o wartości −127: tyle zwraca `getTempC()`, gdy czujnik nie odpowiada. 85,0 to wartość startowa, którą czujnik ma w pamięci zaraz po włączeniu zasilania. Biblioteka w wersji 4.0.6 sama ją rozpoznaje i zamienia na −127, ale starsze wersje przepuszczają 85.0, więc sprawdzamy obie wartości.
+- Dla błędu funkcja zwraca `NAN`, czyli „nie-liczbę” (punkt 4.7). Pole w linii danych zostanie wtedy puste.
+- Porównywanie liczb `float` znakiem `==` bywa zawodne, bo obliczenia na ułamkach dają drobne zaokrąglenia. Tu działa, bo biblioteka zwraca dokładnie −127,0 i dokładnie 85,0.
+- Dwie funkcje DS18B20 różnią się tylko adresem. Każda kolumna ma jednak własną funkcję pomiarową, tak jak ustala punkt 4.5 specyfikacji.
+
+### 5.4. Funkcje wysyłające i nowa funkcja `wyslijPole()`
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.print(",T_szafa_C,T_modul_C,T_otoczenie_C");  // część 2
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedno pole: przecinek, a za nim wartość z jednym miejscem po przecinku.
+// Dla NAN (brak pomiaru) wysyła sam przecinek, więc pole zostaje puste.
+void wyslijPole(float wartosc) {
+  Serial.print(",");
+  if (!isnan(wartosc)) {
+    Serial.print(wartosc, 1);
+  }
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  sensors.requestTemperatures();            // oba DS18B20 mierzą naraz (do 750 ms)
+  float T_szafa_C = zmierzTemperatureSzafy();
+  float T_modul_C = zmierzTemperatureModulu();
+  float T_otoczenie_C = zmierzTemperatureOtoczenia();
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  wyslijPole(T_szafa_C);                    // część 2: trzy temperatury
+  wyslijPole(T_modul_C);
+  wyslijPole(T_otoczenie_C);
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+- **Nagłówek.** Nowe nazwy kolumn dopisujesz drugim `Serial.print()` tuż przed `Serial.println()`, tak jak zapowiadała część 1. Płytka i tak wysyła jedną linię nagłówka, bo `Serial.print()` nie kończy linii: robi to dopiero `Serial.println()`.
+- **`wyslijPole()`** wysyła jedno pole linii danych: najpierw przecinek, a potem liczbę z jednym miejscem po przecinku. Znak `!` znaczy „nie”, więc liczbę wysyła tylko wtedy, gdy wartość nie jest `NAN`. Dla `NAN` zostaje sam przecinek, czyli puste pole. Przecinek idzie zawsze, więc linia ma zawsze sześć kolumn, także gdy brakuje pomiaru. W części 3 ta sama funkcja wyśle kolumny DHT11.
+- **Dlaczego nie zwykły `Serial.print()`?** `Serial.print(NAN, 1)` wypisałby tekst `nan`, a specyfikacja tego zabrania (punkt 4.4, zasada 7). Przez `wyslijPole()` wysyłamy też temperaturę z LM35. Ona nigdy nie jest `NAN`, ale dzięki temu wszystkie temperatury idą w tym samym formacie.
+- **`requestTemperatures()` raz na takt.** Polecenie zleca pomiar obu czujnikom naraz i czeka na wynik. Potem każda funkcja pomiarowa tylko odczytuje swoją liczbę. Gdyby każda funkcja zlecała własny pomiar, takt czekałby dwa razy (punkt 4.6 specyfikacji).
+- Zmienne w `wyslijWiersz()` nazywają się tak jak kolumny, więc łatwo sprawdzić, czy wartości idą w kolejności z nagłówka.
+
+### 5.5. Czy czekanie psuje rytm?
+
+`requestTemperatures()` czeka, aż czujniki skończą pomiar. Przy pełnej rozdzielczości (12 bitów) trwa to do 750 ms (nota katalogowa DS18B20), a biblioteka czeka najwyżej tyle. To mieści się w takcie 2 s. `czas_ms` czytamy na początku `wyslijWiersz()`, przed czekaniem, więc kolumna pokazuje chwilę, w której takt się zaczął. Termin następnego pomiaru `loop()` przesuwa o 2 s jeszcze przed wywołaniem `wyslijWiersz()`, na stałej siatce z [punktu 4.2 specyfikacji](/projekty/monitorowanie#42-rytm-pomiarów), więc czekanie nie przesuwa kolejnych pomiarów. Linia pojawia się w Monitorze tylko trochę później niż chwila zapisana w `czas_ms`, najwyżej o około 0,75 s.
+
+### 5.6. Cały szkic
+
+Tak wygląda druga wersja stacji w całości. Skopiuj ją przyciskiem kopiowania w prawym górnym rogu ramki i wklej do szkicu `stacja_monitoringu` w miejsce wersji 1. Potem **wpisz swoje adresy** w `ADRES_MODUL` i `ADRES_OTOCZENIE` i zapisz szkic (`Ctrl+S`).
+
+<Code lang="cpp" file="stacja_monitoringu.ino">
+```cpp
+// Stacja monitoringu, wersja 2 (projekt Monitorowanie, część 2)
+// Co 2 s mierzy światło (A0), wiatr (A1) i trzy temperatury: LM35 na A2
+// oraz dwa DS18B20 na linii 1-Wire (D3). Wysyła jedną linię CSV:
+// czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C
+
+#include <OneWire.h>            // protokół 1-Wire
+#include <DallasTemperature.h>  // czujniki DS18B20
+
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LM35 = A2;          // temperatura w szafie
+const byte PIN_DS18B20 = 3;        // linia 1-Wire obu czujników DS18B20
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+// Adresy czujników DS18B20: wpisz tu adresy ze swojego testu (rozdziały 2 i 4)!
+// Czujnik „modułu PV”:
+const DeviceAddress ADRES_MODUL = { 0x28, 0xD4, 0x3F, 0x57, 0x04, 0xE1, 0x3C, 0x81 };
+// Czujnik otoczenia:
+const DeviceAddress ADRES_OTOCZENIE = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7A, 0x0B, 0xCF };
+
+OneWire oneWire(PIN_DS18B20);         // linia 1-Wire na pinie 3
+DallasTemperature sensors(&oneWire);  // czujniki DS18B20 na tej linii
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  sensors.begin();            // wyszukaj czujniki DS18B20 na linii 1-Wire
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+
+void loop() {
+  // Czy nadszedł termin pomiaru? (działa także po przepełnieniu millis())
+  if ((long)(millis() - nastepnyPomiar) >= 0) {
+    nastepnyPomiar += INTERWAL_MS;          // termin następnego pomiaru: +2 s
+    wyslijWiersz();                         // zmierz czujniki i wyślij linię danych
+  }
+}
+
+// ----- Funkcje pomiarowe -----
+
+// Światło: surowy odczyt z dzielnika z fotorezystorem (0–1023, bez jednostki)
+int zmierzSwiatlo() {
+  return analogRead(PIN_FOTOREZYSTOR);
+}
+
+// Wiatr: napięcie z suwaka potencjometru przeliczone na m/s
+float zmierzWiatr() {
+  int odczyt = analogRead(PIN_POTENCJOMETR);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;            // napięcie w woltach (0–5 V)
+  return U * 6.0;                             // 1 V to 6 m/s, więc 5 V to 30 m/s
+}
+
+// Temperatura w szafie: LM35 daje 10 mV na każdy 1 °C
+float zmierzTemperatureSzafy() {
+  int odczyt = analogRead(PIN_LM35);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;    // napięcie w woltach
+  return U * 100.0;                   // 1 V to 100 °C
+}
+
+// Temperatura modułu PV: DS18B20 o adresie ADRES_MODUL, w °C albo NAN
+float zmierzTemperatureModulu() {
+  float t = sensors.getTempC(ADRES_MODUL);        // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+
+// Temperatura otoczenia: DS18B20 o adresie ADRES_OTOCZENIE, w °C albo NAN
+float zmierzTemperatureOtoczenia() {
+  float t = sensors.getTempC(ADRES_OTOCZENIE);    // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+
+// ----- Funkcje wysyłające -----
+
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.print(",T_szafa_C,T_modul_C,T_otoczenie_C");  // część 2
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedno pole: przecinek, a za nim wartość z jednym miejscem po przecinku.
+// Dla NAN (brak pomiaru) wysyła sam przecinek, więc pole zostaje puste.
+void wyslijPole(float wartosc) {
+  Serial.print(",");
+  if (!isnan(wartosc)) {
+    Serial.print(wartosc, 1);
+  }
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  sensors.requestTemperatures();            // oba DS18B20 mierzą naraz (do 750 ms)
+  float T_szafa_C = zmierzTemperatureSzafy();
+  float T_modul_C = zmierzTemperatureModulu();
+  float T_otoczenie_C = zmierzTemperatureOtoczenia();
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  wyslijPole(T_szafa_C);                    // część 2: trzy temperatury
+  wyslijPole(T_modul_C);
+  wyslijPole(T_otoczenie_C);
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+W części 3 nic z tego szkicu nie usuniesz: dopiszesz czujnik DHT11, jego funkcje pomiarowe i dwie kolumny, wysyłane tą samą funkcją `wyslijPole()`.
+
+## 6. Uruchomienie i Monitor portu szeregowego
+
+Kliknij **Weryfikuj** (✓), a potem **Wgraj** (→). Gdy wgrywanie się skończy, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud.
+
+<ExpectedOutput title="W Monitorze portu szeregowego">
+
+Najpierw pojawia się nowy nagłówek, a potem co 2 sekundy linia z sześcioma wartościami. Wartości poniżej są przykładowe:
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C
+2000,612,4.3,23.4,22.9,23.1
+4000,610,4.3,23.4,22.9,23.1
+6000,611,4.3,23.9,22.9,23.1
+8000,609,4.3,23.4,22.9,23.0
+```
+
+Dioda L zmienia stan przy każdym pomiarze, tak jak w części 1.
+
+</ExpectedOutput>
+
+{/* SCHEMAT (02.06-monitor-stacja-v2.png): Monitor portu szeregowego ustawiony na 9600 baud; nagłówek wersji 2 i kilkanaście linii danych, w tym linie podczas ogrzewania czujnika modułu palcami (rośnie tylko T_modul_C) */}
+
+Przyjrzyj się danym:
+
+- **Sześć wartości w każdej linii**, oddzielonych pięcioma przecinkami, w kolejności z nagłówka.
+- **`T_szafa_C` przeskakuje czasem o 0.5**, nawet gdy nikt nie dotyka czujnika. To jeden krok ADC: odczyt zmienia się np. z 48 na 49. Kolumny DS18B20 zmieniają się co 0.1.
+- **Temperatury możesz policzyć.** Na stronie piszemy liczby z przecinkiem, a stacja wysyła je z kropką, zgodnie ze specyfikacją.
+
+<Table
+  caption="LM35: rachunek a linia danych"
+  headers={["Odczyt A2", "Napięcie U = odczyt × 5 / 1024", "T = U × 100", "W linii danych"]}
+  rows={[
+    ["41", "≈ 0,200 V", "≈ 20,02 °C", "20.0"],
+    ["48", "≈ 0,234 V", "≈ 23,44 °C", "23.4"],
+    ["49", "≈ 0,239 V", "≈ 23,93 °C", "23.9"],
+    ["61", "≈ 0,298 V", "≈ 29,79 °C", "29.8"],
+  ]}
+/>
+
+**Ogrzej „moduł”.** Chwyć czujnik modułu palcami na około 15 s. W kolejnych liniach rośnie tylko `T_modul_C`, o kilka stopni, a po puszczeniu czujnika powoli wraca. Pozostałe kolumny się nie zmieniają:
+
+```text
+20000,611,4.3,23.4,23.0,23.1
+22000,610,4.3,23.4,25.8,23.1
+24000,611,4.3,23.9,27.6,23.1
+26000,611,4.3,23.4,28.9,23.2
+```
+
+Jeśli zamiast `T_modul_C` rośnie `T_otoczenie_C`, adresy w stałych są zamienione: zamień je miejscami i wgraj szkic jeszcze raz.
+
+**Test brakującego czujnika.** Sprawdź teraz najważniejszą zasadę tej części: czujnik, który nie odpowiada, daje puste pole.
+
+1. Odłącz kabel USB ([zasada bezpieczeństwa 2](/projekty/monitorowanie#6-zasady-bezpieczeństwa)).
+2. Wyjmij z płytki czujnik „modułu”. Rezystor i czujnik otoczenia zostają na miejscu.
+3. Podłącz USB i otwórz Monitor.
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C
+2000,612,4.3,23.4,,23.1
+4000,611,4.3,23.4,,23.1
+6000,610,4.3,23.4,,23.1
+```
+
+Pole `T_modul_C` jest puste: między wartościami `23.4` i `23.1` stoją dwa przecinki obok siebie. Kolumna otoczenia działa dalej, a w danych nie ma `-127`, `85` ani `nan`.
+
+4. Odłącz USB, wepnij czujnik z powrotem w te same rzędy (sprawdź kolejność nóżek!) i podłącz USB. Obie kolumny DS18B20 znów mają wartości.
+
+Tak samo stacja zachowa się, gdy czujnik zawiedzie w czasie pracy, np. przez obluzowany przewód: od najbliższego taktu jego pole będzie puste.
+
+## 7. Wykres w Serial Plotterze
+
+Otwórz Serial Plotter (*Narzędzia → Serial Plotter*). Linia ma teraz sześć liczb, więc Plotter rysuje sześć serii:
+
+<Table
+  caption="Serie na wykresie a kolumny linii danych"
+  headers={["Seria w Plotterze", "Kolumna", "Co pokazuje"]}
+  rows={[
+    ["value 1", "czas_ms", "czas od startu programu; rośnie bez końca"],
+    ["value 2", "swiatlo", "jasność, od 0 do 1023"],
+    ["value 3", "wiatr_m_s", "prędkość wiatru, od 0 do 30"],
+    ["value 4", "T_szafa_C", "temperatura z LM35"],
+    ["value 5", "T_modul_C", "temperatura „modułu” (DS18B20)"],
+    ["value 6", "T_otoczenie_C", "temperatura otoczenia (DS18B20)"],
+  ]}
+/>
+
+Jak w części 1, odznacz pole przy `value 1`, czyli czasie. Odznacz też `value 2`: światło sięga 1023 i spłaszcza resztę wykresu. Zostają wiatr i trzy temperatury, a oś pionowa dopasuje się do kilkudziesięciu jednostek. Jeśli chcesz oglądać same temperatury, odznacz jeszcze `value 3`. Teraz ogrzej palcami czujnik modułu: linia `value 5` wyraźnie odstaje od pozostałych.
+
+{/* SCHEMAT (02.07-plotter-temperatury.png): Serial Plotter z odznaczonymi value 1, value 2 i value 3; trzy linie temperatur blisko siebie, value 5 rośnie po ogrzaniu czujnika modułu palcami */}
+
+Pamiętaj o pułapce opisanej w części 1 (rozwijane pole „Głębiej: jak Serial Plotter czyta linie” w [rozdziale 5](/projekty/monitorowanie/01-szkielet-systemu#5-wykres-w-serial-plotterze)): Plotter traktuje dwa przecinki obok siebie jak jeden. W teście brakującego czujnika temperatura otoczenia trafi więc na wykresie do serii `value 5`, a seria `value 6` zniknie. Myli się tylko wykres: w Monitorze i w pliku CSV każda wartość stoi we właściwej kolumnie.
+
+## 8. Zadania
+
+Zadania nie zmieniają specyfikacji: pinów, rytmu pomiarów ani nazw kolumn nie ruszasz. Najpierw przewiduj albo licz, potem sprawdzaj na układzie.
+
+<Task title="Zadanie 1 — policz, zanim sprawdzisz" estimate="10 min">
+Odczyt z `A2` wynosi 52. Policz napięcie `U` i wartość, którą stacja wyśle w kolumnie `T_szafa_C`. Potem policz, o ile stopni zmienia się `T_szafa_C`, gdy odczyt rośnie o 1, czyli o jeden krok ADC. Czy stacja na pewno pokaże w kolumnie `T_szafa_C`, że temperatura w szafie wzrosła o 0,2 °C? A w kolumnach DS18B20?
+</Task>
+
+<Expandable title="Rozwiązanie zadania 1">
+
+- Odczyt 52: U = 52 × 5 / 1024 ≈ 0,2539 V, T = 0,2539 × 100 ≈ 25,39 °C. Stacja wyśle `25.4`.
+- Jeden krok ADC: 5 / 1024 × 100 ≈ 0,49 °C. Tyle wynosi najmniejsza zmiana w kolumnie `T_szafa_C`.
+
+Wzrost o 0,2 °C to mniej niż jeden krok. Odczyt zmieni się tylko wtedy, gdy temperatura przekroczy granicę między dwoma krokami: raz kolumna przeskoczy o 0.5, a raz nic nie pokaże. DS18B20 przy 12 bitach rozróżnia 0,0625 °C, więc taki wzrost pokaże (z jednym miejscem po przecinku jako 0.2).
+
+</Expandable>
+
+<Task title="Zadanie 2 — czy któryś termometr jest zepsuty?" estimate="10 min">
+Po 5 minutach spokoju stacja pokazuje: `T_szafa_C` = 24.9, `T_modul_C` = 23.1, `T_otoczenie_C` = 23.4. Czy któryś czujnik jest uszkodzony? Uzasadnij liczbami z rozdziału 3. Potem przewidź, co pokaże `T_szafa_C`, gdy napięcie na płytce wynosi 4,8 V, a prawdziwa temperatura to 23 °C.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 2">
+
+Żaden czujnik nie musi być uszkodzony. Dwa DS18B20 różnią się o 0,3 °C, a każdy może się mylić o ±0,5 °C, więc różnica do 1 °C jest normalna. LM35 różni się od nich o 1,5–1,8 °C. To mieści się w granicy około 3 °C: LM35D ±1,5 °C, DS18B20 ±0,5 °C, do tego krok ADC i napięcie zasilania.
+
+Przy 23 °C LM35 daje 0,230 V. Przy napięciu 5 V odczyt wynosi 0,230 × 1024 / 5 ≈ 47,1, czyli 47 (ADC odcina część ułamkową), a stacja pokazuje 47 × 5 / 1024 × 100 ≈ 22,949 °C, czyli `22.9`. Przy 4,8 V ADC porównuje te same 0,230 V z niższym napięciem: 0,230 × 1024 / 4,8 ≈ 49,1, czyli 49. Program nadal liczy z 5 V, więc pokazuje 49 × 5 / 1024 × 100 ≈ 23,93 °C, czyli `23.9`: o stopień więcej niż przy 5 V. Część nadwyżki LM35 może więc pochodzić z portu USB, a nie z czujnika.
+
+</Expandable>
+
+<Task title="Zadanie 3 — znajdź błąd" estimate="10 min">
+Ktoś skrócił funkcję modułu tak:
+
+```cpp
+float zmierzTemperatureModulu() {
+  return sensors.getTempC(ADRES_MODUL);
+}
+```
+
+Program się kompiluje i zwykle działa. Przewidź, co pokaże linia danych, gdy czujnik modułu nie odpowiada. Dlaczego to jest błąd, a nie drobiazg? Popraw funkcję.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 3">
+
+Gdy czujnik nie odpowiada, `getTempC()` zwraca −127, a funkcja oddaje tę liczbę dalej. `wyslijPole()` sprawdza tylko `NAN`, więc wyśle zwykłą liczbę: `2000,612,4.3,23.4,-127.0,23.1`.
+
+To wygląda jak prawdziwy pomiar, tylko absurdalny. Na wykresie powstaje głęboki „dół”, który spłaszcza resztę danych. Średnia się psuje: z 23,1 i −127 wychodzi −52 °C. Program, który pilnowałby mrozu, mógłby ogłosić alarm. Specyfikacja wymaga w takim miejscu pustego pola (punkt 4.4, zasada 7), a [Rejestrator CSV](/narzedzia/rejestrator-csv) policzyłby tę wartość w „Kontroli danych” jako temperaturę −127 lub 85. Poprawka to funkcja z punktu 5.3: sprawdzenie `DEVICE_DISCONNECTED_C` i 85,0 i zwrócenie `NAN`.
+
+</Expandable>
+
+<Task title="Zadanie 4 — eksperyment myślowy: indeksy zamiast adresów" estimate="10 min">
+Ktoś odczytuje czujniki po indeksie: `T_modul_C` z `getTempCByIndex(0)`, a `T_otoczenie_C` z `getTempCByIndex(1)`. Czujnik modułu ma indeks 0. Wartości −127 i 85 zamienia na `NAN`, jak w naszej stacji. Pewnego dnia czujnik modułu przestaje odpowiadać. Co pokażą obie kolumny? Porównaj to z linią naszej stacji w takiej samej sytuacji.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 4">
+
+Biblioteka przy każdym odczycie po indeksie szuka czujników na linii od nowa. Gdy czujnik modułu milczy, pierwszym znalezionym czujnikiem (indeks 0) jest czujnik otoczenia, a indeksu 1 nie ma wcale. `T_modul_C` pokaże więc temperaturę powietrza, a `T_otoczenie_C` będzie puste: `…,23.4,23.1,`. Moduł „ma” temperaturę powietrza i nic nie wskazuje na awarię.
+
+Nasza stacja pokaże `…,23.4,,23.1`: brakuje pomiaru modułu, a temperatura otoczenia stoi we właściwej kolumnie. Gdyby czujnik modułu miał indeks 1, wersja z indeksami w tej sytuacji by zadziałała. Nie wiesz jednak z góry, jaki indeks dostanie czujnik: zależy to od adresów i może się zmienić po wymianie czujnika.
+
+</Expandable>
+
+<Task title="Zadanie 5 — czy czekanie zmienia rytm?" estimate="5 min">
+`requestTemperatures()` czeka w każdym takcie do 750 ms. Obserwuj diodę L i kolumnę `czas_ms` przez kilkanaście linii. Czy stacja nadal mierzy co 2 s? Ile czasu z każdego taktu zostaje wolne?
+</Task>
+
+<Expandable title="Rozwiązanie zadania 5">
+
+Rytm się nie zmienia: `czas_ms` rośnie o 2000 (czasem o 2001 albo 1999, jak w części 1), a dioda zmienia stan co 2 s. Czekanie odbywa się wewnątrz taktu, a termin następnego pomiaru `loop()` ustawia jeszcze przed nim, na stałej siatce. Linia i zmiana stanu diody pojawiają się tylko do 0,75 s po chwili zapisanej w `czas_ms`. Z 2000 ms taktu czekanie zajmuje najwyżej 750 ms, a wysłanie linii kilka milisekund, więc ponad sekunda zostaje wolna.
+
+</Expandable>
+
+## 9. Typowe problemy
+
+<Troubleshooting>
+  <Issue title="Program testowy znajduje 0 czujników">
+    Najczęstsza przyczyna to brak rezystora 4,7 kΩ albo rezystor wpięty do szyny „−” zamiast „+”: linia 1-Wire bez rezystora podciągającego nie działa ([lekcja 19](/lekcje/dzien-06/19-Termometry-analogowe-lm35-i-cyfrowe-ds18b20#7-podłączenie-ds18b20-do-arduino)). Odłącz USB i sprawdź też, czy przewód z rzędu środkowych nóżek (DQ) idzie do `D3`, a nie do `A3` albo `D2`, i czy czujniki nie są obrócone. W programie musi być `PIN_DS18B20 = 3`.
+  </Issue>
+  <Issue title="Program testowy znajduje tylko 1 czujnik">
+    Linia działa, więc winny jest drugi czujnik. Sprawdź, czy jego trzy nóżki są w tych samych rzędach co nóżki pierwszego, czy czujnik nie jest obrócony i czy dobrze trzyma się w stykach. Zamień czujniki miejscami: jeśli błąd przechodzi razem z czujnikiem, czujnik jest uszkodzony.
+  </Issue>
+  <Issue title="Czujnik robi się gorący">
+    Czujnik jest wpięty odwrotnie albo w miejsce czujnika drugiego typu (LM35 i DS18B20 mają zamienione nóżki zasilania). **Natychmiast odłącz USB** i nie dotykaj czujnika, dopóki nie ostygnie. Przeczytaj napis na obudowie i porównaj kolejność nóżek z rozdziałem 1. Po poprawieniu połączeń uruchom program testowy: czujnik, który się przegrzał, mógł się uszkodzić.
+  </Issue>
+  <Issue title="T_szafa_C jest absurdalna albo skacze o kilka stopni">
+    Wartość około `499.5` oznacza, że `A2` jest połączone z 5V, a `0.0`, że z GND: przewód wyjścia LM35 trafił do szyny zasilania albo LM35 stoi w złych rzędach. Wartości skaczące przypadkowo to niepodłączone, „pływające” wejście: przewód do `A2` nie trzyma się albo idzie do innego pinu ([lekcja 07](/lekcje/dzien-02/07-Przetwornik-ADC), zadanie 4). Jeśli LM35 się grzeje, jest wpięty odwrotnie albo to wcale nie LM35, tylko DS18B20: odłącz USB i przeczytaj napis na obudowie. Przeskoki o 0.5 są normalne: to jeden krok ADC.
+  </Issue>
+  <Issue title="T_modul_C albo T_otoczenie_C jest cały czas puste">
+    Program nie znajduje czujnika o adresie zapisanym w stałej. Najczęściej w stałej został adres przykładowy albo jeden bajt jest przepisany z błędem. Porównaj stałą bajt po bajcie z wynikiem programu testowego. Gdy obie kolumny DS18B20 są puste, a adresy są dobre, wgraj program testowy i sprawdź, czy linia 1-Wire działa (powyżej: 0 czujników).
+  </Issue>
+  <Issue title="Ogrzewasz czujnik modułu, a rośnie T_otoczenie_C">
+    Adresy w stałych `ADRES_MODUL` i `ADRES_OTOCZENIE` są zamienione miejscami. Zamień je i wgraj szkic. Upewnij się też, że ogrzewasz czujnik oznaczony jako „moduł”.
+  </Issue>
+  <Issue title="Program testowy pokazuje 85.0 albo -127.0">
+    Program testowy celowo pokazuje surowe wyniki biblioteki. 85.0 to wartość startowa: czujnik nie zdążył wykonać pomiaru, np. po chwilowym zaniku zasilania. Biblioteka starsza niż 4.0.6 pokazuje ją wprost, a wersja 4.0.6 zamienia ją na −127. W stacji obie wartości stają się pustym polem. Jeśli 85.0 albo −127.0 pojawia się w każdym odczycie, czujnik zwykle nie ma zasilania: odłącz USB i sprawdź przewód z prawej nóżki (VDD) do szyny „+”. Bibliotekę zaktualizujesz w Menedżerze bibliotek (*Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami*).
+  </Issue>
+  <Issue title="Kompilator zgłasza: OneWire.h: No such file or directory">
+    Brakuje biblioteki. Komunikat może dotyczyć też pliku `DallasTemperature.h`. Zainstaluj obie biblioteki według [punktu 4.6 specyfikacji](/projekty/monitorowanie#46-biblioteki) i skompiluj szkic jeszcze raz.
+  </Issue>
+  <Issue title="W danych pojawia się -127.0, 85.0 albo nan">
+    Funkcja pomiarowa przepuszcza kod błędu (zadanie 3) albo temperaturę wysyła zwykłe `Serial.print()` zamiast `wyslijPole()`. Porównaj swoje funkcje ze szkicem z punktu 5.6.
+  </Issue>
+  <Issue title="Rejestrator odrzuca linie, a w nagłówku jest 6 kolumn">
+    Nagłówek i linia danych mają różną liczbę kolumn, np. dopisano nowe nazwy w `wyslijNaglowek()`, ale nie dopisano pól w `wyslijWiersz()`. Policz przecinki w Monitorze: w obu liniach ma ich być pięć.
+  </Issue>
+</Troubleshooting>
+
+## 10. Lista kontrolna części 2
+
+Przejdź listę punkt po punkcie, zanim zaczniesz część 3. Jeśli któryś punkt się nie zgadza, wróć do [typowych problemów](#9-typowe-problemy).
+
+- [ ] Pierwsza linia w Monitorze to dokładnie ten nagłówek, bez spacji i bez innych napisów:
+  ```text
+  czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C
+  ```
+- [ ] Każda linia danych ma sześć wartości, oddzielonych pięcioma przecinkami.
+- [ ] W spoczynku trzy temperatury są blisko siebie: dwa DS18B20 różnią się najwyżej o około 1 °C, a LM35 od nich najwyżej o około 3 °C.
+- [ ] Ogrzanie palcami jednego DS18B20 zmienia tylko jego kolumnę: czujnik modułu `T_modul_C`, a czujnik otoczenia `T_otoczenie_C`.
+- [ ] Po wyjęciu jednego DS18B20 (przy odłączonym USB) jego pole jest puste, a druga kolumna działa. W danych nigdy nie pojawia się `-127`, `85` ani `nan`.
+- [ ] Nowa linia pojawia się mniej więcej co 2 s, `czas_ms` rośnie o około 2000, a dioda L zmienia stan przy każdym pomiarze.
+- [ ] Rejestrator CSV, jeśli z niego korzystasz, pokazuje w „Kontroli danych” 0 odrzuconych linii i 0 temperatur −127 lub 85.
+- [ ] Szkic jest zapisany, a cały folder `stacja_monitoringu` skopiowany do folderu `kopia-czesc-2` ([rozdział 7 wprowadzenia](/projekty/monitorowanie#7-jak-pracować-z-projektem)).
+
+## 11. Dla chętnych: Rejestrator CSV
+
+[Rejestrator CSV](/narzedzia/rejestrator-csv) działa z wersją 2 tak samo jak z wersją 1. Zamknij Monitor i Plotter, otwórz rejestrator w Chrome albo Edge, kliknij „Połącz” i wybierz port płytki. Kafelki pokażą teraz także trzy temperatury, a kafelek czujnika bez pomiaru ma napis „brak pomiaru”.
+
+Jeśli w rejestratorze zostały pomiary z części 1, zobaczysz, że rejestrator rozpoznaje zmianę nagłówka. Gdy płytka wyśle nagłówek z innymi kolumnami, zaczyna nowy zapis, a poprzedni odkłada na bok. Komunikat „Poprzedni zapis … czeka na pobranie” pozwala go zapisać do pliku albo odrzucić. Dzięki temu w jednym pliku nigdy nie mieszają się linie z trzema i z sześcioma kolumnami.
+
+Panel „Kontrola danych” to szybki sprawdzian obsługi błędów. Liczy puste pola i osobno temperatury −127 lub 85 w kolumnach `T_…`. Podczas testu brakującego czujnika liczba pustych pól rośnie o jedno z każdą linią, a temperatur −127 lub 85 jest 0. Gdyby funkcja przepuszczała kody błędów, jak w zadaniu 3, rosłaby ta druga liczba.
+
+Licznik odrzuconych linii należy do bieżącego zapisu: zeruje się, gdy nagłówek zaczyna nowy zapis, więc napisy odebrane wcześniej, np. z programu testowego, się do niego nie liczą. „Wyczyść pomiary” usuwa tylko bieżący zapis, a odłożone zapisy zostają, dopóki nie klikniesz przy nich „Odrzuć”. Zanim znowu wgrasz program z Arduino IDE, kliknij „Rozłącz”.
+
+## Podsumowanie
+
+Stacja mierzy teraz trzy temperatury. LM35 na `A2` to „szafa falownika”, a dwa DS18B20 na wspólnej linii 1-Wire `D3` to „moduł PV” i „otoczenie”. Program rozpoznaje je po adresach, więc pomiar nigdy nie trafi do cudzej kolumny. Wiesz, dlaczego termometry stojące obok siebie pokazują różne wartości i jakie różnice są normalne. `requestTemperatures()` zleca pomiar raz na takt i mieści się w rytmie 2 s. Błędny odczyt DS18B20 zostaje pustym polem we własnej kolumnie dzięki `NAN` i funkcji `wyslijPole()`, z której skorzysta też część 3.
+
+Następna część: [Część 3. Dodajemy pomiar wilgotności do systemu](/projekty/monitorowanie/03-pomiar-wilgotnosci).

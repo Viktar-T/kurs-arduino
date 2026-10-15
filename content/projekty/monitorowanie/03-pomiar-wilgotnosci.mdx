@@ -1,0 +1,805 @@
+---
+# --- Life-OS / Obsidian (kept for vault, ignored by the site) ---
+type: note
+namespace: "123-Edu-Kursy"
+status: draft
+sensitivity: low
+
+# --- Site-driving fields ---
+title: "Część 3. Dodajemy pomiar wilgotności do systemu"
+slug: "pomiar-wilgotnosci"
+summary: "Trzecia, ostateczna wersja stacji monitoringu: czujnik DHT11 („szafa falownika albo kontener magazynu energii”) na D2 mierzy wilgotność i temperaturę. Linia danych dostaje dwie ostatnie kolumny, wilgotnosc_proc i T_dht_C, i ma już wszystkie osiem. Najważniejsza zasada tej części: nieudany odczyt zostaje pustym polem, nigdy fałszywym zerem."
+
+project: "monitorowanie"
+part: 3
+order: 3
+duration: 90
+
+objectives:
+  - "Podłączyć DHT11 do D2 z rezystorem 4,7 kΩ zgodnie ze specyfikacją, bez pomylenia kolejności nóżek"
+  - "Sprawdzić programem testowym, czy czujnik odpowiada, i rozpoznać po statusie OK, TIMEOUT albo CHECKSUM, co jest nie tak"
+  - "Ocenić odczyty DHT11 na podstawie rozdzielczości i dokładności z noty katalogowej i porównać T_dht_C z trzema termometrami z części 2"
+  - "Rozbudować szkic stacja_monitoringu.ino do ostatecznej wersji 3, w której oba wyniki DHT11 pochodzą z jednego odczytu czujnika"
+  - "Wyjaśnić, dlaczego nieudany odczyt musi zostać pustym polem, a nie zerem, i sprawdzić to testem wyjętego czujnika"
+  - "Sprawdzić działanie stacji według listy kontrolnej części 3"
+
+prerequisites:
+  - "/projekty/monitorowanie/02-pomiar-temperatury"
+  - "/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11"
+
+hardware:
+  - { name: "Układ z części 1 i 2", qty: 1, note: "zostaje bez zmian; DHT11 wpinasz obok, w wolne rzędy płytki" }
+  - { name: "Czujnik wilgotności DHT11", qty: 1, note: "z czterema nóżkami albo jako moduł z trzema pinami" }
+  - { name: "Rezystor 4,7 kΩ", qty: 1, note: "rezystor podciągający linii danych DHT11; moduł z trzema pinami zwykle ma go już na płytce" }
+  - { name: "Przewody połączeniowe", qty: 3 }
+
+tags: [projekt, monitoring, oze, wilgotnosc, dht11, temperatura, csv, nan, serial-plotter]
+sources:
+  - "https://forbot.pl/blog/wp-content/uploads/2017/02/DHT11.pdf"
+  - "https://github.com/markruys/arduino-DHT"
+  - "https://github.com/markruys/arduino-DHT/blob/master/DHT.cpp"
+  - "https://github.com/markruys/arduino-DHT/blob/master/DHT.h"
+  - "https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/Print.cpp"
+  - "https://en.cppreference.com/w/cpp/language/implicit_conversion"
+  - "https://docs.arduino.cc/learn/microcontrollers/digital-pins/"
+  - "https://github.com/arduino/arduino-serial-plotter-webapp/blob/main/src/msgAggregatorWorker.ts"
+  - "https://github.com/arduino/arduino-serial-plotter-webapp/blob/main/src/utils.ts"
+
+publish: true
+updated: "2026-10-15"
+---
+
+To trzecia część [projektu Monitorowanie](/projekty/monitorowanie). Stacja z [części 2](/projekty/monitorowanie/02-pomiar-temperatury) co 2 sekundy mierzy światło, „wiatr” i trzy temperatury i wysyła linię danych z sześcioma kolumnami. Teraz, zgodnie z [planem projektu](/projekty/monitorowanie#5-plan-projektu), dołożysz ostatni czujnik: DHT11, który mierzy wilgotność i temperaturę. W naszym modelu siedzi w szafie falownika albo w kontenerze z magazynem energii.
+
+Po co mierzyć wilgotność przy elektronice? Gdy wilgotne powietrze się ochłodzi, na zimnych częściach skrapla się woda. Woda powoduje korozję styków i zwarcia. Dlatego w szafach falowników i w kontenerach magazynów energii wilgotność jest pod stałą obserwacją (pokazuje to [tabela we wprowadzeniu](/projekty/monitorowanie#1-co-budujemy-i-po-co)).
+
+<Callout type="note" title="Co masz na końcu tej części">
+
+Kompletną stację monitoringu. Co 2 sekundy wysyła ona linię z ośmioma wartościami, w kolejności z nagłówka:
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+```
+
+To ostateczny układ kolumn projektu. Gdy odczyt DHT11 się nie uda, dwa ostatnie pola zostają puste, a reszta linii działa dalej. Najważniejsza zasada tej części: **nieudany odczyt nie może zamienić się w fałszywe zero**.
+
+</Callout>
+
+<Prerequisites title="Zanim zaczniesz">
+
+- [Część 2. Dodajemy pomiar temperatury do systemu](/projekty/monitorowanie/02-pomiar-temperatury) — stacja przechodzi całą listę kontrolną części 2, a jej folder jest skopiowany do `kopia-czesc-2`. W szkicu są już adresy Twoich czujników DS18B20.
+- [Cyfrowy czujnik wilgotności DHT11](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11) — wilgotność względna, podłączenie DHT11 z rezystorem 4,7 kΩ, biblioteka DHT Marka Ruysa zainstalowana z pliku ZIP oraz funkcje `getHumidity()`, `getTemperature()` i `getStatusString()`.
+
+</Prerequisites>
+
+## 1. Połączenia
+
+Układ z części 1 i 2 zostaje bez zmian. DHT11 wpinasz obok, w wolne rzędy płytki, według kroków „Część 3” z [punktu 4.1 specyfikacji](/projekty/monitorowanie#41-piny-i-połączenia):
+
+1. Odłącz kabel USB.
+2. **DHT11:** ustaw czujnik kratką do siebie, nóżkami w dół, i wepnij go w cztery wolne rzędy płytki. Nóżki liczymy od lewej: 1 (VCC, zasilanie) do szyny „+”, 2 (DATA, linia danych) do `D2`, 3 (NC, niepodłączona) zostaw wolną, 4 (GND) do szyny „−”. To te same połączenia co w [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#3-podłączenie-dht-11-do-arduino).
+3. **Rezystor 4,7 kΩ:** między rząd nóżki 2 (DATA) a szynę „+”. To **rezystor podciągający**, jak przy linii 1-Wire w części 2: w spoczynku utrzymuje na linii danych stan wysoki. To drugi rezystor 4,7 kΩ z zestawu, ten odłożony w części 2.
+4. **Moduł z trzema pinami** (DHT11 przylutowany do małej płytki): kolejność pinów modułów bywa różna, więc kieruj się wyłącznie napisami na płytce. Pin zasilania (VCC albo „+”) do szyny „+”, pin danych (DATA, OUT albo S) do `D2`, pin masy (GND albo „−”) do szyny „−”. Rezystor podciągający zwykle jest już wlutowany w płytkę modułu ([lekcja 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#3-podłączenie-dht-11-do-arduino)); wtedy drugiego nie dokładasz.
+
+Wepnij DHT11 niedaleko LM35, ale tak, żeby się nie stykały. Oba czujniki udają „szafę”, więc w rozdziale 3 porównasz ich temperatury. Trzymaj DHT11 z dala od lampy i od elementów, które się grzeją: nota katalogowa zaleca montować go jak najdalej od źródeł ciepła, bo wilgotność względna mocno zależy od temperatury.
+
+<Pinout
+  board="Arduino UNO — część 3"
+  pins={[
+    { pin: "D2", function: "Wilgotność i temperatura: linia danych DHT11 (nóżka 2, DATA)", note: "rezystor 4,7 kΩ między DATA a 5V" },
+    { pin: "A0, A1, A2, D3, D13", function: "Bez zmian z części 1 i 2", note: "światło, wiatr, LM35, linia 1-Wire obu DS18B20, sygnał życia" },
+  ]}
+/>
+
+{/* SCHEMAT (03.01-polaczenia-czesc-3.png): schemat części 3 — DHT11 z nóżkami 1–4 podpisanymi VCC, DATA, NC, GND; VCC do 5V, DATA do D2, NC wolna, GND do GND; rezystor 4,7 kΩ między DATA a 5V; obok wariant: moduł z trzema pinami (+, DATA, −) bez dodatkowego rezystora */}
+
+{/* SCHEMAT (03.02-uklad-czesc-3.jpg): zdjęcie całego układu po części 3 — układ z części 1 i 2 bez zmian, obok DHT11 kratką do patrzącego, rezystor 4,7 kΩ od rzędu DATA do szyny „+”, przewód do D2 wyraźnie odróżniony od przewodów do A2 i D3 */}
+
+<Callout type="hazard" title="Kolejność nóżek DHT11">
+Liczysz nóżki zawsze od lewej, patrząc na kratkę. Czujnik obrócony tyłem ma zamienione zasilanie: nóżka 4 (GND) dostaje 5 V, a nóżka 1 (VCC) masę. Taki czujnik nie odpowiada i się grzeje, a może się zniszczyć. Nie pomyl też pinów: dane DHT11 idą do `D2`, a nie do `D3` (linia DS18B20) ani do `A2` (LM35). **Jeśli po podłączeniu USB czujesz od czujnika ciepło albo zapach spalenizny, natychmiast odłącz USB** ([zasady bezpieczeństwa, punkty 4 i 5](/projekty/monitorowanie#6-zasady-bezpieczeństwa)) i nie dotykaj go, dopóki nie ostygnie. Sprawny DHT11 ma temperaturę pokoju.
+</Callout>
+
+{/* SCHEMAT (03.03-dht11-nozki.jpg): zbliżenie — DHT11 kratką do patrzącego, nóżkami w dół, pod nóżkami podpisy 1 VCC, 2 DATA, 3 NC, 4 GND; obok moduł DHT11 z trzema pinami i czytelnymi napisami na płytce */}
+
+## 2. Test czujnika wilgotności
+
+Zanim zmienisz szkic stacji, sprawdź DHT11 krótkim programem testowym. Co 2 sekundy odczytuje on czujnik i wypisuje wilgotność, temperaturę oraz **status odczytu**, czyli informację biblioteki, czy odczyt się udał.
+
+<Callout type="note" title="To program tymczasowy">
+Utwórz go jako osobny szkic (*Plik → Nowy szkic*), np. `test_wilgotnosci`. Szkic stacji zostaje na komputerze, w folderze `stacja_monitoringu` i w kopii `kopia-czesc-2`; na płytkę wgrasz go z powrotem w rozdziale 5. Program testowy wysyła dodatkowe napisy, więc nie jest stacją monitoringu.
+</Callout>
+
+Program korzysta z biblioteki DHT Marka Ruysa, tej samej co w lekcji 20. Jeśli jej jeszcze nie masz, zainstaluj ją z pliku ZIP według [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#instalacja-biblioteki) i [punktu 4.6 specyfikacji](/projekty/monitorowanie#46-biblioteki): na stronie github.com/markruys/arduino-DHT kliknij *Code → Download ZIP*, a potem w Arduino IDE wybierz *Szkic → Dołącz bibliotekę → Dodaj bibliotekę .ZIP*. Nie instaluj żadnej innej biblioteki DHT.
+
+<Code lang="cpp" file="test_wilgotnosci.ino">
+```cpp
+// Test czujnika wilgotności: program tymczasowy, tylko do sprawdzenia połączeń.
+// Co 2 s odczytuje DHT11 (D2) i wypisuje wilgotność, temperaturę
+// oraz status odczytu: OK, TIMEOUT albo CHECKSUM.
+
+#include "DHT.h"
+
+const byte PIN_DHT11 = 2;  // linia danych DHT11
+
+DHT dht;                   // obsługa czujnika DHT11
+
+void setup() {
+  Serial.begin(9600);
+  dht.setup(PIN_DHT11, DHT::DHT11);  // pin danych i typ czujnika
+  Serial.println("Test czujnika wilgotnosci DHT11");
+}
+
+void loop() {
+  delay(2000);  // 2 s przerwy, także przed pierwszym odczytem po starcie
+
+  float wilgotnosc = dht.getHumidity();      // odczyt czujnika
+  float temperatura = dht.getTemperature();  // wynik tego samego odczytu
+
+  Serial.print("Wilgotnosc: ");
+  Serial.print(wilgotnosc, 1);
+  Serial.print(" %RH, temperatura: ");
+  Serial.print(temperatura, 1);
+  Serial.print(" C, status: ");
+  Serial.println(dht.getStatusString());
+}
+```
+</Code>
+
+Co tu jest nowego w porównaniu z lekcją 20:
+
+- `dht.setup(PIN_DHT11, DHT::DHT11)` ma drugi argument: typ czujnika. Biblioteka nie musi wtedy zgadywać, jaki czujnik jest podłączony. Dlaczego to ważne, wyjaśnia punkt 4.2.
+- `delay(2000)` stoi na początku `loop()`, więc pierwszy odczyt wypada 2 s po starcie. Nota katalogowa DHT11 prosi, żeby przez pierwszą sekundę po włączeniu zasilania nie wysyłać do czujnika żadnych poleceń, a potem odczytywać go nie częściej niż raz na sekundę.
+- Wyniki trafiają do zmiennych typu `float`, a nie `int` jak w lekcji 20. Dlaczego, zobaczysz w rozdziale 6.
+- `getHumidity()` odczytuje czujnik. `getTemperature()`, wywołana zaraz potem, nie pyta czujnika drugi raz, tylko oddaje temperaturę z tego samego odczytu (punkt 4.3).
+- `getStatusString()` zwraca tekst `OK`, gdy odczyt się udał. `TIMEOUT` znaczy, że czujnik nie odpowiedział na czas. `CHECKSUM` znaczy, że odpowiedział, ale dane dotarły przekłamane: nie zgadza się **suma kontrolna**, czyli liczba wyliczona z danych, po której biblioteka sprawdza, czy nic się nie zmieniło po drodze.
+
+Wgraj program, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud. Wynik wygląda mniej więcej tak (liczby zależą od sali):
+
+```text
+Test czujnika wilgotnosci DHT11
+Wilgotnosc: 41.0 %RH, temperatura: 23.0 C, status: OK
+Wilgotnosc: 41.0 %RH, temperatura: 23.0 C, status: OK
+Wilgotnosc: 42.0 %RH, temperatura: 23.0 C, status: OK
+```
+
+{/* SCHEMAT (03.04-test-wilgotnosci-monitor.png): Monitor portu szeregowego z wynikiem programu test_wilgotnosci; kilka linii ze statusem OK, potem linie po chuchnięciu na czujnik (wilgotność rośnie) */}
+
+Sprawdź po kolei:
+
+- **Status `OK` w każdej linii.** Czujnik odpowiada i dane dochodzą bez błędów.
+- **Wilgotność pasuje do sali.** W pomieszczeniu to zwykle kilkadziesiąt procent. Liczba ma zawsze `.0` na końcu: dlaczego, wyjaśnia rozdział 3.
+- **Temperatura jest bliska temperaturze sali** i pozostałym termometrom. Jak bardzo może się od nich różnić, policzysz w rozdziale 3.
+- **Chuchnij na czujnik.** W ciągu kilku sekund wilgotność wyraźnie rośnie, a potem przez dłuższy czas powoli spada.
+
+Gdy status nie jest `OK`, odłącz USB i sprawdź:
+
+- **`TIMEOUT` w każdej linii, a wartości `nan`:** czujnik w ogóle nie odpowiada. Sprawdź, czy przewód z rzędu nóżki 2 (DATA) idzie do `D2` (a nie do `D3` albo `A2`), czy nóżka 1 ma połączenie z „+”, a nóżka 4 z „−” i czy każda nóżka stoi w osobnym rzędzie płytki. W programie musi być `PIN_DHT11 = 2`.
+- **Czujnik obrócony tyłem** też daje `TIMEOUT`, a do tego się grzeje. Jeśli czujesz od niego ciepło, natychmiast odłącz USB i obróć czujnik kratką do siebie.
+- **Pojedynczy `CHECKSUM` albo `TIMEOUT` wśród linii z `OK`:** jeden odczyt się nie udał, np. przez obluzowany styk. Następny zwykle działa. Jeśli błędy powtarzają się często, dociśnij przewody i sprawdź rezystor 4,7 kΩ.
+
+Program testowy celowo pokazuje surowe wyniki biblioteki, łącznie z `nan` (ang. *not a number*, „nie-liczba”) przy nieudanym odczycie. Stacja w takim miejscu wyśle puste pole.
+
+## 3. Co DHT11 potrafi zmierzyć, a czego nie
+
+DHT11 mierzy **wilgotność względną**, w skrócie RH (ang. *relative humidity*), w procentach: **%RH**. Mówi ona, ile pary wodnej jest w powietrzu w porównaniu z największą ilością, jaką powietrze o tej temperaturze może pomieścić. Przy 100 %RH powietrze jest nasycone i para zaczyna się skraplać. Ciepłe powietrze mieści więcej pary niż zimne, więc gdy wilgotne powietrze w szafie ostygnie, jego wilgotność względna rośnie, aż na zimnych częściach pojawi się woda. Więcej, łącznie z **punktem rosy**, czyli temperaturą, w której zaczyna się skraplanie, znajdziesz w [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#1-czym-jest-wilgotność-względna).
+
+Parametry z noty katalogowej DHT11:
+
+<Table
+  caption="DHT11: wilgotność i temperatura według noty katalogowej"
+  headers={["", "Wilgotność", "Temperatura"]}
+  rows={[
+    ["Zakres pomiaru", "20–90 %RH przy 25 °C (30–90 %RH przy 0 °C, 20–80 %RH przy 50 °C)", "0–50 °C"],
+    ["Rozdzielczość, czyli najmniejsza zmiana, jaką widać", "1 %RH", "1 °C"],
+    ["Dokładność", "typowo ±4 %RH przy 25 °C, najwyżej ±5 %RH w zakresie 0–50 °C", "±2 °C"],
+    ["Czas reakcji: dwie trzecie drogi do nowej wartości", "od 6 do 15 s, typowo 10 s (przy 25 °C i lekkim ruchu powietrza)", "od 6 do 30 s"],
+    ["Odstęp między pomiarami", "co najmniej 1 s, oba wyniki z jednego pomiaru", "co najmniej 1 s, oba wyniki z jednego pomiaru"],
+  ]}
+/>
+
+Co z tego wynika dla stacji:
+
+- **Pełne liczby.** Rozdzielczość to 1 %RH i 1 °C, a biblioteka dla DHT11 bierze z danych czujnika tylko część całkowitą. Stacja wysyła każdą wartość z jednym miejscem po przecinku (specyfikacja, punkt 4.4, zasada 6), więc zobaczysz `41.0` i `23.0`, ale nigdy `41.5`. To `.0` to tylko format zapisu, a nie dokładność do dziesiątej części.
+- **Dokładność ±5 %RH.** Gdy stacja pokazuje `41.0`, prawdziwa wilgotność może wynosić od 36 do 46 %RH. Do wykrywania wilgoci w szafie to wystarcza: ważna jest zmiana i zbliżanie się do nasycenia, a nie pojedynczy procent.
+- **Powolna reakcja.** Po zmianie wilgotności czujnik potrzebuje typowo 10 s, żeby pokonać dwie trzecie drogi do nowej wartości. Stacja mierzy co 2 s, więc kolejne linie pokazują, jak odczyt powoli „dochodzi” do nowej wartości. Szybciej się nie da: częstsze pomiary nie przyspieszą czujnika.
+- **Jeden pomiar daje dwa wyniki.** Wilgotność i temperatura przychodzą z czujnika razem, w jednej porcji danych. Czujnik mierzy temperaturę także dlatego, że wilgotność względna od niej zależy ([lekcja 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#1-czym-jest-wilgotność-względna)).
+
+**Czwarty termometr.** Kolumna `T_dht_C` to już czwarta temperatura w stacji. LM35 (`T_szafa_C`) i DHT11 mierzą to samo miejsce, „szafę”. Dwa czujniki mierzące to samo pozwalają się nawzajem sprawdzać: gdy ich odczyty rozjadą się bardziej, niż pozwalają noty katalogowe, któryś z nich mierzy źle albo stoi przy źródle ciepła. Tak samo jak w [rozdziale 3 części 2](/projekty/monitorowanie/02-pomiar-temperatury#3-porównanie-trzech-termometrów), dopuszczalną różnicę liczysz z dokładności obu czujników:
+
+<Table
+  caption="Ile może się różnić T_dht_C od pozostałych termometrów"
+  headers={["Porównanie", "Z not katalogowych", "W praktyce normalne"]}
+  rows={[
+    ["DHT11 a DS18B20 (T_modul_C, T_otoczenie_C)", "±2 °C i ±0,5 °C, czyli do 2,5 °C", "do około 3 °C, bo DHT11 pokazuje tylko pełne stopnie"],
+    ["DHT11 a LM35 (T_szafa_C)", "±2 °C i ±1,5 °C (LM35D), czyli do 3,5 °C", "do około 5 °C, bo przy LM35 dochodzą krok ADC i napięcie zasilania (część 2, rozdział 3)"],
+  ]}
+/>
+
+Najpewniej porównasz DHT11 z czujnikiem otoczenia, bo DS18B20 jest najdokładniejszy, a „moduł” bywa nagrzany lampą. Różnica wyraźnie większa, np. 8 °C, oznacza błąd w połączeniach, uszkodzony czujnik albo czujnik przy źródle ciepła: zajrzyj do [typowych problemów](#9-typowe-problemy).
+
+## 4. Program stacji, wersja 3 (ostateczna), krok po kroku
+
+Otwórz szkic `stacja_monitoringu` (*Plik → Otwórz…*). Rozbudujesz go do wersji 3. To ostatnia zmiana szkicu w projekcie: część 4 nie zmienia już ani programu, ani układu kolumn. Poniżej omawiamy tylko to, co nowe, od góry pliku. Cały szkic do skopiowania jest w punkcie 4.6.
+
+<Callout type="note" title="Co się zmieniło w porównaniu z wersją 2">
+
+- Nowy `#include "DHT.h"`: biblioteka DHT Marka Ruysa.
+- Nowa stała `PIN_DHT11`.
+- Nowy obiekt `dht`, a w `setup()` wywołanie `dht.setup(PIN_DHT11, DHT::DHT11)`.
+- Dwie nowe funkcje pomiarowe: `zmierzWilgotnosc()` i `zmierzTemperatureDht()`.
+- Dwie nowe kolumny w `wyslijNaglowek()`, a w `wyslijWiersz()` jeden odczyt DHT11 i dwa nowe pola, wysyłane funkcją `wyslijPole()` z części 2.
+
+Bez zmian zostają `loop()` z rytmem pomiarów, sygnał życia, `wyslijPole()`, wszystkie funkcje z części 1 i 2 oraz **Twoje adresy czujników DS18B20**.
+
+</Callout>
+
+### 4.1. Biblioteka, stała i obiekt
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+#include <OneWire.h>            // protokół 1-Wire
+#include <DallasTemperature.h>  // czujniki DS18B20
+#include "DHT.h"                // czujnik DHT11 (biblioteka Marka Ruysa, lekcja 20)
+
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LM35 = A2;          // temperatura w szafie
+const byte PIN_DHT11 = 2;          // wilgotność i temperatura DHT11
+const byte PIN_DS18B20 = 3;        // linia 1-Wire obu czujników DS18B20
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+// Adresy czujników DS18B20: zostaw tu SWOJE adresy z części 2!
+// Czujnik „modułu PV”:
+const DeviceAddress ADRES_MODUL = { 0x28, 0xD4, 0x3F, 0x57, 0x04, 0xE1, 0x3C, 0x81 };
+// Czujnik otoczenia:
+const DeviceAddress ADRES_OTOCZENIE = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7A, 0x0B, 0xCF };
+
+OneWire oneWire(PIN_DS18B20);         // linia 1-Wire na pinie 3
+DallasTemperature sensors(&oneWire);  // czujniki DS18B20 na tej linii
+DHT dht;                              // czujnik DHT11
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+```
+</Code>
+
+- `#include "DHT.h"` dołącza bibliotekę tak samo jak w [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#4-komunikacja-z-dht-11--biblioteka-marka-ruysa). Stoi pod dwoma `#include` z części 2.
+- `PIN_DHT11` ma nazwę i wartość z [punktu 4.5 specyfikacji](/projekty/monitorowanie#45-program). W lekcji 20 ta sama stała nazywała się `DHT11_PIN`; w stacji obowiązuje nazwa ze specyfikacji. Pin cyfrowy D2 zapisujemy jako `2`.
+- `DHT dht;` tworzy obiekt, który obsługuje czujnik, jak w lekcji 20.
+- **Adresy DS18B20 są Twoje.** W tym fragmencie i w całym szkicu w punkcie 4.6 stoją adresy przykładowe z części 2. W Twoim szkicu mają zostać adresy Twoich czujników, wpisane w części 2. Z przykładowymi adresami obie kolumny DS18B20 będą puste.
+
+### 4.2. `setup()`: jedna nowa linia
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  sensors.begin();            // wyszukaj czujniki DS18B20 na linii 1-Wire
+  dht.setup(PIN_DHT11, DHT::DHT11);  // DHT11 na pinie 2, typ podany wprost
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+```
+</Code>
+
+`dht.setup()` mówi bibliotece, na którym pinie jest linia danych. Drugi argument, `DHT::DHT11`, podaje typ czujnika. Biblioteka obsługuje kilka czujników z tej rodziny, a `DHT::DHT11` to nazwa jednego z nich, zapisana w bibliotece (stąd `DHT::` przed nazwą). Z podanym typem `dht.setup()` niczego nie wysyła do czujnika. Pierwszym poleceniem dla DHT11 jest więc pomiar w pierwszym takcie, 2 s po starcie: dokładnie tak, jak zakłada [punkt 4.2 specyfikacji](/projekty/monitorowanie#42-rytm-pomiarów).
+
+<Expandable title="Głębiej: co robi dht.setup() bez typu czujnika" heading="####">
+
+W lekcji 20 wywołanie miało jeden argument: `dht.setup(DHT11_PIN)`. Biblioteka nie wie wtedy, czy podłączony jest DHT11, czy jego większy brat DHT22, więc zgaduje. W funkcji `setup()` w pliku `DHT.cpp` od razu wysyła sygnał startu w wersji dla DHT22, krótszy niż ten, którego potrzebuje DHT11. Według komentarza w kodzie DHT11 na taki sygnał nie odpowiada i po tym biblioteka go rozpoznaje.
+
+Ma to dwa skutki. Pierwsze polecenie trafia do czujnika zaraz po starcie płytki, a nota DHT11 prosi o sekundę spokoju po włączeniu zasilania. Poza tym biblioteka pamięta to zgadywanie jako odczyt (nieudany) i przez następną sekundę nie pyta czujnika ponownie. Autor ostrzega w komentarzu, że po rozpoznaniu DHT11 trzeba odczekać co najmniej sekundę przed pierwszym odczytem. Program z lekcji 20 odczytuje czujnik od razu w pierwszym przejściu `loop()`, więc na początku dostaje `NAN` zamiast pomiaru.
+
+Z typem podanym wprost nie ma zgadywania, a stacja i tak pierwszy raz mierzy 2 s po starcie.
+
+</Expandable>
+
+### 4.3. Funkcje pomiarowe DHT11
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Wilgotność: DHT11, w %RH albo NAN
+float zmierzWilgotnosc() {
+  return dht.getHumidity();     // odczyt czujnika; po błędzie biblioteka zwraca NAN
+}
+
+// Temperatura z DHT11: w °C albo NAN
+float zmierzTemperatureDht() {
+  return dht.getTemperature();  // przez 1 s po odczycie: wynik tego samego odczytu
+}
+```
+</Code>
+
+Funkcje są krótkie, bo dużą część pracy wykonuje biblioteka. Wszystko poniżej sprawdziliśmy w jej kodzie źródłowym (`DHT.cpp`), a nie tylko w opisie:
+
+- **Błąd to już `NAN`.** Przed każdym odczytem biblioteka wpisuje do zapamiętanej wilgotności i temperatury `NAN` i zamienia je na liczby dopiero wtedy, gdy odczyt się uda. Po błędzie `TIMEOUT` albo `CHECKSUM` obie funkcje zwracają więc `NAN`, czyli dokładnie to, czego wymaga [punkt 4.7 specyfikacji](/projekty/monitorowanie#47-błędne-odczyty). Nie trzeba osobno sprawdzać statusu ani zamieniać kodów błędów, jak przy DS18B20. Sprawdzenie `isnan()` zrobi za nas `wyslijPole()`.
+- **Jeden odczyt na takt.** Biblioteka pilnuje odstępu z noty: jeśli od poprzedniego odczytu minęła mniej niż sekunda, nie pyta czujnika, tylko oddaje zapamiętane wyniki. Pierwsza wywołana funkcja, u nas `zmierzWilgotnosc()`, naprawdę odczytuje czujnik. `zmierzTemperatureDht()`, wywołana kilka mikrosekund później, dostaje temperaturę z tego samego odczytu. Obie liczby w linii danych pochodzą więc z jednego pomiaru, a czujnik jest pytany raz na takt, czyli co około 2 s.
+- **Typ `float`.** Funkcje zwracają `float`, a nie `int`. Tylko `float` może przechować `NAN`. Co się dzieje z `NAN` w zmiennej `int`, pokazuje rozdział 6.
+
+<Expandable title="Głębiej: jak biblioteka odczytuje DHT11" heading="####">
+
+Odczyt wykonuje funkcja `readSensor()` w pliku `DHT.cpp`, krok po kroku:
+
+1. Sprawdza, czy od poprzedniego odczytu minęła co najmniej sekunda (dla DHT11 dokładnie 999 ms). Jeśli nie, kończy od razu i nie zmienia ani wyników, ani statusu.
+2. Wpisuje `NAN` do zapamiętanej wilgotności i temperatury.
+3. Wysyła **sygnał startu**: przez 18 ms trzyma linię danych w stanie niskim (nota: co najmniej 18 ms), a potem przełącza pin na wejście i włącza wbudowany rezystor podciągający Arduino.
+4. Odbiera odpowiedź czujnika i 40 bitów danych: część całkowitą i dziesiętną wilgotności, część całkowitą i dziesiętną temperatury (po 8 bitów) oraz 8 bitów sumy kontrolnej. Każdy bit to impuls: krótki oznacza 0, długi 1. Długość impulsów biblioteka mierzy w mikrosekundach. Jeśli linia nie zmieni stanu w ciągu 90 µs, kończy ze statusem `TIMEOUT`.
+5. Dodaje cztery bajty danych i porównuje wynik z piątym, sumą kontrolną. Jeśli się nie zgadzają, kończy ze statusem `CHECKSUM`.
+6. Dopiero teraz zapisuje wyniki (dla DHT11 tylko części całkowite) i ustawia status `OK`.
+
+Gdy odczyt skończy się w punkcie 4 albo 5, w pamięci zostaje `NAN` z punktu 2.
+
+</Expandable>
+
+### 4.4. Funkcje wysyłające: dwie nowe kolumny
+
+<Code lang="cpp" file="stacja_monitoringu.ino (fragment)">
+```cpp
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.print(",T_szafa_C,T_modul_C,T_otoczenie_C");  // część 2
+  Serial.print(",wilgotnosc_proc,T_dht_C");            // część 3
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  sensors.requestTemperatures();            // oba DS18B20 mierzą naraz (do 750 ms)
+  float T_szafa_C = zmierzTemperatureSzafy();
+  float T_modul_C = zmierzTemperatureModulu();
+  float T_otoczenie_C = zmierzTemperatureOtoczenia();
+
+  float wilgotnosc_proc = zmierzWilgotnosc();  // jeden odczyt DHT11 (około 22 ms)
+  float T_dht_C = zmierzTemperatureDht();      // temperatura z tego samego odczytu
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  wyslijPole(T_szafa_C);                    // część 2: trzy temperatury
+  wyslijPole(T_modul_C);
+  wyslijPole(T_otoczenie_C);
+  wyslijPole(wilgotnosc_proc);              // część 3: wilgotność i temperatura DHT11
+  wyslijPole(T_dht_C);
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+- **Nagłówek.** Dwie ostatnie nazwy kolumn dopisujesz trzecim `Serial.print()` przed `Serial.println()`, tak samo jak w części 2. Nagłówek ma teraz osiem nazw i siedem przecinków.
+- **Kolejność wywołań.** Najpierw `zmierzWilgotnosc()`, która odczytuje czujnik, zaraz potem `zmierzTemperatureDht()`, która dostaje wynik tego samego odczytu (punkt 4.3).
+- **Dwa nowe pola na końcu linii** wysyła `wyslijPole()` z części 2: przecinek, a za nim liczba z jednym miejscem po przecinku albo nic, gdy wartość to `NAN`. Gdy odczyt DHT11 się nie uda, linia kończy się więc dwoma pustymi polami: `…,22.8,,`. Przecinki idą zawsze, więc linia ma zawsze osiem kolumn.
+- Zmienne `wilgotnosc_proc` i `T_dht_C` nazywają się tak jak kolumny, jak wszystkie pozostałe.
+
+### 4.5. Czy odczyt DHT11 psuje rytm?
+
+Jeden odczyt DHT11 zatrzymuje program na około 22 ms: 18 ms trwa sygnał startu, a około 4 ms przesyłanie danych (nota katalogowa: jedna wymiana danych trwa około 4 ms). Gdy czujnik nie odpowiada, biblioteka rezygnuje już po około 18 ms. Odczyt następuje po czekaniu na DS18B20 (do 750 ms), więc pomiary całego taktu kończą się najpóźniej po około 0,8 s. Zostaje ponad sekunda zapasu. Termin następnego pomiaru `loop()` ustawia na stałej siatce z [punktu 4.2 specyfikacji](/projekty/monitorowanie#42-rytm-pomiarów) jeszcze przed wywołaniem `wyslijWiersz()`, więc rytm 2 s się nie zmienia. DHT11 dostaje polecenie co około 2 s, czyli rzadziej niż raz na sekundę, jak wymaga nota.
+
+### 4.6. Cały szkic
+
+Tak wygląda trzecia, ostateczna wersja stacji w całości.
+
+<Callout type="warning" title="Zachowaj swoje adresy DS18B20">
+W szkicu poniżej stoją **przykładowe** adresy czujników DS18B20. Twój szkic ma już właściwe adresy z części 2 i muszą one zostać. Zanim wkleisz wersję 3, zaznacz w swoim szkicu dwie linie zaczynające się od `const DeviceAddress` i skopiuj je do notatnika. Potem skopiuj wersję 3 przyciskiem kopiowania w prawym górnym rogu ramki, wklej ją w miejsce wersji 2 i podmień dwie linie z przykładowymi adresami na swoje. Na koniec zapisz szkic (`Ctrl+S`). Jeśli wolisz, możesz zamiast tego dopisać do wersji 2 tylko zmiany z punktów 4.1–4.4: adresy zostaną wtedy na miejscu.
+</Callout>
+
+<Code lang="cpp" file="stacja_monitoringu.ino">
+```cpp
+// Stacja monitoringu, wersja 3 (projekt Monitorowanie, część 3)
+// Co 2 s mierzy światło (A0), wiatr (A1), trzy temperatury (LM35 na A2
+// i dwa DS18B20 na linii 1-Wire D3) oraz wilgotność i temperaturę (DHT11 na D2).
+// Wysyła jedną linię CSV:
+// czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+
+#include <OneWire.h>            // protokół 1-Wire
+#include <DallasTemperature.h>  // czujniki DS18B20
+#include "DHT.h"                // czujnik DHT11 (biblioteka Marka Ruysa, lekcja 20)
+
+// Piny (zgodnie ze specyfikacją systemu)
+const byte PIN_FOTOREZYSTOR = A0;  // światło
+const byte PIN_POTENCJOMETR = A1;  // wiatr
+const byte PIN_LM35 = A2;          // temperatura w szafie
+const byte PIN_DHT11 = 2;          // wilgotność i temperatura DHT11
+const byte PIN_DS18B20 = 3;        // linia 1-Wire obu czujników DS18B20
+const byte PIN_LED = 13;           // sygnał życia (wbudowana dioda L)
+
+// Rytm pomiarów
+const unsigned long INTERWAL_MS = 2000UL;  // co 2 s
+
+// Adresy czujników DS18B20: zostaw tu SWOJE adresy z części 2!
+// Czujnik „modułu PV”:
+const DeviceAddress ADRES_MODUL = { 0x28, 0xD4, 0x3F, 0x57, 0x04, 0xE1, 0x3C, 0x81 };
+// Czujnik otoczenia:
+const DeviceAddress ADRES_OTOCZENIE = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7A, 0x0B, 0xCF };
+
+OneWire oneWire(PIN_DS18B20);         // linia 1-Wire na pinie 3
+DallasTemperature sensors(&oneWire);  // czujniki DS18B20 na tej linii
+DHT dht;                              // czujnik DHT11
+
+unsigned long nastepnyPomiar = INTERWAL_MS; // pierwszy pomiar 2 s po starcie
+int stanLED = LOW;                          // aktualny stan diody sygnału życia
+
+void setup() {
+  Serial.begin(9600);         // UART: 9600 baud (specyfikacja, punkt 4.4)
+  pinMode(PIN_LED, OUTPUT);   // dioda sygnału życia jako wyjście
+  sensors.begin();            // wyszukaj czujniki DS18B20 na linii 1-Wire
+  dht.setup(PIN_DHT11, DHT::DHT11);  // DHT11 na pinie 2, typ podany wprost
+  wyslijNaglowek();           // nazwy kolumn: raz, na początku
+}
+
+void loop() {
+  // Czy nadszedł termin pomiaru? (działa także po przepełnieniu millis())
+  if ((long)(millis() - nastepnyPomiar) >= 0) {
+    nastepnyPomiar += INTERWAL_MS;          // termin następnego pomiaru: +2 s
+    wyslijWiersz();                         // zmierz czujniki i wyślij linię danych
+  }
+}
+
+// ----- Funkcje pomiarowe -----
+
+// Światło: surowy odczyt z dzielnika z fotorezystorem (0–1023, bez jednostki)
+int zmierzSwiatlo() {
+  return analogRead(PIN_FOTOREZYSTOR);
+}
+
+// Wiatr: napięcie z suwaka potencjometru przeliczone na m/s
+float zmierzWiatr() {
+  int odczyt = analogRead(PIN_POTENCJOMETR);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;            // napięcie w woltach (0–5 V)
+  return U * 6.0;                             // 1 V to 6 m/s, więc 5 V to 30 m/s
+}
+
+// Temperatura w szafie: LM35 daje 10 mV na każdy 1 °C
+float zmierzTemperatureSzafy() {
+  int odczyt = analogRead(PIN_LM35);  // 0–1023
+  float U = odczyt * 5.0 / 1024.0;    // napięcie w woltach
+  return U * 100.0;                   // 1 V to 100 °C
+}
+
+// Temperatura modułu PV: DS18B20 o adresie ADRES_MODUL, w °C albo NAN
+float zmierzTemperatureModulu() {
+  float t = sensors.getTempC(ADRES_MODUL);        // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+
+// Temperatura otoczenia: DS18B20 o adresie ADRES_OTOCZENIE, w °C albo NAN
+float zmierzTemperatureOtoczenia() {
+  float t = sensors.getTempC(ADRES_OTOCZENIE);    // wynik ostatniego pomiaru
+  if (t == DEVICE_DISCONNECTED_C || t == 85.0) {  // -127 albo wartość startowa 85
+    return NAN;                                   // błąd: brak pomiaru
+  }
+  return t;
+}
+
+// Wilgotność: DHT11, w %RH albo NAN
+float zmierzWilgotnosc() {
+  return dht.getHumidity();     // odczyt czujnika; po błędzie biblioteka zwraca NAN
+}
+
+// Temperatura z DHT11: w °C albo NAN
+float zmierzTemperatureDht() {
+  return dht.getTemperature();  // przez 1 s po odczycie: wynik tego samego odczytu
+}
+
+// ----- Funkcje wysyłające -----
+
+// Nagłówek: nazwy kolumn, wysyłany raz, w setup()
+void wyslijNaglowek() {
+  Serial.print("czas_ms,swiatlo,wiatr_m_s");
+  Serial.print(",T_szafa_C,T_modul_C,T_otoczenie_C");  // część 2
+  Serial.print(",wilgotnosc_proc,T_dht_C");            // część 3
+  Serial.println();                         // koniec nagłówka
+}
+
+// Jedno pole: przecinek, a za nim wartość z jednym miejscem po przecinku.
+// Dla NAN (brak pomiaru) wysyła sam przecinek, więc pole zostaje puste.
+void wyslijPole(float wartosc) {
+  Serial.print(",");
+  if (!isnan(wartosc)) {
+    Serial.print(wartosc, 1);
+  }
+}
+
+// Jedna linia danych: wywoływana w każdym takcie pomiarowym
+void wyslijWiersz() {
+  unsigned long czas_ms = millis();         // chwila pomiaru
+  int swiatlo = zmierzSwiatlo();
+  float wiatr_m_s = zmierzWiatr();
+
+  sensors.requestTemperatures();            // oba DS18B20 mierzą naraz (do 750 ms)
+  float T_szafa_C = zmierzTemperatureSzafy();
+  float T_modul_C = zmierzTemperatureModulu();
+  float T_otoczenie_C = zmierzTemperatureOtoczenia();
+
+  float wilgotnosc_proc = zmierzWilgotnosc();  // jeden odczyt DHT11 (około 22 ms)
+  float T_dht_C = zmierzTemperatureDht();      // temperatura z tego samego odczytu
+
+  Serial.print(czas_ms);
+  Serial.print(",");
+  Serial.print(swiatlo);
+  Serial.print(",");
+  Serial.print(wiatr_m_s, 1);               // jedno miejsce po przecinku
+  wyslijPole(T_szafa_C);                    // część 2: trzy temperatury
+  wyslijPole(T_modul_C);
+  wyslijPole(T_otoczenie_C);
+  wyslijPole(wilgotnosc_proc);              // część 3: wilgotność i temperatura DHT11
+  wyslijPole(T_dht_C);
+  Serial.println();                         // koniec linii danych
+
+  // Sygnał życia: dioda zmienia stan przy każdym pomiarze
+  stanLED = !stanLED;
+  digitalWrite(PIN_LED, stanLED);
+}
+```
+</Code>
+
+To ostateczna wersja programu stacji. Część 4 niczego w nim nie zmienia: sprawdzisz w niej cały system i zapiszesz dane do pliku.
+
+## 5. Uruchomienie i Monitor portu szeregowego
+
+Kliknij **Weryfikuj** (✓), a potem **Wgraj** (→). Gdy wgrywanie się skończy, otwórz Monitor portu szeregowego i ustaw prędkość `9600` baud.
+
+<ExpectedOutput title="W Monitorze portu szeregowego">
+
+Najpierw pojawia się ostateczny nagłówek, a potem co 2 sekundy linia z ośmioma wartościami. Wartości poniżej są przykładowe:
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+2000,612,4.3,23.4,24.1,22.8,41.0,23.0
+4000,610,4.3,23.4,24.1,22.8,41.0,23.0
+6000,611,4.3,23.9,24.1,22.9,41.0,23.0
+8000,609,4.3,23.4,24.1,22.8,42.0,23.0
+```
+
+Dioda L zmienia stan przy każdym pomiarze, tak jak w częściach 1 i 2.
+
+</ExpectedOutput>
+
+{/* SCHEMAT (03.05-monitor-stacja-v3.png): Monitor portu szeregowego ustawiony na 9600 baud; nagłówek wersji 3 i kilkanaście linii danych, w tym linie podczas testu chuchania (rośnie wilgotnosc_proc) */}
+
+Przyjrzyj się danym:
+
+- **Osiem wartości w każdej linii**, oddzielonych siedmioma przecinkami, w kolejności z nagłówka.
+- **Pierwsza linia ma już wilgotność.** Czujnik pierwszy raz mierzy w pierwszym takcie, 2 s po starcie, więc odczyt się udaje.
+- **`wilgotnosc_proc` i `T_dht_C` kończą się zawsze na `.0`** (rozdział 3) i zmieniają się rzadko, skokami o 1.
+- **`T_dht_C` jest blisko pozostałych temperatur**, w granicach z rozdziału 3.
+
+**Test chuchania.** Chuchnij na DHT11 z bliska, raz albo dwa razy. W ciągu jednego lub dwóch taktów wilgotność wyraźnie rośnie, a potem spada, ale dużo wolniej: powrót do poprzedniej wartości zajmuje kilkadziesiąt sekund. Ciepły oddech może też podnieść `T_dht_C` o stopień. Pozostałe kolumny się nie zmieniają. Przykład:
+
+```text
+20000,611,4.3,23.4,24.1,22.8,41.0,23.0
+22000,610,4.3,23.4,24.1,22.8,63.0,23.0
+24000,611,4.3,23.4,24.1,22.8,74.0,24.0
+26000,611,4.3,23.4,24.1,22.8,70.0,24.0
+28000,610,4.3,23.9,24.1,22.8,64.0,24.0
+```
+
+Tak wygląda powolna reakcja czujnika z rozdziału 3 i tak samo wyglądałby w danych wzrost wilgotności w prawdziwej szafie.
+
+**Test brakującego czujnika.** Sprawdź teraz najważniejszą zasadę tej części: nieudany odczyt DHT11 daje puste pola, a nie zera.
+
+1. Odłącz kabel USB ([zasada bezpieczeństwa 2](/projekty/monitorowanie#6-zasady-bezpieczeństwa)).
+2. Wyjmij z płytki przewód, który łączy nóżkę DATA z `D2` (albo wyjmij cały czujnik). Reszta układu zostaje na miejscu.
+3. Podłącz USB i otwórz Monitor.
+
+```text
+czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+2000,612,4.3,23.4,24.1,22.8,,
+4000,611,4.3,23.4,24.1,22.8,,
+6000,610,4.3,23.4,24.1,22.8,,
+```
+
+Dwa ostatnie pola są puste: po `22.8` stoją już tylko dwa przecinki. Pozostałe kolumny działają dalej, a w danych nie ma `0`, `0.0` ani `nan`.
+
+4. Odłącz USB, przywróć przewód (albo wepnij czujnik w te same rzędy, kratką do siebie) i podłącz USB. Obie kolumny DHT11 znów mają wartości.
+
+Tak samo stacja zachowa się, gdy czujnik zawiedzie w czasie pracy: od najbliższego taktu oba jego pola będą puste, a gdy odczyt znów się uda, wrócą liczby.
+
+## 6. Fałszywe zero
+
+W [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#5-odczyt-wilgotności-i-temperatury) wynik trafiał do zmiennej całkowitej: `int wilgotnosc = dht.getHumidity();`. Gdy czujnik działa, nic złego się nie dzieje, bo DHT11 i tak podaje pełne liczby. Kłopot zaczyna się przy nieudanym odczycie. `getHumidity()` zwraca wtedy `NAN`, a `NAN` nie jest żadną liczbą całkowitą, więc nie da się go zapisać w zmiennej `int`. Standard C++ nie określa, co wtedy wyjdzie: zachowanie programu jest **niezdefiniowane** (ang. *undefined behavior*). W [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#6-obsługa-błędów-odczytu) taki odczyt dawał w Monitorze `0`, ale inny kompilator albo inna płytka mogą dać inną liczbę. To błąd programu, na którym nie wolno polegać, a nie cecha biblioteki.
+
+Dlaczego zero jest groźne? Wygląda jak pomiar:
+
+- **0 %RH to skrajnie suche powietrze.** DHT11 nawet nie mierzy poniżej 20 %RH, ale w danych `0.0` wygląda jak prawdziwy wynik. Gdy czujnik w szafie zawiedzie akurat wtedy, gdy powietrze robi się wilgotne, zero powie operatorowi: „sucho, wszystko w porządku”.
+- **Na wykresie** pojawia się głęboki „dół” do zera, który spłaszcza resztę danych.
+- **Średnia się psuje.** Średnia z pomiarów 41, 41 i fałszywego 0 to około 27 %RH zamiast 41.
+- **`T_dht_C` równe 0** wygląda jak mróz w szafie.
+
+Puste pole mówi uczciwie: „tu nie ma pomiaru”. Arkusz kalkulacyjny pomija puste komórki, gdy liczy średnią, a na wykresie zostaje przerwa. Więcej o tej zasadzie mówi akapit „Dlaczego puste pole, a nie zero?” w [punkcie 4.4 specyfikacji](/projekty/monitorowanie#44-linia-danych-csv).
+
+Dlatego stacja trzyma wyniki DHT11 w zmiennych typu `float` od początku do końca: `NAN` z biblioteki przechodzi przez `zmierzWilgotnosc()` i `wyslijWiersz()` aż do `wyslijPole()`, która zamienia go w puste pole.
+
+## 7. Wykres w Serial Plotterze
+
+Otwórz Serial Plotter (*Narzędzia → Serial Plotter*). Linia ma teraz osiem liczb, więc Plotter rysuje osiem serii. Więcej nie potrafi: osiem serii to jego maksimum (w kodzie źródłowym Plottera nowa seria powstaje tylko wtedy, gdy jest ich mniej niż osiem). Nasza linia danych zajmuje więc wszystkie.
+
+<Table
+  caption="Serie na wykresie a kolumny linii danych"
+  headers={["Seria w Plotterze", "Kolumna", "Co pokazuje"]}
+  rows={[
+    ["value 1", "czas_ms", "czas od startu programu; rośnie bez końca"],
+    ["value 2", "swiatlo", "jasność, od 0 do 1023"],
+    ["value 3", "wiatr_m_s", "prędkość wiatru, od 0 do 30"],
+    ["value 4", "T_szafa_C", "temperatura z LM35"],
+    ["value 5", "T_modul_C", "temperatura „modułu” (DS18B20)"],
+    ["value 6", "T_otoczenie_C", "temperatura otoczenia (DS18B20)"],
+    ["value 7", "wilgotnosc_proc", "wilgotność z DHT11, w %RH"],
+    ["value 8", "T_dht_C", "temperatura z DHT11"],
+  ]}
+/>
+
+Jak w częściach 1 i 2, odznacz pola przy `value 1` (czas) i `value 2` (światło). Zostają wiatr, cztery temperatury i wilgotność. Wilgotność (kilkadziesiąt %RH) i temperatury (dwadzieścia kilka °C) mieszczą się dobrze na jednej osi. Jeśli chcesz oglądać tylko temperatury i wilgotność, odznacz jeszcze `value 3`. Teraz chuchnij na DHT11: linia `value 7` szybko skacze w górę i powoli opada.
+
+{/* SCHEMAT (03.06-plotter-wilgotnosc.png): Serial Plotter z odznaczonymi value 1, value 2 i value 3; cztery linie temperatur blisko siebie, value 7 (wilgotność) wyżej; widoczny skok value 7 po chuchnięciu i powolny spadek */}
+
+**Puste pola na końcu linii.** Z [części 1](/projekty/monitorowanie/01-szkielet-systemu#5-wykres-w-serial-plotterze) wiesz, że Plotter traktuje dwa przecinki obok siebie jak jeden, więc puste pole w środku linii przesuwa następne wartości o jedną serię wcześniej. Co z dwoma pustymi polami na końcu, np. `…,22.8,,`? Sprawdziliśmy to w kodzie źródłowym Plottera: po podziale linii na końcu zostaje tylko pusty kawałek tekstu, a Plotter pomija puste kawałki. **Nic się nie przesuwa.** Serie od `value 1` do `value 6` dostają swoje wartości jak zwykle, a `value 7` i `value 8` w tej linii nie dostają żadnego punktu.
+
+Co wtedy widać na wykresie:
+
+- Gdy DHT11 nie odpowiada od początku, jak w teście brakującego czujnika, serie `value 7` i `value 8` nie dostają ani jednego punktu i na wykresie ich po prostu nie ma.
+- Gdy czujnik zawiedzie w czasie pracy, linie `value 7` i `value 8` urywają się na ostatnim udanym pomiarze. Gdy odczyty wrócą, Plotter połączy ostatni punkt sprzed przerwy z pierwszym po przerwie zwykłą prostą kreską: przerwy nie widać.
+- Seria, która przez 50 kolejnych linii (około 100 s) nie dostanie żadnego punktu, znika z wykresu i z legendy. Wraca, gdy znów przyjdą liczby.
+
+Gdy razem z DHT11 zawiedzie czujnik DS18B20 modułu (`…,23.4,,22.8,,`), puste pole w środku linii znów przesunie temperaturę otoczenia do serii `value 5`, jak w części 2. Wniosek: Plotter dobrze pokazuje zmiany, ale nie nadaje się do szukania braków pomiaru. Braki widać w Monitorze, w [Rejestratorze CSV](/narzedzia/rejestrator-csv) i w pliku CSV, gdzie każda wartość stoi we właściwej kolumnie.
+
+## 8. Zadania
+
+Zadania nie zmieniają specyfikacji: pinów, rytmu pomiarów ani nazw kolumn nie ruszasz. Najpierw przewiduj albo licz, potem sprawdzaj na układzie.
+
+<Task title="Zadanie 1 — dlaczego 41.0, a nigdy 41.5?" estimate="5 min">
+Obserwuj kolumnę `wilgotnosc_proc` przez kilka minut. Wyjaśnij, dlaczego stacja wysyła `41.0` albo `42.0`, ale nigdy `41.5`. Czy końcówka `.0` znaczy, że wilgotność jest znana z dokładnością do 0,1 %RH? Czy zmiana z `41.0` na `42.0` musi oznaczać, że powietrze stało się wilgotniejsze?
+</Task>
+
+<Expandable title="Rozwiązanie zadania 1">
+
+DHT11 ma rozdzielczość 1 %RH (nota katalogowa), a biblioteka bierze z jego danych tylko część całkowitą. `wyslijPole()` wypisuje każdą wartość z jednym miejscem po przecinku, bo tak ustala specyfikacja (punkt 4.4, zasada 6), więc pełna liczba 41 staje się `41.0`. Wartości `41.5` czujnik w ogóle nie poda.
+
+Końcówka `.0` to tylko format zapisu. Dokładność DHT11 to ±5 %RH, więc `41.0` znaczy „gdzieś od 36 do 46 %RH”. Pojedynczy skok o 1 %RH nie musi oznaczać zmiany powietrza: powtarzalność czujnika to ±1 %RH, więc odczyt może tak „drgać” sam z siebie. O zmianie świadczy dopiero trend w wielu kolejnych liniach.
+
+</Expandable>
+
+<Task title="Zadanie 2 — czy DHT11 zgadza się z resztą?" estimate="10 min">
+Po 5 minutach spokoju stacja pokazuje: `T_szafa_C` = 24.9, `T_modul_C` = 23.1, `T_otoczenie_C` = 23.4, `T_dht_C` = 22.0. Czy DHT11 mieści się w granicach dokładności? Porównaj go z czujnikiem otoczenia i z LM35. Potem odpowiedz, co byś sprawdził, gdyby `T_dht_C` wynosiło 28.0. Na koniec porównaj liczby ze swojej stacji.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 2">
+
+- DHT11 a DS18B20 otoczenia: 23,4 − 22,0 = 1,4 °C. Granica z not to ±2 °C i ±0,5 °C, czyli 2,5 °C. Mieści się.
+- DHT11 a LM35: 24,9 − 22,0 = 2,9 °C. Granica z not to ±2 °C i ±1,5 °C, czyli 3,5 °C. Mieści się, a LM35 może do tego pokazywać trochę za dużo przez napięcie z portu USB (część 2, zadanie 2).
+
+Przy `T_dht_C` = 28.0 różnica z czujnikiem otoczenia wynosi 4,6 °C, a więc wyraźnie więcej niż 2,5 °C (i niż około 3 °C w praktyce). Sprawdź najpierw, czy DHT11 nie stoi przy lampie albo przy innym źródle ciepła i czy nikt go niedawno nie dotykał. Odczekaj kilka minut, bo czujnik stygnie powoli. Jeśli różnica zostaje, a połączenia są dobre, czujnik może być niedokładny albo uszkodzony. Właśnie po to w monitoringu mierzy się to samo miejsce dwoma czujnikami.
+
+</Expandable>
+
+<Task title="Zadanie 3 — znajdź błąd" estimate="10 min">
+Ktoś przepisał funkcję wilgotności tak, jak wyglądał program z lekcji 20:
+
+```cpp
+float zmierzWilgotnosc() {
+  int wilgotnosc = dht.getHumidity();
+  return wilgotnosc;
+}
+```
+
+Program się kompiluje, a przy działającym czujniku linia danych wygląda dokładnie tak samo jak z wersji 3. Dlaczego? Przewidź, co się stanie, gdy odczyt DHT11 się nie uda. Popraw funkcję.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 3">
+
+Przy działającym czujniku `getHumidity()` zwraca pełną liczbę, np. 41.0. Zamiana na `int` daje 41, a powrót do `float` daje znowu 41.0, więc w danych nic nie widać. Dlatego ten błąd łatwo przeoczyć.
+
+Gdy odczyt się nie uda, `getHumidity()` zwraca `NAN`. Zamiana `NAN` na `int` jest w C++ niezdefiniowana. W lekcji 20 dawała `0`, więc linia wyglądałaby np. tak: `4000,611,4.3,23.4,24.1,22.8,0.0,`. Wilgotność ma fałszywe zero, a temperatura z DHT11 (nadal `float`) uczciwie puste pole. `wyslijPole()` nie ma szans tego wyłapać, bo `0.0` to zwykła liczba. Poprawka to funkcja z punktu 4.3: `float` od początku do końca, czyli `return dht.getHumidity();`.
+
+</Expandable>
+
+<Task title="Zadanie 4 — jak wygląda linia przy awarii?" estimate="10 min">
+Zapisz przykładową linię danych, gdy zawodzi tylko DHT11. Potem zapisz linię, gdy zawodzą razem DHT11 i czujnik DS18B20 modułu. Ile przecinków ma każda z tych linii? Które serie narysuje w każdym przypadku Serial Plotter? O ile urośnie z każdą taką linią licznik pustych pól w Rejestratorze CSV? Jeśli chcesz, sprawdź drugi przypadek na układzie (przy odłączonym USB wyjmij przewód DATA i czujnik modułu).
+</Task>
+
+<Expandable title="Rozwiązanie zadania 4">
+
+- Tylko DHT11: `6000,610,4.3,23.4,24.1,22.8,,`. Siedem przecinków, dwa puste pola na końcu. Plotter rysuje serie `value 1`–`value 6` jak zwykle, a `value 7` i `value 8` nie dostają punktów. Licznik pustych pól rośnie o 2 z każdą linią.
+- DHT11 i moduł: `6000,610,4.3,23.4,,22.8,,`. Też siedem przecinków: linia ma zawsze osiem kolumn. Plotter widzi tylko pięć liczb, więc temperatura otoczenia trafia do `value 5`, a `value 6`, `value 7` i `value 8` nie dostają punktów. Licznik pustych pól rośnie o 3 z każdą linią.
+
+W Monitorze i w pliku CSV każda wartość stoi we właściwej kolumnie, bo liczy się położenie między przecinkami.
+
+</Expandable>
+
+<Task title="Zadanie 5 — dwa odczyty zamiast jednego?" estimate="5 min">
+Ktoś chce dokładniejszej wilgotności i w jednym takcie wywołuje `zmierzWilgotnosc()` dwa razy, jedno po drugim, a potem uśrednia oba wyniki. Czy dostanie średnią z dwóch pomiarów? Odpowiedz na podstawie punktu 4.3 i noty katalogowej.
+</Task>
+
+<Expandable title="Rozwiązanie zadania 5">
+
+Nie. Drugie wywołanie następuje kilka mikrosekund po pierwszym, czyli przed upływem sekundy. Biblioteka nie zapyta wtedy czujnika, tylko odda zapamiętany wynik pierwszego odczytu. Średnia z dwóch takich samych liczb to ta sama liczba. Biblioteka robi tak celowo: nota katalogowa wymaga co najmniej sekundy między pomiarami DHT11. Z tego samego powodu `zmierzTemperatureDht()` dostaje temperaturę z tego samego odczytu co wilgotność. Nowe dane daje dopiero następny takt, 2 s później.
+
+</Expandable>
+
+## 9. Typowe problemy
+
+<Troubleshooting>
+  <Issue title="Status TIMEOUT w każdym odczycie, a w stacji dwa ostatnie pola zawsze puste">
+    Czujnik nie odpowiada. Odłącz USB i sprawdź: czy przewód z rzędu nóżki 2 (DATA) idzie do `D2`, a nie do `D3` albo `A2`; czy nóżka 1 (VCC) ma połączenie z szyną „+”, a nóżka 4 (GND) z szyną „−”; czy każda nóżka stoi w osobnym rzędzie i czy czujnik nie jest obrócony. W programie musi być `PIN_DHT11 = 2`. Przy module z trzema pinami porównaj połączenia z napisami na jego płytce.
+  </Issue>
+  <Issue title="Czujnik działa, choć rezystora 4,7 kΩ nie ma (albo ma błędy, gdy rezystora brakuje)">
+    Brak rezystora nie zawsze daje błąd. Na czas odczytu biblioteka włącza wbudowany rezystor podciągający Arduino, ale jest on dużo słabszy: ma od 20 do 50 kΩ. Na krótkich przewodach czujnik może więc działać bez zewnętrznego rezystora, ale gorzej, z częstszymi błędami `TIMEOUT` i `CHECKSUM`. Nota DHT11 i specyfikacja projektu wymagają rezystora: wepnij 4,7 kΩ między DATA a szynę „+” (chyba że masz moduł z rezystorem na płytce).
+  </Issue>
+  <Issue title="Czasem CHECKSUM albo pojedyncza linia z pustymi polami DHT11">
+    Jeden odczyt dotarł przekłamany albo czujnik nie zdążył odpowiedzieć, np. przez obluzowany styk albo długie przewody. To normalne, że zdarza się rzadko: taka linia ma dwa puste pola, a następny takt zwykle działa. Jeśli błędy pojawiają się często, odłącz USB, dociśnij czujnik i przewody, skróć przewody do DHT11 i sprawdź rezystor 4,7 kΩ.
+  </Issue>
+  <Issue title="Kompilator zgłasza: Znaleziono wiele bibliotek w „DHT.h” albo 'class DHT' has no member named 'setup'">
+    Na komputerze są dwie biblioteki DHT, a Arduino IDE wybrało nie tę. W naszej próbie z zainstalowaną także „DHT sensor library” firmy Adafruit IDE wybrało właśnie ją, a szkic się nie skompilował: komunikat „Znaleziono wiele bibliotek” (po angielsku *Multiple libraries were found*) wymienia jako wykorzystaną bibliotekę z folderu `DHT_sensor_library`. Usuń bibliotekę Adafruit w Menedżerze bibliotek (*Szkic → Dołącz bibliotekę → Zarządzaj bibliotekami*, wyszukaj „DHT sensor library”, kliknij „Usuń”) i skompiluj jeszcze raz ([punkt 4.6 specyfikacji](/projekty/monitorowanie#46-biblioteki)).
+  </Issue>
+  <Issue title="Kompilator zgłasza: DHT.h: No such file or directory">
+    Brakuje biblioteki DHT. Zainstaluj bibliotekę Marka Ruysa z pliku ZIP według [lekcji 20](/lekcje/dzien-07/20-Cyfrowy-czujnik-wilgotnosci-dht11#instalacja-biblioteki) i rozdziału 2 tej części, a potem skompiluj szkic jeszcze raz.
+  </Issue>
+  <Issue title="Wilgotność stoi w miejscu albo zmienia się bardzo wolno">
+    To normalne. DHT11 pokazuje tylko pełne procenty i reaguje powoli: typowo po 10 s pokonuje dwie trzecie drogi do nowej wartości (rozdział 3). W spokojnej sali wilgotność długo się nie zmienia. Zrób test chuchania: jeśli wilgotność rośnie, czujnik działa. Jeśli nie rośnie nawet wtedy, sprawdź status programem testowym z rozdziału 2.
+  </Issue>
+  <Issue title="Czujnik robi się ciepły">
+    Czujnik jest obrócony albo nóżki zasilania są zamienione: nóżka 4 (GND) dostaje 5 V. **Natychmiast odłącz USB** i nie dotykaj czujnika, dopóki nie ostygnie. Ustaw go kratką do siebie i sprawdź kolejność nóżek z rozdziału 1. Potem uruchom program testowy: czujnik, który się przegrzał, mógł się uszkodzić.
+  </Issue>
+  <Issue title="Po wgraniu wersji 3 obie kolumny DS18B20 są puste">
+    W szkicu są adresy przykładowe zamiast adresów Twoich czujników: wersja 3 została wklejona w całości, a adresy z części 2 nie wróciły na miejsce. Otwórz szkic z folderu `kopia-czesc-2`, skopiuj z niego dwie linie `const DeviceAddress` i wstaw je w miejsce przykładowych. Zapisz szkic i wgraj go jeszcze raz.
+  </Issue>
+  <Issue title="W danych pojawia się nan albo 0.0 w kolumnach DHT11 przy wyjętym czujniku">
+    `nan` oznacza, że wartość wysyła zwykłe `Serial.print()` zamiast `wyslijPole()`. `0.0` przy wyjętym czujniku oznacza fałszywe zero: wynik przeszedł przez zmienną `int` (zadanie 3). Porównaj swoje funkcje ze szkicem z punktu 4.6.
+  </Issue>
+  <Issue title="Rejestrator odrzuca linie, a w nagłówku jest 8 kolumn">
+    Nagłówek i linia danych mają różną liczbę kolumn, np. nowe nazwy są dopisane w `wyslijNaglowek()`, ale brakuje pól w `wyslijWiersz()`, albo odwrotnie. Policz przecinki w Monitorze: w nagłówku i w każdej linii danych ma ich być siedem.
+  </Issue>
+</Troubleshooting>
+
+## 10. Lista kontrolna części 3
+
+Przejdź listę punkt po punkcie, zanim zaczniesz część 4. Jeśli któryś punkt się nie zgadza, wróć do [typowych problemów](#9-typowe-problemy).
+
+- [ ] Pierwsza linia w Monitorze to dokładnie ten nagłówek, bez spacji i bez innych napisów:
+  ```text
+  czas_ms,swiatlo,wiatr_m_s,T_szafa_C,T_modul_C,T_otoczenie_C,wilgotnosc_proc,T_dht_C
+  ```
+- [ ] Każda linia danych ma osiem wartości, oddzielonych siedmioma przecinkami.
+- [ ] Wilgotność jest wiarygodna dla sali (kilkadziesiąt %RH) i wyraźnie rośnie, gdy chuchniesz na czujnik.
+- [ ] `T_dht_C` jest blisko pozostałych termometrów: od DS18B20 różni się najwyżej o około 3 °C, a od LM35 najwyżej o około 5 °C.
+- [ ] Po odłączeniu linii danych DHT11 (przy odłączonym USB) dwa ostatnie pola są puste, a reszta linii działa. W danych nigdy nie pojawia się `0`, `0.0` ani `nan` zamiast brakującego pomiaru.
+- [ ] Nowa linia pojawia się mniej więcej co 2 s, `czas_ms` rośnie o około 2000, a dioda L zmienia stan przy każdym pomiarze.
+- [ ] Rejestrator CSV, jeśli z niego korzystasz, pokazuje w „Kontroli danych” 0 odrzuconych linii i 0 wartości `nan`.
+- [ ] Szkic jest zapisany, a cały folder `stacja_monitoringu` skopiowany do folderu `kopia-czesc-3` ([rozdział 7 wprowadzenia](/projekty/monitorowanie#7-jak-pracować-z-projektem)).
+
+## 11. Dla chętnych: Rejestrator CSV
+
+[Rejestrator CSV](/narzedzia/rejestrator-csv) obsługuje wersję 3 tak samo jak wcześniejsze. Zamknij Monitor i Plotter, otwórz rejestrator w Chrome albo Edge, kliknij „Połącz” i wybierz port płytki. Stacja wysyła teraz ostateczny układ kolumn, więc rejestrator pokazuje kafelek dla każdej z siedmiu kolumn z pomiarami (wszystkich poza `czas_ms`), z polskimi nazwami. Dwa nowe to „Wilgotność” (w %RH) i „Temperatura (DHT11)” (w °C). Kafelek kolumny, w której brakuje pomiaru, ma napis „brak pomiaru”, a jego mały wykres ma w tym miejscu przerwę. Rejestrator, w przeciwieństwie do Plottera, braków nie ukrywa.
+
+Jeśli w rejestratorze zostały pomiary z wersji 2, zobaczysz to samo co w części 2: nagłówek z innymi kolumnami zaczyna nowy zapis, a poprzedni czeka obok na pobranie albo odrzucenie. W jednym pliku nigdy nie mieszają się linie z sześcioma i z ośmioma kolumnami.
+
+Panel „Kontrola danych” sprawdzi test brakującego czujnika. Gdy DHT11 nie odpowiada, liczba „Puste pola (brak pomiaru)” rośnie o 2 z każdą linią, a liczba wartości „nan”, „inf” lub „ovf” zostaje równa 0. Gdyby stacja wysyłała `nan` zamiast pustego pola, rosłaby ta druga liczba. Fałszywego zera rejestrator nie wykryje, bo to zwykła liczba: przed nim chroni Cię tylko program stacji.
+
+Licznik „Odrzucone linie w tym zapisie” należy do bieżącego zapisu i zaczyna od zera, gdy nagłówek zaczyna nowy zapis. W poprawnej stacji wynosi więc 0. „Wyczyść pomiary” usuwa tylko bieżący zapis, a odłożone zapisy zostają, dopóki nie klikniesz przy nich „Odrzuć”.
+
+Zapisywaniem pomiarów do pliku zajmiemy się w części 4. Zanim znowu wgrasz program z Arduino IDE, kliknij w rejestratorze „Rozłącz”.
+
+## Podsumowanie
+
+Stacja monitoringu jest kompletna. Pięć rodzajów czujników (fotorezystor, potencjometr, LM35, dwa DS18B20 i DHT11) daje osiem kolumn linii danych, w ostatecznym układzie ze specyfikacji. DHT11 na `D2` mierzy wilgotność i temperaturę w „szafie” jednym odczytem na takt, a jego temperatura pozwala sprawdzać LM35. Wiesz, czego DHT11 nie potrafi: pokazuje pełne liczby, myli się o kilka procent i reaguje powoli. Najważniejsze: błąd każdego czujnika cyfrowego zostaje pustym polem we własnej kolumnie. Wyniki trzymamy w `float`, biblioteka oddaje `NAN`, a `wyslijPole()` zamienia go w puste pole, więc w danych nie ma fałszywych zer.
+
+W części 4 sprawdzisz cały system punkt po punkcie i zapiszesz dane do pliku CSV.
+
+Następna część: **Część 4. Od czujnika do pliku CSV** (w przygotowaniu).
