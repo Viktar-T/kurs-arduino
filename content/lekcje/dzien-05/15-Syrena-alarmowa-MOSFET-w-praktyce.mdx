@@ -35,7 +35,8 @@ hardware:
   - { name: "Kabel USB-A — USB-B", qty: 1 }
   - { name: "Buzzer bez generatora", qty: 1 }
   - { name: "Tranzystor MOSFET IRL540N", qty: 1 }
-  - { name: "Rezystor 10 kΩ", qty: 2 }
+  - { name: "Rezystor 220 Ω", qty: 1, note: "szeregowo z bramką MOSFET-a" }
+  - { name: "Rezystor 10 kΩ", qty: 2, note: "ściągający bramkę do GND i równolegle z buzzerem" }
   - { name: "Zasilacz zewnętrzny 12 V", qty: 1, optional: true }
   - { name: "Multimetr", qty: 1, optional: true, note: "do testu napięcia w układzie z MOSFET-em" }
   - { name: "Płytka stykowa", qty: 1 }
@@ -434,14 +435,21 @@ Wyprowadzenia IRL540N (patrząc od frontu, od lewej):
 ### Podłączenie i test napięcia
 
 Schemat połączeń:
-- pin A5 Arduino → rezystor 10 kΩ → **Gate** (lewy pin) MOSFET-a,
+- pin A5 Arduino → rezystor 220 Ω → **Gate** (lewy pin) MOSFET-a,
+- rezystor 10 kΩ między **Gate** a **Source** — rezystor ściągający (*pull-down*),
 - **Source** (prawy pin) → GND Arduino,
 - **Drain** (środkowy pin) → przewód do obciążenia — na razie luźny,
 - **VIN** Arduino → drugi luźny przewód — podłączamy zasilacz zewnętrzny (12 V).
 
+<Callout type="note" title="Dlaczego dwa rezystory przy bramce?">
+Bramka MOSFET-a zachowuje się jak mały kondensator. **Rezystor 220 Ω** ogranicza chwilowy prąd jej ładowania (ok. 23 mA), chroniąc pin Arduino, a jednocześnie pozwala przełączać tranzystor w ułamku mikrosekundy. **Rezystor 10 kΩ do GND** trzyma tranzystor wyłączony, gdy pin nie steruje bramką — podczas resetu, wgrywania programu albo po odpięciu przewodu. Bez niego „pływająca” bramka może częściowo otworzyć tranzystor i włączyć obciążenie.
+
+Na schematach i zdjęciach w tej lekcji (z oryginalnego kursu Forbot) przy bramce jest tylko jeden rezystor 10 kΩ, szeregowo. Przy dźwiękach o częstotliwości kilku kHz bramka ładuje się przez niego zbyt wolno: tranzystor długo pracuje w stanie przejściowym i niepotrzebnie się nagrzewa. Dlatego budujemy wersję z listy powyżej.
+</Callout>
+
 <Schematic
   src="/img/lekcje/15.05-mosfet-podlaczenie-schemat.png"
-  caption="Schemat montażowy: podłączenie tranzystora MOSFET IRL540N do Arduino z rezystorem 10 kΩ na bramce."
+  caption="Schemat montażowy z oryginalnego kursu Forbot: rezystor 10 kΩ szeregowo z bramką. W naszej wersji wstaw w to miejsce 220 Ω i dodaj 10 kΩ między bramką a GND."
   alt="Schemat Fritzing: Arduino UNO, MOSFET IRL540N, rezystor 10 kΩ, przewody zasilające"
 />
 
@@ -501,7 +509,7 @@ Finalny, działający układ:
 
 <Photo
   file="15.09-buzzer-uklad-koncowy-rezystor-10k.jpg"
-  caption="Finalny układ: buzzer zasilany 12 V przez MOSFET IRL540N, rezystor 10 kΩ równolegle z buzzerem."
+  caption="Finalny układ: buzzer zasilany 12 V przez MOSFET IRL540N, rezystor 10 kΩ równolegle z buzzerem (na zdjęciu wersja Forbot z jednym rezystorem 10 kΩ przy bramce)."
   alt="Zdjęcie gotowego układu na płytce stykowej: Arduino, MOSFET IRL540N, buzzer, dwa rezystory 10 kΩ"
 />
 
@@ -529,7 +537,7 @@ Buzzer bez generatora działa też bezpośrednio z 5 V Arduino. MOSFET-a użyli�
 </Callout>
 
 <Task title="Zadanie 3 — MOSFET z syreną" estimate="15 min">
-Podłącz pełny układ (buzzer + MOSFET + rezystor 10 kΩ na bramce + rezystor 10 kΩ równolegle z buzzerem) i wgraj program syreny. Porównaj głośność:
+Podłącz pełny układ (buzzer + MOSFET + rezystor 220 Ω na bramce + rezystor 10 kΩ ściągający bramkę do GND + rezystor 10 kΩ równolegle z buzzerem) i wgraj program syreny. Porównaj głośność:
 
 1. Bez rezystora równoległego z buzzerem.
 2. Z rezystorem 10 kΩ.
@@ -551,4 +559,4 @@ Skorzystaj z funkcji `zmierzOdleglosc()` z tamtej lekcji. Możesz też zastąpi�
 
 ## Podsumowanie
 
-Buzzer bez generatora reaguje na **zmiany napięcia** — im szybsze przełączanie, tym wyższy słyszalny ton. Funkcja `tone()` upraszcza to zadanie: generuje sygnał o zadanej częstotliwości, korzystając z wbudowanego timera, bez blokowania pętli głównej. Każdy buzzer ma **częstotliwość rezonansową** — dla naszego modelu to ok. 4000 Hz. Szybka zmiana między dwiema częstotliwościami tworzy efekt syreny alarmowej. Tranzystor **MOSFET IRL540N** pełni rolę elektronicznego przełącznika — Arduino steruje jego bramką sygnałem 5 V, a przez dren może płynąć prąd z układu 12 V. Rezystor 10 kΩ na bramce chroni Arduino, a rezystor równoległy z buzzerem rozładowuje kondensator piezoelektryczny, dzięki czemu dźwięk jest wyraźnie głośniejszy.
+Buzzer bez generatora reaguje na **zmiany napięcia** — im szybsze przełączanie, tym wyższy słyszalny ton. Funkcja `tone()` upraszcza to zadanie: generuje sygnał o zadanej częstotliwości, korzystając z wbudowanego timera, bez blokowania pętli głównej. Każdy buzzer ma **częstotliwość rezonansową** — dla naszego modelu to ok. 4000 Hz. Szybka zmiana między dwiema częstotliwościami tworzy efekt syreny alarmowej. Tranzystor **MOSFET IRL540N** pełni rolę elektronicznego przełącznika — Arduino steruje jego bramką sygnałem 5 V, a przez dren może płynąć prąd z układu 12 V. Rezystor 220 Ω na bramce ogranicza prąd jej ładowania i chroni pin Arduino, rezystor 10 kΩ między bramką a GND trzyma tranzystor wyłączony, gdy pin nim nie steruje, a rezystor równoległy z buzzerem rozładowuje kondensator piezoelektryczny, dzięki czemu dźwięk jest wyraźnie głośniejszy.

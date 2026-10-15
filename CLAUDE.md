@@ -81,7 +81,7 @@ Path alias: `@/*` → `./*` (already configured in `tsconfig.json`).
 ### Polish content
 
 - All lesson text, callouts, headings and student-facing UI strings are in **Polish**.
-- Internal identifiers (file slugs, component names, function names, frontmatter keys) stay **English / ASCII** to keep URLs and imports stable. Example: file `dzien-01/01-srodowisko-ide.mdx`, frontmatter `title: "Środowisko Arduino IDE i pierwszy szkic"`.
+- Internal identifiers (file slugs, component names, function names, frontmatter keys) stay **English / ASCII** to keep URLs and imports stable. Example: file `dzien-01/03-srodowisko-ide.mdx`, frontmatter `title: "Środowisko Arduino IDE i pierwszy szkic"`.
 - Use ASCII-friendly slugs (no Polish diacritics): `srodowisko-ide`, not `środowisko-ide`.
 
 ### Frontmatter
@@ -93,11 +93,15 @@ The Life-OS fields (`type`, `namespace`, `status`, `sensitivity`) are kept for v
 ### File ordering
 
 - Day folder name: `dzien-NN` (zero-padded, 01..10).
-- Lesson filename starts with a two-digit prefix matching `order` in frontmatter: `01-srodowisko-ide.mdx`. If you change `order`, rename the file.
+- Lesson filename is `NN-slug.mdx`, where `NN` is the lesson's **running number in the whole course** (`01`..`29`), not its position in the day: `dzien-01/03-srodowisko-ide.mdx`, `dzien-04/11-Sterowanie-silnikami-DC.mdx`. A lesson split into parts uses `NN.MM` (`06.01-…`, `06.02-…`). A new lesson takes the next free number.
+- `order` in frontmatter is the position **within the day** (1, 2, 3, …) and must follow the file-name order inside the folder — the sidebar sorts by weekend → day → file name.
+- The file name without `.mdx` is the URL: `/lekcje/dzien-NN/<file-name>`. External pages link these URLs, so **don't rename a published file**; when a lesson moves to another day, old `/lekcje/…` links in MDX still resolve (with a build warning), but update them. The frontmatter `slug` is only an alias used by `prerequisites` (`dzien-NN/<file-name>` or `dzien-NN/<slug>`).
+- Images of lesson `NN` go flat into `public/img/lekcje/` as `NN.MM-name.ext` (no per-day subfolders): `<Photo file="03.01-….png" … />`, `<Schematic src="/img/lekcje/04.12-….png" … />`.
 
 ### Code samples
 
 - Arduino sketches in lessons use the `cpp` language tag (Shiki has no native `arduino` grammar — `cpp` is the correct alias).
+- Untagged fences are highlighted as C++ (`defaultLang` in `lib/mdx.ts`), so tag everything else: `text` for Serial Monitor output, AI prompts, specs and folder trees; `ini` for `platformio.ini`; `bash`/`powershell` for shell commands.
 - Comments inside code samples: **Polish** (consistent with the spoken language during training).
 - Wrap longer sketches in `<Code lang="cpp" file="blink.ino">…</Code>` for the file-name header + copy button.
 
@@ -126,14 +130,14 @@ When static export is enabled, the build emits to `out/`. Pagefind runs against 
 ## 6. How to add a new lesson (recipe)
 
 1. Pick the day folder: `content/lekcje/dzien-NN/`. Create it if missing.
-2. Copy a sibling lesson as a template, rename to `MM-slug.mdx` with a two-digit `order` prefix and an ASCII slug.
-3. Fill the frontmatter — every field required by `lib/frontmatter.ts` must be present.
+2. Copy a sibling lesson as a template and name it `NN-slug.mdx` with the next free course-wide lesson number `NN` and an ASCII slug (see §4 "File ordering").
+3. Fill the frontmatter — every field required by `lib/frontmatter.ts` must be present. Set `order` to the lesson's position within the day.
 4. Write the body in Polish MDX. Use the components from `components/mdx/` for callouts, hardware lists, tasks, schematics.
-5. Add images to `public/img/lekcje/dzien-NN/` and reference them via absolute paths.
-6. Run `npm run dev` — the lesson appears under `/lekcje/dzien-NN/<slug>` and in the sidebar.
+5. Add images to `public/img/lekcje/` as `NN.MM-name.ext` and reference them via `<Photo file="…">` or absolute `/img/lekcje/…` paths.
+6. Run `npm run dev` — the lesson appears under `/lekcje/dzien-NN/<file-name>` and in the sidebar.
 7. Run `npm run build` before committing to catch frontmatter validation errors.
 
-A reference lesson lives at `content/lekcje/dzien-01/01-srodowisko-ide.mdx` — copy it.
+A reference lesson lives at `content/lekcje/dzien-01/03-srodowisko-ide.mdx` — copy it. `content/lekcje/README.md` summarises the naming rules.
 
 ### 6a. Projects (`content/projekty/`)
 
@@ -207,10 +211,9 @@ If the surrounding ecosystem (Obsidian vault, exported handouts) still expects w
 
 ## 10. Subagents available
 
-Project-scoped Claude Code subagent definitions ship in **`claude-agents/`**. To activate them, copy (or symlink) into `.claude/agents/`:
+Project-scoped Claude Code subagent definitions ship in **`claude-agents/`**, and active copies are already committed in `.claude/agents/` (the folder Claude Code loads). Keep the two folders identical — after editing an agent in `claude-agents/`, copy it over:
 
 ```bash
-mkdir -p .claude/agents
 cp claude-agents/*.md .claude/agents/
 ```
 

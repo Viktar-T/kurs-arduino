@@ -87,23 +87,28 @@ kurs-arduino/
 │   └── layout/                   ← Shell, Header, Footer
 ├── content/
 │   ├── lekcje/                   ← single source of truth for lesson MDX
+│   │   ├── README.md             ← naming rules (summary of §4)
 │   │   ├── dzien-01/             ← organized by training day (1..10)
-│   │   │   ├── 01-srodowisko-ide.mdx
-│   │   │   └── 02-pierwszy-szkic.mdx
+│   │   │   ├── 01-Arduino-RasberyPi-Logo.mdx   ← NN = course-wide lesson number
+│   │   │   ├── …
+│   │   │   └── 03-srodowisko-ide.mdx           ← reference lesson
 │   │   ├── dzien-02/
+│   │   │   ├── 06.01-UART-(komunikacja-z-PC)-zmienne.mdx  ← lesson split into parts
+│   │   │   └── …
 │   │   └── …
 │   └── projekty/                 ← projects outside the timetable (§4.5)
 │       └── monitorowanie/        ← one folder per project
 │           ├── 00-wprowadzenie.mdx
 │           └── 01-szkielet-systemu.mdx
 ├── lib/
-│   ├── content.ts                ← getAllLessons, getLessonBySlug, buildNav
+│   ├── content.ts                ← getAllLessons, getLessonBySegments, buildNav, resolveLessonRef/Href
 │   ├── projects.ts               ← project loader: getAllProjects, buildProjectNav
 │   ├── frontmatter.ts            ← Zod schemas for lesson and project frontmatter
 │   ├── serial-logger.ts          ← Rejestrator CSV engine (Web Serial, storage, CSV)
 │   └── mdx.ts                    ← MDX compile pipeline (remark/rehype)
 ├── public/
-│   └── img/lekcje/...            ← schematics, photos (projects: img/projekty/<project>/)
+│   ├── img/lekcje/NN.MM-name.ext ← lesson schematics, photos (flat; projects: img/projekty/<project>/)
+│   └── docs/                     ← source materials served at /docs/… (Forbot notes, ebooks)
 ├── PROJECT_BRIEF.md              ← this file
 ├── package.json
 ├── tsconfig.json                 ← @/* → ./* (already configured)
@@ -116,7 +121,7 @@ Path alias: `@/*` already maps to `./*` — keep it.
 
 ## 4. Data Structure (Course Content)
 
-The single source of truth for lesson content are **MDX files** stored in `content/lekcje/`, grouped into **one folder per training day** (`dzien-NN/`, `NN` ∈ 01..10). Each file's filename starts with a two-digit order prefix (`01-`, `02-`, …) reflecting the order of that lesson within the day.
+The single source of truth for lesson content are **MDX files** stored in `content/lekcje/`, grouped into **one folder per training day** (`dzien-NN/`, `NN` ∈ 01..10). Each file is named `NN-slug.mdx`, where `NN` is the lesson's **running number in the whole course** (`01`..`29`; a lesson split into parts uses `NN.MM`, e.g. `06.01`, `06.02`) — not its position in the day. The file name (without `.mdx`) is the lesson's URL segment, so a published file is never renamed. The `order` field gives the position within the day and must follow the file-name order inside the folder. Images of lesson `NN` live flat in `public/img/lekcje/` as `NN.MM-name.ext`. `content/lekcje/README.md` summarises these rules.
 
 The 13 program blocks from `20_program/01_Program-kursu.md` are tracked **as metadata** on each lesson (the `block` / `blockTitle` frontmatter fields), so the same Markdown corpus can be re-projected as a "by-block" view at `/program` for client reporting.
 
@@ -134,12 +139,12 @@ sensitivity: low
 
 # --- Site-driving fields (required) ---
 title: "Środowisko Arduino IDE i pierwszy szkic"
-slug: "srodowisko-ide-i-pierwszy-szkic"   # URL part inside the day folder
+slug: "srodowisko-ide-i-pierwszy-szkic"   # alias for prerequisites; the URL comes from the file name
 summary: "Instalacja IDE, struktura szkicu setup()/loop(), wgranie Blink na UNO."
 
 day: 1                                    # 1..10 (training days) — PRIMARY axis
 weekend: 1                                # 1..5
-order: 1                                  # order within day (matches file prefix)
+order: 3                                  # position within the day (follows file-name order)
 duration: 60                              # minutes
 block: 1                                  # 1..13 — client-contract mapping (metadata only)
 blockTitle: "Podstawy Arduino i środowisko IDE"
@@ -151,8 +156,8 @@ objectives:                               # learning objectives — rendered as 
   - "Wyjaśnić różnicę między setup() a loop()"
   - "Wgrać szkic Blink na płytkę"
 
-prerequisites:                            # other lesson slugs that must be done first
-  - "dzien-01/00-wprowadzenie"
+prerequisites:                            # earlier lessons: dzien-NN/<file-name> or dzien-NN/<slug>
+  - "dzien-01/arduino-uno-budowa-plytki"
 
 hardware:                                 # components needed at the bench
   - { name: "Arduino UNO R3", qty: 1 }
@@ -160,11 +165,11 @@ hardware:                                 # components needed at the bench
   - { name: "Dioda LED",       qty: 1, optional: true }
 
 tags: [arduino, ide, blink, setup-loop]
-sources:                                  # citations / references
-  - "[[../../40_materialy/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s.|Książka B, r. 1–2]]"
+sources:                                  # citations — formats in CLAUDE.md §9
   - "https://forbot.pl/blog/kurs-arduino-srodowisko-jak-zaczac-programowac-id936"
+  - "/docs/Ebooki Arduino - Helion/ksiazki/arduino-dla-poczatkujacych-podstawy-i-szkice-krok-1-wydanie-2-169s..pdf#page=17 (Książka B, r. 1–2)"
 
-cover: "/img/lekcje/dzien-01/ide-pierwszy-szkic.png"  # optional
+cover: "/img/lekcje/03.01-Arduino_IDE_instalacja_blink2-726x320.png"  # optional
 publish: true                             # gate: false = skipped at build time
 updated: "2026-05-11"
 ---
@@ -178,28 +183,32 @@ A **Zod schema** in `lib/frontmatter.ts` validates every file at build time. Bui
 /                                                       → course landing
 /program                                                → 13 blocks overview (client-contract view)
 /harmonogram                                            → 10 days timeline (primary delivery view)
-/lekcje/<day-folder>/<file-slug>                        → individual lesson
-e.g. /lekcje/dzien-01/01-srodowisko-ide
+/lekcje/<day-folder>/<file-name>                        → individual lesson (file name without .mdx)
+e.g. /lekcje/dzien-01/03-srodowisko-ide
 /projekty/<project>                                     → project overview (part 0)
 /projekty/<project>/<file-slug>                         → project part
 e.g. /projekty/monitorowanie/01-szkielet-systemu
 /narzedzia/rejestrator-csv                              → Rejestrator CSV tool (§4.6)
 ```
 
-`generateStaticParams` walks `content/lekcje/**/*.mdx`, validates frontmatter via Zod, and emits a route per file where `publish: true`.
+`generateStaticParams` walks `content/lekcje/**/*.mdx`, validates frontmatter via Zod, and emits a route per file where `publish: true`. Internal `/lekcje/…` links and `prerequisites` that point to a lesson that was renamed or moved to another day are resolved to its current URL (`resolveLessonRef` in `lib/content.ts`), with a build warning.
 
 ### 4.3 Navigation (derived, not hand-written)
 
-The sidebar is built from frontmatter at build time, **ordered by `weekend → day → order`, grouped by `day`** (one collapsible group per training day, days grouped under their weekend heading). Each lesson row carries a small **block badge** (`B1`..`B13`) so the client-contract mapping is visible without making block a navigation level. The `/program` page re-projects the same corpus by `block` for client reporting. The 13 blocks and 10 days come from `20_program/01_Program-kursu.md` and `20_program/02_Harmonogram-zjazdow.md`.
+The sidebar is built from frontmatter at build time, **ordered by `weekend → day → file name`, grouped by `day`** (`order` must follow the file-name order) (one collapsible group per training day, days grouped under their weekend heading). Each lesson row carries a small **block badge** (`B1`..`B13`) so the client-contract mapping is visible without making block a navigation level. The `/program` page re-projects the same corpus by `block` for client reporting. The 13 blocks and 10 days come from `20_program/01_Program-kursu.md` and `20_program/02_Harmonogram-zjazdow.md`.
 
 ### 4.4 Custom MDX components (used inside lessons)
 
 - `<Callout type="note|warning|hardware|hazard|tip">…</Callout>`
 - `<Hardware items={[…]} />`               — renders the hardware list
-- `<Task>…</Task>`                         — student task box
-- `<MiniProject title="…">…</MiniProject>`
-- `<Schematic src="…" caption="…" />`
+- `<Task title estimate>…</Task>`          — student task box
+- `<MiniProject title="…" goal estimate>…</MiniProject>`
+- `<Schematic src="…" caption="…" alt="…" />`
+- `<Photo file="NN.MM-….jpg" caption alt />` — lesson photo from `public/img/lekcje/`
 - `<Code lang="cpp" file="blink.ino">…</Code>` — wraps Shiki with file label + copy button
+- `<Objectives items>`, `<Prerequisites items>`, `<Pinout board pins>`, `<ExpectedOutput>`, `<Troubleshooting>` + `<Issue title>`, `<Expandable title heading defaultOpen>`, `<Video youtube|vimeo|src>`, `<Table caption headers rows>`
+
+The registry is `components/mdx/index.ts`; each component documents its props at the top of its file. Any other capitalised tag fails the page.
 
 ### 4.5 Projects (`content/projekty/`)
 
@@ -270,7 +279,7 @@ Browser-only helpers listed in the sidebar group **"Narzędzia"** (`components/n
 1. Replace placeholder `app/page.tsx` with a course landing page (course title, 10-day timetable, link to `/harmonogram` and `/program`). (`<html lang="pl">` and metadata are already set.)
 2. Wire up `@next/mdx` + `gray-matter` + `next-mdx-remote/rsc`; add `shiki` + `rehype-pretty-code` with the `cpp` grammar.
 3. Define the Zod frontmatter schema in `lib/frontmatter.ts` matching §4.1.
-4. Seed `content/lekcje/dzien-01/01-srodowisko-ide.mdx` as a reference lesson.
+4. Seed `content/lekcje/dzien-01/03-srodowisko-ide.mdx` as a reference lesson.
 5. Build `app/lekcje/[...slug]/page.tsx` with `generateStaticParams` walking `content/lekcje/**/*.mdx`.
 6. Build the sidebar (Weekend → Day → Lesson with block badges) from frontmatter.
 7. Add `/program` (by-block view) and `/harmonogram` (by-day view) re-projecting the same corpus.

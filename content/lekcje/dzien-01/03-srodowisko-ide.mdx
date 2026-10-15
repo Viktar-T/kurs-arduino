@@ -80,14 +80,14 @@ Windows, `/dev/cu.usbmodem*` na macOS lub `/dev/ttyACM0` / `/dev/ttyUSB0` na Lin
 Arduino IDE ma dwa kluczowe przyciski w pasku narzędzi:
 
 - **Weryfikuj** (ikona ✓) — kompiluje kod i sprawdza błędy składni, ale **nie wysyła** programu na płytkę. Używaj przed wgraniem, żeby upewnić się, że kod jest poprawny.
-- **Wgraj** (ikona →; w polskiej wersji IDE 2.x podpowiedź „Prześlij”) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
+- **Prześlij** (ikona →) — kompiluje kod i od razu przesyła gotowy program do podłączonej płytki.
 
-<Photo file="03.02-Arduino_IDE_instalacja_blink3.png" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Prześlij (Wgraj)" />
+<Photo file="03.02-Arduino_IDE_instalacja_blink3.png" caption="Dwa przyciski do sprawdzania i wgrywania programu" alt="Pasek narzędzi Arduino IDE z przyciskami Weryfikuj i Prześlij" />
 
 Jak wgrać program krok po kroku:
 
 1. Upewnij się, że płytka jest podłączona i wybrany jest właściwy port (**Narzędzia → Port**).
-2. Kliknij **Wgraj** (→) lub naciśnij `Ctrl+U` (Windows/Linux) albo `Cmd+U` (macOS).
+2. Kliknij **Prześlij** (→) lub naciśnij `Ctrl+U` (Windows/Linux) albo `Cmd+U` (macOS).
 3. W dolnym panelu IDE zobaczysz komunikaty kompilacji, a następnie pasek postępu przesyłania.
 4. Komunikat **„Przesyłanie zakończone”** (*Done uploading*) w prawym dolnym rogu oznacza sukces — płytka automatycznie się resetuje i uruchamia nowy program.
 
@@ -146,7 +146,7 @@ void loop() {
 ```
 </Code>
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,25 Hz (1000 milisekund to 1 sekunda). 
+Następnie **Prześlij** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,25 Hz (1000 milisekund to 1 sekunda). 
 
 Policz liczbę migań diody. Następnie naciśnij reset na płytce Arduino. Co się stało po wciśnięciu reset?
 
@@ -169,7 +169,7 @@ void loop() {
 </Code>
 
 Kliknij **Weryfikuj** (✓) — kompilacja powinna zakończyć się bez błędów.
-Następnie **Wgraj** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,5 Hz.
+Następnie **Prześlij** (→) — patrz sekcja 3, jeśli potrzebujesz przypomnienia. Po chwili dioda na płytce zacznie migać z częstotliwością 0,5 Hz.
 
 <ExpectedOutput title="Efekt po wgraniu">
 Wbudowana dioda LED na płytce Arduino UNO zapala się na 1 sekundę, gaśnie na

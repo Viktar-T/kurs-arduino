@@ -8,7 +8,7 @@ sensitivity: low
 # --- Site-driving fields ---
 title: "Asystenci AI w VS Code — GitHub Copilot i darmowe alternatywy"
 slug: "asystenci-ai-w-vs-code"
-summary: "Jak dołożyć asystenta AI do PlatformIO: GitHub Copilot jako podstawa (Copilot Free i plan Student), a do tego darmowe plany i triale edytorów AI Cursor i Windsurf, darmowe chatboty (Claude/ChatGPT/Gemini, Arduino Cloud AI) oraz nota o RODO i zgodzie rodziców."
+summary: "Jak dołożyć asystenta AI do PlatformIO: GitHub Copilot jako podstawa (Copilot Free i plan Student), a do tego darmowe plany i triale edytorów AI Cursor i Devin Desktop (dawniej Windsurf), darmowe chatboty (Claude/ChatGPT/Gemini, Arduino Cloud AI) oraz nota o RODO i zgodzie rodziców."
 
 day: 9
 weekend: 5
@@ -22,7 +22,7 @@ forbotChapter: 2
 objectives:
   - "Rozróżnić asystenta w edytorze (uzupełnianie + czat) od chatbota w przeglądarce"
   - "Zainstalować GitHub Copilot w VS Code i zalogować się kontem GitHub"
-  - "Poznać darmowe plany i triale edytorów AI Cursor i Windsurf"
+  - "Poznać darmowe plany i triale edytorów AI Cursor i Devin Desktop (dawniej Windsurf)"
   - "Korzystać z darmowych chatbotów (Claude, ChatGPT, Gemini, Arduino Cloud AI) do wyjaśniania kodu"
   - "Opisać obowiązki RODO i potrzebę zgody rodziców przy narzędziach chmurowych"
 
@@ -31,14 +31,15 @@ prerequisites:
 
 hardware: []
 
-tags: [ai, github-copilot, copilot-free, cursor, windsurf, chatbot, gemini, rodo, vs-code]
+tags: [ai, github-copilot, copilot-free, cursor, devin-desktop, windsurf, chatbot, gemini, rodo, vs-code]
 sources:
   - "https://github.com/features/copilot/plans"
   - "https://education.github.com/pack"
   - "https://github.com/orgs/community/discussions/189268"
   - "https://docs.github.com/en/copilot/get-started/plans"
   - "https://cursor.com/pricing"
-  - "https://windsurf.com/pricing"
+  - "https://devin.ai/pricing"
+  - "https://devin.ai/desktop"
   - "https://cursor.com/students"
   - "https://blog.arduino.cc/2025/06/26/why-we-chose-claude-for-the-arduino-cloud-ai-assistant/"
 
@@ -46,17 +47,17 @@ publish: true
 updated: "2026-10-15"
 ---
 
-Mamy już profesjonalne środowisko (VS Code + PlatformIO). Czas dołożyć **asystenta AI**, który podpowiada kod i tłumaczy błędy. Podstawą na naszych zajęciach jest **GitHub Copilot** w VS Code — jako uczeń możesz z niego korzystać za darmo w planie **Copilot Free**, a jeśli masz już zweryfikowany status ucznia w GitHub Education — w planie **Student**; szkoła go nie rozdaje, zdobywasz go samodzielnie. Pokażemy też **darmowe plany i triale innych edytorów AI** (Cursor, Windsurf) oraz darmowe chatboty do wyjaśniania kodu — żeby każdy miał z czego korzystać.
+Mamy już profesjonalne środowisko (VS Code + PlatformIO). Czas dołożyć **asystenta AI**, który podpowiada kod i tłumaczy błędy. Podstawą na naszych zajęciach jest **GitHub Copilot** w VS Code — jako uczeń możesz z niego korzystać za darmo w planie **Copilot Free**, a jeśli masz już zweryfikowany status ucznia w GitHub Education — w planie **Student**; szkoła go nie rozdaje, zdobywasz go samodzielnie. Pokażemy też **darmowe plany i triale innych edytorów AI** (Cursor, Devin Desktop) oraz darmowe chatboty do wyjaśniania kodu — żeby każdy miał z czego korzystać.
 
 <Callout type="warning" title="Ceny i limity zmieniają się co miesiąc">
-Wszystkie liczby w tej lekcji podano według stanu na **czerwiec 2026**. Plany darmowe, triale i zasady kwalifikacji bywają zmieniane bardzo często — przed zajęciami zawsze sprawdź aktualny stan na oficjalnej stronie danego narzędzia.
+Wszystkie liczby w tej lekcji podano według stanu na **październik 2026**. Plany darmowe, triale i zasady kwalifikacji bywają zmieniane bardzo często — przed zajęciami zawsze sprawdź aktualny stan na oficjalnej stronie danego narzędzia.
 </Callout>
 
 <Objectives
   items={[
     "Poznać dwa typy pomocy AI: w edytorze i w przeglądarce",
     "Zainstalować i zalogować GitHub Copilot w VS Code",
-    "Poznać darmowe plany i triale edytorów AI Cursor i Windsurf",
+    "Poznać darmowe plany i triale edytorów AI Cursor i Devin Desktop (dawniej Windsurf)",
     "Korzystać z darmowych chatbotów do wyjaśniania kodu",
     "Zrozumieć zasady RODO przy narzędziach chmurowych",
   ]}
@@ -77,7 +78,7 @@ W praktyce uczeń korzysta z AI na dwa sposoby — warto je rozróżniać, bo na
   caption="Asystent w edytorze vs chatbot w przeglądarce"
   headers={["Typ", "Gdzie działa", "Najlepszy do"]}
   rows={[
-    ["Asystent w edytorze", "W VS Code (GitHub Copilot) lub w edytorze AI (Cursor, Windsurf)", "Uzupełnianie kodu w locie, czat o pliku, tłumaczenie błędów kompilatora"],
+    ["Asystent w edytorze", "W VS Code (GitHub Copilot) lub w edytorze AI (Cursor, Devin Desktop)", "Uzupełnianie kodu w locie, czat o pliku, tłumaczenie błędów kompilatora"],
     ["Chatbot w przeglądarce", "Strona WWW (Claude, ChatGPT, Gemini)", "Wyjaśnianie „dlaczego”, projektowanie logiki, nauka pojęć"],
   ]}
 />
@@ -93,7 +94,7 @@ Copilot to nasz **podstawowy** asystent: wtyczka do VS Code, którego już używ
 Skąd wziąć dostęp za darmo? Są dwie ścieżki:
 
 <Table
-  caption="Darmowe plany GitHub Copilot (stan: czerwiec 2026)"
+  caption="Darmowe plany GitHub Copilot (stan: październik 2026)"
   headers={["Plan", "Koszt", "Co daje", "Uwaga"]}
   rows={[
     ["Copilot Free", "0 zł", "Ok. 2000 uzupełnień + 50 zapytań „premium” czatu miesięcznie", "Dla każdego z kontem GitHub — wystarczy na naukę"],
@@ -106,33 +107,33 @@ Skąd wziąć dostęp za darmo? Są dwie ścieżki:
 Plan **Student** wymaga potwierdzenia statusu ucznia na [education.github.com/pack](https://education.github.com/pack) (e-mail szkolny lub legitymacja, wiek od 13 lat). Polskie technika kwalifikują się. **Ważne:** od 20 kwietnia 2026 GitHub wstrzymał przyjmowanie nowych uczniów do darmowego planu Copilot Student — kto aktywował go wcześniej, zachowuje dostęp. Jeśli nie zdążyłeś, użyj **Copilot Free** (działa dla każdego), edytora AI z darmowym planem (niżej) albo darmowego chatbota.
 </Callout>
 
-## 3. Edytory AI z darmowym planem i trialem — Cursor i Windsurf
+## 3. Edytory AI z darmowym planem — Cursor i Devin Desktop
 
-Poza wtyczką Copilot istnieją **osobne edytory** zbudowane wokół AI: **Cursor** i **Windsurf**. To „forki” VS Code — wyglądają i działają niemal identycznie, możesz zaimportować swoje ustawienia i rozszerzenia (w tym **PlatformIO**), więc otworzysz w nich ten sam projekt co w VS Code. Każdy ma **darmowy plan** oraz **trial** pełnej wersji Pro.
+Poza wtyczką Copilot istnieją **osobne edytory** zbudowane wokół AI: **Cursor** i **Devin Desktop** (wcześniej pod nazwą **Windsurf**). To „forki” VS Code — wyglądają i działają niemal identycznie, możesz zaimportować swoje ustawienia i rozszerzenia (w tym **PlatformIO**), więc otworzysz w nich ten sam projekt co w VS Code. Każdy ma **darmowy plan**, a nowym użytkownikom bywa oferowany **trial** wersji Pro.
 
 <Table
-  caption="Edytory AI z darmowym dostępem (stan: czerwiec 2026)"
+  caption="Edytory AI z darmowym dostępem (stan: październik 2026)"
   headers={["Edytor", "Darmowy plan", "Trial Pro", "Na co uważać"]}
   rows={[
     ["Cursor", "Hobby: ograniczona liczba uzupełnień i zapytań do agenta, bez karty, bezterminowo", "ok. 1 tydzień pełnego Pro przy rejestracji", "Osobny edytor (fork VS Code); oferty studenckie tylko dla studentów uczelni"],
-    ["Windsurf", "Darmowe, nielimitowane uzupełnianie (Tab) + niewielki limit dzienny/tygodniowy na agenta Cascade", "ok. 2 tygodnie Pro dla nowych użytkowników", "Osobny edytor (fork VS Code); darmowy limit Cascade starcza na 2–3 dni intensywnej pracy"],
+    ["Devin Desktop (dawniej Windsurf)", "Nielimitowane uzupełnianie (Tab) i edycje w linii + niewielki limit na agenta Cascade", "Tylko okresowo i nie dla każdego nowego użytkownika", "Osobny edytor (fork VS Code); darmowy limit agenta jest niewielki — używaj go oszczędnie"],
   ]}
 />
 
-<Expandable title="Jak wypróbować Cursor lub Windsurf" heading="####">
+<Expandable title="Jak wypróbować Cursor lub Devin Desktop" heading="####">
 
-1. Pobierz edytor ze strony producenta (**cursor.com** lub **windsurf.com**) i zainstaluj go obok VS Code.
+1. Pobierz edytor ze strony producenta (**cursor.com** lub **devin.ai/desktop** — stary adres windsurf.com przekierowuje tam) i zainstaluj go obok VS Code.
 2. Przy pierwszym uruchomieniu **zaimportuj ustawienia i rozszerzenia** z VS Code — kreator sam to zaproponuje.
 3. Doinstaluj **PlatformIO** z panelu rozszerzeń.
 4. Otwórz swój projekt z lekcji 24 i porównaj podpowiadanie kodu oraz czat z tym, co daje Copilot.
 
-Po zakończeniu trialu Pro wracasz do darmowego planu albo do VS Code + Copilot — niczego nie tracisz, bo projekt PlatformIO jest ten sam.
+Jeśli dostaniesz trial Pro, po jego zakończeniu wracasz do darmowego planu albo do VS Code + Copilot — niczego nie tracisz, bo projekt PlatformIO jest ten sam.
 
 </Expandable>
 
 <Callout type="warning" title="Na co uważać przy edytorach AI">
-- **Cursor i Windsurf to osobne aplikacje**, nie wtyczki — instalujesz je obok VS Code.
-- **Triale Pro się kończą** (Cursor ok. 1 tydzień, Windsurf ok. 2 tygodnie) — potem zostaje darmowy plan lub wersja płatna.
+- **Cursor i Devin Desktop to osobne aplikacje**, nie wtyczki — instalujesz je obok VS Code.
+- **Triale Pro się kończą** (Cursor ok. 1 tydzień; Devin Desktop daje trial tylko części nowych użytkowników) — potem zostaje darmowy plan lub wersja płatna.
 - **Oferty studenckie Cursora** (np. darmowy rok Pro) są przeznaczone dla studentów uczelni — uczniowie technikum się nie kwalifikują (ale darmowy plan **Hobby** działa dla wszystkich).
 - **Gemini Code Assist** (darmowa wtyczka do IDE dla osób prywatnych) przestała działać 18.06.2026 — w przeglądarce Gemini nadal działa.
 </Callout>
@@ -146,7 +147,7 @@ Do rozumienia kodu i projektowania logiki świetnie sprawdzają się darmowe cha
 - **Arduino Cloud AI Assistant** — asystent oparty na **oficjalnej dokumentacji Arduino** (mniej zmyśla, bo odpowiada z dokumentów). Darmowo ok. 30 interakcji miesięcznie — świetny do **sprawdzania** wątpliwych podpowiedzi z innych narzędzi.
 
 <Callout type="tip" title="Łącz narzędzia">
-Dobry układ dla ucznia: **Copilot Free** (lub darmowy plan Cursora/Windsurfa) do pisania w edytorze + **ChatGPT/Gemini** (Claude.ai — jeśli masz 18 lat) w przeglądarce do wyjaśnień + **Arduino Cloud AI** do sprawdzenia spornej kwestii sprzętowej. Wszystko za darmo.
+Dobry układ dla ucznia: **Copilot Free** (lub darmowy plan Cursora albo Devin Desktop) do pisania w edytorze + **ChatGPT/Gemini** (Claude.ai — jeśli masz 18 lat) w przeglądarce do wyjaśnień + **Arduino Cloud AI** do sprawdzenia spornej kwestii sprzętowej. Wszystko za darmo.
 </Callout>
 
 ## 5. RODO i zgoda rodziców
@@ -161,7 +162,7 @@ Jesteście niepełnoletni, a większość tych narzędzi to usługi **chmurowe**
 </Callout>
 
 <Task title="Uruchom asystenta i wypróbuj edytor AI" estimate="20 min">
-Najpierw uruchom **GitHub Copilot** w VS Code (plan **Free** wystarczy) i sprawdź podpowiedź, pisząc funkcję `int zmierzOdleglosc()`. Następnie (opcjonalnie, w domu) zainstaluj **Cursor** albo **Windsurf**, zaimportuj ustawienia, doinstaluj PlatformIO i otwórz swój projekt z lekcji 24 — porównaj podpowiadanie i czat. Na koniec otwórz jeden darmowy chatbot (Claude, ChatGPT lub Gemini) i poproś o wyjaśnienie fragmentu swojego kodu. Zapisz, które narzędzia udało Ci się uruchomić.
+Najpierw uruchom **GitHub Copilot** w VS Code (plan **Free** wystarczy) i sprawdź podpowiedź, pisząc funkcję `int zmierzOdleglosc()`. Następnie (opcjonalnie, w domu) zainstaluj **Cursor** albo **Devin Desktop**, zaimportuj ustawienia, doinstaluj PlatformIO i otwórz swój projekt z lekcji 24 — porównaj podpowiadanie i czat. Na koniec otwórz jeden darmowy chatbot (Claude, ChatGPT lub Gemini) i poproś o wyjaśnienie fragmentu swojego kodu. Zapisz, które narzędzia udało Ci się uruchomić.
 </Task>
 
 ## Podsumowanie
@@ -171,8 +172,8 @@ Dołożyliśmy do PlatformIO **asystentów AI** i zadbaliśmy o to, by **każdy 
 Kluczowe wnioski:
 
 - **GitHub Copilot** to podstawa — wtyczka do VS Code; darmowo przez **Copilot Free** lub plan **Student** (nabór wstrzymany od 20.04.2026).
-- **Cursor** i **Windsurf** to osobne edytory AI (forki VS Code) z **darmowym planem** i **trialem Pro** — otworzysz w nich ten sam projekt PlatformIO.
-- Oferty studenckie Cursora są tylko dla studentów uczelni; plan **Hobby** Cursora i darmowy **Windsurf** działają dla każdego.
+- **Cursor** i **Devin Desktop** (dawniej Windsurf) to osobne edytory AI (forki VS Code) z **darmowym planem** — otworzysz w nich ten sam projekt PlatformIO.
+- Oferty studenckie Cursora są tylko dla studentów uczelni; plan **Hobby** Cursora i darmowy **Devin Desktop** działają dla każdego.
 - W przeglądarce wyjaśnień udzielą **Claude, ChatGPT, Gemini**, a **Arduino Cloud AI** sprawdzi kwestie sprzętowe.
 - Pamiętaj o **RODO**: brak danych osobowych w chmurze, zgoda rodziców, a dane wrażliwe nie idą do chmury.
 

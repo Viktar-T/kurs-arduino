@@ -50,7 +50,6 @@ sources:
   - "https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot"
   - "https://docs.wokwi.com/vscode/project-config"
   - "https://github.com/github/spec-kit"
-  - "https://kurs-arduino.vercel.app/harmonogram"
 
 publish: true
 updated: "2026-10-15"
@@ -157,7 +156,7 @@ Na każdym etapie obowiązuje ta sama **mikro-pętla**:
 projekt-wezel-klimatu/             # repo git — commit na każdym etapie
 ├── .github/
 │   └── copilot-instructions.md    # KONSTYTUCJA dla Copilota (auto-kontekst)
-├── .windsurfrules                 # to samo dla Windsurf (jeśli go używasz)
+├── .devin/rules/                  # to samo dla Devin Desktop (pliki .md)
 ├── .cursor/rules/                 # to samo dla Cursor (pliki .mdc)
 ├── docs/
 │   ├── 00-idea.md                 # problem + oczekiwane zachowanie
@@ -182,7 +181,7 @@ AI **słabo** czyta PDF-y z dokumentacją. Surowe PDF-y trzymaj w `datasheets/` 
 </Callout>
 
 <Callout type="note" title="Kontekst niezależny od narzędzia">
-`.github/copilot-instructions.md` czyta tylko Copilot. Jeśli pracujesz w **Cursor**, te same zasady wpisz do `.cursor/rules/` (pliki `.mdc`); w **Windsurf** — do `.windsurfrules`. Treść konstytucji jest ta sama, zmienia się tylko nazwa pliku.
+`.github/copilot-instructions.md` czyta tylko Copilot. Jeśli pracujesz w **Cursor**, te same zasady wpisz do `.cursor/rules/` (pliki `.mdc`); w **Devin Desktop** (dawniej Windsurf) — do plików `.md` w folderze `.devin/rules/` (starszy plik `.windsurfrules` też jest jeszcze czytany). Treść konstytucji jest ta sama, zmienia się tylko nazwa pliku.
 </Callout>
 
 ## 5. Gotowe szablony plików (kopiuj-wklej)
@@ -244,8 +243,8 @@ Tę samą procedurę uruchamiasz w każdej sesji pracy:
 6. **Zdecyduj sam**, zapisz decyzję do `05-dziennik.md`.
 7. Zrób commit, np. `git commit -m "architektura: wybor DHT22 i LCD I2C"`.
 
-<Callout type="note" title="Tryb agenta — realia (stan: czerwiec 2026)">
-**Tryb agenta** (samodzielne edytowanie wielu plików, uruchamianie poleceń) działa w VS Code z Copilotem. Na planie **Free** czat i tryb agenta mają wspólny, niewielki limit (ok. 50 zapytań/mies.) — używaj ich oszczędnie. Cursor i Windsurf mają własne tryby agenta i własne limity.
+<Callout type="note" title="Tryb agenta — realia (stan: październik 2026)">
+**Tryb agenta** (samodzielne edytowanie wielu plików, uruchamianie poleceń) działa w VS Code z Copilotem. Na planie **Free** czat i tryb agenta mają wspólny, niewielki limit (ok. 50 zapytań/mies.) — używaj ich oszczędnie. Cursor i Devin Desktop mają własne tryby agenta i własne limity.
 </Callout>
 
 ## 7. Kryteria ukończenia (definicja „gotowe”)
@@ -279,7 +278,7 @@ Kluczowe wnioski:
 - **Zaczynaj od problemu i architektury**, nie od komponentu; fizykę analizuj przed specyfikacją.
 - Prowadź projekt **mikro-pętlą**: zapis/commit do repo → omów z AI → zweryfikuj → zdecyduj i zapisz.
 - **Repo git jest pamięcią projektu i kontekstem AI** — dokumenty `docs/`, przepisane datasheety, dziennik decyzji.
-- Kontekst rób **niezależnie od narzędzia** (Copilot / Cursor / Windsurf) i pamiętaj o **bramce weryfikacji** z lekcji 27.
+- Kontekst rób **niezależnie od narzędzia** (Copilot / Cursor / Devin Desktop) i pamiętaj o **bramce weryfikacji** z lekcji 27.
 - Projekt jest „gotowy” dopiero wtedy, gdy spełnia całą **listę kryteriów ukończenia**.
 
 To zamyka kurs: masz komplet narzędzi i — co ważniejsze — **metodę**, dzięki której AI Ci pomaga, a Ty pozostajesz inżynierem odpowiedzialnym za projekt.

@@ -12,9 +12,8 @@ external pages link these URLs, so don't rename a published file. The
 frontmatter `slug` is only an alias: `prerequisites` may reference a lesson as
 `dzien-NN/<file name>` or `dzien-NN/<slug>`.
 
-See `../../PROJECT_BRIEF.md` §4 and `../../CLAUDE.md` §6 for the full recipe
-(both still describe the older "file prefix = `order`" rule; where they
-disagree, this file reflects the current content).
+See `../../PROJECT_BRIEF.md` §4 and `../../CLAUDE.md` §4 and §6 for the full
+contract and recipe.
 
 A reference lesson lives at `dzien-01/03-srodowisko-ide.mdx` — copy it as a
 template.
